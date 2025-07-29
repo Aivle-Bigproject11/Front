@@ -31,10 +31,15 @@ body {
 }
 
 .btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-/* 점보트론 스타일 */
+.ribbon-body:hover {
+  transform: translateY(-5px);
+}
+
+/* 전체 애플리케이션 스타일 */
 .jumbotron {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 10px;
@@ -425,22 +430,36 @@ body {
 /* 리본 방명록 스타일 */
 .ribbon-guestbook-container {
   position: relative;
+  max-width: 1400px; /* 컨테이너 최대 너비 */
+  margin: 0 auto; /* 중앙 정렬 */
 }
 
 .ribbon-scroll-container {
   position: relative;
   transform-style: preserve-3d;
   overflow: hidden;
+  cursor: grab;
+  background: transparent; /* 배경 투명하게 */
+  padding: 0; /* 패딩 제거 */
+  margin: 0; /* 마진 제거 */
+}
+
+.ribbon-scroll-container:active {
+  cursor: grabbing;
 }
 
 .ribbon-items-wrapper {
   transform-style: preserve-3d;
+  width: max-content; /* 콘텐츠에 맞는 너비 */
+  height: 280px; /* 리본 카드와 같은 높이 */
+  align-items: flex-start;
 }
 
 .ribbon-item {
   position: relative;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
+  flex-shrink: 0; /* 크기 변경 방지 */
 }
 
 .ribbon-item:hover {
@@ -465,29 +484,6 @@ body {
   opacity: 1;
 }
 
-.ribbon-tail-top {
-  transition: all 0.3s ease;
-}
-
-.ribbon-item:hover .ribbon-tail-top {
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)) !important;
-}
-
-.ribbon-item:after {
-  content: '';
-  position: absolute;
-  bottom: -3px;
-  left: 3px;
-  right: 3px;
-  height: 3px;
-  background: rgba(0,0,0,0.2);
-  border-radius: 1px;
-}
-
-.ribbon-tail {
-  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
-}
-
 /* 리본 애니메이션 효과 */
 @keyframes ribbonFloat {
   0%, 100% { 
@@ -501,13 +497,13 @@ body {
 }
 
 .ribbon-item:nth-child(even) {
-  animation: ribbonFloat 6s ease-in-out infinite;
+  animation: ribbonFloat 8s ease-in-out infinite;
   animation-delay: 0.5s;
 }
 
 .ribbon-item:nth-child(odd) {
-  animation: ribbonFloat 6s ease-in-out infinite;
-  animation-delay: 1.5s;
+  animation: ribbonFloat 8s ease-in-out infinite;
+  animation-delay: 2s;
 }
 
 /* 호버시 애니메이션 정지 */
@@ -515,20 +511,77 @@ body {
   animation-play-state: paused;
 }
 
+/* 리본 바디 스타일 */
+.ribbon-body {
+  transition: all 0.3s ease;
+  overflow: visible !important;
+  border-radius: 12px !important; /* 전체 모서리 둥글게 */
+  position: relative;
+  min-height: 280px;
+}
+
+.ribbon-body::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.1);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.ribbon-body:hover {
+  transform: translateY(-5px);
+}
+
+/* 리본 꼬리 통합 애니메이션 */
+.ribbon-item:hover .ribbon-tail-wrapper {
+  transform: translateY(-5px);
+}
+
+.ribbon-item:hover .ribbon-tail-main {
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4)) !important;
+}
+
+.ribbon-item:hover .ribbon-tail-left,
+.ribbon-item:hover .ribbon-tail-right {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
 /* 반응형 리본 */
 @media (max-width: 768px) {
   .ribbon-item {
-    min-width: 220px !important;
-    height: 180px !important;
-    font-size: 0.85rem;
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
+    height: 300px !important;
   }
   
   .ribbon-scroll-container {
-    height: 200px !important;
+    height: 300px !important; /* 높이 더 감소 */
   }
   
   .ribbon-items-wrapper {
-    gap: 10px !important;
+    gap: 15px !important;
+  }
+  
+  .ribbon-body {
+    height: 200px !important;
+    padding: 15px 10px !important;
+    font-size: 0.85rem;
+  }
+}
+
+/* 대형 화면에서의 추가 제한 */
+@media (min-width: 1400px) {
+  .ribbon-guestbook-container {
+    max-width: 1200px;
+  }
+  
+  .ribbon-scroll-container {
+    max-width: 1200px;
   }
 }
 

@@ -17,7 +17,10 @@ const MemorialDetail = () => {
   const [guestbookList, setGuestbookList] = useState([]);
   const [activeTab, setActiveTab] = useState('video'); // 'video' 또는 'photos'
   const [ribbonScrollIndex, setRibbonScrollIndex] = useState(0);
-  const ribbonItemsPerView = 3; // 한 번에 3개씩 보이도록
+  const ribbonItemsPerView = 4; // 화면에 보이는 리본 개수
+  const ribbonItemWidth = 220; // 리본 너비 + 간격
+  const [selectedRibbon, setSelectedRibbon] = useState(null);
+  const [showRibbonDetailModal, setShowRibbonDetailModal] = useState(false);
 
   useEffect(() => {
     // TODO: 실제 API 호출로 교체
@@ -92,6 +95,20 @@ const MemorialDetail = () => {
   // 탭 전환 함수들
   const switchToVideo = () => setActiveTab('video');
   const switchToPhotos = () => setActiveTab('photos');
+
+  // 마우스 휠 이벤트 핸들러
+  const handleRibbonWheel = (e) => {
+    e.preventDefault();
+    const maxIndex = Math.max(0, guestbookList.length - ribbonItemsPerView);
+    
+    if (e.deltaY > 0) {
+      // 아래로 스크롤 - 다음 리본으로
+      setRibbonScrollIndex(prev => Math.min(maxIndex, prev + 1));
+    } else {
+      // 위로 스크롤 - 이전 리본으로
+      setRibbonScrollIndex(prev => Math.max(0, prev - 1));
+    }
+  };
 
   if (loading) {
     return (
@@ -216,87 +233,11 @@ const MemorialDetail = () => {
 
       {/* 메인 콘텐츠 영역 - 새로운 레이아웃 */}
       <Row>
-        {/* 왼쪽: 추모사 */}
-        <Col lg={4}>
-          {/* 추모사 */}
-          <Card style={{ borderRadius: '15px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-            <Card.Header style={{ 
-              background: 'linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%)',
-              borderRadius: '15px 15px 0 0',
-              border: 'none'
-            }}>
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">
-                  <i className="fas fa-heart me-2"></i>
-                  추모사
-                </h5>
-                <Button 
-                  variant="outline-primary" 
-                  size="sm"
-                >
-                  <i className="fas fa-robot me-1"></i>
-                  AI 생성
-                </Button>
-              </div>
-            </Card.Header>
-            <Card.Body className="p-4" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-              <div className="memorial-eulogy">
-                <div className="eulogy-title mb-3 text-center">
-                  <h6 className="text-primary mb-2" style={{ fontWeight: '600' }}>
-                    사랑하고 존경하는 우리 아버지, {memorial.name}님.
-                  </h6>
-                </div>
-                
-                <div className="eulogy-content" style={{ 
-                  lineHeight: '1.8', 
-                  fontSize: '0.95rem',
-                  color: '#495057'
-                }}>
-                  <p className="mb-3">
-                    늘 저희의 든든한 버팀목이 되어 주셨던 아버지를 이렇게 보내드려야 한다는 사실이 
-                    아직도 실감 나지 않습니다. 아버지는 저희에게 세상에서 가장 크고 단단한 산과 같은 분이셨습니다.
-                  </p>
-                  
-                  <p className="mb-3">
-                    언제나 말없이 묵묵히 가족을 위해 헌신하셨던 아버지의 깊은 사랑을 이제야 더 절실히 깨닫게 됩니다. 
-                    저희에게 보여주셨던 정직함과 성실함은 앞으로 저희가 세상을 살아가는 데 가장 큰 가르침이 될 것입니다.
-                  </p>
-                  
-                  <p className="mb-3">
-                    아버지, 이제 모든 무거운 짐을 내려놓으시고 하늘에서는 부디 평안히 쉬십시오. 
-                    저희에게 베풀어주신 크나큰 사랑, 가슴 깊이 간직하며 열심히 살아가겠습니다.
-                  </p>
-                  
-                  <div className="text-center mt-4">
-                    <p className="mb-0" style={{ 
-                      fontStyle: 'italic', 
-                      fontWeight: '500',
-                      color: '#6c757d'
-                    }}>
-                      영원히 사랑하고 기억하겠습니다.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="eulogy-footer mt-4 pt-3" style={{ 
-                  borderTop: '1px solid #e9ecef',
-                  textAlign: 'right'
-                }}>
-                  <small className="text-muted">
-                    <i className="fas fa-calendar-alt me-1"></i>
-                    작성일: {new Date().toLocaleDateString('ko-KR')}
-                  </small>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* 오른쪽: 영상/사진첩 + 방명록 + 리본 */}
+        {/* 좌측: 영상/사진첩 + 방명록 리본 */}
         <Col lg={8}>
           <Row>
             {/* 상단: 추모영상과 사진첩 - 겹쳐진 탭 구조 */}
-            <Col lg={8}>
+            <Col lg={12}>
               <div className="memorial-tabs-container position-relative mb-4" style={{ 
                 borderRadius: '15px', 
                 overflow: 'hidden',
@@ -497,57 +438,7 @@ const MemorialDetail = () => {
                   </div>
                 </div>
               </div>
-            </Col>
 
-            {/* 우측 상단: 방명록 작성 */}
-            <Col lg={4}>
-              <Card className="mb-4" style={{ borderRadius: '15px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Card.Header style={{ 
-                  background: 'linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%)',
-                  borderRadius: '15px 15px 0 0',
-                  border: 'none'
-                }}>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h6 className="mb-0">
-                      <i className="fas fa-book me-2"></i>
-                      위로의 말 전하기
-                    </h6>
-                    <Button 
-                      variant="outline-primary" 
-                      size="sm"
-                      onClick={() => setShowGuestbookModal(true)}
-                    >
-                      <i className="fas fa-edit me-1"></i>
-                      작성
-                    </Button>
-                  </div>
-                </Card.Header>
-                <Card.Body className="p-3">
-                  <div className="text-center text-muted">
-                    <i className="fas fa-pen-alt fa-2x mb-2"></i>
-                    <p className="small mb-0">소중한 추억과 위로의 말을<br/>리본에 남겨주세요</p>
-                  </div>
-                </Card.Body>
-              </Card>
-
-              {/* 공유 버튼 */}
-              <Card style={{ borderRadius: '15px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Card.Body className="text-center p-3">
-                  <Button 
-                    variant="primary" 
-                    className="w-100"
-                    style={{
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      border: 'none',
-                      padding: '12px'
-                    }}
-                  >
-                    <i className="fas fa-share-alt me-2"></i>
-                    공유하기
-                  </Button>
-                </Card.Body>
-              </Card>
             </Col>
           </Row>
 
@@ -558,7 +449,7 @@ const MemorialDetail = () => {
                 background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
                 borderRadius: '15px',
                 padding: '2rem',
-                minHeight: '300px',
+                minHeight: '380px',
                 position: 'relative',
                 overflow: 'hidden'
               }}>
@@ -592,144 +483,192 @@ const MemorialDetail = () => {
                   )}
                 </div>
                 
-                <div className="ribbon-scroll-container" style={{
-                  height: '250px',
-                  perspective: '1200px',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
+                <div 
+                  className="ribbon-scroll-container" 
+                  style={{
+                    height: '300px', // 리본 카드에 맞춘 높이
+                    perspective: '1200px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    maxWidth: '1200px',
+                    margin: '0 auto',
+                    padding: '10px 0' // 상하 패딩만 약간
+                  }}
+                  onWheel={handleRibbonWheel}
+                >
                   <div className="ribbon-items-wrapper" style={{
                     display: 'flex',
-                    gap: '15px',
-                    transform: `translateX(-${ribbonScrollIndex * 280}px)`,
+                    gap: '20px', // 고정된 간격
+                    transform: `translateX(-${ribbonScrollIndex * ribbonItemWidth}px)`, // 고정된 스크롤 단위
                     transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                     height: '100%',
                     alignItems: 'flex-start',
-                    paddingTop: '20px'
+                    paddingTop: '20px',
+                    justifyContent: 'flex-start' // 좌측 정렬
                   }}>
                     {guestbookList.map((entry, index) => (
                       <div
                         key={entry.id}
                         className="ribbon-item"
                         style={{
-                          minWidth: '260px',
-                          height: '200px',
+                          width: '200px', // 고정 너비
+                          minWidth: '200px', // 최소 너비도 고정
+                          maxWidth: '200px', // 최대 너비도 고정
+                          height: '350px',
+                          position: 'relative',
+                          cursor: 'pointer',
+                          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transform: `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`,
+                          zIndex: guestbookList.length - Math.abs(index - ribbonScrollIndex),
+                          transformOrigin: 'center top',
+                          flexShrink: 0 // 크기 변경 방지
+                        }}
+                        onClick={() => {
+                          setSelectedRibbon(entry);
+                          setShowRibbonDetailModal(true);
+                        }}
+                        onMouseEnter={(e) => {
+                          const ribbonItem = e.currentTarget;
+                          const ribbonBody = ribbonItem.querySelector('.ribbon-body');
+                          const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
+                          
+                          ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15 + 15}px) scale(1.05)`;
+                          ribbonItem.style.filter = 'brightness(1.1)';
+                          
+                          if (ribbonBody) {
+                            ribbonBody.style.transform = 'translateY(-5px)';
+                          }
+                          if (ribbonTailWrapper) {
+                            ribbonTailWrapper.style.transform = 'translateY(-5px)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          const ribbonItem = e.currentTarget;
+                          const ribbonBody = ribbonItem.querySelector('.ribbon-body');
+                          const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
+                          
+                          ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`;
+                          ribbonItem.style.filter = 'brightness(1)';
+                          
+                          if (ribbonBody) {
+                            ribbonBody.style.transform = 'translateY(0)';
+                          }
+                          if (ribbonTailWrapper) {
+                            ribbonTailWrapper.style.transform = 'translateY(0)';
+                          }
+                        }}
+                      >
+                        {/* 실제 리본 모양 */}
+                        <div className="ribbon-body" style={{
+                          width: '100%',
+                          height: '280px',
                           background: `linear-gradient(135deg, 
-                            ${index % 3 === 0 ? '#667eea' : index % 3 === 1 ? '#764ba2' : '#52c234'} 0%, 
-                            ${index % 3 === 0 ? '#764ba2' : index % 3 === 1 ? '#667eea' : '#b83dba'} 100%)`,
-                          borderRadius: '15px 15px 0 0',
+                            ${index % 4 === 0 ? '#667eea' : index % 4 === 1 ? '#764ba2' : index % 4 === 2 ? '#52c234' : '#e74c3c'} 0%, 
+                            ${index % 4 === 0 ? '#764ba2' : index % 4 === 1 ? '#667eea' : index % 4 === 2 ? '#b83dba' : '#c0392b'} 100%)`,
+                          borderRadius: '12px', // 전체 모서리 둥글게
                           color: 'white',
                           display: 'flex',
                           flexDirection: 'column',
-                          padding: '20px',
-                          cursor: 'pointer',
-                          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                          transform: `rotateY(${Math.max(0, index - ribbonScrollIndex) * -8}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -20}px)`,
-                          zIndex: guestbookList.length - Math.abs(index - ribbonScrollIndex),
-                          boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
-                          border: '3px solid rgba(255,255,255,0.3)',
-                          position: 'relative',
-                          transformOrigin: 'left center'
-                        }}
-                        onClick={() => {
-                          alert(`${entry.name} (${entry.relationship}):\n\n${entry.message}`);
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -8}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -20 + 10}px) scale(1.02)`;
-                          e.currentTarget.style.boxShadow = '0 12px 35px rgba(0,0,0,0.3)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -8}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -20}px)`;
-                          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)';
-                        }}
-                      >
-                        {/* 리본 상단 꼬리 */}
-                        <div className="ribbon-tail-top" style={{
-                          position: 'absolute',
-                          top: '-10px',
-                          left: '20px',
-                          right: '20px',
-                          height: '0',
-                          borderLeft: '10px solid transparent',
-                          borderRight: '10px solid transparent',
-                          borderBottom: `10px solid ${index % 3 === 0 ? '#667eea' : index % 3 === 1 ? '#764ba2' : '#52c234'}`,
-                          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-                        }}></div>
-                        
-                        {/* 헤더 영역 */}
-                        <div className="ribbon-header" style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
+                          justifyContent: 'flex-start',
                           alignItems: 'center',
-                          marginBottom: '15px',
-                          borderBottom: '1px solid rgba(255,255,255,0.3)',
-                          paddingBottom: '10px'
+                          padding: '25px 20px',
+                          boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
+                          border: 'none',
+                          position: 'relative',
+                          overflow: 'visible',
+                          textAlign: 'center'
                         }}>
-                          <div>
-                            <strong style={{ 
-                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                              fontSize: '1rem'
+                          {/* 헤더 영역 */}
+                          <div className="ribbon-header" style={{
+                            textAlign: 'center',
+                            marginBottom: '20px',
+                            borderBottom: '1px solid rgba(255,255,255,0.3)',
+                            paddingBottom: '15px'
+                          }}>
+                            <div style={{ 
+                              fontSize: '1.25rem', // 폰트 크기 증가
+                              fontWeight: 'bold',
+                              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                              marginBottom: '8px',
+                              lineHeight: '1.3'
                             }}>
                               {entry.name}
-                            </strong>
+                            </div>
                             <div style={{ 
-                              opacity: 0.8, 
-                              fontSize: '0.8rem',
+                              fontSize: '0.95rem', // 폰트 크기 증가
+                              opacity: 0.9,
                               textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                              marginTop: '2px'
+                              marginBottom: '5px',
+                              lineHeight: '1.2'
                             }}>
                               {entry.relationship}
                             </div>
+                            <div style={{ 
+                              fontSize: '0.8rem', // 폰트 크기 증가
+                              opacity: 0.8,
+                              marginTop: '5px',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              lineHeight: '1.2'
+                            }}>
+                              {entry.date}
+                            </div>
                           </div>
-                          <small style={{ 
-                            opacity: 0.8,
-                            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                            fontSize: '0.75rem'
-                          }}>
-                            {entry.date}
-                          </small>
-                        </div>
-                        
-                        {/* 메시지 영역 */}
-                        <div className="ribbon-message" style={{
-                          flex: 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center'
-                        }}>
-                          <div style={{
-                            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                            lineHeight: '1.4',
-                            fontSize: '0.9rem',
-                            textAlign: 'center',
-                            maxHeight: '80px',
-                            overflow: 'hidden'
-                          }}>
-                            {entry.message.length > 80 ? entry.message.substring(0, 80) + '...' : entry.message}
-                          </div>
-                        </div>
-                        
-                        {/* 하단 아이콘 */}
-                        <div className="ribbon-footer" style={{
-                          textAlign: 'center',
-                          marginTop: '15px'
-                        }}>
-                          <div style={{
-                            width: '35px',
-                            height: '35px',
-                            background: 'rgba(255,255,255,0.25)',
-                            borderRadius: '50%',
-                            display: 'inline-flex',
-                            alignItems: 'center',
+                          
+                          {/* 메시지 영역 */}
+                          <div className="ribbon-message" style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
                             justifyContent: 'center',
-                            border: '2px solid rgba(255,255,255,0.4)',
-                            transition: 'all 0.3s ease'
+                            textAlign: 'center',
+                            padding: '10px 0' // 패딩 추가
                           }}>
-                            <i className="fas fa-envelope-open" style={{ 
-                              fontSize: '0.9rem',
-                              color: 'white',
-                              textShadow: '0 1px 2px rgba(0,0,0,0.5)'
-                            }}></i>
+                            <div style={{
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              lineHeight: '1.5',
+                              fontSize: '0.95rem', // 폰트 크기 증가
+                              overflow: 'visible', // visible로 변경
+                              display: '-webkit-box',
+                              WebkitLineClamp: 5, // 줄 수 증가
+                              WebkitBoxOrient: 'vertical',
+                              wordWrap: 'break-word'
+                            }}>
+                              {entry.message}
+                            </div>
+                            
+                            {entry.message.length > 80 && ( // 글자 수 조정
+                              <div style={{
+                                marginTop: '10px',
+                                fontSize: '0.75rem',
+                                opacity: 0.8,
+                                fontStyle: 'italic'
+                              }}>
+                                클릭하여 전체보기
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* 하단 아이콘 */}
+                          <div className="ribbon-footer" style={{
+                            textAlign: 'center',
+                            marginTop: '15px'
+                          }}>
+                            <div style={{
+                              width: '30px',
+                              height: '30px',
+                              background: 'rgba(255,255,255,0.25)',
+                              borderRadius: '50%',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              border: '2px solid rgba(255,255,255,0.4)'
+                            }}>
+                              <i className="fas fa-heart" style={{ 
+                                fontSize: '0.8rem',
+                                color: 'white',
+                                textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                              }}></i>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -749,43 +688,152 @@ const MemorialDetail = () => {
                     </div>
                   )}
                 </div>
-                
-                <div className="text-center mt-4">
-                  <button 
-                    className="btn btn-primary px-4 py-2"
-                    onClick={() => setShowGuestbookModal(true)}
-                    style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      border: 'none',
-                      borderRadius: '25px',
-                      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
-                    }}
-                  >
-                    <i className="fas fa-plus me-2"></i>
-                    위로의 리본 남기기
-                  </button>
-                </div>
               </div>
             </Col>
           </Row>
+        </Col>
+
+        {/* 우측: 추모사 + 위로의 말 전하기 */}
+        <Col lg={4}>
+          {/* 추모사 */}
+          <Card className="mb-4" style={{ borderRadius: '15px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <Card.Header style={{ 
+              background: 'linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%)',
+              borderRadius: '15px 15px 0 0',
+              border: 'none'
+            }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0">
+                  <i className="fas fa-heart me-2"></i>
+                  추모사
+                </h5>
+                <Button 
+                  variant="outline-primary" 
+                  size="sm"
+                >
+                  <i className="fas fa-robot me-1"></i>
+                  AI 생성
+                </Button>
+              </div>
+            </Card.Header>
+            <Card.Body className="p-4" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+              <div className="memorial-eulogy">
+                <div className="eulogy-title mb-3 text-center">
+                  <h6 className="text-primary mb-2" style={{ fontWeight: '600' }}>
+                    사랑하고 존경하는 우리 아버지, {memorial.name}님.
+                  </h6>
+                </div>
+                
+                <div className="eulogy-content" style={{ 
+                  lineHeight: '1.8', 
+                  fontSize: '0.9rem',
+                  color: '#495057'
+                }}>
+                  <p className="mb-3">
+                    늘 저희의 든든한 버팀목이 되어 주셨던 아버지를 이렇게 보내드려야 한다는 사실이 
+                    아직도 실감 나지 않습니다. 아버지는 저희에게 세상에서 가장 크고 단단한 산과 같은 분이셨습니다.
+                  </p>
+                  
+                  <p className="mb-3">
+                    언제나 말없이 묵묵히 가족을 위해 헌신하셨던 아버지의 깊은 사랑을 이제야 더 절실히 깨닫게 됩니다. 
+                    저희에게 보여주셨던 정직함과 성실함은 앞으로 저희가 세상을 살아가는 데 가장 큰 가르침이 될 것입니다.
+                  </p>
+                  
+                  <p className="mb-3">
+                    아버지, 이제 모든 무거운 짐을 내려놓으시고 하늘에서는 부디 평안히 쉬십시오. 
+                    저희에게 베풀어주신 크나큰 사랑, 가슴 깊이 간직하며 열심히 살아가겠습니다.
+                  </p>
+                  
+                  <div className="text-center mt-4">
+                    <p className="mb-0" style={{ 
+                      fontStyle: 'italic', 
+                      fontWeight: '500',
+                      color: '#6c757d'
+                    }}>
+                      영원히 사랑하고 기억하겠습니다.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="eulogy-footer mt-4 pt-3" style={{ 
+                  borderTop: '1px solid #e9ecef',
+                  textAlign: 'right'
+                }}>
+                  <small className="text-muted">
+                    <i className="fas fa-calendar-alt me-1"></i>
+                    작성일: {new Date().toLocaleDateString('ko-KR')}
+                  </small>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+
+          {/* 위로의 말 전하기 */}
+          <Card className="mb-4" style={{ borderRadius: '15px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <Card.Header style={{ 
+              background: 'linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%)',
+              borderRadius: '15px 15px 0 0',
+              border: 'none'
+            }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <h6 className="mb-0">
+                  <i className="fas fa-book me-2"></i>
+                  위로의 말 전하기
+                </h6>
+                <Button 
+                  variant="outline-primary" 
+                  size="sm"
+                  onClick={() => setShowGuestbookModal(true)}
+                >
+                  <i className="fas fa-edit me-1"></i>
+                  작성
+                </Button>
+              </div>
+            </Card.Header>
+            <Card.Body className="p-3">
+              <div className="text-center text-muted">
+                <i className="fas fa-ribbon fa-2x mb-2"></i>
+                <p className="small mb-0">소중한 추억과 위로의 말을<br/>아름다운 리본으로 남겨주세요</p>
+              </div>
+            </Card.Body>
+          </Card>
+
+          {/* 공유 버튼 */}
+          <Card style={{ borderRadius: '15px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <Card.Body className="text-center p-3">
+              <Button 
+                variant="primary" 
+                className="w-100"
+                style={{
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  border: 'none',
+                  padding: '12px'
+                }}
+              >
+                <i className="fas fa-share-alt me-2"></i>
+                공유하기
+              </Button>
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
 
       {/* 방명록 작성 모달 */}
       <Modal show={showGuestbookModal} onHide={() => setShowGuestbookModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>위로의 말 전하기</Modal.Title>
+          <Modal.Title>
+            <i className="fas fa-ribbon me-2"></i>
+            위로의 리본 남기기
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <div className="text-center mb-3">
+            <p className="text-muted">
+              <i className="fas fa-heart me-2"></i>
+              작성하신 위로의 말씀이 아름다운 리본으로 표시됩니다
+            </p>
+          </div>
           <Form onSubmit={handleGuestbookSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>성명</Form.Label>
@@ -836,8 +884,135 @@ const MemorialDetail = () => {
           <Button variant="secondary" onClick={() => setShowGuestbookModal(false)}>
             취소
           </Button>
-          <Button variant="primary" onClick={handleGuestbookSubmit}>
-            작성 완료
+          <Button 
+            variant="primary" 
+            onClick={handleGuestbookSubmit}
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none'
+            }}
+          >
+            <i className="fas fa-ribbon me-2"></i>
+            리본으로 등록하기
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* 리본 상세보기 모달 */}
+      <Modal 
+        show={showRibbonDetailModal} 
+        onHide={() => setShowRibbonDetailModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header 
+          closeButton
+          style={{
+            background: selectedRibbon ? `linear-gradient(135deg, 
+              ${selectedRibbon.id % 4 === 1 ? '#667eea' : selectedRibbon.id % 4 === 2 ? '#764ba2' : selectedRibbon.id % 4 === 3 ? '#52c234' : '#e74c3c'} 0%, 
+              ${selectedRibbon.id % 4 === 1 ? '#764ba2' : selectedRibbon.id % 4 === 2 ? '#667eea' : selectedRibbon.id % 4 === 3 ? '#b83dba' : '#c0392b'} 100%)` : '#f8f9fa',
+            color: 'white',
+            border: 'none'
+          }}
+        >
+          <Modal.Title style={{ display: 'flex', alignItems: 'center' }}>
+            <i className="fas fa-ribbon me-2"></i>
+            {selectedRibbon?.name}님의 위로의 말
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '2rem' }}>
+          {selectedRibbon && (
+            <>
+              <div className="ribbon-detail-header mb-4">
+                <Row>
+                  <Col md={8}>
+                    <h5 className="text-primary mb-2">
+                      <i className="fas fa-user me-2"></i>
+                      {selectedRibbon.name}
+                    </h5>
+                    <p className="text-muted mb-1">
+                      <i className="fas fa-heart me-2"></i>
+                      관계: {selectedRibbon.relationship}
+                    </p>
+                    <p className="text-muted">
+                      <i className="fas fa-calendar-alt me-2"></i>
+                      작성일: {selectedRibbon.date}
+                    </p>
+                  </Col>
+                  <Col md={4} className="text-end">
+                    <div style={{
+                      width: '80px',
+                      height: '80px',
+                      background: selectedRibbon ? `linear-gradient(135deg, 
+                        ${selectedRibbon.id % 4 === 1 ? '#667eea' : selectedRibbon.id % 4 === 2 ? '#764ba2' : selectedRibbon.id % 4 === 3 ? '#52c234' : '#e74c3c'} 0%, 
+                        ${selectedRibbon.id % 4 === 1 ? '#764ba2' : selectedRibbon.id % 4 === 2 ? '#667eea' : selectedRibbon.id % 4 === 3 ? '#b83dba' : '#c0392b'} 100%)` : '#f8f9fa',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                    }}>
+                      <i className="fas fa-heart fa-2x" style={{ color: 'white' }}></i>
+                    </div>
+                  </Col>
+                </Row>
+              </div>
+              
+              <hr style={{ margin: '2rem 0' }} />
+              
+              <div className="ribbon-detail-message">
+                <h6 className="text-secondary mb-3">
+                  <i className="fas fa-quote-left me-2"></i>
+                  위로의 말씀
+                </h6>
+                <div 
+                  style={{
+                    background: '#f8f9fa',
+                    borderLeft: '4px solid #007bff',
+                    padding: '1.5rem',
+                    borderRadius: '0 8px 8px 0',
+                    lineHeight: '1.8',
+                    fontSize: '1.1rem',
+                    color: '#495057',
+                    fontStyle: 'italic'
+                  }}
+                >
+                  {selectedRibbon.message}
+                </div>
+              </div>
+              
+              <div className="text-center mt-4">
+                <small className="text-muted">
+                  <i className="fas fa-heart me-1"></i>
+                  따뜻한 마음으로 전해진 위로의 말씀입니다
+                </small>
+              </div>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{ background: '#f8f9fa', border: 'none' }}>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowRibbonDetailModal(false)}
+          >
+            닫기
+          </Button>
+          <Button 
+            variant="primary"
+            style={{
+              background: selectedRibbon ? `linear-gradient(135deg, 
+                ${selectedRibbon.id % 4 === 1 ? '#667eea' : selectedRibbon.id % 4 === 2 ? '#764ba2' : selectedRibbon.id % 4 === 3 ? '#52c234' : '#e74c3c'} 0%, 
+                ${selectedRibbon.id % 4 === 1 ? '#764ba2' : selectedRibbon.id % 4 === 2 ? '#667eea' : selectedRibbon.id % 4 === 3 ? '#b83dba' : '#c0392b'} 100%)` : '#007bff',
+              border: 'none'
+            }}
+            onClick={() => {
+              // 공유 기능 구현 예정
+              alert('공유 기능은 곧 구현될 예정입니다.');
+            }}
+          >
+            <i className="fas fa-share-alt me-2"></i>
+            공유하기
           </Button>
         </Modal.Footer>
       </Modal>

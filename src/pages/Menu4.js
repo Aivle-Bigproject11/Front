@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Modal, Form, Badge, Tab, Tabs, Dropdown } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Badge, Dropdown } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { dummyData } from '../services/api';
 
@@ -68,12 +68,6 @@ const Menu4 = () => {
       imageUrl: memorial.imageUrl || '',
       customerId: memorial.customerId
     });
-    setShowModal(true);
-  };
-
-  const openViewModal = (memorial) => {
-    setModalMode('view');
-    setSelectedMemorial(memorial);
     setShowModal(true);
   };
 
@@ -206,11 +200,6 @@ const Menu4 = () => {
       // TODO: API 호출로 추모관 삭제
       setMemorials(memorials.filter(memorial => memorial.id !== id));
     }
-  };
-
-  const generateAIContent = (type) => {
-    // TODO: AI 서비스 호출
-    alert(`AI ${type} 생성 기능을 호출합니다.`);
   };
 
   if (loading) {
@@ -440,21 +429,7 @@ const Menu4 = () => {
                           {/* 하단 버튼들 */}
                           <div className="mt-auto">
                             <hr className="mb-3" />
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div className="d-flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline-primary"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openViewModal(memorial);
-                                  }}
-                                >
-                                  <i className="fas fa-eye me-1"></i>
-                                  보기
-                                </Button>
-                              </div>
-                              
+                            <div className="d-flex justify-content-end align-items-center">
                               {/* 더보기 메뉴 */}
                               <Dropdown align="end" onClick={(e) => e.stopPropagation()}>
                                 <Dropdown.Toggle
@@ -514,180 +489,110 @@ const Menu4 = () => {
         </Col>
       </Row>
 
-      {/* AI 서비스 섹션 */}
-      <Row className="mt-4">
-        <Col md={6}>
-          <Card>
-            <Card.Header>
-              <h5>AI 추모영상 생성</h5>
-            </Card.Header>
-            <Card.Body>
-              <p>AI 기술을 활용하여 감동적인 추모영상을 자동으로 생성합니다.</p>
-              <Button 
-                variant="success"
-                onClick={() => generateAIContent('추모영상')}
-              >
-                <i className="fas fa-video"></i> AI 추모영상 생성
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={6}>
-          <Card>
-            <Card.Header>
-              <h5>AI 추모사 생성</h5>
-            </Card.Header>
-            <Card.Body>
-              <p>AI가 고인의 삶과 추억을 바탕으로 따뜻한 추모사를 작성합니다.</p>
-              <Button 
-                variant="info"
-                onClick={() => generateAIContent('추모사')}
-              >
-                <i className="fas fa-pen"></i> AI 추모사 생성
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
       {/* 추모관 생성/수정/보기 모달 */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
             {modalMode === 'create' && '새 추모관 만들기'}
             {modalMode === 'edit' && '추모관 정보 수정'}
-            {modalMode === 'view' && '추모관 상세 정보'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {modalMode === 'view' ? (
-            <Tabs defaultActiveKey="info" className="mb-3">
-              <Tab eventKey="info" title="기본 정보">
-                <div className="row">
-                  <div className="col-md-6">
-                    <p><strong>이름:</strong> {selectedMemorial?.name}</p>
-                    <p><strong>나이:</strong> {selectedMemorial?.age}세</p>
-                    <p><strong>성별:</strong> {selectedMemorial?.gender === 'MALE' ? '남성' : '여성'}</p>
-                  </div>
-                  <div className="col-md-6">
-                    <p><strong>생년월일:</strong> {selectedMemorial?.birthOfDate}</p>
-                    <p><strong>별세일:</strong> {selectedMemorial?.deceasedDate}</p>
-                    <p><strong>고객ID:</strong> {selectedMemorial?.customerId}</p>
-                  </div>
-                </div>
-              </Tab>
-              <Tab eventKey="memorial" title="추모 콘텐츠">
-                <div className="text-center p-4">
-                  <i className="fas fa-image fa-3x text-muted mb-3"></i>
-                  <p>추모 콘텐츠가 준비 중입니다.</p>
-                </div>
-              </Tab>
-              <Tab eventKey="guestbook" title="방명록">
-                <div className="text-center p-4">
-                  <i className="fas fa-book fa-3x text-muted mb-3"></i>
-                  <p>방명록 기능이 준비 중입니다.</p>
-                </div>
-              </Tab>
-            </Tabs>
-          ) : (
-            <Form onSubmit={handleSubmit}>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>이름 *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </Form.Group>
+          <Form onSubmit={handleSubmit}>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>이름 *</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label>나이 *</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="age"
-                      value={formData.age}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>나이 *</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="age"
+                    value={formData.age}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label>성별 *</Form.Label>
-                    <Form.Select
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="">선택하세요</option>
-                      <option value="MALE">남성</option>
-                      <option value="FEMALE">여성</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
+                <Form.Group className="mb-3">
+                  <Form.Label>성별 *</Form.Label>
+                  <Form.Select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="MALE">남성</option>
+                    <option value="FEMALE">여성</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
 
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>생년월일 *</Form.Label>
-                    <Form.Control
-                      type="date"
-                      name="birthOfDate"
-                      value={formData.birthOfDate}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </Form.Group>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>생년월일 *</Form.Label>
+                  <Form.Control
+                    type="date"
+                    name="birthOfDate"
+                    value={formData.birthOfDate}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label>별세일 *</Form.Label>
-                    <Form.Control
-                      type="date"
-                      name="deceasedDate"
-                      value={formData.deceasedDate}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>별세일 *</Form.Label>
+                  <Form.Control
+                    type="date"
+                    name="deceasedDate"
+                    value={formData.deceasedDate}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label>고객ID *</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="customerId"
-                      value={formData.customerId}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
+                <Form.Group className="mb-3">
+                  <Form.Label>고객ID *</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="customerId"
+                    value={formData.customerId}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
 
-              <Form.Group className="mb-3">
-                <Form.Label>사진 URL (선택사항)</Form.Label>
-                <Form.Control
-                  type="url"
-                  name="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={handleInputChange}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </Form.Group>
-            </Form>
-          )}
+            <Form.Group className="mb-3">
+              <Form.Label>사진 URL (선택사항)</Form.Label>
+              <Form.Control
+                type="url"
+                name="imageUrl"
+                value={formData.imageUrl}
+                onChange={handleInputChange}
+                placeholder="https://example.com/image.jpg"
+              />
+            </Form.Group>
+          </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            {modalMode === 'view' ? '닫기' : '취소'}
+            취소
           </Button>
-          {modalMode !== 'view' && (
-            <Button variant="primary" onClick={handleSubmit}>
-              {modalMode === 'create' ? '추모관 만들기' : '수정 완료'}
-            </Button>
-          )}
+          <Button variant="primary" onClick={handleSubmit}>
+            {modalMode === 'create' ? '추모관 만들기' : '수정 완료'}
+          </Button>
         </Modal.Footer>
       </Modal>
 
