@@ -11,6 +11,7 @@ import Menu1 from './pages/Menu1';
 import Menu2 from './pages/Menu2';
 import Menu3 from './pages/Menu3';
 import Menu4 from './pages/Menu4';
+import MemorialDetail from './pages/MemorialDetail';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function App() {
@@ -54,6 +55,7 @@ const MainLayout = () => {
         <Route path="/menu2" element={<Menu2 />} />
         <Route path="/menu3" element={<Menu3 />} />
         <Route path="/menu4" element={<Menu4 />} />
+        <Route path="/memorial/:id" element={<MemorialDetail />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

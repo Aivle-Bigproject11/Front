@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge, Tab, Tabs, Dropdown } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { dummyData } from '../services/api';
 
 const Menu4 = () => {
+  const navigate = useNavigate();
   const [memorials, setMemorials] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showFamilyModal, setShowFamilyModal] = useState(false);
@@ -167,6 +169,11 @@ const Menu4 = () => {
 
   const removeFamilyMember = (id) => {
     setFamilyMembers(familyMembers.filter(member => member.id !== id));
+  };
+
+  // 추모관 카드 클릭 시 상세 페이지로 이동
+  const handleCardClick = (memorialId) => {
+    navigate(`/memorial/${memorialId}`);
   };
 
   const handleSubmit = async (e) => {
@@ -343,7 +350,15 @@ const Menu4 = () => {
                 <Row>
                   {memorials.map(memorial => (
                     <Col key={memorial.id} lg={4} md={6} sm={12} className="mb-4">
-                      <Card className="h-100 memorial-card" style={{ transition: 'all 0.3s ease', border: '1px solid #e0e0e0' }}>
+                      <Card 
+                        className="h-100 memorial-card" 
+                        style={{ 
+                          transition: 'all 0.3s ease', 
+                          border: '1px solid #e0e0e0',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => handleCardClick(memorial.id)}
+                      >
                         {/* 추모관 헤더 이미지 */}
                         <div 
                           className="memorial-header"
@@ -430,7 +445,10 @@ const Menu4 = () => {
                                 <Button
                                   size="sm"
                                   variant="outline-primary"
-                                  onClick={() => openViewModal(memorial)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openViewModal(memorial);
+                                  }}
                                 >
                                   <i className="fas fa-eye me-1"></i>
                                   보기
@@ -438,7 +456,7 @@ const Menu4 = () => {
                               </div>
                               
                               {/* 더보기 메뉴 */}
-                              <Dropdown align="end">
+                              <Dropdown align="end" onClick={(e) => e.stopPropagation()}>
                                 <Dropdown.Toggle
                                   size="sm"
                                   variant="outline-secondary"
@@ -456,17 +474,26 @@ const Menu4 = () => {
                                 </Dropdown.Toggle>
 
                                 <Dropdown.Menu>
-                                  <Dropdown.Item onClick={() => openEditModal(memorial)}>
+                                  <Dropdown.Item onClick={(e) => {
+                                    e.stopPropagation();
+                                    openEditModal(memorial);
+                                  }}>
                                     <i className="fas fa-edit me-2"></i>
                                     수정
                                   </Dropdown.Item>
-                                  <Dropdown.Item onClick={() => openFamilyModal(memorial)}>
+                                  <Dropdown.Item onClick={(e) => {
+                                    e.stopPropagation();
+                                    openFamilyModal(memorial);
+                                  }}>
                                     <i className="fas fa-users me-2"></i>
                                     유가족 관리
                                   </Dropdown.Item>
                                   <Dropdown.Divider />
                                   <Dropdown.Item 
-                                    onClick={() => deleteMemorial(memorial.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteMemorial(memorial.id);
+                                    }}
                                     className="text-danger"
                                   >
                                     <i className="fas fa-trash me-2"></i>
