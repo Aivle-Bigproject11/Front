@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Modal, Form, Table, Badge, Tab, Tabs } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Badge, Tab, Tabs } from 'react-bootstrap';
 import { dummyData } from '../services/api';
 
 const Menu4 = () => {
@@ -122,92 +122,243 @@ const Menu4 = () => {
     <Container className="mt-4">
       <Row>
         <Col>
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <h1>디지털 추모관</h1>
-              <p className="lead">소중한 분들을 영원히 기억할 수 있는 디지털 공간입니다.</p>
+          <div className="memorial-header-section p-4 mb-4" style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '15px',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+              opacity: 0.1
+            }}></div>
+            <div className="d-flex justify-content-between align-items-center position-relative">
+              <div>
+                <h1 className="mb-2" style={{ fontWeight: '700', fontSize: '2.5rem' }}>
+                  <i className="fas fa-heart me-3"></i>
+                  디지털 추모관
+                </h1>
+                <p className="lead mb-0" style={{ fontSize: '1.1rem', opacity: 0.9 }}>
+                  소중한 분들을 영원히 기억할 수 있는 디지털 공간입니다
+                </p>
+              </div>
+              <Button 
+                size="lg"
+                variant="light" 
+                onClick={openCreateModal}
+                style={{
+                  borderRadius: '12px',
+                  padding: '12px 24px',
+                  fontWeight: '600',
+                  boxShadow: '0 4px 15px rgba(255,255,255,0.2)'
+                }}
+              >
+                <i className="fas fa-plus me-2"></i> 새 추모관 만들기
+              </Button>
             </div>
-            <Button variant="primary" onClick={openCreateModal}>
-              <i className="fas fa-plus"></i> 새 추모관 만들기
-            </Button>
           </div>
         </Col>
       </Row>
 
       <Row className="mt-4">
         <Col>
-          <Card>
-            <Card.Header>
-              <h5>추모관 목록</h5>
+          <Card style={{ border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', borderRadius: '15px' }}>
+            <Card.Header style={{
+              background: 'linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%)',
+              border: 'none',
+              borderRadius: '15px 15px 0 0',
+              padding: '1.5rem'
+            }}>
+              <div className="d-flex align-items-center">
+                <div className="memorial-icon-bg me-3" style={{
+                  width: '50px',
+                  height: '50px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fas fa-list text-white" style={{ fontSize: '1.2rem' }}></i>
+                </div>
+                <div>
+                  <h5 className="mb-1" style={{ fontWeight: '600', color: '#333' }}>
+                    추모관 목록
+                  </h5>
+                  <small className="text-muted">
+                    총 {memorials.length}개의 추모관이 등록되어 있습니다
+                  </small>
+                </div>
+              </div>
             </Card.Header>
-            <Card.Body>
+            <Card.Body style={{ padding: '2rem' }}>
               {memorials.length === 0 ? (
-                <div className="text-center p-5">
-                  <i className="fas fa-heart fa-3x text-muted mb-3"></i>
-                  <h5>등록된 추모관이 없습니다</h5>
-                  <p className="text-muted">첫 번째 추모관을 만들어보세요.</p>
+                <div className="text-center p-5" style={{
+                  background: 'linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%)',
+                  borderRadius: '12px',
+                  border: '2px dashed #e0e7ff'
+                }}>
+                  <div className="memorial-empty-icon mb-4" style={{
+                    width: '80px',
+                    height: '80px',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto'
+                  }}>
+                    <i className="fas fa-heart text-white" style={{ fontSize: '2rem' }}></i>
+                  </div>
+                  <h5 style={{ color: '#4c51bf', fontWeight: '600' }}>
+                    등록된 추모관이 없습니다
+                  </h5>
+                  <p className="text-muted mb-4" style={{ fontSize: '1.1rem' }}>
+                    소중한 분을 기리는 첫 번째 추모관을 만들어보세요
+                  </p>
+                  <Button 
+                    variant="primary" 
+                    size="lg"
+                    onClick={openCreateModal}
+                    style={{
+                      borderRadius: '12px',
+                      padding: '12px 32px',
+                      fontWeight: '600',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      border: 'none'
+                    }}
+                  >
+                    <i className="fas fa-plus me-2"></i>
+                    새 추모관 만들기
+                  </Button>
                 </div>
               ) : (
-                <Table responsive hover>
-                  <thead>
-                    <tr>
-                      <th>이름</th>
-                      <th>나이</th>
-                      <th>성별</th>
-                      <th>생년월일</th>
-                      <th>별세일</th>
-                      <th>고객ID</th>
-                      <th>상태</th>
-                      <th>작업</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {memorials.map(memorial => (
-                      <tr key={memorial.id}>
-                        <td>
-                          <strong>{memorial.name}</strong>
-                        </td>
-                        <td>{memorial.age}세</td>
-                        <td>
-                          <Badge bg={memorial.gender === 'MALE' ? 'primary' : 'danger'}>
-                            {memorial.gender === 'MALE' ? '남성' : '여성'}
-                          </Badge>
-                        </td>
-                        <td>{memorial.birthOfDate}</td>
-                        <td>{memorial.deceasedDate}</td>
-                        <td>{memorial.customerId}</td>
-                        <td>
-                          <Badge bg="success">활성</Badge>
-                        </td>
-                        <td>
-                          <div className="d-flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline-info"
-                              onClick={() => openViewModal(memorial)}
-                            >
-                              보기
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline-primary"
-                              onClick={() => openEditModal(memorial)}
-                            >
-                              수정
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline-danger"
-                              onClick={() => deleteMemorial(memorial.id)}
-                            >
-                              삭제
-                            </Button>
+                <Row>
+                  {memorials.map(memorial => (
+                    <Col key={memorial.id} lg={4} md={6} sm={12} className="mb-4">
+                      <Card className="h-100 memorial-card" style={{ transition: 'all 0.3s ease', border: '1px solid #e0e0e0' }}>
+                        {/* 추모관 헤더 이미지 */}
+                        <div 
+                          className="memorial-header"
+                          style={{
+                            height: '200px',
+                            background: memorial.imageUrl 
+                              ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url(${memorial.imageUrl})`
+                              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            color: 'white',
+                            position: 'relative'
+                          }}
+                        >
+                          {!memorial.imageUrl && (
+                            <i className="fas fa-user-circle fa-4x mb-2" style={{ opacity: 0.8 }}></i>
+                          )}
+                          <h4 className="mb-0" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>
+                            {memorial.name}
+                          </h4>
+                          <p className="mb-0" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>
+                            {memorial.age}세
+                          </p>
+                          
+                          {/* 상태 배지 */}
+                          <div className="position-absolute top-0 end-0 m-2">
+                            <Badge bg="success" className="px-2 py-1">
+                              <i className="fas fa-circle me-1" style={{ fontSize: '0.6rem' }}></i>
+                              활성
+                            </Badge>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
+                        </div>
+
+                        <Card.Body className="d-flex flex-column">
+                          {/* 기본 정보 */}
+                          <div className="memorial-info mb-3">
+                            <Row className="mb-2">
+                              <Col xs={6}>
+                                <small className="text-muted">
+                                  <i className="fas fa-venus-mars me-1"></i>성별
+                                </small>
+                                <div>
+                                  <Badge bg={memorial.gender === 'MALE' ? 'primary' : 'danger'} className="px-2">
+                                    {memorial.gender === 'MALE' ? '남성' : '여성'}
+                                  </Badge>
+                                </div>
+                              </Col>
+                              <Col xs={6}>
+                                <small className="text-muted">
+                                  <i className="fas fa-id-card me-1"></i>고객ID
+                                </small>
+                                <div className="fw-bold">{memorial.customerId}</div>
+                              </Col>
+                            </Row>
+                            
+                            <Row className="mb-2">
+                              <Col xs={12}>
+                                <small className="text-muted">
+                                  <i className="fas fa-birthday-cake me-1"></i>생년월일
+                                </small>
+                                <div>{memorial.birthOfDate}</div>
+                              </Col>
+                            </Row>
+                            
+                            <Row>
+                              <Col xs={12}>
+                                <small className="text-muted">
+                                  <i className="fas fa-cross me-1"></i>별세일
+                                </small>
+                                <div>{memorial.deceasedDate}</div>
+                              </Col>
+                            </Row>
+                          </div>
+
+                          {/* 하단 버튼들 */}
+                          <div className="mt-auto">
+                            <hr className="mb-3" />
+                            <div className="d-flex justify-content-between gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline-info"
+                                className="flex-fill"
+                                onClick={() => openViewModal(memorial)}
+                              >
+                                <i className="fas fa-eye me-1"></i>
+                                보기
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline-primary"
+                                className="flex-fill"
+                                onClick={() => openEditModal(memorial)}
+                              >
+                                <i className="fas fa-edit me-1"></i>
+                                수정
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline-danger"
+                                className="flex-fill"
+                                onClick={() => deleteMemorial(memorial.id)}
+                              >
+                                <i className="fas fa-trash me-1"></i>
+                                삭제
+                              </Button>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
               )}
             </Card.Body>
           </Card>

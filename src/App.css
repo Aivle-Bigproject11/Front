@@ -136,3 +136,80 @@ body {
   height: 1rem;
   border-radius: 0.5rem;
 }
+
+/* 추모관 카드 스타일 */
+.memorial-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.memorial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.memorial-header {
+  position: relative;
+  border-radius: 12px 12px 0 0;
+}
+
+.memorial-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  z-index: 1;
+}
+
+.memorial-info {
+  font-size: 0.9rem;
+}
+
+.memorial-info .row {
+  align-items: center;
+}
+
+.memorial-info small {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 추모관 카드 버튼 스타일 */
+.memorial-card .btn-outline-info:hover {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: white;
+}
+
+.memorial-card .btn-outline-primary:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.memorial-card .btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .memorial-card {
+    margin-bottom: 1rem;
+  }
+  
+  .memorial-header {
+    height: 180px !important;
+  }
+  
+  .memorial-info {
+    font-size: 0.8rem;
+  }
+}

@@ -68,7 +68,7 @@ export const dummyData = {
           birthOfDate: "1998-03-15",
           deceasedDate: "2023-12-01",
           gender: "FEMALE",
-          imageUrl: "/images/memorial1.jpg",
+          imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=300&fit=crop&crop=face",
           customerId: 1001,
           _links: {
             memorial: { href: "http://localhost:8080/memorials/1" },
@@ -77,16 +77,100 @@ export const dummyData = {
         },
         {
           id: 2,
-          name: "준호",
+          name: "현종",
           age: 32,
           birthOfDate: "1991-08-22",
           deceasedDate: "2024-01-15",
           gender: "MALE",
-          imageUrl: "/images/memorial2.jpg",
+          imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&crop=face",
           customerId: 1002,
           _links: {
             memorial: { href: "http://localhost:8080/memorials/2" },
             self: { href: "http://localhost:8080/memorials/2" }
+          }
+        },
+        {
+          id: 3,
+          name: "도형",
+          age: 28,
+          birthOfDate: "1995-11-08",
+          deceasedDate: "2024-02-20",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=300&fit=crop&crop=face",
+          customerId: 1003,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/3" },
+            self: { href: "http://localhost:8080/memorials/3" }
+          }
+        },
+        {
+          id: 4,
+          name: "시훈",
+          age: 30,
+          birthOfDate: "1993-07-12",
+          deceasedDate: "2024-03-10",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=300&fit=crop&crop=face",
+          customerId: 1004,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/4" },
+            self: { href: "http://localhost:8080/memorials/4" }
+          }
+        },
+        {
+          id: 5,
+          name: "수연",
+          age: 27,
+          birthOfDate: "1996-04-18",
+          deceasedDate: "2024-01-25",
+          gender: "FEMALE",
+          imageUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b17c?w=400&h=300&fit=crop&crop=face",
+          customerId: 1005,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/5" },
+            self: { href: "http://localhost:8080/memorials/5" }
+          }
+        },
+        {
+          id: 6,
+          name: "성현",
+          age: 31,
+          birthOfDate: "1992-09-03",
+          deceasedDate: "2024-02-14",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=300&fit=crop&crop=face",
+          customerId: 1006,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/6" },
+            self: { href: "http://localhost:8080/memorials/6" }
+          }
+        },
+        {
+          id: 7,
+          name: "근우",
+          age: 29,
+          birthOfDate: "1994-12-25",
+          deceasedDate: "2024-03-05",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=300&fit=crop&crop=face",
+          customerId: 1007,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/7" },
+            self: { href: "http://localhost:8080/memorials/7" }
+          }
+        },
+        {
+          id: 8,
+          name: "헌준",
+          age: 26,
+          birthOfDate: "1997-05-14",
+          deceasedDate: "2024-04-12",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=300&fit=crop&crop=face",
+          customerId: 1008,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/8" },
+            self: { href: "http://localhost:8080/memorials/8" }
           }
         }
       ]
@@ -98,7 +182,7 @@ export const dummyData = {
     page: {
       number: 0,
       size: 20,
-      totalElements: 2,
+      totalElements: 8,
       totalPages: 1
     }
   },
