@@ -1,0 +1,176 @@
+# Java 컴파일 파일
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven 빌드 디렉토리
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Gradle 빌드 디렉토리
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# Visual Studio Code
+.vscode/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Spring Boot
+spring-boot-*.log
+spring.log
+
+# 로그 파일
+*.log
+*.log.*
+logs/
+
+# 임시 파일
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# 운영체제 파일
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+
+# 환경 변수 파일
+.env
+.env.local
+.env.development
+.env.production
+
+# 데이터베이스 파일
+*.db
+*.sqlite
+*.sqlite3
+
+# H2 데이터베이스
+*.h2.db
+*.trace.db
+*.lock.db
+
+# Node.js (프론트엔드 도구용)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 패키지 파일
+*.tgz
+*.tar.xz
+
+# 백업 파일
+*.bak
+*.backup
+
+# 캐시 디렉토리
+.cache/
+
+# 애플리케이션 특정 파일
+application-local.properties
+application-dev.properties
+application-prod.properties
+
+# 업로드 파일 디렉토리 (필요시 추가)
+uploads/
+files/
+
+# 테스트 커버리지 리포트
+coverage/
+*.exec
+
+# JRebel
+rebel.xml
+
+# Maven Wrapper (선택사항 - 보통 포함시킴)
+# .mvn/
+# mvnw
+# mvnw.cmd
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# React 관련 파일들
+frontend-react/node_modules/
+frontend-react/build/
+frontend-react/.env.local
+frontend-react/.env.development.local
+frontend-react/.env.test.local
+frontend-react/.env.production.local
+
+# npm 로그
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
