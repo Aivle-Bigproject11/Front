@@ -1,0 +1,138 @@
+/* Custom CSS for Memorial Service Application */
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.App {
+  min-height: 100vh;
+}
+
+/* 카드 스타일 */
+.card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* 버튼 스타일 */
+.btn {
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* 점보트론 스타일 */
+.jumbotron {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+/* 테이블 스타일 */
+.table {
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+}
+
+/* 내비게이션 스타일 */
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+/* 로딩 스피너 스타일 */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* 폼 스타일 */
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* 모달 스타일 */
+.modal-content {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+/* 배지 스타일 */
+.badge {
+  font-size: 0.75em;
+}
+
+/* 차트 컨테이너 */
+.chart-container {
+  position: relative;
+  height: 400px;
+}
+
+/* 반응형 유틸리티 */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .jumbotron {
+    padding: 2rem 1rem !important;
+  }
+  
+  .display-4 {
+    font-size: 2rem;
+  }
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* 아이콘 스타일 */
+.fas, .far {
+  margin-right: 0.5rem;
+}
+
+/* 알림 스타일 */
+.alert {
+  border-radius: 8px;
+  border: none;
+}
+
+/* 진행률 바 스타일 */
+.progress {
+  height: 1rem;
+  border-radius: 0.5rem;
+}
