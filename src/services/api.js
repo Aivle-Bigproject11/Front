@@ -204,7 +204,111 @@ export const dummyData = {
     monthlyMemorials: [65, 78, 90, 81, 56, 75],
     memorialsByGender: { male: 80, female: 70 },
     dailyVisits: [120, 190, 300, 500, 200, 300, 150]
-  }
+  },
+
+  // 전체 회원 목록 (유가족 검색용)
+  members: [
+    {
+      id: 1001,
+      name: "김철수",
+      phone: "010-1234-5678",
+      email: "kim.chulsoo@example.com",
+      address: "서울시 강남구 역삼동",
+      birthDate: "1985-03-15",
+      gender: "MALE",
+      joinDate: "2023-01-10"
+    },
+    {
+      id: 1002,
+      name: "이영희",
+      phone: "010-9876-5432",
+      email: "lee.younghee@example.com",
+      address: "서울시 서초구 서초동",
+      birthDate: "1990-07-22",
+      gender: "FEMALE",
+      joinDate: "2023-02-15"
+    },
+    {
+      id: 1003,
+      name: "박민수",
+      phone: "010-5555-1234",
+      email: "park.minsu@example.com",
+      address: "서울시 송파구 잠실동",
+      birthDate: "1988-12-08",
+      gender: "MALE",
+      joinDate: "2023-03-20"
+    },
+    {
+      id: 1004,
+      name: "최수정",
+      phone: "010-7777-8888",
+      email: "choi.sujung@example.com",
+      address: "서울시 마포구 홍대입구",
+      birthDate: "1992-05-30",
+      gender: "FEMALE",
+      joinDate: "2023-04-05"
+    },
+    {
+      id: 1005,
+      name: "정현우",
+      phone: "010-3333-9999",
+      email: "jung.hyunwoo@example.com",
+      address: "경기도 성남시 분당구",
+      birthDate: "1987-09-14",
+      gender: "MALE",
+      joinDate: "2023-05-12"
+    },
+    {
+      id: 1006,
+      name: "윤미라",
+      phone: "010-1111-2222",
+      email: "yoon.mira@example.com",
+      address: "인천시 연수구 송도동",
+      birthDate: "1993-11-25",
+      gender: "FEMALE",
+      joinDate: "2023-06-18"
+    },
+    {
+      id: 1007,
+      name: "강동혁",
+      phone: "010-4444-5555",
+      email: "kang.donghyuk@example.com",
+      address: "부산시 해운대구 우동",
+      birthDate: "1989-04-17",
+      gender: "MALE",
+      joinDate: "2023-07-22"
+    },
+    {
+      id: 1008,
+      name: "송지은",
+      phone: "010-6666-7777",
+      email: "song.jieun@example.com",
+      address: "대구시 수성구 범어동",
+      birthDate: "1991-08-03",
+      gender: "FEMALE",
+      joinDate: "2023-08-15"
+    },
+    {
+      id: 1009,
+      name: "임태호",
+      phone: "010-8888-9999",
+      email: "lim.taeho@example.com",
+      address: "대전시 유성구 도룡동",
+      birthDate: "1986-02-28",
+      gender: "MALE",
+      joinDate: "2023-09-10"
+    },
+    {
+      id: 1010,
+      name: "한소영",
+      phone: "010-2222-3333",
+      email: "han.soyoung@example.com",
+      address: "광주시 북구 일곡동",
+      birthDate: "1994-06-12",
+      gender: "FEMALE",
+      joinDate: "2023-10-05"
+    }
+  ]
 };
 
 export default api;

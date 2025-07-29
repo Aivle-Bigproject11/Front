@@ -10,12 +10,11 @@ const Menu4 = () => {
   const [selectedMemorial, setSelectedMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [familyMembers, setFamilyMembers] = useState([]);
-  const [newFamilyMember, setNewFamilyMember] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    relationship: ''
-  });
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [relationship, setRelationship] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -82,42 +81,87 @@ const Menu4 = () => {
     setFamilyMembers([
       {
         id: 1,
+        memberId: 1001,
         name: '김철수',
         phone: '010-1234-5678',
-        email: 'kim@example.com',
+        email: 'kim.chulsoo@example.com',
         relationship: '아들'
       },
       {
         id: 2,
-        name: '김영희',
+        memberId: 1002,
+        name: '이영희',
         phone: '010-9876-5432',
-        email: 'younghee@example.com',
+        email: 'lee.younghee@example.com',
         relationship: '딸'
       }
     ]);
+    setSearchKeyword('');
+    setSearchResults([]);
+    setSelectedMember(null);
+    setRelationship('');
     setShowFamilyModal(true);
   };
 
-  const handleFamilyInputChange = (e) => {
-    setNewFamilyMember({
-      ...newFamilyMember,
-      [e.target.name]: e.target.value
-    });
+  // 회원 검색 함수
+  const searchMembers = async (keyword) => {
+    if (!keyword.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    
+    // TODO: 실제 API 호출로 교체
+    setTimeout(() => {
+      const results = dummyData.members.filter(member =>
+        member.name.toLowerCase().includes(keyword.toLowerCase()) ||
+        member.phone.includes(keyword) ||
+        member.email.toLowerCase().includes(keyword.toLowerCase())
+      );
+      setSearchResults(results);
+      setIsSearching(false);
+    }, 500);
   };
 
+  // 검색어 변경 핸들러
+  const handleSearchChange = (e) => {
+    const keyword = e.target.value;
+    setSearchKeyword(keyword);
+    searchMembers(keyword);
+  };
+
+  // 회원 선택 핸들러
+  const selectMember = (member) => {
+    setSelectedMember(member);
+    setSearchKeyword(member.name);
+    setSearchResults([]);
+  };
+
+  // 유가족 등록 함수
   const addFamilyMember = () => {
-    if (newFamilyMember.name && newFamilyMember.phone) {
-      const newMember = {
+    if (selectedMember && relationship) {
+      // 이미 등록된 회원인지 확인
+      const isAlreadyRegistered = familyMembers.some(fm => fm.memberId === selectedMember.id);
+      
+      if (isAlreadyRegistered) {
+        alert('이미 등록된 회원입니다.');
+        return;
+      }
+
+      const newFamilyMember = {
         id: familyMembers.length + 1,
-        ...newFamilyMember
+        memberId: selectedMember.id,
+        name: selectedMember.name,
+        phone: selectedMember.phone,
+        email: selectedMember.email,
+        relationship: relationship
       };
-      setFamilyMembers([...familyMembers, newMember]);
-      setNewFamilyMember({
-        name: '',
-        phone: '',
-        email: '',
-        relationship: ''
-      });
+      
+      setFamilyMembers([...familyMembers, newFamilyMember]);
+      setSelectedMember(null);
+      setSearchKeyword('');
+      setRelationship('');
     }
   };
 
@@ -638,46 +682,72 @@ const Menu4 = () => {
             <div className="col-12">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h6 className="mb-0">
-                  <i className="fas fa-user-plus me-2"></i>
-                  새 유가족 추가
+                  <i className="fas fa-search me-2"></i>
+                  회원 검색 및 유가족 등록
                 </h6>
               </div>
               
-              <div className="row g-3">
-                <div className="col-md-3">
-                  <Form.Control
-                    type="text"
-                    name="name"
-                    placeholder="이름"
-                    value={newFamilyMember.name}
-                    onChange={handleFamilyInputChange}
-                  />
+              {/* 회원 검색 */}
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <div className="position-relative">
+                    <Form.Control
+                      type="text"
+                      placeholder="이름, 전화번호, 이메일로 검색..."
+                      value={searchKeyword}
+                      onChange={handleSearchChange}
+                      className="pe-5"
+                    />
+                    <div className="position-absolute top-50 end-0 translate-middle-y pe-3">
+                      {isSearching ? (
+                        <div className="spinner-border spinner-border-sm" role="status">
+                          <span className="visually-hidden">검색 중...</span>
+                        </div>
+                      ) : (
+                        <i className="fas fa-search text-muted"></i>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* 검색 결과 드롭다운 */}
+                  {searchResults.length > 0 && (
+                    <div className="position-absolute w-100" style={{ zIndex: 1050 }}>
+                      <div className="card mt-1 shadow-sm">
+                        <div className="card-body p-0">
+                          <div className="list-group list-group-flush">
+                            {searchResults.slice(0, 5).map(member => (
+                              <button
+                                key={member.id}
+                                type="button"
+                                className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                onClick={() => selectMember(member)}
+                              >
+                                <div>
+                                  <div className="fw-bold">{member.name}</div>
+                                  <small className="text-muted">{member.phone} | {member.email}</small>
+                                </div>
+                                <Badge bg="secondary">{member.gender === 'MALE' ? '남' : '여'}</Badge>
+                              </button>
+                            ))}
+                            {searchResults.length > 5 && (
+                              <div className="list-group-item text-center text-muted">
+                                <small>더 많은 결과가 있습니다. 검색어를 더 구체적으로 입력해주세요.</small>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
+                
                 <div className="col-md-3">
-                  <Form.Control
-                    type="tel"
-                    name="phone"
-                    placeholder="전화번호"
-                    value={newFamilyMember.phone}
-                    onChange={handleFamilyInputChange}
-                  />
-                </div>
-                <div className="col-md-3">
-                  <Form.Control
-                    type="email"
-                    name="email"
-                    placeholder="이메일"
-                    value={newFamilyMember.email}
-                    onChange={handleFamilyInputChange}
-                  />
-                </div>
-                <div className="col-md-2">
                   <Form.Select
-                    name="relationship"
-                    value={newFamilyMember.relationship}
-                    onChange={handleFamilyInputChange}
+                    value={relationship}
+                    onChange={(e) => setRelationship(e.target.value)}
+                    disabled={!selectedMember}
                   >
-                    <option value="">관계</option>
+                    <option value="">관계 선택</option>
                     <option value="배우자">배우자</option>
                     <option value="아들">아들</option>
                     <option value="딸">딸</option>
@@ -686,17 +756,50 @@ const Menu4 = () => {
                     <option value="기타">기타</option>
                   </Form.Select>
                 </div>
-                <div className="col-md-1">
+                
+                <div className="col-md-3">
                   <Button 
                     variant="primary" 
-                    size="sm"
                     onClick={addFamilyMember}
-                    disabled={!newFamilyMember.name || !newFamilyMember.phone}
+                    disabled={!selectedMember || !relationship}
+                    className="w-100"
                   >
-                    <i className="fas fa-plus"></i>
+                    <i className="fas fa-user-plus me-2"></i>
+                    유가족 등록
                   </Button>
                 </div>
               </div>
+
+              {/* 선택된 회원 정보 표시 */}
+              {selectedMember && (
+                <div className="alert alert-info d-flex align-items-center">
+                  <div className="me-3" style={{
+                    width: '40px',
+                    height: '40px',
+                    background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fas fa-user text-white"></i>
+                  </div>
+                  <div className="flex-grow-1">
+                    <div className="fw-bold">{selectedMember.name}</div>
+                    <small>{selectedMember.phone} | {selectedMember.email}</small>
+                  </div>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedMember(null);
+                      setSearchKeyword('');
+                    }}
+                  >
+                    <i className="fas fa-times"></i>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
