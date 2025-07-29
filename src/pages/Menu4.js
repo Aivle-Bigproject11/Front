@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Modal, Form, Badge, Tab, Tabs } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Badge, Tab, Tabs, Dropdown } from 'react-bootstrap';
 import { dummyData } from '../services/api';
 
 const Menu4 = () => {
   const [memorials, setMemorials] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showFamilyModal, setShowFamilyModal] = useState(false);
   const [modalMode, setModalMode] = useState('create'); // create, edit, view
   const [selectedMemorial, setSelectedMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [familyMembers, setFamilyMembers] = useState([]);
+  const [newFamilyMember, setNewFamilyMember] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    relationship: ''
+  });
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -66,6 +74,55 @@ const Menu4 = () => {
     setModalMode('view');
     setSelectedMemorial(memorial);
     setShowModal(true);
+  };
+
+  const openFamilyModal = (memorial) => {
+    setSelectedMemorial(memorial);
+    // TODO: 실제 API에서 해당 추모관의 유가족 목록 조회
+    setFamilyMembers([
+      {
+        id: 1,
+        name: '김철수',
+        phone: '010-1234-5678',
+        email: 'kim@example.com',
+        relationship: '아들'
+      },
+      {
+        id: 2,
+        name: '김영희',
+        phone: '010-9876-5432',
+        email: 'younghee@example.com',
+        relationship: '딸'
+      }
+    ]);
+    setShowFamilyModal(true);
+  };
+
+  const handleFamilyInputChange = (e) => {
+    setNewFamilyMember({
+      ...newFamilyMember,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const addFamilyMember = () => {
+    if (newFamilyMember.name && newFamilyMember.phone) {
+      const newMember = {
+        id: familyMembers.length + 1,
+        ...newFamilyMember
+      };
+      setFamilyMembers([...familyMembers, newMember]);
+      setNewFamilyMember({
+        name: '',
+        phone: '',
+        email: '',
+        relationship: ''
+      });
+    }
+  };
+
+  const removeFamilyMember = (id) => {
+    setFamilyMembers(familyMembers.filter(member => member.id !== id));
   };
 
   const handleSubmit = async (e) => {
@@ -324,34 +381,55 @@ const Menu4 = () => {
                           {/* 하단 버튼들 */}
                           <div className="mt-auto">
                             <hr className="mb-3" />
-                            <div className="d-flex justify-content-between gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline-info"
-                                className="flex-fill"
-                                onClick={() => openViewModal(memorial)}
-                              >
-                                <i className="fas fa-eye me-1"></i>
-                                보기
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline-primary"
-                                className="flex-fill"
-                                onClick={() => openEditModal(memorial)}
-                              >
-                                <i className="fas fa-edit me-1"></i>
-                                수정
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline-danger"
-                                className="flex-fill"
-                                onClick={() => deleteMemorial(memorial.id)}
-                              >
-                                <i className="fas fa-trash me-1"></i>
-                                삭제
-                              </Button>
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div className="d-flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline-primary"
+                                  onClick={() => openViewModal(memorial)}
+                                >
+                                  <i className="fas fa-eye me-1"></i>
+                                  보기
+                                </Button>
+                              </div>
+                              
+                              {/* 더보기 메뉴 */}
+                              <Dropdown align="end">
+                                <Dropdown.Toggle
+                                  size="sm"
+                                  variant="outline-secondary"
+                                  style={{
+                                    width: '40px',
+                                    height: '32px',
+                                    padding: '0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '1px solid #dee2e6'
+                                  }}
+                                >
+                                  <i className="fas fa-ellipsis-v"></i>
+                                </Dropdown.Toggle>
+
+                                <Dropdown.Menu>
+                                  <Dropdown.Item onClick={() => openEditModal(memorial)}>
+                                    <i className="fas fa-edit me-2"></i>
+                                    수정
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => openFamilyModal(memorial)}>
+                                    <i className="fas fa-users me-2"></i>
+                                    유가족 관리
+                                  </Dropdown.Item>
+                                  <Dropdown.Divider />
+                                  <Dropdown.Item 
+                                    onClick={() => deleteMemorial(memorial.id)}
+                                    className="text-danger"
+                                  >
+                                    <i className="fas fa-trash me-2"></i>
+                                    삭제
+                                  </Dropdown.Item>
+                                </Dropdown.Menu>
+                              </Dropdown>
                             </div>
                           </div>
                         </Card.Body>
@@ -539,6 +617,171 @@ const Menu4 = () => {
               {modalMode === 'create' ? '추모관 만들기' : '수정 완료'}
             </Button>
           )}
+        </Modal.Footer>
+      </Modal>
+
+      {/* 유가족 관리 모달 */}
+      <Modal 
+        show={showFamilyModal} 
+        onHide={() => setShowFamilyModal(false)} 
+        size="lg"
+        className="family-management-modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="fas fa-users me-2"></i>
+            유가족 관리 - {selectedMemorial?.name}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="row mb-4">
+            <div className="col-12">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6 className="mb-0">
+                  <i className="fas fa-user-plus me-2"></i>
+                  새 유가족 추가
+                </h6>
+              </div>
+              
+              <div className="row g-3">
+                <div className="col-md-3">
+                  <Form.Control
+                    type="text"
+                    name="name"
+                    placeholder="이름"
+                    value={newFamilyMember.name}
+                    onChange={handleFamilyInputChange}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <Form.Control
+                    type="tel"
+                    name="phone"
+                    placeholder="전화번호"
+                    value={newFamilyMember.phone}
+                    onChange={handleFamilyInputChange}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <Form.Control
+                    type="email"
+                    name="email"
+                    placeholder="이메일"
+                    value={newFamilyMember.email}
+                    onChange={handleFamilyInputChange}
+                  />
+                </div>
+                <div className="col-md-2">
+                  <Form.Select
+                    name="relationship"
+                    value={newFamilyMember.relationship}
+                    onChange={handleFamilyInputChange}
+                  >
+                    <option value="">관계</option>
+                    <option value="배우자">배우자</option>
+                    <option value="아들">아들</option>
+                    <option value="딸">딸</option>
+                    <option value="부모">부모</option>
+                    <option value="형제자매">형제자매</option>
+                    <option value="기타">기타</option>
+                  </Form.Select>
+                </div>
+                <div className="col-md-1">
+                  <Button 
+                    variant="primary" 
+                    size="sm"
+                    onClick={addFamilyMember}
+                    disabled={!newFamilyMember.name || !newFamilyMember.phone}
+                  >
+                    <i className="fas fa-plus"></i>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div className="row">
+            <div className="col-12">
+              <h6 className="mb-3">
+                <i className="fas fa-list me-2"></i>
+                등록된 유가족 목록 ({familyMembers.length}명)
+              </h6>
+              
+              {familyMembers.length === 0 ? (
+                <div className="text-center p-4" style={{
+                  background: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '2px dashed #dee2e6'
+                }}>
+                  <i className="fas fa-users fa-2x text-muted mb-2"></i>
+                  <p className="text-muted mb-0">등록된 유가족이 없습니다</p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead className="table-light">
+                      <tr>
+                        <th>이름</th>
+                        <th>전화번호</th>
+                        <th>이메일</th>
+                        <th>관계</th>
+                        <th width="100">관리</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {familyMembers.map(member => (
+                        <tr key={member.id}>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <div className="me-2" style={{
+                                width: '32px',
+                                height: '32px',
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}>
+                                <i className="fas fa-user text-white" style={{ fontSize: '0.8rem' }}></i>
+                              </div>
+                              <span className="fw-bold">{member.name}</span>
+                            </div>
+                          </td>
+                          <td>{member.phone}</td>
+                          <td>{member.email || '-'}</td>
+                          <td>
+                            <Badge bg="info" className="px-2">
+                              {member.relationship || '미지정'}
+                            </Badge>
+                          </td>
+                          <td>
+                            <Button
+                              size="sm"
+                              variant="outline-danger"
+                              onClick={() => removeFamilyMember(member.id)}
+                            >
+                              <i className="fas fa-trash"></i>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowFamilyModal(false)}>
+            닫기
+          </Button>
+          <Button variant="primary">
+            <i className="fas fa-save me-2"></i>
+            변경사항 저장
+          </Button>
         </Modal.Footer>
       </Modal>
     </Container>

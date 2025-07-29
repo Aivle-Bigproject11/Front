@@ -199,6 +199,52 @@ body {
   color: white;
 }
 
+/* 추모관 카드 드롭다운 스타일 */
+.memorial-card .dropdown-toggle::after {
+  display: none;
+}
+
+.memorial-card .dropdown-menu {
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  min-width: 150px;
+}
+
+.memorial-card .dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.memorial-card .dropdown-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(5px);
+}
+
+.memorial-card .dropdown-item i {
+  width: 16px;
+}
+
+/* 유가족 관리 모달 스타일 */
+.family-management-modal .modal-dialog {
+  max-width: 900px;
+}
+
+.family-management-modal .table {
+  margin-bottom: 0;
+}
+
+.family-management-modal .table td {
+  vertical-align: middle;
+  padding: 1rem 0.75rem;
+}
+
+.family-management-modal .badge {
+  font-size: 0.8rem;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .memorial-card {
