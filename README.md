@@ -1,5 +1,7 @@
 # Memorial Service - React Frontend
 
+Saja boys
+
 상조서비스를 위한 React 기반 프론트엔드 애플리케이션입니다.
 
 ## 🎯 프로젝트 개요
