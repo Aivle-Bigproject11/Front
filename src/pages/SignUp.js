@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react'; // useEffect 추가 (useLocation 사용 시 필요할 수 있음)
-import { useLocation } from 'react-router-dom'; // useLocation 임포트
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 // 메인 SignUp 컴포넌트
 function SignUp() {
   const location = useLocation();
   // 로그인 페이지에서 전달받은 state.isEmployee 값을 사용하여 초기 isEmployee 상태 설정
   // state가 없거나 isEmployee 값이 명시되지 않은 경우 기본값은 true (직원용)
-  const [isEmployee, setIsEmployee] = useState(location.state?.isEmployee ?? true); 
+  const [isEmployee] = useState(location.state?.isEmployee ?? true); 
 
   const [userId, setUserId] = useState(''); // 아이디 입력
   const [isIdAvailable, setIsIdAvailable] = useState(null); // 아이디 사용 가능 여부 (null: 확인 전, true: 사용 가능, false: 사용 불가)

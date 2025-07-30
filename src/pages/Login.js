@@ -455,24 +455,36 @@ const Login = () => {
                 marginBottom: '20px'
               }}>
                 {activeTab === 'employee' && (
-                  <a href="/SignUp" style={{
-                    color: '#667eea',
-                    textDecoration: 'none',
-                    fontSize: '14px',
-                    fontWeight: '600'
-                  }}>
+                  <button 
+                    onClick={() => navigate('/SignUp', { state: { isEmployee: true } })}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#667eea',
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
                     <i className="fas fa-user-plus me-2"></i>직원 회원가입
-                  </a>
+                  </button>
                 )}
                 {activeTab === 'user' && (
-                  <a href="/SignUp" style={{
-                    color: '#667eea',
-                    textDecoration: 'none',
-                    fontSize: '14px',
-                    fontWeight: '600'
-                  }}>
+                  <button 
+                    onClick={() => navigate('/SignUp', { state: { isEmployee: false } })}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#667eea',
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
                     <i className="fas fa-user-plus me-2"></i>사용자 회원가입
-                  </a>
+                  </button>
                 )}
               </div>
 
