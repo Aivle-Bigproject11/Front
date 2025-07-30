@@ -13,13 +13,8 @@ body {
   border: none;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
   transition: all 0.3s ease;
-}
 
-.card:hover {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
 }
-
 .card-body {
   padding: 1.5rem;
 }
@@ -101,20 +96,24 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
 }
 
 .login-card {
-  max-width: 800px;
+  max-width: 900px;
   width: 100%;
   border: none;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   border-radius: 10px;
+  margin: 0 auto;
 }
 
 .login-tabs {
   background-color: #e9ecef;
-  border-radius: 10px 10px 0 0;
+  border-radius: 0;
   padding: 0;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .login-tab {
@@ -123,8 +122,9 @@ body {
   padding: 15px 30px;
   color: #6c757d;
   font-weight: 500;
-  border-radius: 10px 10px 0 0;
+  border-radius: 0;
   transition: all 0.3s ease;
+  flex: 0 0 auto;
 }
 
 .login-tab.active {
@@ -132,12 +132,9 @@ body {
   color: white;
 }
 
-.login-tab:first-child {
-  border-top-left-radius: 10px;
-}
-
-.login-tab:last-child {
-  border-top-right-radius: 10px;
+.login-form-area {
+  padding: 40px;
+  flex: 1;
 }
 
 .login-content {
@@ -150,15 +147,16 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: white;
+  background-color: #f8f9fa;
   border-radius: 0 0 0 10px;
 }
 
 .login-right {
   flex: 1;
-  padding: 40px;
   background-color: white;
   border-radius: 0 0 10px 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .login-image-placeholder {
