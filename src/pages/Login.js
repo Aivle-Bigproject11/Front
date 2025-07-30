@@ -69,7 +69,17 @@ const Login = () => {
         position: 'relative',
         zIndex: 1,
         width: '100%',
-        maxWidth: '1000px',
+        maxWidth: '940px', // 카드보다 40px 더 크게
+        minHeight: '640px', // 카드보다 40px 더 크게
+        margin: '0 auto',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxSizing: 'border-box',
+        background: '#f8f9fa', // 연한 흰색 배경
+        boxShadow: '0 8px 32px rgba(102,126,234,0.08)',
+        padding: '24px', // 카드와의 여백
+        borderRadius: '28px', // 카드보다 약간 더 둥글게
         transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
         opacity: animateCard ? 1 : 0,
         transition: 'all 0.6s ease-out'
