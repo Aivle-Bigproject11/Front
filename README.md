@@ -7,11 +7,14 @@ Saja boys 사자보이즈 서비스 개발
 
 ## 🎯 프로젝트 개요
 
-- **프론트엔드**: React 19.1.0 SPA 애플리케이션 (포트 3000)
+- **프론트엔드**: React 18.3.1 SPA 애플리케이션 (포트 3000)
 - **백엔드 API**: Spring Boot API 서버 연동 준비 (포트 8080)
-- **4개 메뉴 페이지**: 장례서류작성, 대시보드, 전환서비스추천, 디지털 추모관
+- **주요 페이지**: 장례서류작성, 대시보드, 전환서비스추천, 디지털 추모관
 - **API 통신**: Axios를 통한 RESTful API 호출 (현재 더미 데이터 사용)
 - **UI 프레임워크**: React Bootstrap 5 + Chart.js
+- **라우팅**: React Router DOM 6.28.0 기반 SPA
+- **상태관리**: React Context API + Local Storage
+- **스타일링**: Bootstrap 5.3.7 + Font Awesome + 커스텀 CSS
 
 ## 🚀 실행 방법
 
@@ -87,23 +90,39 @@ c:\Github\Front/                    # React 프론트엔드 프로젝트
 ## 🛠️ 기술 스택
 
 **Frontend (React)**
-- React 19.1.0
-- React Router DOM 7.7.1 (SPA 라우팅)
+- React 18.3.1 (UI 라이브러리)
+- React Router DOM 6.28.0 (SPA 라우팅)
 - React Bootstrap 2.10.10 (UI 컴포넌트)
 - Bootstrap 5.3.7 (CSS 프레임워크)
 - Chart.js 4.5.0 & react-chartjs-2 5.3.0 (데이터 시각화)
 - Axios 1.11.0 (HTTP 클라이언트)
-- Font Awesome 6.0.0 (아이콘)
+- Font Awesome 6.0.0 (아이콘 라이브러리)
+- PapaParse 5.4.1 (CSV 파싱)
 
 **Development Tools**
-- Create React App (개발 환경)
+- Create React App 5.0.1 (개발 환경)
+- React Scripts 5.0.1 (빌드 도구)
 - React Testing Library (테스팅)
 - Jest (단위 테스트)
+- Web Vitals (성능 측정)
+
+**CSS & Styling**
+- CSS3 (커스텀 스타일)
+- Bootstrap Icons
+- 반응형 디자인 (모바일 퍼스트)
+- CSS Grid & Flexbox
+
+**State Management & Routing**
+- React Context API (전역 상태 관리)
+- React Hooks (useState, useEffect, useContext)
+- Protected Routes (인증 기반 라우팅)
+- Local Storage (토큰 저장)
 
 **Backend Integration Ready**
 - Spring Boot REST API 연동 준비
 - JWT 토큰 인증 구조
 - HAL 포맷 API 응답 지원
+- CORS 설정 준비
 
 ## 📝 로그인 정보
 
