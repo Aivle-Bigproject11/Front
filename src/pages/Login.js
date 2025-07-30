@@ -153,7 +153,7 @@ const Login = () => {
                   color: '#495057',
                   fontWeight: '700',
                   marginBottom: '15px'
-                }}>상조서비스</h3>
+                }}>사자 보이즈</h3>
                 <p style={{
                   color: '#6c757d',
                   fontSize: '16px',
@@ -172,7 +172,10 @@ const Login = () => {
               flex: '1',
               padding: '50px 40px',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              background: activeTab === 'employee' ? '#dae7fcff' : '#e9deffff', // 탭에 따라 배경색 변경
+              borderRadius: '16px',
+              boxShadow: '0 2px 12px rgba(102,126,234,0.04)'
             }}>
               {/* 탭 헤더 */}
               <div className="login-tabs" style={{
