@@ -7,6 +7,8 @@ import './App.css';
 import Navbar from './components/Layout/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import FindId from './pages/FindId';
+import FindPassword from './pages/FindPassword'; 
 import Menu1 from './pages/Menu1';
 import Menu2 from './pages/Menu2';
 import Menu3 from './pages/Menu3';
@@ -21,6 +23,8 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/findId" element={<FindId />} />
+            <Route path="/findPassword" element={<FindPassword />} />
             <Route path="/*" element={<MainLayout />} />
           </Routes>
         </div>
