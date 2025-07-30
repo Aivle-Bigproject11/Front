@@ -115,8 +115,8 @@ const Login = () => {
                   </div>
 
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <span style={{ fontSize: '14px', color: '#6c757d' }}>아이디 찾기</span>
-                    <span style={{ fontSize: '14px', color: '#6c757d' }}>비밀번호 찾기</span>
+                    <a href="/FindId" className="login-link">아이디 찾기</a>
+                    <a href="/FindPassword" className="login-link">비밀번호 찾기</a>
                   </div>
 
                   <div style={{ marginTop: '30px' }}>
@@ -130,18 +130,19 @@ const Login = () => {
                   </div>
                 </form>
 
-                {activeTab === 'user' && (
-                  <div className="unique-number-info">
-                    고유 번호로 추모관 입장하기
-                  </div>
-                )}
+                {/* 고유번호로 추모관 입장하기: 항상 노출 */}
+                <div className="unique-number-info" style={{ marginTop: '30px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="text" placeholder="고유번호 입력" className="login-form-control" style={{ flex: 1 }} />
+                  <button className="login-btn" style={{ width: '120px' }}>입장</button>
+                </div>
 
-                <div className="login-links">
+                {/* 회원가입 버튼: 탭에 따라 노출 */}
+                <div className="login-links" style={{ marginTop: '20px' }}>
                   {activeTab === 'employee' && (
-                    <>
-                      <a href="#" className="login-link">직원 회원가입</a>
-                      <a href="#" className="login-link">사용자 회원가입</a>
-                    </>
+                    <a href="/SignUp" className="login-link">직원 회원가입</a>
+                  )}
+                  {activeTab === 'user' && (
+                    <a href="/SignUp" className="login-link">사용자 회원가입</a>
                   )}
                 </div>
 
