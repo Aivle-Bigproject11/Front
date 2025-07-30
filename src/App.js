@@ -14,6 +14,9 @@ import Menu4 from './pages/Menu4';
 import MemorialDetail from './pages/MemorialDetail';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
+// Login 컴포넌트와 SignUp 컴포넌트를 임포트합니다. 
+import SignUp from './pages/SignUp';
+
 function App() {
   return (
     <AuthProvider>
@@ -21,6 +24,10 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/login" element={<Login />} />
+
+            {/* 회원가입 페이지 경로추가 */}
+                <Route path="/signup" element={<SignUp />} /> 
+
             <Route path="/*" element={<MainLayout />} />
           </Routes>
         </div>
