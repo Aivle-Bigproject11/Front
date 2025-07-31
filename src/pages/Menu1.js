@@ -102,6 +102,66 @@ const Menu1 = () => {
       },
       funeralDate: '2025-08-03',
       location: '인천시 남동구'
+    },
+    {
+      id: 5,
+      name: '이헌준',
+      phone: '010-5678-1234',
+      type: '고인',
+      status: 'pending',
+      age: '95',
+      documents: {
+        obituary: false,
+        schedule: false,
+        deathCertificate: false
+      },
+      funeralDate: '2025-08-04',
+      location: '서울시 성동구 왕십리'
+    },
+    {
+      id: 6,
+      name: '이현종',
+      phone: '010-6789-2345',
+      type: '고인',
+      status: 'inProgress',
+      age: '82',
+      documents: {
+        obituary: true,
+        schedule: false,
+        deathCertificate: false
+      },
+      funeralDate: '2025-08-05',
+      location: '경기도 수원시 영통구'
+    },
+    {
+      id: 7,
+      name: '안도형',
+      phone: '010-7890-3456',
+      type: '고인',
+      status: 'completed',
+      age: '78',
+      documents: {
+        obituary: true,
+        schedule: true,
+        deathCertificate: true
+      },
+      funeralDate: '2025-07-29',
+      location: '강원도 춘천시'
+    },
+    {
+      id: 8,
+      name: '김민서',
+      phone: '010-8901-4567',
+      type: '고인',
+      status: 'pending',
+      age: '89',
+      documents: {
+        obituary: false,
+        schedule: false,
+        deathCertificate: false
+      },
+      funeralDate: '2025-08-06',
+      location: '충청북도 청주시'
     }
   ];
 
@@ -317,7 +377,7 @@ const Menu1 = () => {
   if (loading) {
     return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: 'calc(100vh - 56px)',
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           display: 'flex',
           alignItems: 'center',
@@ -337,14 +397,16 @@ const Menu1 = () => {
   // 고객 리스트 화면
   const CustomerListView = () => (
       <div style={{
-        minHeight: '100vh',
+        '--navbar-height': '56px',
+        height: 'calc(100vh - var(--navbar-height))',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '20px',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxSizing: 'border-box'
       }}>
         {/* 배경 패턴 */}
         <div style={{
@@ -361,7 +423,7 @@ const Menu1 = () => {
           zIndex: 1,
           width: '100%',
           maxWidth: '1200px',
-          minHeight: '80vh',
+          height: '100%',
           margin: '0 auto',
           display: 'flex',
           alignItems: 'center',
@@ -373,7 +435,8 @@ const Menu1 = () => {
           borderRadius: '28px',
           transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
           opacity: animateCard ? 1 : 0,
-          transition: 'all 0.6s ease-out'
+          transition: 'all 0.6s ease-out',
+          overflow: 'hidden'
         }}>
           <div style={{
             background: 'rgba(255, 255, 255, 0.95)',
@@ -698,12 +761,14 @@ const Menu1 = () => {
   // 장례정보 등록 화면
   const RegisterView = () => (
       <div style={{
-        minHeight: '100vh',
+        '--navbar-height': '56px',
+        height: 'calc(100vh - var(--navbar-height))',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: '24px',
         display: 'flex',
         justifyContent: 'center',
-        alignItems: 'flex-start'
+        alignItems: 'flex-start',
+        boxSizing: 'border-box'
       }}>
         <div style={{
           position: 'relative',
@@ -883,9 +948,11 @@ const Menu1 = () => {
   // 서류관리 화면
   const DocumentsView = () => (
       <div style={{
-        minHeight: '100vh',
+        '--navbar-height': '56px',
+        height: 'calc(100vh - var(--navbar-height))',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '24px'
+        padding: '24px',
+        boxSizing: 'border-box'
       }}>
         <div style={{
           position: 'relative',
