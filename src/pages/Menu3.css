@@ -1,0 +1,509 @@
+/* Menu3.css */
+
+/* 전체 레이아웃 */
+.menu3-container {
+  font-family: 'Inter', sans-serif; /* Inter 폰트 사용 */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f0f2f5;
+  color: #333;
+}
+
+/* 상단 메뉴바 스타일 삭제됨 */
+
+/* 메인 콘텐츠 영역 */
+.content-area {
+  padding: 20px 30px;
+  flex-grow: 1;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+/* 필터링 섹션 */
+.filter-section {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap; /* 반응형을 위해 flex-wrap 유지 */
+  gap: 20px;
+  align-items: flex-end; /* 하단 정렬 */
+  justify-content: flex-start; /* 왼쪽 정렬 */
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  flex-basis: calc((100% / 7) - 20px); /* 7개 아이템이 한 줄에 들어가도록 계산 */
+  min-width: 120px; /* 최소 너비 설정 */
+  flex-shrink: 0; /* 아이템이 줄어들지 않도록 */
+}
+
+.filter-item label {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.filter-item input[type="text"],
+.filter-item select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  width: 100%;
+  box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+  transition: border-color 0.2s ease-in-out;
+}
+
+.filter-item input[type="text"]:focus,
+.filter-item select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.search-input-group {
+  flex-grow: 1; /* 검색 입력 필드 너비 확장 */
+  min-width: 200px; /* 최소 너비 조정 */
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-input-wrapper input {
+  padding-right: 35px; /* 아이콘 공간 확보 */
+}
+
+.search-icon {
+  position: absolute;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  color: #888;
+}
+
+.checkbox-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding-top: 25px; /* 라벨과 정렬을 위해 */
+}
+
+.checkbox-group label {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #007bff; /* 체크박스 색상 */
+  cursor: pointer;
+}
+
+.search-button {
+  padding: 12px 25px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+  margin-top: 25px; /* 필터 아이템과 정렬을 위해 조정 */
+  align-self: flex-end; /* 버튼을 아래로 정렬 */
+}
+
+.search-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.search-button:active {
+  transform: translateY(0);
+}
+
+/* 고객 정보 표 섹션 */
+.customer-table-section {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.customer-table-section h3 {
+  font-size: 22px;
+  color: #333;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+table th,
+table td {
+  border: 1px solid #eee;
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 15px;
+}
+
+table th {
+  background-color: #f8f8f8;
+  font-weight: 600;
+  color: #444;
+}
+
+table tr:nth-child(even) {
+  background-color: #fdfdfd;
+}
+
+table tr:hover {
+  background-color: #f5f5f5;
+}
+
+.customer-name-cell {
+  color: #007bff;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.customer-name-cell:hover {
+  text-decoration: underline;
+}
+
+table input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #007bff;
+  cursor: pointer;
+}
+
+.table-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.button-primary,
+.button-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+
+.button-primary {
+  background-color: #28a745; /* 초록색 */
+  color: #fff;
+}
+
+.button-primary:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.button-secondary {
+  background-color: #6c757d; /* 회색 */
+  color: #fff;
+}
+
+.button-secondary:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* 하단 섹션 (메시지 미리보기, 고객 정보/발송 기록) */
+.bottom-section {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.message-preview-section,
+.customer-detail-section {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  flex: 1; /* 동일한 너비 */
+  display: flex;
+  flex-direction: column;
+}
+
+.message-preview-section h3,
+.customer-detail-section h3 {
+  font-size: 22px;
+  color: #333;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.message-content-box {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  flex-grow: 1; /* 텍스트 영역이 가능한 공간을 모두 차지하도록 */
+  display: flex;
+  flex-direction: column;
+}
+
+.message-textarea {
+  width: 100%;
+  height: 200px; /* 고정 높이 */
+  border: none;
+  resize: vertical; /* 수직으로만 크기 조절 가능 */
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  background-color: transparent; /* 배경 투명하게 */
+  outline: none; /* 포커스 시 아웃라인 제거 */
+}
+
+.message-textarea:read-only {
+  background-color: #f9f9f9; /* 읽기 전용일 때 배경색 */
+  cursor: default;
+}
+
+.message-textarea:focus:not([readOnly]) {
+  border: 1px solid #007bff; /* 편집 모드일 때 테두리 */
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.message-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.customer-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex-grow: 1;
+}
+
+.customer-info-box,
+.message-history-box {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+  background-color: #f9f9f9;
+}
+
+.customer-info-box h4,
+.message-history-box h4 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+.customer-info-box p {
+  margin-bottom: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.no-selection-message,
+.no-history {
+  text-align: center;
+  color: #777;
+  padding: 20px;
+  font-style: italic;
+}
+
+.sample-message-record {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sample-message-record p {
+  margin-bottom: 10px;
+}
+
+.message-card {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.message-image {
+  width: 100px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.message-text {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #444;
+}
+
+.detail-link {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
+.button-resend {
+  padding: 8px 15px;
+  background-color: #17a2b8; /* 청록색 */
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  float: right; /* 오른쪽 정렬 */
+  margin-top: 10px;
+}
+
+.button-resend:hover {
+  background-color: #138496;
+}
+
+/* 팝업 스타일 */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  min-width: 300px;
+}
+
+.popup-content p {
+  font-size: 18px;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1400px) { /* 더 넓은 화면에서 7개 유지 */
+  .filter-item {
+    flex-basis: calc((100% / 6) - 20px); /* 6개씩 한 줄 */
+  }
+}
+
+@media (max-width: 1200px) {
+  .filter-item {
+    flex-basis: calc((100% / 5) - 20px); /* 5개씩 한 줄 */
+  }
+}
+
+@media (max-width: 992px) {
+  .filter-item {
+    flex-basis: calc((100% / 4) - 20px); /* 4개씩 한 줄 */
+  }
+  .bottom-section {
+    flex-direction: column; /* 하단 섹션 세로 정렬 */
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-item {
+    flex-basis: calc((100% / 3) - 20px); /* 3개씩 한 줄 */
+  }
+  .table-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .button-primary,
+  .button-secondary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .filter-item {
+    flex-basis: calc((100% / 2) - 20px); /* 2개씩 한 줄 */
+  }
+}
+
+@media (max-width: 480px) {
+  .content-area {
+    padding: 15px;
+  }
+  .page-title {
+    font-size: 24px;
+  }
+  .filter-item {
+    width: 100%;
+    min-width: unset;
+    flex-basis: 100%; /* 한 개씩 한 줄 */
+  }
+  .search-button {
+    width: 100%;
+  }
+  .message-card {
+    flex-direction: column;
+    align-items: center;
+  }
+  .message-image {
+    width: 100%;
+    height: auto;
+    max-width: 150px;
+  }
+}
