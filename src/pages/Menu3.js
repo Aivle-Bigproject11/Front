@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Menu3.css'; // Menu3.css 파일 import
+import './Menu3.css'; 
 
 const Menu3 = () => {
   // 검색 필터 상태 관리
@@ -115,31 +115,6 @@ const Menu3 = () => {
     });
   };
 
-  // 고객 추가 버튼 클릭 (페이지 이동)
-  const handleAddCustomer = () => {
-    // 고객 추가 페이지로 이동하는 로직 (현재는 비워둠)
-    console.log('고객 추가 페이지로 이동');
-  };
-
-  // 고객 삭제 버튼 클릭 (팝업 표시)
-  const handleDeleteCustomer = () => {
-    if (selectedCustomers.length > 0) {
-      setShowDeletePopup(true);
-    } else {
-      alert('삭제할 고객을 선택해주세요.'); // 실제로는 커스텀 모달 사용
-    }
-  };
-
-  // 삭제 확인
-  const confirmDelete = () => {
-    setCustomers(prevCustomers =>
-      prevCustomers.filter(customer => !selectedCustomers.includes(customer.id))
-    );
-    setSelectedCustomers([]);
-    setShowDeletePopup(false);
-    setSelectedCustomerDetail(null); // 삭제된 고객의 상세 정보 초기화
-  };
-
   // 메시지 생성 버튼 클릭 (AI API 연동 필요)
   const handleGenerateMessage = async () => {
     if (selectedCustomers.length === 0) {
@@ -178,9 +153,6 @@ const Menu3 = () => {
 
   // 메시지 수정 버튼 클릭 (메시지 미리보기 직접 수정 가능)
   const handleEditMessage = () => {
-    // 메시지 미리보기 텍스트 영역을 편집 가능하게 전환
-    // 현재는 <textarea>의 readOnly 속성을 토글하는 방식으로 구현
-    // 실제로는 별도의 상태를 두어 편집 모드를 관리할 수 있습니다.
     const textarea = document.getElementById('message-preview-textarea');
     if (textarea) {
       textarea.readOnly = !textarea.readOnly;
@@ -215,7 +187,6 @@ const Menu3 = () => {
 
         {/* 필터링 부분 */}
         <div className="filter-section">
-          {/* 모든 필터링 항목을 한 줄에 배치 */}
           <div className="filter-row-all">
             <div className="filter-item search-input-group">
               <label htmlFor="customer-search">고객명 또는 고객 고유번호</label> 
@@ -307,7 +278,6 @@ const Menu3 = () => {
             </div>
           </div>
 
-          {/* 조회 버튼을 위한 별도의 줄 */}
           <div className="filter-row-bottom">
             <button className="search-button" onClick={handleSearch}>조회</button>
           </div>
@@ -350,8 +320,6 @@ const Menu3 = () => {
           </table>
           <div className="table-buttons">
             <button className="button-primary" onClick={handleGenerateMessage}>메시지 생성</button>
-            <button className="button-secondary" onClick={handleAddCustomer}>고객 추가</button>
-            <button className="button-secondary" onClick={handleDeleteCustomer}>고객 삭제</button>
           </div>
         </div>
 
@@ -415,19 +383,6 @@ const Menu3 = () => {
           </div>
         </div>
       </div>
-
-      {/* 삭제 확인 팝업 */}
-      {showDeletePopup && (
-        <div className="popup-overlay">
-          <div className="popup-content">
-            <p>선택된 고객을 삭제하시겠습니까?</p>
-            <div className="popup-buttons">
-              <button className="button-primary" onClick={confirmDelete}>확인</button>
-              <button className="button-secondary" onClick={() => setShowDeletePopup(false)}>취소</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 전송 완료 팝업 */}
       {showTransmissionCompletePopup && (
