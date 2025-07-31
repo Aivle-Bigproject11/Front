@@ -43,20 +43,24 @@ const Menu2 = () => {
         padding: '20px',
         gap: '20px'
       }}>
-        <div className="dashboard-left" style={{
-          flex: '0 0 300px', // 왼쪽 영역 너비 고정
-          background: 'rgba(255, 255, 255, 0.8)',
-          borderRadius: '15px',
-          padding: '20px',
-          height: 'min-content',
-          position: 'sticky',
-          top: '20px'
-        }}>
-          <h4 className="mb-4" style={{ fontWeight: '700', color: '#343a40' }}>통합 대시보드</h4>
-          <InteractiveMap
-            selectedRegion={selectedRegion}
-            onRegionSelect={setSelectedRegion}
-          />
+        <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
+
+          <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#343a40', paddingLeft: '10px' }}>
+            통합 대시보드
+          </h4>
+          <div className="dashboard-left" style={{
+            background: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: '15px',
+            padding: '20px',
+            height: 'min-content',
+            position: 'sticky',
+            top: '20px'
+          }}>
+            <InteractiveMap
+              selectedRegion={selectedRegion}
+              onRegionSelect={setSelectedRegion}
+            />
+          </div>
         </div>
 
         <div className="dashboard-right" style={{
