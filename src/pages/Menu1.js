@@ -1,7 +1,7 @@
+
 import React, {useEffect, useState} from 'react';
 import {Badge, Button, ButtonGroup, Card, Col, Container, Form, Modal, Row} from 'react-bootstrap';
 import { Users, FileText, Calendar, User, Phone, MapPin, Clock, Check, X, Plus, Eye, Printer, Download, Heart } from 'lucide-react';
-import { dummyData } from '../services/api';
 import './Menu3.css';
 
 const Menu1 = () => {
@@ -16,6 +16,7 @@ const Menu1 = () => {
   const [editedMessage, setEditedMessage] = useState('');
   const [currentView, setCurrentView] = useState('customerList');
   const [animateCard, setAnimateCard] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState('obituary');
 
   const handleMessageEdit = () => {
     setIsEditing(true);
@@ -40,63 +41,74 @@ const Menu1 = () => {
     }
   };
 
+  // Mock customers 데이터 - 여러 고인 표시
+  const mockCustomers = [
+    {
+      id: 1,
+      name: '양성현',
+      phone: '010-1234-5678',
+      type: '고인',
+      status: 'pending',
+      age: '75',
+      documents: {
+        obituary: false,
+        schedule: false,
+        deathCertificate: false
+      },
+      funeralDate: '2025-08-02',
+      location: '서울시 강남구 삼성동'
+    },
+    {
+      id: 2,
+      name: '김시훈',
+      phone: '010-2345-6789',
+      type: '고인',
+      status: 'inProgress',
+      age: '96',
+      documents: {
+        obituary: true,
+        schedule: false,
+        deathCertificate: false
+      },
+      funeralDate: '2025-08-01',
+      location: '부산시 해운대구'
+    },
+    {
+      id: 3,
+      name: '박수연',
+      phone: '010-3456-7890',
+      type: '고인',
+      status: 'completed',
+      age: '88',
+      documents: {
+        obituary: true,
+        schedule: true,
+        deathCertificate: true
+      },
+      funeralDate: '2025-07-30',
+      location: '대구시 중구'
+    },
+    {
+      id: 4,
+      name: '류근우',
+      phone: '010-4567-8901',
+      type: '고인',
+      status: 'pending',
+      age: '94',
+      documents: {
+        obituary: false,
+        schedule: true,
+        deathCertificate: false
+      },
+      funeralDate: '2025-08-03',
+      location: '인천시 남동구'
+    }
+  ];
+
   useEffect(() => {
-    // 카드 애니메이션 효과
     setAnimateCard(true);
 
-    // TODO: 실제 API 호출로 교체
     setTimeout(() => {
-      const mockCustomers = [
-        {
-          id: 1,
-          name: '김철수',
-          phone: '010-1234-5678',
-          relationship: '본인',
-          type: '고인',
-          status: 'pending',
-          documents: {
-            obituary: false,
-            schedule: false,
-            deathCertificate: false
-          },
-          funeralDate: '2025-07-30',
-          location: '서울시 강남구'
-        },
-        {
-          id: 2,
-          name: '박영희',
-          phone: '010-9876-5432',
-          relationship: '딸',
-          type: '유족',
-          status: 'inProgress',
-          documents: {
-            obituary: true,
-            schedule: true,
-            deathCertificate: false
-          },
-          funeralDate: '2025-07-29',
-          location: '부산시 해운대구',
-          deceasedName: '박만수',
-          deceasedAge: '78'
-        },
-        {
-          id: 3,
-          name: '이민수',
-          phone: '010-5555-7777',
-          relationship: '아들',
-          type: '유족',
-          status: 'completed',
-          documents: {
-            obituary: true,
-            schedule: true,
-            deathCertificate: true
-          },
-          funeralDate: '2025-07-28',
-          location: '대구시 중구',
-          deceasedName: '이정호',
-          deceasedAge: '82'
-        }
-      ];
       setCustomers(mockCustomers);
       setFilteredCustomers(mockCustomers);
       setLoading(false);
@@ -192,323 +204,377 @@ const Menu1 = () => {
     }
   };
 
+  // 서류 미리보기 콘텐츠
+  const getPreviewContent = (docType) => {
+    const docTitles = {
+      obituary: '부고장',
+      deathCertificate: '사망신고서',
+      schedule: '장례일정표'
+    };
+
+    const docContent = {
+      obituary: {
+        title: '부고장',
+        content: `
+          고 ${selectedCustomer?.name} 별세
+
+          향년 ${selectedCustomer?.age}세
+          
+          발인일시: ${selectedCustomer?.funeralDate}
+          장례식장: ${selectedCustomer?.location}
+          
+          삼가 고인의 명복을 빕니다.
+        `
+      },
+      deathCertificate: {
+        title: '사망신고서',
+        content: `
+          사망신고서
+          
+          성명: ${selectedCustomer?.name}
+          나이: ${selectedCustomer?.age}세
+          사망일: ${selectedCustomer?.funeralDate}
+          신고인: [신고인 정보]
+          
+          위와 같이 사망신고를 합니다.
+        `
+      },
+      schedule: {
+        title: '장례일정표',
+        content: `
+          장례일정표
+          
+          고인: ${selectedCustomer?.name}
+          
+          입관: ${selectedCustomer?.funeralDate} 오전 10시
+          발인: ${selectedCustomer?.funeralDate} 오후 2시
+          장례식장: ${selectedCustomer?.location}
+          
+          세부 일정은 상황에 따라 변경될 수 있습니다.
+        `
+      }
+    };
+
+    if (!selectedCustomer || !docContent[docType]) {
+      return (
+          <div style={{
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'white',
+            borderRadius: '8px',
+            margin: '16px'
+          }}>
+            <div style={{ textAlign: 'center', color: '#6b7280' }}>
+              <FileText size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+              <h3>서류를 선택해주세요</h3>
+              <p>왼쪽에서 서류를 선택하면 미리보기가 표시됩니다</p>
+            </div>
+          </div>
+      );
+    }
+
+    return (
+        <div style={{
+          height: '100%',
+          background: 'white',
+          borderRadius: '8px',
+          margin: '16px',
+          padding: '24px',
+          overflow: 'auto'
+        }}>
+          <div style={{
+            background: '#f9fafb',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            padding: '32px',
+            minHeight: '500px',
+            fontFamily: 'serif'
+          }}>
+            <h2 style={{
+              textAlign: 'center',
+              marginBottom: '32px',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#111827'
+            }}>
+              {docContent[docType].title}
+            </h2>
+            <div style={{
+              whiteSpace: 'pre-line',
+              lineHeight: '1.8',
+              fontSize: '16px',
+              color: '#374151'
+            }}>
+              {docContent[docType].content}
+            </div>
+          </div>
+        </div>
+    );
+  };
+
   if (loading) {
     return (
-        <Container className="mt-4">
-          <div className="text-center">
-            <div className="spinner-border" role="status">
+        <div style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div className="text-center" style={{ color: 'white' }}>
+            <div className="spinner-border" role="status" style={{ width: '3rem', height: '3rem' }}>
               <span className="visually-hidden">Loading...</span>
             </div>
-            <p className="mt-2">장례서류작성 시스템을 불러오는 중...</p>
+            <p className="mt-3" style={{ fontSize: '1.2rem' }}>장례서류작성 시스템을 불러오는 중...</p>
           </div>
-        </Container>
+        </div>
     );
   }
 
   // 고객 리스트 화면
   const CustomerListView = () => (
-      <Container fluid className="funeral-management-wrapper" style={{
-        background: '#f8f9fa',
+      <div style={{
         minHeight: '100vh',
-        padding: '24px'
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        {/* 헤더 섹션 */}
-        <Row className="mb-4">
-          <Col>
-            <div className="funeral-header-section p-4" style={{
-              background: 'linear-gradient(135deg, #6f42c1 0%, #495057 100%)',
-              borderRadius: '15px',
-              color: 'white',
-              position: 'relative',
-              overflow: 'hidden'
+        {/* 배경 패턴 */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat'
+        }}></div>
+
+        <div className={`login-container ${animateCard ? 'animate-in' : ''}`} style={{
+          position: 'relative',
+          zIndex: 1,
+          width: '100%',
+          maxWidth: '1200px',
+          minHeight: '80vh',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxSizing: 'border-box',
+          background: '#f8f9fa',
+          boxShadow: '0 8px 32px rgba(102,126,234,0.08)',
+          padding: '24px',
+          borderRadius: '28px',
+          transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
+          opacity: animateCard ? 1 : 0,
+          transition: 'all 0.6s ease-out'
+        }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '20px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+            backdropFilter: 'blur(10px)',
+            overflow: 'hidden',
+            border: '1px solid rgba(255,255,255,0.2)',
+            width: '100%',
+            height: '100%'
+          }}>
+            <div style={{
+              display: 'flex',
+              minHeight: '75vh',
+              height: '100%'
             }}>
-              <div className="footer-action" style={{
-                textAlign: 'center',
-                marginTop: '32px',
-                paddingTop: '24px',
-                borderTop: '2px solid rgba(102, 126, 234, 0.1)'
-              }}>
-                <button style={{
-                  padding: '16px 32px',
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(107, 70, 193, 0.39)'
-                }} onClick={() => setCurrentView('newDocument')}>
-                  새 서류 작성하기 <i className="fas fa-arrow-right ms-2"></i>
-                </button>
-              </div>
+              
+              {/* 오른쪽 콘텐츠 영역 */}
               <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
-                opacity: 0.1
-              }}></div>
-              <div className="position-relative">
-                <h1 className="mb-2" style={{ fontWeight: '700', fontSize: '2.5rem' }}>
-                  <i className="fas fa-file-alt me-3"></i>
-                  장례서류작성
-                </h1>
-                <p className="lead mb-0" style={{ fontSize: '1.1rem', opacity: 0.9 }}>
-                  장례 관련 서류를 체계적으로 관리하고 작성하세요
-                </p>
-              </div>
-            </div>
-          </Col>
-        </Row>
-
-        {/* 메인 콘텐츠 카드 */}
-        <Row>
-          <Col>
-            <Card style={{
-              border: 'none',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-              borderRadius: '20px',
-              height: 'calc(100vh - 200px)',
-              minHeight: '600px'
-            }}>
-              <Card.Header style={{
-                background: 'linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%)',
-                border: 'none',
-                borderRadius: '20px 20px 0 0',
-                padding: '1.5rem'
-              }}>
-                <div className="d-flex align-items-center">
-                  <div className="funeral-icon-bg me-3" style={{
-                    width: '50px',
-                    height: '50px',
-                    background: 'linear-gradient(135deg, #6f42c1 0%, #495057 100%)',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <i className="fas fa-users text-white" style={{ fontSize: '1.2rem' }}></i>
-                  </div>
-                  <div>
-                    <h4 className="mb-1" style={{ fontWeight: '600' }}>고객 목록</h4>
-                    <small className="text-muted">총 {customers.length}명의 고객</small>
-                  </div>
-                </div>
-              </Card.Header>
-
-              <Card.Body style={{
+                flex: 1,
                 padding: '0',
-                height: 'calc(100% - 100px)',
-                overflow: 'hidden'
+                display: 'flex',
+                flexDirection: 'column',
+                background: '#fafafa'
               }}>
-                {/* 고객 카드 스크롤 영역 */}
+                {/* 서브 헤더 */}
                 <div style={{
-                  height: '100%',
+                  padding: '30px 40px 20px',
+                  borderBottom: '1px solid rgba(229, 231, 235, 0.5)'
+                }}>
+                  <h3 style={{
+                    color: '#374151',
+                    fontWeight: '600',
+                    marginBottom: '8px',
+                    fontSize: '1.5rem'
+                  }}>장례서류 관리 시스템</h3>
+                  <p style={{
+                    color: '#6c757d',
+                    fontSize: '14px',
+                    margin: 0
+                  }}>총 {customers.length}명의 고객</p>
+                </div>
+
+                {/* 고객 카드 리스트 */}
+                <div style={{
+                  flex: 1,
+                  padding: '20px 40px',
                   overflowY: 'auto',
-                  overflowX: 'hidden',
-                  padding: '1.5rem'
+                  height: 'calc(100% - 100px)'
                 }}>
                   <div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '24px'
+                    gap: '16px'
                   }}>
                     {customers.map((customer, index) => {
                       const urgency = getUrgencyLevel(customer.funeralDate);
-                      const isDeceased = customer.type === '고인';
                       return (
                           <div key={customer.id} style={{
                             background: 'white',
-                            borderRadius: '20px',
+                            borderRadius: '16px',
                             overflow: 'hidden',
-                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
                             border: '1px solid rgba(229, 231, 235, 0.8)',
                             borderLeft: getUrgencyBorder(urgency),
                             transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
                             opacity: animateCard ? 1 : 0,
                             transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.1}s`,
                             display: 'flex',
-                            minHeight: '180px',
+                            minHeight: '140px',
                             position: 'relative',
                             cursor: 'pointer'
                           }}
                                onClick={() => setSelectedCustomer(customer)}
                                onMouseEnter={(e) => {
-                                 e.currentTarget.style.transform = 'translateY(-5px)';
-                                 e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.15)';
+                                 e.currentTarget.style.transform = 'translateY(-2px)';
+                                 e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
                                }}
                                onMouseLeave={(e) => {
                                  e.currentTarget.style.transform = 'translateY(0)';
-                                 e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.08)';
+                                 e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.06)';
                                }}
                           >
                             {/* 긴급도 표시 배지 */}
                             {urgency === 'urgent' && (
                                 <div style={{
                                   position: 'absolute',
-                                  top: '16px',
-                                  right: '16px',
+                                  top: '12px',
+                                  right: '12px',
                                   background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
                                   color: 'white',
-                                  padding: '6px 12px',
-                                  borderRadius: '20px',
-                                  fontSize: '12px',
+                                  padding: '4px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
                                   fontWeight: '600',
                                   zIndex: 10,
-                                  boxShadow: '0 4px 12px rgba(220, 53, 69, 0.3)'
+                                  boxShadow: '0 2px 8px rgba(220, 53, 69, 0.3)'
                                 }}>
-                                  <Clock size={14} style={{ marginRight: '4px' }} />
+                                  <Clock size={12} style={{ marginRight: '2px' }} />
                                   긴급
                                 </div>
                             )}
 
-                            {/* 왼쪽: 고객 정보 섹션 */}
+                            {/* 왼쪽: 고객 정보 */}
                             <div style={{
                               background: urgency === 'urgent'
                                   ? 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)'
                                   : urgency === 'warning'
                                       ? 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)'
                                       : 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)',
-                              padding: '24px',
+                              padding: '20px',
                               color: 'white',
                               display: 'flex',
                               flexDirection: 'column',
                               justifyContent: 'center',
-                              minWidth: '240px',
+                              minWidth: '200px',
                               position: 'relative'
                             }}>
-                              <div style={{
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                bottom: 0,
-                                width: '1px',
-                                background: 'rgba(255, 255, 255, 0.2)'
-                              }}></div>
-
-                              <div style={{ marginBottom: '16px' }}>
-                                <h3 style={{
-                                  fontSize: '1.5rem',
+                              <div style={{ marginBottom: '12px' }}>
+                                <h4 style={{
+                                  fontSize: '1.3rem',
                                   fontWeight: '700',
-                                  margin: '0 0 8px 0',
+                                  margin: '0 0 6px 0',
                                   display: 'flex',
                                   alignItems: 'center'
                                 }}>
-                                  {isDeceased ? (
-                                      <>
-                                        <span>고 {customer.name}</span>
-                                        <Badge bg="light" text="dark" className="ms-2" style={{ fontSize: '0.7rem' }}>
-                                          고인
-                                        </Badge>
-                                      </>
-                                  ) : (
-                                      customer.name
-                                  )}
-                                </h3>
+                                  {customer.name}
+                                  <Badge bg="light" text="dark" className="ms-2" style={{ fontSize: '0.7rem' }}>
+                                    고인
+                                  </Badge>
+                                </h4>
 
-                                <Badge className={getStatusColor(customer.status)}>
+                                <Badge className={getStatusColor(customer.status)} style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
                                   {getStatusText(customer.status)}
                                 </Badge>
                               </div>
 
-                              {!isDeceased && (
-                                  <div style={{
-                                    background: 'rgba(255, 255, 255, 0.15)',
-                                    padding: '12px',
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(255, 255, 255, 0.2)'
-                                  }}>
-                                    <h4 style={{
-                                      fontSize: '1rem',
-                                      fontWeight: '600',
-                                      margin: '0 0 4px 0'
-                                    }}>
-                                      고인: {customer.deceasedName || '고 홍길동'}
-                                    </h4>
-                                    <p style={{
-                                      fontSize: '0.9rem',
-                                      margin: 0,
-                                      opacity: 0.9
-                                    }}>
-                                      향년 {customer.deceasedAge || '75'}세
-                                    </p>
-                                  </div>
-                              )}
+                              <div style={{
+                                background: 'rgba(255, 255, 255, 0.15)',
+                                padding: '10px',
+                                borderRadius: '10px',
+                                border: '1px solid rgba(255, 255, 255, 0.2)'
+                              }}>
+                                <p style={{
+                                  fontSize: '0.95rem',
+                                  fontWeight: '600',
+                                  margin: '0 0 2px 0'
+                                }}>
+                                  향년 {customer.age}세
+                                </p>
+                                <p style={{
+                                  fontSize: '0.85rem',
+                                  margin: 0,
+                                  opacity: 0.9
+                                }}>
+                                  {customer.funeralDate}
+                                </p>
+                              </div>
                             </div>
 
-                            {/* 가운데: 세부 정보 섹션 */}
+                            {/* 가운데: 세부 정보 */}
                             <div style={{
                               flex: 1,
-                              padding: '24px',
+                              padding: '20px',
                               display: 'flex',
                               flexDirection: 'column',
                               justifyContent: 'space-between'
                             }}>
-                              {/* 연락처 및 기본 정보 */}
                               <div>
                                 <div style={{
                                   display: 'grid',
-                                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                                  gap: '12px',
-                                  marginBottom: '20px'
+                                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                                  gap: '8px',
+                                  marginBottom: '12px'
                                 }}>
                                   <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    padding: '12px',
+                                    padding: '8px',
                                     background: 'rgba(111, 66, 193, 0.05)',
-                                    borderRadius: '12px',
+                                    borderRadius: '8px',
                                     border: '1px solid rgba(111, 66, 193, 0.1)'
                                   }}>
-                                    <Phone size={18} style={{ color: '#6f42c1', marginRight: '8px' }} />
-                                    <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
-                                  {customer.phone}
-                                </span>
+                                    <Phone size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
+                                    <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
+                                      {customer.phone}
+                                    </span>
                                   </div>
 
                                   <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    padding: '12px',
+                                    padding: '8px',
                                     background: 'rgba(111, 66, 193, 0.05)',
-                                    borderRadius: '12px',
+                                    borderRadius: '8px',
                                     border: '1px solid rgba(111, 66, 193, 0.1)'
                                   }}>
-                                    <User size={18} style={{ color: '#6f42c1', marginRight: '8px' }} />
-                                    <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
-                                  {!isDeceased ? `${customer.relationship} (유족)` : '본인'}
-                                </span>
-                                  </div>
-
-                                  <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '12px',
-                                    background: 'rgba(111, 66, 193, 0.05)',
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(111, 66, 193, 0.1)'
-                                  }}>
-                                    <Calendar size={18} style={{ color: '#6f42c1', marginRight: '8px' }} />
-                                    <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
-                                  {customer.funeralDate}
-                                </span>
-                                  </div>
-
-                                  <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '12px',
-                                    background: 'rgba(111, 66, 193, 0.05)',
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(111, 66, 193, 0.1)'
-                                  }}>
-                                    <MapPin size={18} style={{ color: '#6f42c1', marginRight: '8px' }} />
-                                    <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
-                                  {customer.location}
-                                </span>
+                                    <MapPin size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
+                                    <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
+                                      {customer.location}
+                                    </span>
                                   </div>
                                 </div>
 
@@ -517,21 +583,21 @@ const Menu1 = () => {
                                   <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    marginBottom: '12px'
+                                    marginBottom: '8px'
                                   }}>
-                                    <FileText size={18} style={{ color: '#6f42c1', marginRight: '8px' }} />
+                                    <FileText size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
                                     <span style={{
-                                      fontSize: '0.95rem',
+                                      fontSize: '0.9rem',
                                       fontWeight: '600',
                                       color: '#374151'
                                     }}>
-                                  서류 작성 상태
-                                </span>
+                                      서류 작성 상태
+                                    </span>
                                   </div>
 
                                   <div style={{
                                     display: 'flex',
-                                    gap: '8px',
+                                    gap: '6px',
                                     flexWrap: 'wrap'
                                   }}>
                                     {Object.entries(customer.documents).map(([docType, isCompleted]) => {
@@ -548,13 +614,13 @@ const Menu1 = () => {
                                               style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                padding: '6px 12px',
-                                                fontSize: '0.85rem'
+                                                padding: '4px 8px',
+                                                fontSize: '0.75rem'
                                               }}
                                           >
                                             {isCompleted ?
-                                                <Check size={14} style={{ marginRight: '4px' }} /> :
-                                                <X size={14} style={{ marginRight: '4px' }} />
+                                                <Check size={12} style={{ marginRight: '3px' }} /> :
+                                                <X size={12} style={{ marginRight: '3px' }} />
                                             }
                                             {docNames[docType]}
                                           </Badge>
@@ -565,50 +631,56 @@ const Menu1 = () => {
                               </div>
                             </div>
 
-                            {/* 오른쪽: 액션 버튼 섹션 */}
+                            {/* 오른쪽: 버튼 */}
                             <div style={{
                               display: 'flex',
                               flexDirection: 'column',
                               justifyContent: 'center',
                               alignItems: 'center',
-                              padding: '24px 20px',
+                              padding: '20px 16px',
                               background: 'rgba(248, 250, 252, 0.8)',
                               borderLeft: '1px solid rgba(229, 231, 235, 0.5)',
-                              minWidth: '180px',
-                              gap: '12px'
+                              minWidth: '140px',
+                              gap: '8px'
                             }}>
                               <Button
                                   variant="primary"
+                                  size="sm"
                                   style={{
                                     width: '100%',
-                                    borderRadius: '12px',
+                                    borderRadius: '8px',
                                     fontWeight: '600',
-                                    padding: '12px'
+                                    padding: '8px',
+                                    fontSize: '0.85rem'
                                   }}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    setSelectedCustomer(customer);
                                     setCurrentView('register');
                                   }}
                               >
-                                <FileText size={16} style={{ marginRight: '8px' }} />
-                                서류 작성
+                                <FileText size={14} style={{ marginRight: '4px' }} />
+                                정보등록
                               </Button>
 
                               <Button
                                   variant="outline-primary"
+                                  size="sm"
                                   style={{
                                     width: '100%',
-                                    borderRadius: '12px',
+                                    borderRadius: '8px',
                                     fontWeight: '600',
-                                    padding: '12px'
+                                    padding: '8px',
+                                    fontSize: '0.85rem'
                                   }}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    alert('상세 정보를 확인합니다.');
+                                    setSelectedCustomer(customer);
+                                    setCurrentView('documents');
                                   }}
                               >
-                                <Eye size={16} style={{ marginRight: '8px' }} />
-                                상세 보기
+                                <Eye size={14} style={{ marginRight: '4px' }} />
+                                서류관리
                               </Button>
                             </div>
                           </div>
@@ -616,11 +688,11 @@ const Menu1 = () => {
                     })}
                   </div>
                 </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
   );
 
   // 장례정보 등록 화면
@@ -808,27 +880,470 @@ const Menu1 = () => {
       </div>
   );
 
+  // 서류관리 화면
+  const DocumentsView = () => (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '24px'
+      }}>
+        <div style={{
+          position: 'relative',
+          zIndex: 1,
+          width: '100%',
+          maxWidth: '1400px',
+          margin: '0 auto',
+          background: 'rgba(255, 255, 255, 0.98)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '24px',
+          boxShadow: '0 32px 64px rgba(0, 0, 0, 0.12)',
+          padding: '24px',
+          height: 'calc(100vh - 48px)',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: '24px'
+          }}>
+            <button
+                onClick={() => setCurrentView('customerList')}
+                style={{
+                  marginRight: '16px',
+                  background: 'rgba(102, 126, 234, 0.1)',
+                  color: '#667eea',
+                  border: 'none',
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+            >
+              ← 돌아가기
+            </button>
+            <h1 style={{
+              fontSize: '2rem',
+              fontWeight: '700',
+              color: '#374151',
+              margin: 0
+            }}>
+              만드실 서류를 선택해 주세요 - {selectedCustomer?.name}
+            </h1>
+          </div>
+
+          <div style={{
+            flex: 1,
+            display: 'grid',
+            gridTemplateColumns: '1fr 3fr',
+            gap: '24px'
+          }}>
+            {/* 왼쪽 서류 선택 영역 */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
+              {/* 부고장 */}
+              <div
+                  style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    padding: '16px',
+                    cursor: 'pointer',
+                    border: selectedDoc === 'obituary' ? '2px solid #3b82f6' : '2px solid transparent',
+                    backgroundColor: selectedDoc === 'obituary' ? '#eff6ff' : 'white',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onClick={() => setSelectedDoc('obituary')}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    width: '100%',
+                    height: '128px',
+                    background: '#f3f4f6',
+                    borderRadius: '8px',
+                    marginBottom: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <FileText size={48} style={{ color: '#9ca3af' }} />
+                  </div>
+                  <h3 style={{
+                    fontWeight: '600',
+                    color: '#111827',
+                    marginBottom: '8px',
+                    fontSize: '1.1rem'
+                  }}>부고장</h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '4px'
+                  }}>
+                    <button style={{
+                      background: '#3b82f6',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}>
+                      <Eye size={12} style={{ marginRight: '4px' }} />
+                      미리보기
+                    </button>
+                    <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateCustomerDocuments(selectedCustomer.id, 'obituary');
+                        }}
+                        style={{
+                          background: '#10b981',
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          border: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer'
+                        }}
+                    >
+                      제작하기
+                    </button>
+                    <button style={{
+                      background: '#6b7280',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}>
+                      <Download size={12} style={{ marginRight: '4px' }} />
+                      다운로드
+                    </button>
+                    <button style={{
+                      background: '#8b5cf6',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}>
+                      <Printer size={12} style={{ marginRight: '4px' }} />
+                      인쇄하기
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 사망신고서 */}
+              <div
+                  style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    padding: '16px',
+                    cursor: 'pointer',
+                    border: selectedDoc === 'deathCertificate' ? '2px solid #3b82f6' : '2px solid transparent',
+                    backgroundColor: selectedDoc === 'deathCertificate' ? '#eff6ff' : 'white',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onClick={() => setSelectedDoc('deathCertificate')}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    width: '100%',
+                    height: '128px',
+                    background: '#f3f4f6',
+                    borderRadius: '8px',
+                    marginBottom: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <FileText size={48} style={{ color: '#9ca3af' }} />
+                  </div>
+                  <h3 style={{
+                    fontWeight: '600',
+                    color: '#111827',
+                    marginBottom: '8px',
+                    fontSize: '1.1rem'
+                  }}>사망신고서</h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '4px'
+                  }}>
+                    <button style={{
+                      background: '#3b82f6',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}>
+                      <Eye size={12} style={{ marginRight: '4px' }} />
+                      미리보기
+                    </button>
+                    <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateCustomerDocuments(selectedCustomer.id, 'deathCertificate');
+                        }}
+                        style={{
+                          background: '#10b981',
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          border: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer'
+                        }}
+                    >
+                      제작하기
+                    </button>
+                    <button style={{
+                      background: '#6b7280',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}>
+                      <Download size={12} style={{ marginRight: '4px' }} />
+                      다운로드
+                    </button>
+                    <button style={{
+                      background: '#8b5cf6',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}>
+                      <Printer size={12} style={{ marginRight: '4px' }} />
+                      인쇄하기
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 장례일정표 */}
+              <div
+                  style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    padding: '16px',
+                    cursor: 'pointer',
+                    border: selectedDoc === 'schedule' ? '2px solid #3b82f6' : '2px solid transparent',
+                    backgroundColor: selectedDoc === 'schedule' ? '#eff6ff' : 'white',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onClick={() => setSelectedDoc('schedule')}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    width: '100%',
+                    height: '128px',
+                    background: '#f3f4f6',
+                    borderRadius: '8px',
+                    marginBottom: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Calendar size={48} style={{ color: '#9ca3af' }} />
+                  </div>
+                  <h3 style={{
+                    fontWeight: '600',
+                    color: '#111827',
+                    marginBottom: '8px',
+                    fontSize: '1.1rem'
+                  }}>장례일정표</h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '4px'
+                  }}>
+                    <button style={{
+                      background: '#3b82f6',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}>
+                      <Eye size={12} style={{ marginRight: '4px' }} />
+                      미리보기
+                    </button>
+                    <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateCustomerDocuments(selectedCustomer.id, 'schedule');
+                        }}
+                        style={{
+                          background: '#10b981',
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          border: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer'
+                        }}
+                    >
+                      제작하기
+                    </button>
+                    <button style={{
+                      background: '#6b7280',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}>
+                      <Download size={12} style={{ marginRight: '4px' }} />
+                      다운로드
+                    </button>
+                    <button style={{
+                      background: '#8b5cf6',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}>
+                      <Printer size={12} style={{ marginRight: '4px' }} />
+                      인쇄하기
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 오른쪽 미리보기 영역 */}
+            <div style={{
+              background: '#f9fafb',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+            }}>
+              {getPreviewContent(selectedDoc)}
+            </div>
+          </div>
+
+          {/* 하단 일괄 처리 버튼 */}
+          <div style={{
+            marginTop: '24px',
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            padding: '16px'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '16px'
+            }}>
+              <button
+                  onClick={() => {
+                    updateCustomerDocuments(selectedCustomer.id, 'obituary');
+                    updateCustomerDocuments(selectedCustomer.id, 'deathCertificate');
+                    updateCustomerDocuments(selectedCustomer.id, 'schedule');
+                    setCustomers(customers.map(c =>
+                        c.id === selectedCustomer.id
+                            ? {...c, status: 'completed'}
+                            : c
+                    ));
+                  }}
+                  style={{
+                    background: '#8b5cf6',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+              >
+                <FileText size={16} style={{ marginRight: '8px' }} />
+                전체 서류 일괄 제작
+              </button>
+              <button style={{
+                background: '#6b7280',
+                color: 'white',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}>
+                <Printer size={16} style={{ marginRight: '8px' }} />
+                완성된 서류 일괄 인쇄
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+  );
+
   return (
       <div>
         {currentView === 'customerList' && <CustomerListView />}
         {currentView === 'register' && <RegisterView />}
-        {currentView === 'newDocument' && (
-            <Container className="mt-4">
-              <Card>
-                <Card.Header>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h4>새 서류 작성</h4>
-                    <Button variant="secondary" onClick={() => setCurrentView('customerList')}>
-                      목록으로 돌아가기
-                    </Button>
-                  </div>
-                </Card.Header>
-                <Card.Body>
-                  <p>새 서류 작성 기능은 개발 중입니다.</p>
-                </Card.Body>
-              </Card>
-            </Container>
-        )}
+        {currentView === 'documents' && <DocumentsView />}
       </div>
   );
 };
