@@ -196,7 +196,7 @@ const RegionDataDisplay = ({ region }) => {
             <Line options={chartOptions} data={longTermChartData} height={100} />
           </Col>
           <Col md={12}>
-            <h5 style={{ fontWeight: '600' }}>최근 24개월 실제 데이터 + 예측</h5>
+            <h5 style={{ fontWeight: '600' }}>최근 24개월 실제 데이터 + 향후 12개월 예측</h5>
             <Line options={chartOptions} data={predictionChartData} height={100} />
           </Col>
         </Row>
