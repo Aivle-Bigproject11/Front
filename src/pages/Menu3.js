@@ -1,7 +1,3 @@
- import { Container, Row, Col, Card, Form, Button, ListGroup, Badge, Modal } from 'react-bootstrap';
-
-// import React, { useState, useEffect, useCallback } from 'react';
-
 import React, { useState, useEffect } from 'react';
 import './Menu3.css'; // Menu3.css 파일 import
 
@@ -89,7 +85,12 @@ const Menu3 = () => {
 
     // 자녀 필터링
     if (childrenFilter !== '전체') {
-      tempCustomers = tempCustomers.filter(customer => customer.familyComposition.includes(childrenFilter));
+      // '유' 또는 '무' 필터링 로직
+      if (childrenFilter === '유') {
+        tempCustomers = tempCustomers.filter(customer => customer.familyComposition.includes('자녀') && !customer.familyComposition.includes('자녀 X'));
+      } else if (childrenFilter === '무') {
+        tempCustomers = tempCustomers.filter(customer => customer.familyComposition.includes('자녀 X'));
+      }
     }
 
     // 납입금 필터링 (더미 데이터에는 납입금 정보가 없으므로 임시로 구현)
@@ -210,22 +211,24 @@ const Menu3 = () => {
   return (
     <div className="menu3-container">
       <div className="content-area">
-        <h2 className="page-title"style={{ textAlign: 'left' }}>메시지 관리</h2>
+        <h2 className="page-title" style={{ textAlign: 'left' }}>메시지 관리</h2>
 
         {/* 필터링 부분 */}
         <div className="filter-section">
-          <div className="filter-row">
+          {/* 모든 필터링 항목을 한 줄에 배치 */}
+          <div className="filter-row-all">
             <div className="filter-item search-input-group">
-              <label htmlFor="customer-search">고객명 또는 고객 고유번호</label>
-              <input
-                type="text"
-                id="customer-search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="고객명 또는 고객 고유번호 입력"
-              />
+              <label htmlFor="customer-search">고객명 또는 고객 고유번호</label> 
+              <div className="search-input-wrapper">
+                <input
+                  type="text"
+                  id="customer-search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="고객명 또는 고객 고유번호 입력" 
+                />
+              </div>
             </div>
-
 
             <div className="filter-item">
               <label htmlFor="age-select">나이</label>
@@ -275,7 +278,7 @@ const Menu3 = () => {
               <label htmlFor="disease-has">유</label>
             </div>
 
-            <div className="filter-item">
+            <div className="filter-item filter-item-small-select">
               <label htmlFor="marriage-select">결혼</label>
               <select id="marriage-select" value={marriageFilter} onChange={(e) => setMarriageFilter(e.target.value)}>
                 <option value="전체">전체</option>
@@ -284,13 +287,12 @@ const Menu3 = () => {
               </select>
             </div>
 
-            <div className="filter-item">
+            <div className="filter-item filter-item-small-select">
               <label htmlFor="children-select">자녀</label>
               <select id="children-select" value={childrenFilter} onChange={(e) => setChildrenFilter(e.target.value)}>
                 <option value="전체">전체</option>
                 <option value="유">유</option>
                 <option value="무">무</option>
-
               </select>
             </div>
 
@@ -301,10 +303,12 @@ const Menu3 = () => {
                 <option value="400~499">400~499 만원</option>
                 <option value="500~599">500~599 만원</option>
                 <option value="600 이상">600만원 이상</option>
-
               </select>
             </div>
+          </div>
 
+          {/* 조회 버튼을 위한 별도의 줄 */}
+          <div className="filter-row-bottom">
             <button className="search-button" onClick={handleSearch}>조회</button>
           </div>
         </div>
@@ -373,7 +377,7 @@ const Menu3 = () => {
 
           {/* 고객 정보 및 메시지 발송 기록 */}
           <div className="customer-detail-section">
-            <h3>고객 정보 및 메시지 발송 기록 </h3>
+            <h3>고객 정보 및 메시지 발송 기록</h3>
             {selectedCustomerDetail ? (
               <div className="customer-detail-content">
                 <div className="customer-info-box">
