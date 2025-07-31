@@ -110,6 +110,14 @@ const MemorialDetail = () => {
     }
   };
 
+  // 예시: 실제 로그인 유저가 유가족인지 확인하는 로직 (추후 API 연동)
+  const isFamilyMember = true; // 실제 구현 시, 유가족 여부로 변경
+
+  // 관리페이지 이동
+  const goToSettings = () => {
+    navigate(`/memorial/${id}/settings`);
+  };
+
   if (loading) {
     return (
       <Container className="mt-4">
@@ -137,7 +145,24 @@ const MemorialDetail = () => {
   }
 
   return (
-    <Container fluid className="memorial-detail-page">
+    <Container fluid className="memorial-detail-wrapper" style={{ background: '#f8f9fa', minHeight: '100vh', padding: '0' }}>
+      <Row className="align-items-center" style={{ padding: '24px 32px 0 32px' }}>
+        <Col xs={6} md={8} lg={9}>
+          {/* ...기존 상단 정보... */}
+        </Col>
+        <Col xs={6} md={4} lg={3} className="text-end">
+          {isFamilyMember && (
+            <Button
+              variant="outline-secondary"
+              style={{ fontWeight: '600', borderRadius: '8px', padding: '8px 24px', fontSize: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+              onClick={goToSettings}
+            >
+              관리 페이지
+            </Button>
+          )}
+        </Col>
+      </Row>
+
       {/* 헤더 섹션 (1-1) */}
       <Row className="mb-4">
         <Col>

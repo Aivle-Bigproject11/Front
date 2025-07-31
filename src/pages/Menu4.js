@@ -449,13 +449,13 @@ const Menu4 = () => {
                                 </Dropdown.Toggle>
 
                                 <Dropdown.Menu>
-                                  <Dropdown.Item onClick={(e) => {
+                                  {/* <Dropdown.Item onClick={(e) => {
                                     e.stopPropagation();
                                     openEditModal(memorial);
                                   }}>
                                     <i className="fas fa-edit me-2"></i>
                                     수정
-                                  </Dropdown.Item>
+                                  </Dropdown.Item> */}
                                   <Dropdown.Item onClick={(e) => {
                                     e.stopPropagation();
                                     openFamilyModal(memorial);
@@ -494,7 +494,7 @@ const Menu4 = () => {
         <Modal.Header closeButton>
           <Modal.Title>
             {modalMode === 'create' && '새 추모관 만들기'}
-            {modalMode === 'edit' && '추모관 정보 수정'}
+            {/* {modalMode === 'edit' && '추모관 정보 수정'} */}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -591,7 +591,8 @@ const Menu4 = () => {
             취소
           </Button>
           <Button variant="primary" onClick={handleSubmit}>
-            {modalMode === 'create' ? '추모관 만들기' : '수정 완료'}
+            새 추모관 만들기
+            {/* {modalMode === 'create' ? '추모관 만들기' : '수정 완료'} */}
           </Button>
         </Modal.Footer>
       </Modal>
