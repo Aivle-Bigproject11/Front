@@ -14,21 +14,21 @@ const Menu2 = () => {
 
   return (
     <div className="page-wrapper" style={{
-      minHeight: '100vh',
+      '--navbar-height': '70px',
+      height: 'calc(100vh - var(--navbar-height))', 
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      padding: '20px',
+      boxSizing: 'border-box',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
-      position: 'relative',
-      overflow: 'hidden'
     }}>
       <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{
         position: 'relative',
         zIndex: 1,
         width: '100%',
         maxWidth: '1600px',
-        minHeight: 'calc(100vh - 40px)',
+        height: '100%', 
         margin: '0 auto',
         display: 'flex',
         boxSizing: 'border-box',
@@ -41,10 +41,10 @@ const Menu2 = () => {
         opacity: animateCard ? 1 : 0,
         transition: 'all 0.6s ease-out',
         padding: '20px',
-        gap: '20px'
+        gap: '20px',
+        overflow: 'hidden', 
       }}>
         <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
-
           <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#343a40', paddingLeft: '10px' }}>
             통합 대시보드
           </h4>
@@ -64,9 +64,9 @@ const Menu2 = () => {
         </div>
 
         <div className="dashboard-right" style={{
-          flex: '1', // 나머지 공간 모두 차지
+          flex: '1',
           overflowY: 'auto',
-          maxHeight: 'calc(100vh - 80px)', // 스크롤을 위한 높이 설정
+          height: '100%', 
           paddingRight: '10px'
         }}>
           <RegionDataDisplay region={selectedRegion} />
@@ -102,9 +102,13 @@ const Menu2 = () => {
         }
 
         @media (max-width: 1200px) {
+          .page-wrapper {
+            height: auto;
+            min-height: calc(100vh - var(--navbar-height));
+          }
           .dashboard-container {
             flex-direction: column;
-            min-height: auto;
+            height: auto;
           }
           .dashboard-left {
             position: static;
@@ -112,6 +116,7 @@ const Menu2 = () => {
             flex: 0 0 auto;
           }
           .dashboard-right {
+            height: auto;
             max-height: none;
           }
         }
