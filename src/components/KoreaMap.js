@@ -4,15 +4,15 @@ import React from 'react';
 
 // PNG 이미지 크기에 맞춰 각 지역의 좌표를 퍼센트(%)로 조정
 const regionPositions = {
-  '서울': { top: '17%', left: '28%' },
-  '경기': { top: '25%', left: '39%' },
-  '인천': { top: '24%', left: '10%' },
-  '충남': { top: '40%', left: '16%' },
-  '부산': { top: '60%', left: '82%' },
-  '대구': { top: '49%', left: '67%' },
-  '광주': { top: '61%', left: '25%' },
-  '울산': { top: '51%', left: '90%' },
-  '세종': { top: '38%', left: '35%' },
+  '서울': { top: '20%', left: '35%' },
+  '경기': { top: '11%', left: '37%' },
+  '인천': { top: '22%', left: '17%' },
+  '충남': { top: '43%', left: '24%' },
+  '부산': { top: '63%', left: '77%' },
+  '대구': { top: '51%', left: '65%' },
+  '광주': { top: '63%', left: '30%' },
+  '울산': { top: '55%', left: '83%' },
+  '세종': { top: '35%', left: '35%' },
 };
 
 const KoreaMap = ({ selectedRegion, onRegionSelect }) => {
@@ -44,7 +44,7 @@ const KoreaMap = ({ selectedRegion, onRegionSelect }) => {
 
       {/* 지도 이미지 */}
       <img 
-        src="/Map_removebg.png" 
+        src="/SouthKoreaGreyMap.png" 
         alt="대한민국 지도" 
         style={{ width: '100%', height: 'auto', display: 'block' }} 
       />

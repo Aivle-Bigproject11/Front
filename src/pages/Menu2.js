@@ -43,7 +43,7 @@ const Menu2 = () => {
         padding: '20px',
         gap: '20px'
       }}>
-        <div style={{ flex: '0 0 350px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
 
           <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#343a40', paddingLeft: '10px' }}>
             통합 대시보드
