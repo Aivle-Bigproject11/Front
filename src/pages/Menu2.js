@@ -44,7 +44,7 @@ const Menu2 = () => {
         gap: '20px'
       }}>
         <div className="dashboard-left" style={{
-          flex: '0 0 300px', // 왼쪽 영역 너비 고정
+          flex: '0 0 350px',
           background: 'rgba(255, 255, 255, 0.8)',
           borderRadius: '15px',
           padding: '20px',
