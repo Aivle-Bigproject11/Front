@@ -4,6 +4,18 @@
  * @description 일반 사용자 데이터베이스 (새로운 구조)
  */
 const mockUserDB = [
+  { 
+        id: 0, 
+        loginId: 'user', 
+        loginPassword: 'password', 
+        name: '테스트', 
+        email: 'user00@example.com',
+        phone: '010-0000-0000',
+        status: 'active',
+        memorialId: null,
+        createdAt: new Date('2024-01-15T09:00:00Z'),
+        updatedAt: new Date('2024-07-20T14:30:00Z')
+    },
     { 
         id: 1, 
         loginId: 'user01', 
@@ -70,6 +82,16 @@ const mockUserDB = [
  * @description 관리자(상조사 직원) 데이터베이스 (기존 구조 유지)
  */
 const mockEmployeeDB = [
+    {
+        id: 99,
+        loginId: 'admin',
+        loginPassword: 'password',
+        name: '테스트관리자',
+        email: 'admin00@company.com',
+        phone: '010-1000-1000',
+        department: '사자보이즈',
+        position: '사장'
+    },
     { 
         id: 100, 
         loginId: 'admin', 

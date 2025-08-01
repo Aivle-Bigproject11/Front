@@ -21,6 +21,15 @@ const Login = () => {
     setAnimateCard(true);
   }, [isAuthenticated, navigate]);
 
+  // 탭 전환시 테스트 계정 정보 자동 입력
+  useEffect(() => {
+    if (activeTab === 'employee') {
+      setCredentials({ username: 'admin', password: 'password' });
+    } else {
+      setCredentials({ username: 'user', password: 'password' });
+    }
+  }, [activeTab]);
+
   const handleChange = (e) => {
     setCredentials({
       ...credentials,
@@ -260,6 +269,25 @@ const Login = () => {
                 </Alert>
               )}
 
+              {/* 테스트 계정 안내 */}
+              <div style={{
+                textAlign: 'center',
+                padding: '15px',
+                background: 'rgba(102, 126, 234, 0.1)',
+                borderRadius: '8px',
+                border: '1px solid rgba(102, 126, 234, 0.2)'
+              }}>
+                <p style={{
+                  fontSize: '12px',
+                  color: '#667eea',
+                  margin: 0,
+                  fontWeight: '500'
+                }}>
+                  <i className="fas fa-info-circle me-2"></i>
+                  테스트용 계정: {activeTab === 'employee' ? 'admin / password' : 'user / password'}
+                </p>
+              </div>
+
               {/* 폼 */}
               <form onSubmit={handleSubmit} style={{ flex: 1 }}>
                 <div className="login-form-group" style={{ marginBottom: '25px' }}>
@@ -493,24 +521,6 @@ const Login = () => {
                 )}
               </div>
 
-              {/* 테스트 계정 안내 */}
-              <div style={{
-                textAlign: 'center',
-                padding: '15px',
-                background: 'rgba(102, 126, 234, 0.1)',
-                borderRadius: '8px',
-                border: '1px solid rgba(102, 126, 234, 0.2)'
-              }}>
-                <p style={{
-                  fontSize: '12px',
-                  color: '#667eea',
-                  margin: 0,
-                  fontWeight: '500'
-                }}>
-                  <i className="fas fa-info-circle me-2"></i>
-                  테스트용 계정: user / password
-                </p>
-              </div>
             </div>
           </div>
         </div>
