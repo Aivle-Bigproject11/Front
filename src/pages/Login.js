@@ -3,6 +3,7 @@ import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getMemorialByCode } from '../services/memorialService';
+import icon from '../assets/logo/icon01.png';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -95,7 +96,7 @@ const Login = () => {
   return (
     <div className="login-page-wrapper" style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -110,35 +111,38 @@ const Login = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat'
+        background: 'url("data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23B8860B" fill-opacity="0.12"%3E%3Cpath d="M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+        opacity: 0.7
       }}></div>
       
       <div className={`login-container ${animateCard ? 'animate-in' : ''}`} style={{
         position: 'relative',
         zIndex: 1,
         width: '100%',
-        maxWidth: '940px', // 카드보다 40px 더 크게
-        minHeight: '640px', // 카드보다 40px 더 크게
+        maxWidth: '940px',
+        minHeight: '640px',
         margin: '0 auto',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         boxSizing: 'border-box',
-        background: '#f8f9fa', // 연한 흰색 배경
-        boxShadow: '0 8px 32px rgba(102,126,234,0.08)',
-        padding: '24px', // 카드와의 여백
-        borderRadius: '28px', // 카드보다 약간 더 둥글게
+        background: 'rgba(184, 134, 11, 0.18)',
+        boxShadow: '0 12px 40px rgba(44, 31, 20, 0.35)',
+        backdropFilter: 'blur(12px)',
+        padding: '24px',
+        borderRadius: '28px',
+        border: '1px solid rgba(184, 134, 11, 0.25)',
         transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
         opacity: animateCard ? 1 : 0,
         transition: 'all 0.6s ease-out'
       }}>
         <div className="login-card" style={{
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: 'rgba(255, 251, 235, 0.98)',
           borderRadius: '20px',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-          backdropFilter: 'blur(10px)',
+          boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)',
+          backdropFilter: 'blur(15px)',
           overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.2)'
+          border: '2px solid rgba(184, 134, 11, 0.35)'
         }}>
           <div className="login-content" style={{
             display: 'flex',
@@ -147,34 +151,104 @@ const Login = () => {
             {/* 왼쪽 이미지 영역 */}
             <div className="login-left" style={{
               flex: '1',
-              background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               position: 'relative',
               overflow: 'hidden'
             }}>
-              {/* 장식 요소들 */}
+              {/* 모서리 라인 장식 */}
+              {/* 왼쪽 상단 */}
               <div style={{
                 position: 'absolute',
-                top: '10%',
-                left: '10%',
-                width: '80px',
-                height: '80px',
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                borderRadius: '50%',
-                opacity: 0.1
+                top: '20px',
+                left: '20px',
+                width: '60px',
+                height: '2px',
+                background: 'rgba(44, 31, 20, 0.3)'
               }}></div>
               <div style={{
                 position: 'absolute',
-                bottom: '20%',
-                right: '15%',
-                width: '120px',
-                height: '120px',
-                background: 'linear-gradient(135deg, #764ba2, #667eea)',
-                borderRadius: '20px',
-                opacity: 0.08,
-                transform: 'rotate(45deg)'
+                top: '20px',
+                left: '20px',
+                width: '2px',
+                height: '60px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              
+              {/* 오른쪽 상단 */}
+              <div style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                width: '60px',
+                height: '2px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                width: '2px',
+                height: '60px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              
+              {/* 왼쪽 하단 */}
+              <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '20px',
+                width: '60px',
+                height: '2px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '20px',
+                width: '2px',
+                height: '60px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              
+              {/* 오른쪽 하단 */}
+              <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                right: '20px',
+                width: '60px',
+                height: '2px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                right: '20px',
+                width: '2px',
+                height: '60px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              
+              {/* 중앙 세로선들 */}
+              <div style={{
+                position: 'absolute',
+                left: '50%',
+                top: '15%',
+                transform: 'translateX(-50%)',
+                width: '1px',
+                height: '20%',
+                background: 'rgba(255, 255, 255, 0.15)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                left: '50%',
+                bottom: '15%',
+                transform: 'translateX(-50%)',
+                width: '1px',
+                height: '20%',
+                background: 'rgba(255, 255, 255, 0.15)'
               }}></div>
               
               <div className="login-image-content" style={{
@@ -184,33 +258,53 @@ const Login = () => {
                 <div style={{
                   width: '150px',
                   height: '150px',
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  background: 'linear-gradient(135deg, #2C1F14 0%, #4A3728 100%)',
                   borderRadius: '50%',
                   margin: '0 auto 30px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)'
+                  boxShadow: '0 15px 35px rgba(44, 31, 20, 0.5)',
+                  border: '3px solid rgba(255, 255, 255, 0.35)',
+                  overflow: 'hidden'
                 }}>
-                  <i className="fas fa-heart" style={{
+                  <img 
+                    src={icon} 
+                    alt="Golden Gate Logo"
+                    style={{
+                      width: '80px',
+                      height: '80px',
+                      objectFit: 'contain',
+                      filter: 'brightness(1.2) contrast(1.1)'
+                    }}
+                    onError={(e) => {
+                      // 이미지 로드 실패시 폴백 아이콘
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'block';
+                    }}
+                  />
+                  <i className="fas fa-yin-yang" style={{
                     fontSize: '4rem',
-                    color: 'white'
+                    color: '#B8860B',
+                    display: 'none'
                   }}></i>
                 </div>
                 <h3 style={{
-                  color: '#495057',
+                  color: '#2C1F14',
                   fontWeight: '700',
-                  marginBottom: '15px'
-                }}>사자 보이즈</h3>
+                  marginBottom: '15px',
+                  fontSize: '1.8rem'
+                }}>Golden Gate</h3>
                 <p style={{
-                  color: '#6c757d',
+                  color: '#4A3728',
                   fontSize: '16px',
                   lineHeight: '1.6',
-                  margin: 0
+                  margin: 0,
+                  fontWeight: '500'
                 }}>
                   소중한 분들을 위한<br/>
-                  디지털 추모 공간과<br/>
-                  전문 상조 서비스
+                  전통과 품격을 갖춘<br/>
+                  프리미엄 상조 서비스
                 </p>
               </div>
             </div>
@@ -221,17 +315,21 @@ const Login = () => {
               padding: '50px 40px',
               display: 'flex',
               flexDirection: 'column',
-              background: activeTab === 'employee' ? '#dae7fcff' : '#e9deffff', // 탭에 따라 배경색 변경
+              background: activeTab === 'employee' 
+                ? 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)' 
+                : 'linear-gradient(135deg, rgba(74, 55, 40, 0.12) 0%, rgba(139, 90, 43, 0.08) 100%)',
               borderRadius: '16px',
-              boxShadow: '0 2px 12px rgba(102,126,234,0.04)'
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
+              border: '1px solid rgba(184, 134, 11, 0.2)'
             }}>
               {/* 탭 헤더 */}
               <div className="login-tabs" style={{
                 display: 'flex',
                 marginBottom: '40px',
                 borderRadius: '12px',
-                background: '#f8f9fa',
-                padding: '4px'
+                background: 'rgba(184, 134, 11, 0.12)',
+                padding: '4px',
+                border: '1px solid rgba(184, 134, 11, 0.25)'
               }}>
                 <button 
                   className={`login-tab ${activeTab === 'employee' ? 'active' : ''}`}
@@ -242,13 +340,16 @@ const Login = () => {
                     border: 'none',
                     borderRadius: '8px',
                     background: activeTab === 'employee' 
-                      ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+                      ? 'linear-gradient(135deg, #B8860B, #CD853F)' 
                       : 'transparent',
-                    color: activeTab === 'employee' ? 'white' : '#6c757d',
-                    fontWeight: '600',
+                    color: activeTab === 'employee' ? '#2C1F14' : '#4A3728',
+                    fontWeight: '700',
                     fontSize: '14px',
                     transition: 'all 0.3s ease',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    boxShadow: activeTab === 'employee' 
+                      ? '0 2px 8px rgba(184, 134, 11, 0.35)' 
+                      : 'none'
                   }}
                 >
                   직원 로그인
@@ -262,13 +363,16 @@ const Login = () => {
                     border: 'none',
                     borderRadius: '8px',
                     background: activeTab === 'user' 
-                      ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+                      ? 'linear-gradient(135deg, #4A3728, #8B5A2B)' 
                       : 'transparent',
-                    color: activeTab === 'user' ? 'white' : '#6c757d',
-                    fontWeight: '600',
+                    color: activeTab === 'user' ? '#FFF' : '#4A3728',
+                    fontWeight: '700',
                     fontSize: '14px',
                     transition: 'all 0.3s ease',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    boxShadow: activeTab === 'user' 
+                      ? '0 2px 8px rgba(74, 55, 40, 0.35)' 
+                      : 'none'
                   }}
                 >
                   사용자 로그인
@@ -278,15 +382,16 @@ const Login = () => {
               {/* 제목 */}
               <div style={{ marginBottom: '30px' }}>
                 <h2 style={{
-                  color: '#495057',
+                  color: '#2C1F14',
                   fontWeight: '700',
                   fontSize: '28px',
                   marginBottom: '8px'
                 }}>로그인</h2>
                 <p style={{
-                  color: '#6c757d',
+                  color: '#4A3728',
                   fontSize: '14px',
-                  margin: 0
+                  margin: 0,
+                  fontWeight: '500'
                 }}>계정 정보를 입력해주세요</p>
               </div>
 
@@ -297,7 +402,8 @@ const Login = () => {
                   border: 'none',
                   backgroundColor: '#fff5f5',
                   color: '#e53e3e',
-                  marginBottom: '20px'
+                  marginBottom: '20px',
+                  border: '1px solid #fed7d7'
                 }}>
                   {error}
                 </Alert>
@@ -307,17 +413,18 @@ const Login = () => {
               <div style={{
                 textAlign: 'center',
                 padding: '15px',
-                background: 'rgba(102, 126, 234, 0.1)',
+                background: 'rgba(184, 134, 11, 0.12)',
                 borderRadius: '8px',
-                border: '1px solid rgba(102, 126, 234, 0.2)'
+                border: '1px solid rgba(184, 134, 11, 0.3)',
+                marginBottom: '25px'
               }}>
                 <p style={{
                   fontSize: '12px',
-                  color: '#667eea',
+                  color: '#6B4423',
                   margin: 0,
-                  fontWeight: '500'
+                  fontWeight: '600'
                 }}>
-                  <i className="fas fa-info-circle me-2"></i>
+                  <i className="fas fa-yin-yang me-2" style={{ color: '#B8860B' }}></i>
                   테스트용 계정: {activeTab === 'employee' ? 'admin / password' : 'user / password'}
                 </p>
               </div>
@@ -328,8 +435,8 @@ const Login = () => {
                   <label className="login-form-label" style={{
                     display: 'block',
                     marginBottom: '8px',
-                    color: '#495057',
-                    fontWeight: '600',
+                    color: '#2C1F14',
+                    fontWeight: '700',
                     fontSize: '14px'
                   }}>아이디</label>
                   <input
@@ -342,14 +449,21 @@ const Login = () => {
                     style={{
                       width: '100%',
                       padding: '15px 20px',
-                      border: '2px solid #e9ecef',
+                      border: '2px solid rgba(184, 134, 11, 0.35)',
                       borderRadius: '12px',
                       fontSize: '16px',
                       transition: 'all 0.3s ease',
-                      outline: 'none'
+                      outline: 'none',
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                    onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#B8860B';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
 
@@ -357,8 +471,8 @@ const Login = () => {
                   <label className="login-form-label" style={{
                     display: 'block',
                     marginBottom: '8px',
-                    color: '#495057',
-                    fontWeight: '600',
+                    color: '#2C1F14',
+                    fontWeight: '700',
                     fontSize: '14px'
                   }}>비밀번호</label>
                   <input
@@ -371,14 +485,21 @@ const Login = () => {
                     style={{
                       width: '100%',
                       padding: '15px 20px',
-                      border: '2px solid #e9ecef',
+                      border: '2px solid rgba(184, 134, 11, 0.35)',
                       borderRadius: '12px',
                       fontSize: '16px',
                       transition: 'all 0.3s ease',
-                      outline: 'none'
+                      outline: 'none',
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                    onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#B8860B';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
 
@@ -396,13 +517,14 @@ const Login = () => {
                       marginRight: '10px',
                       width: '18px',
                       height: '18px',
-                      accentColor: '#667eea'
+                      accentColor: '#B8860B'
                     }}
                   />
                   <label htmlFor="rememberMe" style={{
-                    color: '#6c757d',
+                    color: '#4A3728',
                     fontSize: '14px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    fontWeight: '500'
                   }}>아이디 기억하기</label>
                 </div>
 
@@ -412,16 +534,16 @@ const Login = () => {
                   marginBottom: '30px'
                 }}>
                   <a href="/FindId" className="login-link" style={{
-                    color: '#667eea',
+                    color: '#B8860B',
                     textDecoration: 'none',
                     fontSize: '14px',
-                    fontWeight: '500'
+                    fontWeight: '600'
                   }}>아이디 찾기</a>
                   <a href="/FindPassword" className="login-link" style={{
-                    color: '#667eea',
+                    color: '#B8860B',
                     textDecoration: 'none',
                     fontSize: '14px',
-                    fontWeight: '500'
+                    fontWeight: '600'
                   }}>비밀번호 찾기</a>
                 </div>
 
@@ -434,26 +556,27 @@ const Login = () => {
                     padding: '15px',
                     background: loading 
                       ? '#e9ecef' 
-                      : 'linear-gradient(135deg, #667eea, #764ba2)',
-                    color: 'white',
+                      : 'linear-gradient(135deg, #D4AF37, #F5C23E)',
+                    color: loading ? '#6c757d' : '#2C1F14',
                     border: 'none',
                     borderRadius: '12px',
                     fontSize: '16px',
-                    fontWeight: '600',
+                    fontWeight: '700',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.3s ease',
-                    marginBottom: '25px'
+                    marginBottom: '25px',
+                    boxShadow: loading ? 'none' : '0 4px 15px rgba(184, 134, 11, 0.35)'
                   }}
                   onMouseEnter={(e) => {
                     if (!loading) {
                       e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.3)';
+                      e.target.style.boxShadow = '0 8px 25px rgba(184, 134, 11, 0.45)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!loading) {
                       e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = 'none';
+                      e.target.style.boxShadow = '0 4px 15px rgba(184, 134, 11, 0.35)';
                     }
                   }}
                 >
@@ -474,16 +597,20 @@ const Login = () => {
               {/* 고유번호 입장 */}
               <div className="unique-number-section" style={{
                 padding: '20px',
-                background: '#f8f9fa',
+                background: 'rgba(184, 134, 11, 0.12)',
                 borderRadius: '12px',
-                marginBottom: '20px'
+                marginBottom: '20px',
+                border: '1px solid rgba(184, 134, 11, 0.25)'
               }}>
                 <h6 style={{
-                  color: '#495057',
+                  color: '#2C1F14',
                   marginBottom: '15px',
                   fontSize: '14px',
-                  fontWeight: '600'
-                }}>고유번호로 추모관 입장</h6>
+                  fontWeight: '700'
+                }}>
+                  <i className="fas fa-yin-yang me-2" style={{ color: '#B8860B' }}></i>
+                  고유번호로 추모관 입장
+                </h6>
                 <div style={{
                   display: 'flex',
                   gap: '10px'
@@ -501,13 +628,20 @@ const Login = () => {
                     style={{
                       flex: 1,
                       padding: '10px 15px',
-                      border: '2px solid #e9ecef',
+                      border: '2px solid rgba(184, 134, 11, 0.35)',
                       borderRadius: '8px',
                       fontSize: '14px',
-                      outline: 'none'
+                      outline: 'none',
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                    onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#B8860B';
+                      e.target.style.boxShadow = '0 0 0 2px rgba(184, 134, 11, 0.2)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
+                      e.target.style.boxShadow = 'none';
+                    }}
                     disabled={joinLoading}
                   />
                   <button 
@@ -517,12 +651,12 @@ const Login = () => {
                       padding: '10px 20px',
                       background: joinLoading 
                         ? '#6c757d' 
-                        : 'linear-gradient(135deg, #667eea, #764ba2)',
+                        : 'linear-gradient(135deg, #4A3728, #8B5A2B)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
                       fontSize: '14px',
-                      fontWeight: '600',
+                      fontWeight: '700',
                       cursor: joinLoading ? 'not-allowed' : 'pointer',
                       transition: 'all 0.3s ease',
                       minWidth: '80px',
@@ -549,9 +683,10 @@ const Login = () => {
                   <div style={{
                     marginTop: '10px',
                     fontSize: '12px',
-                    color: '#6c757d'
+                    color: '#6B4423',
+                    fontWeight: '500'
                   }}>
-                    <i className="fas fa-info-circle me-1"></i>
+                    <i className="fas fa-info-circle me-1" style={{ color: '#B8860B' }}></i>
                     입력된 고유번호: {joinCode}
                   </div>
                 )}
@@ -568,10 +703,10 @@ const Login = () => {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#667eea',
+                      color: '#B8860B',
                       textDecoration: 'none',
                       fontSize: '14px',
-                      fontWeight: '600',
+                      fontWeight: '700',
                       cursor: 'pointer'
                     }}
                   >
@@ -584,10 +719,10 @@ const Login = () => {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#667eea',
+                      color: '#6B4423',
                       textDecoration: 'none',
                       fontSize: '14px',
-                      fontWeight: '600',
+                      fontWeight: '700',
                       cursor: 'pointer'
                     }}
                   >
