@@ -1,11 +1,8 @@
-// src/pages/Menu1-1.js - 고객 목록 페이지
-
 import React, { useEffect, useState } from 'react';
 import { Badge, Button } from 'react-bootstrap';
 import { Users, FileText, Phone, MapPin, Clock, Check, X, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { customerService, customerUtils } from '../services/customerService';
-import './Menu3.css';
 
 const Menu1_1 = () => {
   const [customers, setCustomers] = useState([]);
@@ -26,7 +23,6 @@ const Menu1_1 = () => {
       setLoading(true);
       setError(null);
       
-      // 애니메이션을 위한 지연
       setAnimateCard(true);
       
       const data = await customerService.getAllCustomers();
@@ -50,7 +46,6 @@ const Menu1_1 = () => {
   };
 
   const handleCustomerSelect = (customer) => {
-    // 선택된 고객 정보를 로컬 스토리지에 저장 (페이지 간 데이터 전달용)
     localStorage.setItem('selectedCustomer', JSON.stringify(customer));
   };
 
@@ -69,7 +64,7 @@ const Menu1_1 = () => {
   if (loading) {
     return (
       <div className="page-wrapper" style={{
-        '--navbar-height': '70px',
+        '--navbar-height': '62px',
         height: 'calc(100vh - var(--navbar-height))',
         background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
         display: 'flex',
@@ -90,7 +85,7 @@ const Menu1_1 = () => {
   if (error) {
     return (
       <div className="page-wrapper" style={{
-        '--navbar-height': '70px',
+        '--navbar-height': '62px',
         height: 'calc(100vh - var(--navbar-height))',
         background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
         display: 'flex',
@@ -111,7 +106,7 @@ const Menu1_1 = () => {
 
   return (
     <div className="page-wrapper" style={{
-      '--navbar-height': '70px',
+      '--navbar-height': '62px',
       height: 'calc(100vh - var(--navbar-height))', 
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       padding: '20px',
@@ -134,9 +129,6 @@ const Menu1_1 = () => {
         backdropFilter: 'blur(8px)',
         border: '1px solid rgba(255, 255, 255, 0.18)',
         borderRadius: '20px',
-        transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
-        opacity: animateCard ? 1 : 0,
-        transition: 'all 0.6s ease-out',
         padding: '20px',
         gap: '20px',
         overflow: 'hidden',
@@ -286,26 +278,22 @@ const Menu1_1 = () => {
                     overflow: 'hidden',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
                     border: '1px solid rgba(229, 231, 235, 0.8)',
-                    borderLeft: customerUtils.getUrgencyBorder(urgency),
-                    transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
-                    opacity: animateCard ? 1 : 0,
-                    transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.1}s`,
                     display: 'flex',
                     minHeight: '140px',
                     position: 'relative',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease'
                   }}
-                       onClick={() => handleCustomerSelect(customer)}
-                       onMouseEnter={(e) => {
-                         e.currentTarget.style.transform = 'translateY(-2px)';
-                         e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
-                       }}
-                       onMouseLeave={(e) => {
-                         e.currentTarget.style.transform = 'translateY(0)';
-                         e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.06)';
-                       }}
+                    onClick={() => handleCustomerSelect(customer)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.06)';
+                    }}
                   >
-                    {/* 긴급도 표시 배지 */}
                     {urgency === 'urgent' && (
                       <div style={{
                         position: 'absolute',
@@ -325,7 +313,6 @@ const Menu1_1 = () => {
                       </div>
                     )}
 
-                    {/* 왼쪽: 고객 정보 */}
                     <div style={{
                       background: urgency === 'urgent'
                         ? 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)'
@@ -383,7 +370,6 @@ const Menu1_1 = () => {
                       </div>
                     </div>
 
-                    {/* 가운데: 세부 정보 */}
                     <div style={{
                       flex: 1,
                       padding: '20px',
@@ -398,28 +384,14 @@ const Menu1_1 = () => {
                           gap: '8px',
                           marginBottom: '12px'
                         }}>
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '8px',
-                            background: 'rgba(111, 66, 193, 0.05)',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(111, 66, 193, 0.1)'
-                          }}>
+                          <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(111, 66, 193, 0.05)', borderRadius: '8px', border: '1px solid rgba(111, 66, 193, 0.1)' }}>
                             <Phone size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
                             <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
                               {customer.phone}
                             </span>
                           </div>
 
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '8px',
-                            background: 'rgba(111, 66, 193, 0.05)',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(111, 66, 193, 0.1)'
-                          }}>
+                          <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(111, 66, 193, 0.05)', borderRadius: '8px', border: '1px solid rgba(111, 66, 193, 0.1)' }}>
                             <MapPin size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
                             <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
                               {customer.location}
@@ -427,28 +399,15 @@ const Menu1_1 = () => {
                           </div>
                         </div>
 
-                        {/* 서류 작성 상태 */}
                         <div>
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            marginBottom: '8px'
-                          }}>
+                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                             <FileText size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
-                            <span style={{
-                              fontSize: '0.9rem',
-                              fontWeight: '600',
-                              color: '#374151'
-                            }}>
+                            <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#374151' }}>
                               서류 작성 상태
                             </span>
                           </div>
 
-                          <div style={{
-                            display: 'flex',
-                            gap: '6px',
-                            flexWrap: 'wrap'
-                          }}>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                             {Object.entries(customer.documents).map(([docType, isCompleted]) => {
                               const docNames = {
                                 obituary: '부고장',
@@ -460,12 +419,7 @@ const Menu1_1 = () => {
                                 <Badge
                                   key={docType}
                                   bg={isCompleted ? 'success' : 'danger'}
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '4px 8px',
-                                    fontSize: '0.75rem'
-                                  }}
+                                  style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '0.75rem' }}
                                 >
                                   {isCompleted ?
                                     <Check size={12} style={{ marginRight: '3px' }} /> :
@@ -480,7 +434,6 @@ const Menu1_1 = () => {
                       </div>
                     </div>
 
-                    {/* 오른쪽: 버튼 */}
                     <div style={{
                       display: 'flex',
                       flexDirection: 'column',
@@ -495,13 +448,7 @@ const Menu1_1 = () => {
                       <Button
                         variant="primary"
                         size="sm"
-                        style={{
-                          width: '100%',
-                          borderRadius: '8px',
-                          fontWeight: '600',
-                          padding: '8px',
-                          fontSize: '0.85rem'
-                        }}
+                        style={{ width: '100%', borderRadius: '8px', fontWeight: '600', padding: '8px', fontSize: '0.85rem' }}
                         onClick={(e) => handleRegisterClick(e, customer)}
                       >
                         <FileText size={14} style={{ marginRight: '4px' }} />
@@ -511,13 +458,7 @@ const Menu1_1 = () => {
                       <Button
                         variant="outline-primary"
                         size="sm"
-                        style={{
-                          width: '100%',
-                          borderRadius: '8px',
-                          fontWeight: '600',
-                          padding: '8px',
-                          fontSize: '0.85rem'
-                        }}
+                        style={{ width: '100%', borderRadius: '8px', fontWeight: '600', padding: '8px', fontSize: '0.85rem' }}
                         onClick={(e) => handleDocumentsClick(e, customer)}
                       >
                         <Eye size={14} style={{ marginRight: '4px' }} />
@@ -532,7 +473,7 @@ const Menu1_1 = () => {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -544,7 +485,12 @@ const Menu1_1 = () => {
           }
         }
         
-        .animate-in {
+        .dashboard-container {
+          opacity: 0;
+        }
+    
+        .dashboard-container.animate-in {
+          opacity: 1;
           animation: fadeInUp 0.6s ease-out;
         }
 
