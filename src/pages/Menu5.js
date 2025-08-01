@@ -77,6 +77,40 @@ const Menu5 = () => {
     });
   };
 
+  const baseButtonStyle = {
+    border: 'none',
+    borderRadius: '12px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+  };
+
+  const detailButtonStyle = {
+    ...baseButtonStyle,
+    background: '#6c757d', 
+    color: 'white',
+    padding: '8px 16px',
+    fontSize: '14px',
+  };
+
+  const addButtonStyle = {
+    ...baseButtonStyle,
+    background: 'linear-gradient(135deg, #667eea, #764ba2)', 
+    color: 'white',
+    padding: '12px 28px',
+    fontSize: '16px',
+  };
+
+  const handleMouseEnter = (e) => {
+    e.target.style.transform = 'translateY(-2px)';
+    e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+  };
+
+  const handleMouseLeave = (e) => {
+    e.target.style.transform = 'translateY(0)';
+    e.target.style.boxShadow = 'none';
+  };
+
   return (
     <div className="page-wrapper" style={{
       '--navbar-height': '62px',
@@ -172,7 +206,13 @@ const Menu5 = () => {
                     </Row>
                   </Col>
                   <Col md="auto">
-                    <Button variant="dark">상세정보/수정</Button>
+                    <button 
+                      style={detailButtonStyle}
+                      onMouseEnter={handleMouseEnter}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      상세정보/수정
+                    </button>
                   </Col>
                 </Row>
               </Card.Body>
@@ -181,7 +221,13 @@ const Menu5 = () => {
         </div>
 
         <div className="text-end mt-3" style={{ flexShrink: 0 }}>
-          <Button variant="primary" size="lg">고객 추가</Button>
+          <button 
+            style={addButtonStyle}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            고객 추가
+          </button>
         </div>
       </div>
 
