@@ -61,6 +61,13 @@ const Navbar = () => {
             >
               디지털 추모관
             </Nav.Link>
+              <Nav.Link 
+              as={Link} 
+              to="/menu5_2" 
+              active={location.pathname === "/menu5_2"}
+            >
+              고객 관리 메뉴5-2
+            </Nav.Link>
           </Nav>
           <Nav>
             <BootstrapNavbar.Text className="me-3">

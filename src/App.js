@@ -16,9 +16,12 @@ import Menu2 from './pages/Menu2';
 import Menu3 from './pages/Menu3';
 import Menu4 from './pages/Menu4';
 import Menu5 from './pages/Menu5';
+import Menu5_1 from './pages/Menu5_1'; 
+import Menu5_2 from './pages/Menu5_2';
 import MemorialDetail from './pages/MemorialDetail';
 import MemorialConfig from './pages/MemorialConfig';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+
 
 // Login 컴포넌트와 SignUp 컴포넌트를 임포트합니다.
 import SignUp from './pages/SignUp';
@@ -71,7 +74,6 @@ const MainLayout = () => {
                 <Route path="/menu2" element={<Menu2 />} />
                 <Route path="/menu3" element={<Menu3 />} />
                 <Route path="/menu4" element={<Menu4 />} />
-                <Route path="/menu5" element={<Menu5 />} />
                 <Route path="/memorial/:id" element={<MemorialDetail />} />
                 <Route path="/memorial/:id/settings" element={<MemorialConfig />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
