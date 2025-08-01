@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, InputGroup } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom'; 
+
 
 // 실제로는 서버에서 받아올 고객 데이터 예시입니다.
 const allCustomers = [
@@ -13,6 +15,8 @@ const allCustomers = [
 ];
 
 const Menu5 = () => {
+  const navigate = useNavigate();
+
   const [filters, setFilters] = useState({
     id: '',
     name: '',
@@ -210,6 +214,7 @@ const Menu5 = () => {
                       style={detailButtonStyle}
                       onMouseEnter={handleMouseEnter}
                       onMouseLeave={handleMouseLeave}
+                      onClick={() => navigate('/menu5_1')}
                     >
                       상세정보/수정
                     </button>
@@ -225,6 +230,7 @@ const Menu5 = () => {
             style={addButtonStyle}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onClick={() => navigate('/menu5_2')}
           >
             고객 추가
           </button>
