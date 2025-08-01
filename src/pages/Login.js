@@ -3,6 +3,7 @@ import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getMemorialByCode } from '../services/memorialService';
+import icon from '../assets/logo/icon01.png';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -157,35 +158,97 @@ const Login = () => {
               position: 'relative',
               overflow: 'hidden'
             }}>
-              {/* 장식 요소들 */}
+              {/* 모서리 라인 장식 */}
+              {/* 왼쪽 상단 */}
               <div style={{
                 position: 'absolute',
-                top: '15%',
-                left: '15%',
+                top: '20px',
+                left: '20px',
                 width: '60px',
+                height: '2px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                top: '20px',
+                left: '20px',
+                width: '2px',
                 height: '60px',
-                background: 'rgba(44, 31, 20, 0.2)',
-                borderRadius: '50%',
-                transform: 'rotate(45deg)'
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              
+              {/* 오른쪽 상단 */}
+              <div style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                width: '60px',
+                height: '2px',
+                background: 'rgba(44, 31, 20, 0.3)'
               }}></div>
               <div style={{
                 position: 'absolute',
-                bottom: '20%',
-                right: '15%',
-                width: '80px',
-                height: '80px',
-                background: 'rgba(44, 31, 20, 0.15)',
-                borderRadius: '20px',
-                transform: 'rotate(30deg)'
+                top: '20px',
+                right: '20px',
+                width: '2px',
+                height: '60px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              
+              {/* 왼쪽 하단 */}
+              <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '20px',
+                width: '60px',
+                height: '2px',
+                background: 'rgba(44, 31, 20, 0.3)'
               }}></div>
               <div style={{
                 position: 'absolute',
-                top: '40%',
-                right: '20%',
-                width: '40px',
-                height: '40px',
-                background: 'rgba(255, 255, 255, 0.25)',
-                borderRadius: '50%'
+                bottom: '20px',
+                left: '20px',
+                width: '2px',
+                height: '60px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              
+              {/* 오른쪽 하단 */}
+              <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                right: '20px',
+                width: '60px',
+                height: '2px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                right: '20px',
+                width: '2px',
+                height: '60px',
+                background: 'rgba(44, 31, 20, 0.3)'
+              }}></div>
+              
+              {/* 중앙 세로선들 */}
+              <div style={{
+                position: 'absolute',
+                left: '50%',
+                top: '15%',
+                transform: 'translateX(-50%)',
+                width: '1px',
+                height: '20%',
+                background: 'rgba(255, 255, 255, 0.15)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                left: '50%',
+                bottom: '15%',
+                transform: 'translateX(-50%)',
+                width: '1px',
+                height: '20%',
+                background: 'rgba(255, 255, 255, 0.15)'
               }}></div>
               
               <div className="login-image-content" style={{
@@ -202,11 +265,28 @@ const Login = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 15px 35px rgba(44, 31, 20, 0.5)',
-                  border: '3px solid rgba(255, 255, 255, 0.35)'
+                  border: '3px solid rgba(255, 255, 255, 0.35)',
+                  overflow: 'hidden'
                 }}>
+                  <img 
+                    src={icon} 
+                    alt="Golden Gate Logo"
+                    style={{
+                      width: '80px',
+                      height: '80px',
+                      objectFit: 'contain',
+                      filter: 'brightness(1.2) contrast(1.1)'
+                    }}
+                    onError={(e) => {
+                      // 이미지 로드 실패시 폴백 아이콘
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'block';
+                    }}
+                  />
                   <i className="fas fa-yin-yang" style={{
                     fontSize: '4rem',
-                    color: '#B8860B'
+                    color: '#B8860B',
+                    display: 'none'
                   }}></i>
                 </div>
                 <h3 style={{
