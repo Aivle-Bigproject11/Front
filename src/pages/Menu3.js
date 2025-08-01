@@ -1,402 +1,195 @@
 import React, { useState, useEffect } from 'react';
-import './Menu3.css'; 
+import { Row, Col, Card, Form, Button, Modal } from 'react-bootstrap';
+import { Search, Mail } from 'lucide-react';
+
+const allCustomers = [
+    { id: 'SB2001', name: '김말똥', birth: '1950.01.01', age: 74, gender: '남', family: '자녀 2', job: '의사', term: '2020.01.03 ~ 2025.07.18', hasDisease: true, payment: 680 },
+    { id: 'SB2002', name: '김진우', birth: '1990.01.01', age: 34, gender: '남', family: '미혼', job: '무직', term: '2020.01.03 ~ 2025.07.18', hasDisease: false, payment: 420 },
+    { id: 'SB2003', name: '최개똥', birth: '2000.01.01', age: 24, gender: '남', family: 'X', job: '정비사', term: '2020.01.03 ~ 2025.07.18', hasDisease: false, payment: 480 },
+    { id: 'SB2004', name: '이철수', birth: '1975.01.01', age: 49, gender: '남', family: '자녀 5', job: '개발자', term: '2020.01.03 ~ 2025.07.18', hasDisease: true, payment: 750 },
+    { id: 'SB2005', name: '박영희', birth: '1982.05.10', age: 42, gender: '여', family: '기혼', job: '주부', term: '2021.03.15 ~ 2026.03.14', hasDisease: false, payment: 550 },
+];
 
 const Menu3 = () => {
-  // 검색 필터 상태 관리
-  const [searchTerm, setSearchTerm] = useState('');
-  const [ageFilter, setAgeFilter] = useState('전체');
-  const [genderFilter, setGenderFilter] = useState({ male: false, female: false });
-  const [diseaseFilter, setDiseaseFilter] = useState({ none: false, has: false });
-  const [marriageFilter, setMarriageFilter] = useState('전체');
-  const [childrenFilter, setChildrenFilter] = useState('전체');
-  const [paymentFilter, setPaymentFilter] = useState('전체');
+    const [filters, setFilters] = useState({ id: '', name: '', age: '', payment: '', gender: [], disease: [], family: [] });
+    const [filteredCustomers, setFilteredCustomers] = useState(allCustomers);
+    const [animateCard, setAnimateCard] = useState(false);
+    const [selectedCustomers, setSelectedCustomers] = useState([]);
+    const [selectedCustomerDetail, setSelectedCustomerDetail] = useState(null);
+    const [messagePreview, setMessagePreview] = useState('');
+    const [showTransmissionCompletePopup, setShowTransmissionCompletePopup] = useState(false);
 
-  // 고객 데이터 (더미 데이터)
-  const [customers, setCustomers] = useState([
-    { id: 'SB2001', name: '김강봉', age: 60, gender: '남', subscriptionPeriod: '2020.01.03.~2025.07.18', familyComposition: '자녀 2' },
-    { id: 'SB2002', name: '김선우', age: 35, gender: '남', subscriptionPeriod: '2020.01.05.~2025.07.18', familyComposition: '기혼' },
-    { id: 'SB2003', name: '이예주', age: 30, gender: '여', subscriptionPeriod: '2020.01.24.~2025.07.18', familyComposition: '미혼' },
-    { id: 'SB2004', name: '김순자', age: 70, gender: '여', subscriptionPeriod: '2020.03.01.~2025.07.18', familyComposition: '자녀 4' },
-    { id: 'SB2005', name: '최현숙', age: 65, gender: '남', subscriptionPeriod: '2020.08.08.~2025.07.18', familyComposition: '자녀 1' },
-    { id: 'SB2006', name: '이영수', age: 55, gender: '남', subscriptionPeriod: '2020.10.09.~2025.07.18', familyComposition: '기혼, 자녀 X' },
-  ]);
+    useEffect(() => { setAnimateCard(true); }, []);
 
-  // 필터링된 고객 데이터
-  const [filteredCustomers, setFilteredCustomers] = useState([]);
-  // 선택된 고객 (체크박스)
-  const [selectedCustomers, setSelectedCustomers] = useState([]);
-  // 고객 상세 정보 및 메시지 발송 기록
-  const [selectedCustomerDetail, setSelectedCustomerDetail] = useState(null);
-  // 메시지 미리보기 내용
-  const [messagePreview, setMessagePreview] = useState('');
-  // 삭제 팝업 상태
-  const [showDeletePopup, setShowDeletePopup] = useState(false);
-  // 전송 완료 팝업 상태
-  const [showTransmissionCompletePopup, setShowTransmissionCompletePopup] = useState(false);
+    useEffect(() => {
+        let result = allCustomers;
+        if (filters.id) { result = result.filter(c => c.id.toLowerCase().includes(filters.id.toLowerCase())); }
+        if (filters.name) { result = result.filter(c => c.name.toLowerCase().includes(filters.name.toLowerCase())); }
+        if (filters.age) {
+            const [minAge, maxAge] = filters.age.split('-').map(Number);
+            result = result.filter(c => c.age >= minAge && c.age <= maxAge);
+        }
+        if (filters.payment) {
+            if (filters.payment === '600-99999') { result = result.filter(c => c.payment >= 600); } 
+            else {
+                const [minPay, maxPay] = filters.payment.split('-').map(Number);
+                result = result.filter(c => c.payment >= minPay && c.payment <= maxPay);
+            }
+        }
+        if (filters.gender.length > 0) { result = result.filter(c => filters.gender.includes(c.gender)); }
+        if (filters.disease.length > 0) {
+            const hasDisease = filters.disease.includes('유');
+            const noDisease = filters.disease.includes('무');
+            if (hasDisease && !noDisease) result = result.filter(c => c.hasDisease);
+            if (!hasDisease && noDisease) result = result.filter(c => !c.hasDisease);
+        }
+        if (filters.family.length > 0) {
+            result = result.filter(c => {
+                if (filters.family.includes('미혼') && c.family === '미혼') return true;
+                if (filters.family.includes('기혼') && c.family === '기혼') return true;
+                if (filters.family.includes('자녀') && c.family.includes('자녀')) return true;
+                return false;
+            });
+        }
+        setFilteredCustomers(result);
+    }, [filters]);
 
-  // 컴포넌트 마운트 시 초기 필터링 적용 (모든 고객 표시)
-  useEffect(() => {
-    setFilteredCustomers(customers);
-  }, [customers]);
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
+    };
+    const handleCheckboxChange = (e) => {
+        const { name, value, checked } = e.target;
+        setFilters(prev => {
+            const newValues = checked ? [...prev[name], value] : prev[name].filter(v => v !== value);
+            return { ...prev, [name]: newValues };
+        });
+    };
+    
+    const handleCustomerSelect = (customerId) => {
+        setSelectedCustomers(prev => prev.includes(customerId) ? prev.filter(id => id !== customerId) : [...prev, customerId]);
+    };
 
-  // 검색 필터링 로직
-  const handleSearch = () => {
-    let tempCustomers = [...customers];
+    const handleSelectAll = (e) => {
+        if (e.target.checked) { setSelectedCustomers(filteredCustomers.map(c => c.id)); } 
+        else { setSelectedCustomers([]); }
+    };
+    
+    const handleCustomerDetailClick = (customer) => { setSelectedCustomerDetail(customer); };
+    const handleGenerateMessage = () => { /* 메시지 생성 로직 */ };
+    const handleEditMessage = () => { /* 메시지 수정 로직 */ };
+    const handleSendMessage = () => { setShowTransmissionCompletePopup(true); };
 
-    // 고객명 또는 고객 고유번호 검색
-    if (searchTerm) {
-      tempCustomers = tempCustomers.filter(customer =>
-        customer.name.includes(searchTerm) || customer.id.includes(searchTerm)
-      );
-    }
-
-    // 나이 필터링
-    if (ageFilter !== '전체') {
-      tempCustomers = tempCustomers.filter(customer => {
-        const age = customer.age;
-        if (ageFilter === '20대') return age >= 20 && age < 30;
-        if (ageFilter === '30대') return age >= 30 && age < 40;
-        if (ageFilter === '40대') return age >= 40 && age < 50;
-        if (ageFilter === '50대') return age >= 50 && age < 60;
-        if (ageFilter === '60대 이상') return age >= 60;
-        return true;
-      });
-    }
-
-    // 성별 필터링
-    if (genderFilter.male && !genderFilter.female) {
-      tempCustomers = tempCustomers.filter(customer => customer.gender === '남');
-    } else if (!genderFilter.male && genderFilter.female) {
-      tempCustomers = tempCustomers.filter(customer => customer.gender === '여');
-    }
-
-    // 질병 필터링 (더미 데이터에는 질병 정보가 없으므로 임시로 구현)
-    // 실제 데이터가 들어오면 customer.disease 등으로 필터링 로직 추가 필요
-    // if (diseaseFilter.none && !diseaseFilter.has) {
-    //   tempCustomers = tempCustomers.filter(customer => customer.disease === '없음');
-    // } else if (!diseaseFilter.none && diseaseFilter.has) {
-    //   tempCustomers = tempCustomers.filter(customer => customer.disease === '있음');
-    // }
-
-    // 결혼 필터링
-    if (marriageFilter !== '전체') {
-      tempCustomers = tempCustomers.filter(customer => customer.familyComposition.includes(marriageFilter));
-    }
-
-    // 자녀 필터링
-    if (childrenFilter !== '전체') {
-      // '유' 또는 '무' 필터링 로직
-      if (childrenFilter === '유') {
-        tempCustomers = tempCustomers.filter(customer => customer.familyComposition.includes('자녀') && !customer.familyComposition.includes('자녀 X'));
-      } else if (childrenFilter === '무') {
-        tempCustomers = tempCustomers.filter(customer => customer.familyComposition.includes('자녀 X'));
-      }
-    }
-
-    // 납입금 필터링 (더미 데이터에는 납입금 정보가 없으므로 임시로 구현)
-    // 실제 데이터가 들어오면 customer.payment 등으로 필터링 로직 추가 필요
-    // if (paymentFilter !== '전체') {
-    //   const [min, max] = paymentFilter.split('~').map(s => parseInt(s));
-    //   tempCustomers = tempCustomers.filter(customer => customer.payment >= min && customer.payment <= max);
-    // }
-
-    setFilteredCustomers(tempCustomers);
-    setSelectedCustomers([]); // 필터링 시 선택된 고객 초기화
-  };
-
-  // 체크박스 핸들러
-  const handleCustomerSelect = (customerId) => {
-    setSelectedCustomers(prevSelected => {
-      if (prevSelected.includes(customerId)) {
-        return prevSelected.filter(id => id !== customerId);
-      } else {
-        return [...prevSelected, customerId];
-      }
-    });
-  };
-
-  // 메시지 생성 버튼 클릭 (AI API 연동 필요)
-  const handleGenerateMessage = async () => {
-    if (selectedCustomers.length === 0) {
-      alert('메시지를 생성할 고객을 선택해주세요.'); // 실제로는 커스텀 모달 사용
-      return;
-    }
-
-    // AI API 호출 (더미 데이터 사용)
-    const prompt = `다음 고객들에게 전환 서비스 추천 메시지를 생성해줘: ${selectedCustomers.map(id => customers.find(c => c.id === id).name).join(', ')}`;
-    console.log('AI API 호출 프롬프트:', prompt);
-
-    // AI API 응답을 기다리는 동안 로딩 표시
-    setMessagePreview('메시지 생성 중...');
-
-    try {
-        // AI API 호출 예시 (실제 API 연동 시 주석 해제 및 수정 필요)
-        // const payload = { contents: [{ parts: [{ text: prompt }] }] };
-        // const apiKey = ""; // API 키는 Canvas 런타임에서 제공
-        // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-        // const response = await fetch(apiUrl, {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(payload)
-        // });
-        // const result = await response.json();
-        // const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        // 더미 메시지 생성
-        const generatedText = `[추천 전환 서비스 메시지]\n\n${selectedCustomers.map(id => customers.find(c => c.id === id).name).join(', ')} 고객님, 안녕하세요! 고객님의 현재 서비스 이용 패턴을 분석한 결과, 더욱 만족스러운 경험을 위한 특별한 전환 서비스를 추천드립니다. 자세한 내용은 아래 링크를 통해 확인해주세요!\n\n[링크 이동하기]`;
-        setMessagePreview(generatedText);
-    } catch (error) {
-        console.error('메시지 생성 중 오류 발생:', error);
-        setMessagePreview('메시지 생성에 실패했습니다. 다시 시도해주세요.');
-    }
-  };
-
-  // 메시지 수정 버튼 클릭 (메시지 미리보기 직접 수정 가능)
-  const handleEditMessage = () => {
-    const textarea = document.getElementById('message-preview-textarea');
-    if (textarea) {
-      textarea.readOnly = !textarea.readOnly;
-      textarea.focus(); // 편집 모드 진입 시 포커스
-    }
-  };
-
-  // 메시지 전송 버튼 클릭 (팝업 표시)
-  const handleSendMessage = () => {
-    if (selectedCustomers.length === 0) {
-      alert('메시지를 전송할 고객을 선택해주세요.'); // 실제로는 커스텀 모달 사용
-      return;
-    }
-    if (!messagePreview) {
-      alert('생성된 메시지가 없습니다.'); // 실제로는 커스텀 모달 사용
-      return;
-    }
-    setShowTransmissionCompletePopup(true);
-    // 실제 전송 로직 추가 (백엔드 연동)
-    console.log('메시지 전송:', messagePreview, '대상 고객:', selectedCustomers);
-  };
-
-  // 고객명 클릭 시 상세 정보 표시
-  const handleCustomerNameClick = (customer) => {
-    setSelectedCustomerDetail(customer);
-  };
-
-  return (
-    <div className="menu3-container">
-      <div className="content-area">
-        <h2 className="page-title" style={{ textAlign: 'left' }}>메시지 관리</h2>
-
-        {/* 필터링 부분 */}
-        <div className="filter-section">
-          <div className="filter-row-all">
-            <div className="filter-item search-input-group">
-              <label htmlFor="customer-search">고객명 또는 고객 고유번호</label> 
-              <div className="search-input-wrapper">
-                <input
-                  type="text"
-                  id="customer-search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="고객명 또는 고객 고유번호 입력" 
-                />
-              </div>
-            </div>
-
-            <div className="filter-item">
-              <label htmlFor="age-select">나이</label>
-              <select id="age-select" value={ageFilter} onChange={(e) => setAgeFilter(e.target.value)}>
-                <option value="전체">전체</option>
-                <option value="20대">20대</option>
-                <option value="30대">30대</option>
-                <option value="40대">40대</option>
-                <option value="50대">50대</option>
-                <option value="60대 이상">60대 이상</option>
-              </select>
-            </div>
-
-            <div className="filter-item checkbox-group">
-              <label>성별</label>
-              <input
-                type="checkbox"
-                id="gender-male"
-                checked={genderFilter.male}
-                onChange={(e) => setGenderFilter({ ...genderFilter, male: e.target.checked })}
-              />
-              <label htmlFor="gender-male">남</label>
-              <input
-                type="checkbox"
-                id="gender-female"
-                checked={genderFilter.female}
-                onChange={(e) => setGenderFilter({ ...genderFilter, female: e.target.checked })}
-              />
-              <label htmlFor="gender-female">여</label>
-            </div>
-
-            <div className="filter-item checkbox-group">
-              <label>질병</label>
-              <input
-                type="checkbox"
-                id="disease-none"
-                checked={diseaseFilter.none}
-                onChange={(e) => setDiseaseFilter({ ...diseaseFilter, none: e.target.checked })}
-              />
-              <label htmlFor="disease-none">무</label>
-              <input
-                type="checkbox"
-                id="disease-has"
-                checked={diseaseFilter.has}
-                onChange={(e) => setDiseaseFilter({ ...diseaseFilter, has: e.target.checked })}
-              />
-              <label htmlFor="disease-has">유</label>
-            </div>
-
-            <div className="filter-item filter-item-small-select">
-              <label htmlFor="marriage-select">결혼</label>
-              <select id="marriage-select" value={marriageFilter} onChange={(e) => setMarriageFilter(e.target.value)}>
-                <option value="전체">전체</option>
-                <option value="기혼">기혼</option>
-                <option value="미혼">미혼</option>
-              </select>
-            </div>
-
-            <div className="filter-item filter-item-small-select">
-              <label htmlFor="children-select">자녀</label>
-              <select id="children-select" value={childrenFilter} onChange={(e) => setChildrenFilter(e.target.value)}>
-                <option value="전체">전체</option>
-                <option value="유">유</option>
-                <option value="무">무</option>
-              </select>
-            </div>
-
-            <div className="filter-item">
-              <label htmlFor="payment-select">납입금</label>
-              <select id="payment-select" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}>
-                <option value="전체">전체</option>
-                <option value="400~499">400~499 만원</option>
-                <option value="500~599">500~599 만원</option>
-                <option value="600 이상">600만원 이상</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="filter-row-bottom">
-            <button className="search-button" onClick={handleSearch}>조회</button>
-          </div>
-        </div>
-
-        {/* 고객 정보 표 */}
-        <div className="customer-table-section">
-          <h3 style={{ textAlign: 'left' }}>고객 정보</h3>
-          <table>
-            <thead>
-              <tr>
-                <th></th> {/* 체크박스 컬럼 */}
-                <th>고객 고유번호</th>
-                <th>이름</th>
-                <th>나이</th>
-                <th>성별</th>
-                <th>납입기간</th>
-                <th>가족 구성원</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCustomers.map(customer => (
-                <tr key={customer.id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedCustomers.includes(customer.id)}
-                      onChange={() => handleCustomerSelect(customer.id)}
-                    />
-                  </td>
-                  <td>{customer.id}</td>
-                  <td className="customer-name-cell" onClick={() => handleCustomerNameClick(customer)}>{customer.name}</td>
-                  <td>{customer.age}</td>
-                  <td>{customer.gender}</td>
-                  <td>{customer.subscriptionPeriod}</td>
-                  <td>{customer.familyComposition}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="table-buttons">
-            <button className="button-primary" onClick={handleGenerateMessage}>메시지 생성</button>
-          </div>
-        </div>
-
-        {/* 메시지 미리보기 및 고객 정보/발송 기록 섹션 */}
-        <div className="bottom-section">
-          {/* 메시지 미리보기 */}
-          <div className="message-preview-section">
-            <h3>메시지 미리보기</h3>
-            <div className="message-content-box">
-              <textarea
-                id="message-preview-textarea"
-                className="message-textarea"
-                value={messagePreview}
-                onChange={(e) => setMessagePreview(e.target.value)}
-                readOnly={true} // 초기에는 읽기 전용
-              ></textarea>
-            </div>
-            <div className="message-actions">
-              <button className="button-primary" onClick={handleEditMessage}>메시지 수정</button>
-              <button className="button-primary" onClick={handleSendMessage}>메시지 전송</button>
-            </div>
-          </div>
-
-          {/* 고객 정보 및 메시지 발송 기록 */}
-          <div className="customer-detail-section">
-            <h3>고객 정보 및 메시지 발송 기록</h3>
-            {selectedCustomerDetail ? (
-              <div className="customer-detail-content">
-                <div className="customer-info-box">
-                  <h4>고객 상세 정보</h4>
-                  <p><strong>이름:</strong> {selectedCustomerDetail.name}</p>
-                  <p><strong>나이:</strong> {selectedCustomerDetail.age}</p>
-                  <p><strong>직업:</strong> 없음 (더미)</p>
-                  <p><strong>채널:</strong> 없음 (더미)</p>
-                  <p><strong>납입 기간:</strong> 2년 6개월 (더미)</p>
-                  <p><strong>가족 구성원:</strong> {selectedCustomerDetail.familyComposition}</p>
-                </div>
-                <div className="message-history-box">
-                  <h4>메시지 발송 기록</h4>
-                  {/* 실제 발송 기록 데이터가 들어올 부분 */}
-                  <p className="no-history">발송 기록이 없습니다.</p>
-                  {/* 예시 발송 기록 (이미지 포함) */}
-                  <div className="sample-message-record">
-                    <p><strong>발송 일시:</strong> 2025.07.20</p>
-                    <div className="message-card">
-                      <img src="https://placehold.co/100x70/E0E0E0/333333?text=Image1" alt="Sample Image 1" className="message-image" />
-                      <img src="https://placehold.co/100x70/E0E0E0/333333?text=Image2" alt="Sample Image 2" className="message-image" />
-                      <p className="message-text">
-                        OOO상품 OO님, 요즘 자녀가 결혼할 시기시죠?<br/>
-                        아니면 곧 퇴직 후 여행 생각 없으신가요? OO상품으로 맞춤 패키지를 추천드립니다!
-                        <a href="#" className="detail-link">자세히 보기</a>
-                      </p>
+    return (
+        <div className="page-wrapper" style={{
+            '--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))',
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            padding: '20px', boxSizing: 'border-box', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+        }}>
+            <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{
+                width: '100%', maxWidth: '1600px', height: '100%', margin: '0 auto',
+                display: 'flex', boxSizing: 'border-box', background: 'rgba(255, 255, 255, 0.7)',
+                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.18)', borderRadius: '20px',
+                padding: '20px', gap: '20px', overflow: 'hidden',
+            }}>
+                <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
+                    <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#343a40', paddingLeft: '10px', flexShrink: 0 }}>
+                        전환서비스 추천
+                    </h4>
+                    <div className="sidebar-scroll-area" style={{
+                        background: 'rgba(255, 255, 255, 0.8)', borderRadius: '15px', padding: '20px',
+                        flex: 1, overflowY: 'auto', minHeight: 0
+                    }}>
+                        <div style={{
+                            width: '120px', height: '120px', background: 'rgba(111, 66, 193, 0.2)',
+                            borderRadius: '50%', margin: '0 auto 30px', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+                        }}><Mail size={48} style={{ color: '#6f42c1' }} /></div>
+                        <h2 style={{fontWeight: '700', marginBottom: '15px', fontSize: '1.8rem', textAlign: 'center', color: '#343a40'}}>고객 조회</h2>
+                        <p style={{fontSize: '16px', lineHeight: '1.6', margin: 0, opacity: 0.7, textAlign: 'center', color: '#6c757d'}}>
+                            조건별로 고객을 검색하고<br/>메시지를 발송하세요.
+                        </p>
+                        <hr className="my-4"/>
+                        <Form>
+                            <Row className="g-3 mb-3"><Col xs={6}><Form.Label>고객 고유번호</Form.Label><Form.Control name="id" value={filters.id} onChange={handleInputChange} placeholder="고유번호" /></Col><Col xs={6}><Form.Label>이름</Form.Label><Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" /></Col></Row>
+                            <Row className="g-3"><Col xs={6}><Form.Label>나이대</Form.Label><Form.Select name="age" value={filters.age} onChange={handleInputChange}><option value="">전체</option><option value="20-29">20대</option><option value="30-39">30대</option><option value="40-49">40대</option><option value="50-59">50대</option><option value="60-150">60대 이상</option></Form.Select></Col><Col xs={6}><Form.Label>납입금</Form.Label><Form.Select name="payment" value={filters.payment} onChange={handleInputChange}><option value="">전체</option><option value="400-499">400 ~ 499 만원</option><option value="500-599">500 ~ 599 만원</option><option value="600-99999">600만원 이상</option></Form.Select></Col></Row>
+                            <hr /><Form.Label>상세 조건</Form.Label>
+                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px'}}>성별:</strong><Form.Check inline type="checkbox" label="남" name="gender" value="남" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여" name="gender" value="여" onChange={handleCheckboxChange} /></div>
+                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" onChange={handleCheckboxChange} /></div>
+                            <div className="d-flex align-items-center"><strong className="me-3" style={{minWidth: '40px'}}>가족:</strong><Form.Check inline type="checkbox" label="미혼" name="family" value="미혼" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="기혼" name="family" value="기혼" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="자녀" name="family" value="자녀" onChange={handleCheckboxChange} /></div>
+                        </Form>
                     </div>
-                    <button className="button-resend">재전송</button>
-                  </div>
                 </div>
-              </div>
-            ) : (
-              <p className="no-selection-message">고객을 선택하여 상세 정보를 확인하세요.</p>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* 전송 완료 팝업 */}
-      {showTransmissionCompletePopup && (
-        <div className="popup-overlay">
-          <div className="popup-content">
-            <p>메시지 전송이 완료되었습니다.</p>
-            <div className="popup-buttons">
-              <button className="button-primary" onClick={() => setShowTransmissionCompletePopup(false)}>확인</button>
+                {/* 오른쪽 메인 콘텐츠 */}
+                <div className="dashboard-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, paddingBottom: '10px' }}>
+                        <div className="d-flex align-items-center">
+                            <h5 style={{ fontWeight: '600', color: '#343a40', margin: 0 }}>고객 목록 ({filteredCustomers.length}명)</h5>
+                            <Form.Check 
+                                type="checkbox"
+                                label={`전체 선택 (${selectedCustomers.length}명)`}
+                                className="ms-3"
+                                checked={filteredCustomers.length > 0 && selectedCustomers.length === filteredCustomers.length}
+                                onChange={handleSelectAll}
+                            />
+                        </div>
+                        <Button className="btn-purple" onClick={handleGenerateMessage}>선택 고객 메시지 생성</Button>
+                    </div>
+                    
+                    <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
+                        {filteredCustomers.map(customer => (
+                            <Card key={customer.id} className="mb-3" style={{ background: 'rgba(255, 255, 255, 0.9)' }}>
+                                <Card.Body>
+                                    <Row className="align-items-center">
+                                        <Col xs="auto" className="pe-0"><Form.Check type="checkbox" checked={selectedCustomers.includes(customer.id)} onChange={() => handleCustomerSelect(customer.id)} /></Col>
+                                        <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end px-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.id}</p><h5 className="fw-bold mb-0">{customer.name}</h5></Col>
+                                        <Col>
+                                            <Row>
+                                                <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birth} (만 {customer.age}세)</Col>
+                                                <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
+                                                <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
+                                                <Col sm={6} className="mb-2"><strong>가족:</strong> {customer.family}</Col>
+                                                <Col sm={6} className="mb-2"><strong>납입금:</strong> {customer.payment.toLocaleString()}만원</Col>
+                                                <Col sm={6} className="mb-2"><strong>납입기간:</strong> {customer.term}</Col>
+                                            </Row>
+                                        </Col>
+                                        <Col md="auto" className="text-center text-md-end"><Button variant="secondary" size="sm" onClick={() => handleCustomerDetailClick(customer)}>상세정보</Button></Col>
+                                    </Row>
+                                </Card.Body>
+                            </Card>
+                        ))}
+                    </div>
+
+                    <div className="mt-3" style={{ flexShrink: 0 }}>
+                        <Row><Col lg={6} className="mb-3 mb-lg-0"><Card style={{ background: 'rgba(255, 255, 255, 0.8)', border: 'none', height: '100%' }}><Card.Header as="h5">메시지 미리보기</Card.Header><Card.Body className="d-flex flex-column"><Form.Control as="textarea" rows={5} value={messagePreview} onChange={(e) => setMessagePreview(e.target.value)} className="mb-3 flex-grow-1" /><div className="d-flex justify-content-end gap-2"><Button variant="secondary" onClick={handleEditMessage}>메시지 수정</Button><Button className="btn-purple" onClick={handleSendMessage}>메시지 전송</Button></div></Card.Body></Card></Col><Col lg={6}><Card style={{ background: 'rgba(255, 255, 255, 0.8)', border: 'none', height: '100%' }}><Card.Header as="h5">고객 정보 및 메시지 발송 기록</Card.Header><Card.Body>{selectedCustomerDetail ? (<div><h6>{selectedCustomerDetail.name}님 상세 정보</h6><p><strong>나이:</strong> {selectedCustomerDetail.age} / <strong>성별:</strong> {selectedCustomerDetail.gender}</p><hr /><h6>메시지 발송 기록</h6><p className="text-muted">발송 기록이 없습니다.</p></div>) : (<p className="text-muted">고객 목록에서 '상세정보' 버튼을 클릭하여 확인하세요.</p>)}</Card.Body></Card></Col></Row>
+                    </div>
+                </div>
             </div>
-          </div>
+            
+            <Modal show={showTransmissionCompletePopup} onHide={() => setShowTransmissionCompletePopup(false)} centered>
+                <Modal.Header closeButton><Modal.Title>알림</Modal.Title></Modal.Header>
+                <Modal.Body>메시지 전송이 완료되었습니다.</Modal.Body>
+                <Modal.Footer><Button variant="primary" onClick={() => setShowTransmissionCompletePopup(false)}>확인</Button></Modal.Footer>
+            </Modal>
+
+            <style>{`
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                .dashboard-container { opacity: 0; }
+                .dashboard-container.animate-in { animation: fadeIn 0.6s ease-out forwards; }
+                .content-scroll-area::-webkit-scrollbar,
+                .sidebar-scroll-area::-webkit-scrollbar { width: 6px; }
+                .content-scroll-area::-webkit-scrollbar-track,
+                .sidebar-scroll-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+                .content-scroll-area::-webkit-scrollbar-thumb,
+                .sidebar-scroll-area::-webkit-scrollbar-thumb { background-color: rgba(108, 117, 125, 0.5); border-radius: 10px; }
+                .btn-purple { background-color: #6f42c1; border-color: #6f42c1; color: white; }
+                .btn-purple:hover { background-color: #5a32a3; border-color: #5a32a3; color: white; }
+            `}</style>
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default Menu3;

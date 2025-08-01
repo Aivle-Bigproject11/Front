@@ -156,7 +156,7 @@ const Menu1_1 = () => {
               justifyContent: 'center',
               boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
             }}>
-              <Users size={48} style={{ color: '#6f42c1' }} />
+              <FileText size={48} style={{ color: '#6f42c1' }} />
             </div>
             <h2 style={{
               fontWeight: '700',
@@ -271,7 +271,6 @@ const Menu1_1 = () => {
               {filteredCustomers.map((customer) => {
                 const urgency = customerUtils.getUrgencyLevel(customer.funeralDate);
                 return (
-                  // ✅ 호버 효과(onMouseEnter, onMouseLeave) 제거
                   <div key={customer.id} style={{
                     background: 'white',
                     borderRadius: '16px',
