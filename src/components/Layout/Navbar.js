@@ -17,6 +17,9 @@ const Navbar = () => {
     return null;
   }
 
+  // '고객 관리' 메뉴 활성화
+  const isCustomerManagementActive = location.pathname.startsWith('/menu5');
+
   return (
     <BootstrapNavbar expand="lg" bg="dark" variant="dark">
       <Container>
@@ -63,10 +66,10 @@ const Navbar = () => {
             </Nav.Link>
               <Nav.Link 
               as={Link} 
-              to="/menu5_2" 
-              active={location.pathname === "/menu5_2"}
+              to="/menu5" 
+              active={isCustomerManagementActive}
             >
-              고객 관리 메뉴5-2
+              고객 관리 
             </Nav.Link>
           </Nav>
           <Nav>
