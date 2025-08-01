@@ -15,12 +15,12 @@ const Menu2 = () => {
   return (
     <div className="page-wrapper" style={{
       '--navbar-height': '70px',
-      minHeight: 'calc(100vh - var(--navbar-height))',
+      height: 'calc(100vh - var(--navbar-height))', 
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       padding: '20px',
       boxSizing: 'border-box',
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'center',
     }}>
       <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{
@@ -28,7 +28,7 @@ const Menu2 = () => {
         zIndex: 1,
         width: '100%',
         maxWidth: '1600px',
-        height: 'auto',
+        height: '100%', 
         margin: '0 auto',
         display: 'flex',
         boxSizing: 'border-box',
@@ -42,27 +42,20 @@ const Menu2 = () => {
         transition: 'all 0.6s ease-out',
         padding: '20px',
         gap: '20px',
+        overflow: 'hidden', 
       }}>
-        <div style={{ flex: '0 0 400px' }}>
+        <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
+          <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#343a40', paddingLeft: '10px' }}>
+            통합 대시보드
+          </h4>
           <div className="dashboard-left" style={{
             background: 'rgba(255, 255, 255, 0.8)',
             borderRadius: '15px',
             padding: '20px',
+            height: 'min-content',
             position: 'sticky',
-            top: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '15px'
+            top: '20px'
           }}>
-            <h4 className="mb-3" style={{
-              fontSize: '30px',
-              fontWeight: '700',
-              color: '#343a40',
-              paddingLeft: '10px',
-              margin: 0
-            }}>
-              통합 대시보드
-            </h4>
             <InteractiveMap
               selectedRegion={selectedRegion}
               onRegionSelect={setSelectedRegion}
@@ -71,8 +64,9 @@ const Menu2 = () => {
         </div>
 
         <div className="dashboard-right" style={{
-          flex: '1 1 65%', 
-          minWidth: 0, 
+          flex: '1',
+          overflowY: 'auto',
+          height: '100%', 
           paddingRight: '10px'
         }}>
           <RegionDataDisplay region={selectedRegion} />
@@ -81,12 +75,37 @@ const Menu2 = () => {
 
       <style jsx global>{`
         @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        .animate-in { animation: fadeInUp 0.6s ease-out; }
+        
+        .animate-in {
+          animation: fadeInUp 0.6s ease-out;
+        }
 
-        @media (max-width: 992px) {
+        .dashboard-right::-webkit-scrollbar {
+          width: 6px;
+        }
+        .dashboard-right::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.05);
+          border-radius: 10px;
+        }
+        .dashboard-right::-webkit-scrollbar-thumb {
+          background-color: rgba(108, 117, 125, 0.5);
+          border-radius: 10px;
+        }
+
+        @media (max-width: 1200px) {
+          .page-wrapper {
+            height: auto;
+            min-height: calc(100vh - var(--navbar-height));
+          }
           .dashboard-container {
             flex-direction: column;
             height: auto;
@@ -99,7 +118,6 @@ const Menu2 = () => {
           .dashboard-right {
             height: auto;
             max-height: none;
-            width: 100%;
           }
         }
       `}</style>
