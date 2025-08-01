@@ -79,19 +79,35 @@ const Home = () => {
             </Card.Body>
           </Card>
         </Col>
+
+        <Col md={6} lg={3} className="mb-4">
+          <Card className="h-100">
+            <Card.Body className="text-center">
+              <i className="fas fa-users-cog fa-3x text-danger mb-3"></i>
+              <Card.Title>고객 관리</Card.Title>
+              <Card.Text>
+                - 고객 정보 조회<br />
+                - 고객 문의 관리
+              </Card.Text>
+              <Button as={Link} to="/menu5" variant="danger">
+                바로가기
+              </Button>
+            </Card.Body>
+          </Card>
+        </Col>
       </Row>
 
       <Row className="mt-5">
         <Col>
           <Card>
             <Card.Header>
-              <h5>최근 공지사항</h5>
+              <h5>Golden Gate Frontend Team</h5>
             </Card.Header>
             <Card.Body>
               <ul>
-                <li>추모관 서비스 시스템이 새롭게 업데이트되었습니다.</li>
-                <li>AI 기반 추모사 생성 기능이 추가되었습니다.</li>
-                <li>디지털 추모관 템플릿이 다양화되었습니다.</li>
+                <li>김시훈</li>
+                <li>양성현</li>
+                <li>박수연</li>
               </ul>
             </Card.Body>
           </Card>
