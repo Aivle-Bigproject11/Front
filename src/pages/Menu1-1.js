@@ -474,14 +474,12 @@ const Menu1_1 = () => {
       </div>
 
       <style>{`
-        @keyframes fadeInUp {
+        @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(30px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
           }
         }
         
@@ -491,7 +489,7 @@ const Menu1_1 = () => {
     
         .dashboard-container.animate-in {
           opacity: 1;
-          animation: fadeInUp 0.6s ease-out;
+          animation: fadeIn 0.6s ease-out;
         }
 
         .dashboard-right::-webkit-scrollbar {
