@@ -384,22 +384,25 @@ const Menu1_1 = () => {
                       borderLeft: '1px solid rgba(229, 231, 235, 0.5)',
                       minWidth: '140px', gap: '8px'
                     }}>
-                      <Button
-                        className="btn-outline-purple"
+                    <Button
+                        variant="primary"
                         size="sm"
+                        style={{ width: '100%', borderRadius: '8px', fontWeight: '600', padding: '8px', fontSize: '0.85rem' }}
                         onClick={(e) => handleRegisterClick(e, customer)}
-                      >
-                        <FileText size={14} className="me-1" />
+                    >
+                    <FileText size={14} style={{ marginRight: '4px' }} />
                         정보등록
-                      </Button>
-                      <Button
+                    </Button>
+
+                    <Button 
+                        variant="outline-primary"
                         size="sm"
-                        className="btn-outline-purple"
+                        style={{ width: '100%', borderRadius: '8px', fontWeight: '600', padding: '8px', fontSize: '0.85rem' }}
                         onClick={(e) => handleDocumentsClick(e, customer)}
-                      >
-                        <Eye size={14} className="me-1" />
+                    >
+                    <Eye size={14} style={{ marginRight: '4px' }} />
                         서류관리
-                      </Button>
+                    </Button>
                     </div>
                   </div>
                 );
