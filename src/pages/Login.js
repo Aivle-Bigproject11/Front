@@ -96,7 +96,7 @@ const Login = () => {
   return (
     <div className="login-page-wrapper" style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #2C1F14 0%, #4A3728 30%, #6B4423 70%, #8B5A2B 100%)',
+      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
