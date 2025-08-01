@@ -54,7 +54,7 @@ const Lobby = () => {
       const memorial = await getMemorialByCode(joinCode);
       
       if (memorial) {
-        navigate(`/memorial/${memorial.id}`);
+        navigate(`/user-memorial/${memorial.id}`);
       } else {
         setError('유효하지 않은 고유번호입니다.');
       }
@@ -64,7 +64,7 @@ const Lobby = () => {
   };
 
   const handleMemorialClick = (memorial) => {
-    navigate(`/memorial/${memorial.id}`);
+    navigate(`/user-memorial/${memorial.id}`);
   };
 
   const getStatusBadge = (status) => {

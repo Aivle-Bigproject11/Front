@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge, Carousel } from 'react-bootstrap';
 import { dummyData } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const MemorialDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showGuestbookModal, setShowGuestbookModal] = useState(false);
@@ -21,6 +24,14 @@ const MemorialDetail = () => {
   const ribbonItemWidth = 220; // 리본 너비 + 간격
   const [selectedRibbon, setSelectedRibbon] = useState(null);
   const [showRibbonDetailModal, setShowRibbonDetailModal] = useState(false);
+
+  // 접근 모드 확인: 고유번호 접근(guest), 유저 로그인(user), 관리자 로그인(admin)
+  const isGuestAccess = !user; // 로그인하지 않고 고유번호로 접근
+  const isUserAccess = user && user.userType === 'user'; // 유저로 로그인 (유가족)
+  const isAdminAccess = user && user.userType === 'employee'; // 관리자로 로그인
+  
+  // 관리 페이지 접근 권한: 유저(유가족) 또는 관리자
+  const canAccessSettings = !isGuestAccess; // 고유번호 접근이 아닌 경우
 
   useEffect(() => {
     // TODO: 실제 API 호출로 교체
@@ -110,9 +121,6 @@ const MemorialDetail = () => {
     }
   };
 
-  // 예시: 실제 로그인 유저가 유가족인지 확인하는 로직 (추후 API 연동)
-  const isFamilyMember = true; // 실제 구현 시, 유가족 여부로 변경
-
   // 관리페이지 이동
   const goToSettings = () => {
     navigate(`/memorial/${id}/settings`);
@@ -151,7 +159,7 @@ const MemorialDetail = () => {
           {/* ...기존 상단 정보... */}
         </Col>
         <Col xs={6} md={4} lg={3} className="text-end">
-          {isFamilyMember && (
+          {canAccessSettings && (
             <Button
               variant="outline-secondary"
               style={{ fontWeight: '600', borderRadius: '8px', padding: '8px 24px', fontSize: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
@@ -175,7 +183,15 @@ const MemorialDetail = () => {
             <Button 
               variant="light" 
               size="sm" 
-              onClick={() => navigate('/menu4')}
+              onClick={() => {
+                if (isGuestAccess) {
+                  window.history.back(); // 고유번호 접근시 브라우저 뒤로가기
+                } else if (isUserAccess) {
+                  navigate('/lobby'); // 유저는 로비로
+                } else if (isAdminAccess) {
+                  navigate('/menu4'); // 관리자는 메뉴4로
+                }
+              }}
               className="mb-3"
             >
               <i className="fas fa-arrow-left me-2"></i>
@@ -732,13 +748,7 @@ const MemorialDetail = () => {
                   <i className="fas fa-heart me-2"></i>
                   추모사
                 </h5>
-                <Button 
-                  variant="outline-primary" 
-                  size="sm"
-                >
-                  <i className="fas fa-robot me-1"></i>
-                  AI 생성
-                </Button>
+                
               </div>
             </Card.Header>
             <Card.Body className="p-4" style={{ maxHeight: '500px', overflowY: 'auto' }}>
