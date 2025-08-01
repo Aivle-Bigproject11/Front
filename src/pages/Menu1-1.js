@@ -22,7 +22,6 @@ const Menu1_1 = () => {
     try {
       setLoading(true);
       setError(null);
-      
       setAnimateCard(true);
       
       const data = await customerService.getAllCustomers();
@@ -157,7 +156,7 @@ const Menu1_1 = () => {
               justifyContent: 'center',
               boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
             }}>
-              <Users size={48} style={{ color: '#6f42c1' }} />
+              <FileText size={48} style={{ color: '#6f42c1' }} />
             </div>
             <h2 style={{
               fontWeight: '700',
@@ -269,7 +268,7 @@ const Menu1_1 = () => {
               flexDirection: 'column',
               gap: '16px'
             }}>
-              {filteredCustomers.map((customer, index) => {
+              {filteredCustomers.map((customer) => {
                 const urgency = customerUtils.getUrgencyLevel(customer.funeralDate);
                 return (
                   <div key={customer.id} style={{
@@ -281,31 +280,14 @@ const Menu1_1 = () => {
                     display: 'flex',
                     minHeight: '140px',
                     position: 'relative',
-                    cursor: 'pointer',
-                    transition: 'transform 0.3s ease, box-shadow 0.3s ease'
                   }}
-                    onClick={() => handleCustomerSelect(customer)}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.06)';
-                    }}
                   >
                     {urgency === 'urgent' && (
                       <div style={{
-                        position: 'absolute',
-                        top: '12px',
-                        right: '12px',
+                        position: 'absolute', top: '12px', right: '12px',
                         background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
-                        color: 'white',
-                        padding: '4px 8px',
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        zIndex: 10,
+                        color: 'white', padding: '4px 8px', borderRadius: '12px',
+                        fontSize: '11px', fontWeight: '600', zIndex: 10,
                         boxShadow: '0 2px 8px rgba(220, 53, 69, 0.3)'
                       }}>
                         <Clock size={12} style={{ marginRight: '2px' }} />
@@ -319,70 +301,45 @@ const Menu1_1 = () => {
                         : urgency === 'warning'
                           ? 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)'
                           : 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)',
-                      padding: '20px',
-                      color: 'white',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      minWidth: '200px',
-                      position: 'relative'
+                      padding: '20px', color: 'white', display: 'flex', flexDirection: 'column',
+                      justifyContent: 'center', minWidth: '200px', position: 'relative'
                     }}>
                       <div style={{ marginBottom: '12px' }}>
                         <h4 style={{
-                          fontSize: '1.3rem',
-                          fontWeight: '700',
-                          margin: '0 0 6px 0',
-                          display: 'flex',
-                          alignItems: 'center'
+                          fontSize: '1.3rem', fontWeight: '700', margin: '0 0 6px 0',
+                          display: 'flex', alignItems: 'center'
                         }}>
                           {customer.name}
                           <Badge bg="light" text="dark" className="ms-2" style={{ fontSize: '0.7rem' }}>
                             고인
                           </Badge>
                         </h4>
-
                         <Badge className={customerUtils.getStatusColor(customer.status)} 
                                style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
                           {customerUtils.getStatusText(customer.status)}
                         </Badge>
                       </div>
-
                       <div style={{
-                        background: 'rgba(255, 255, 255, 0.15)',
-                        padding: '10px',
-                        borderRadius: '10px',
-                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                        background: 'rgba(255, 255, 255, 0.15)', padding: '10px',
+                        borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.2)'
                       }}>
-                        <p style={{
-                          fontSize: '0.95rem',
-                          fontWeight: '600',
-                          margin: '0 0 2px 0'
-                        }}>
+                        <p style={{ fontSize: '0.95rem', fontWeight: '600', margin: '0 0 2px 0' }}>
                           향년 {customer.age}세
                         </p>
-                        <p style={{
-                          fontSize: '0.85rem',
-                          margin: 0,
-                          opacity: 0.9
-                        }}>
+                        <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.9 }}>
                           {customerUtils.formatDate(customer.funeralDate)}
                         </p>
                       </div>
                     </div>
 
                     <div style={{
-                      flex: 1,
-                      padding: '20px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
+                      flex: 1, padding: '20px', display: 'flex',
+                      flexDirection: 'column', justifyContent: 'space-between'
                     }}>
                       <div>
                         <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                          gap: '8px',
-                          marginBottom: '12px'
+                          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                          gap: '8px', marginBottom: '12px'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(111, 66, 193, 0.05)', borderRadius: '8px', border: '1px solid rgba(111, 66, 193, 0.1)' }}>
                             <Phone size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
@@ -390,7 +347,6 @@ const Menu1_1 = () => {
                               {customer.phone}
                             </span>
                           </div>
-
                           <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(111, 66, 193, 0.05)', borderRadius: '8px', border: '1px solid rgba(111, 66, 193, 0.1)' }}>
                             <MapPin size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
                             <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
@@ -398,7 +354,6 @@ const Menu1_1 = () => {
                             </span>
                           </div>
                         </div>
-
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                             <FileText size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
@@ -406,25 +361,13 @@ const Menu1_1 = () => {
                               서류 작성 상태
                             </span>
                           </div>
-
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                             {Object.entries(customer.documents).map(([docType, isCompleted]) => {
-                              const docNames = {
-                                obituary: '부고장',
-                                schedule: '일정표',
-                                deathCertificate: '사망신고서'
-                              };
-
+                              const docNames = { obituary: '부고장', schedule: '일정표', deathCertificate: '사망신고서' };
                               return (
-                                <Badge
-                                  key={docType}
-                                  bg={isCompleted ? 'success' : 'danger'}
-                                  style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '0.75rem' }}
-                                >
-                                  {isCompleted ?
-                                    <Check size={12} style={{ marginRight: '3px' }} /> :
-                                    <X size={12} style={{ marginRight: '3px' }} />
-                                  }
+                                <Badge key={docType} bg={isCompleted ? 'success' : 'danger'}
+                                  style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '0.75rem' }}>
+                                  {isCompleted ? <Check size={12} style={{ marginRight: '3px' }} /> : <X size={12} style={{ marginRight: '3px' }} />}
                                   {docNames[docType]}
                                 </Badge>
                               );
@@ -435,35 +378,31 @@ const Menu1_1 = () => {
                     </div>
 
                     <div style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '20px 16px',
+                      display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                      alignItems: 'center', padding: '20px 16px',
                       background: 'rgba(248, 250, 252, 0.8)',
                       borderLeft: '1px solid rgba(229, 231, 235, 0.5)',
-                      minWidth: '140px',
-                      gap: '8px'
+                      minWidth: '140px', gap: '8px'
                     }}>
-                      <Button
+                    <Button
                         variant="primary"
                         size="sm"
                         style={{ width: '100%', borderRadius: '8px', fontWeight: '600', padding: '8px', fontSize: '0.85rem' }}
                         onClick={(e) => handleRegisterClick(e, customer)}
-                      >
-                        <FileText size={14} style={{ marginRight: '4px' }} />
+                    >
+                    <FileText size={14} style={{ marginRight: '4px' }} />
                         정보등록
-                      </Button>
+                    </Button>
 
-                      <Button
+                    <Button 
                         variant="outline-primary"
                         size="sm"
                         style={{ width: '100%', borderRadius: '8px', fontWeight: '600', padding: '8px', fontSize: '0.85rem' }}
                         onClick={(e) => handleDocumentsClick(e, customer)}
-                      >
-                        <Eye size={14} style={{ marginRight: '4px' }} />
+                    >
+                    <Eye size={14} style={{ marginRight: '4px' }} />
                         서류관리
-                      </Button>
+                    </Button>
                     </div>
                   </div>
                 );
@@ -474,58 +413,49 @@ const Menu1_1 = () => {
       </div>
 
       <style>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
-        
-        .dashboard-container {
-          opacity: 0;
-        }
-    
+        .dashboard-container { opacity: 0; }
         .dashboard-container.animate-in {
           opacity: 1;
-          animation: fadeInUp 0.6s ease-out;
+          animation: fadeIn 0.6s ease-out;
         }
-
-        .dashboard-right::-webkit-scrollbar {
-          width: 6px;
-        }
-        .dashboard-right::-webkit-scrollbar-track {
-          background: rgba(0,0,0,0.05);
-          border-radius: 10px;
-        }
-        .dashboard-right::-webkit-scrollbar-thumb {
-          background-color: rgba(108, 117, 125, 0.5);
-          border-radius: 10px;
-        }
-
+        .dashboard-right::-webkit-scrollbar { width: 6px; }
+        .dashboard-right::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .dashboard-right::-webkit-scrollbar-thumb { background-color: rgba(108, 117, 125, 0.5); border-radius: 10px; }
         @media (max-width: 1200px) {
-          .page-wrapper {
-            height: auto;
-            min-height: calc(100vh - var(--navbar-height));
-          }
-          .dashboard-container {
-            flex-direction: column;
-            height: auto;
-          }
-          .dashboard-left {
-            position: static;
-            width: 100%;
-            flex: 0 0 auto;
-          }
-          .dashboard-right {
-            height: auto;
-            max-height: none;
-          }
+          .page-wrapper { height: auto; min-height: calc(100vh - var(--navbar-height)); }
+          .dashboard-container { flex-direction: column; height: auto; }
+          .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
+          .dashboard-right { height: auto; max-height: none; }
         }
-      `}</style>
+
+        .btn-purple {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+            }
+            .btn-purple:hover {
+                            background-color: transparent;
+            background-color: #5a32a3;
+            border-color: #5a32a3;
+            color: white;
+            }
+
+            .btn-outline-purple {
+            background-color: transparent;
+            border-color: #6f42c1;
+            color: #6f42c1;
+            }
+            .btn-outline-purple:hover {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+            }
+        }
+        `}</style>
     </div>
   );
 };

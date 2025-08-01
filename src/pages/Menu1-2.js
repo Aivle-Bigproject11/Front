@@ -1,17 +1,13 @@
-// src/pages/Menu1-2.js - 장례정보 등록 페이지
-
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, Card, Form } from 'react-bootstrap';
-import { ArrowLeft, Save, User, Users, FileText, MapPin, Calendar, Phone } from 'lucide-react';
+import { ArrowLeft, Save, User, Users, FileText, MapPin, Phone, Calendar } from 'lucide-react'; 
 import { useNavigate } from 'react-router-dom';
-import { customerService } from '../services/customerService';
+import { customerService, customerUtils } from '../services/customerService';
 import { initialFormData, formGroups, fieldLabels, fieldTypes, validationRules } from '../data/formData';
-import './Menu3.css';
 
 const Menu1_2 = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [animateCard, setAnimateCard] = useState(false);
   const [errors, setErrors] = useState({});
@@ -21,13 +17,11 @@ const Menu1_2 = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 로컬 스토리지에서 선택된 고객 정보 가져오기
     const customerData = localStorage.getItem('selectedCustomer');
     if (customerData) {
       const customer = JSON.parse(customerData);
       setSelectedCustomer(customer);
       
-      // 고객 정보로 폼 데이터 초기화
       setFormData(prev => ({
         ...prev,
         고인성명한글: customer.name || '',
@@ -38,7 +32,6 @@ const Menu1_2 = () => {
         발인일시: customer.funeralDate || ''
       }));
     } else {
-      // 선택된 고객이 없으면 목록으로 리다이렉트
       navigate('/menu1-1');
       return;
     }
@@ -50,48 +43,31 @@ const Menu1_2 = () => {
     const rules = validationRules;
     const fieldErrors = [];
 
-    // 필수 필드 체크
     if (rules.required?.includes(name) && !value.trim()) {
       fieldErrors.push(`${fieldLabels[name]}은(는) 필수 입력 항목입니다.`);
     }
-
-    // 최소 길이 체크
     if (rules.minLength?.[name] && value.length < rules.minLength[name]) {
       fieldErrors.push(`${fieldLabels[name]}은(는) 최소 ${rules.minLength[name]}자 이상이어야 합니다.`);
     }
-
-    // 최대 길이 체크
     if (rules.maxLength?.[name] && value.length > rules.maxLength[name]) {
       fieldErrors.push(`${fieldLabels[name]}은(는) 최대 ${rules.maxLength[name]}자까지 입력 가능합니다.`);
     }
-
-    // 패턴 체크
     if (rules.pattern?.[name] && value && !rules.pattern[name].test(value)) {
       fieldErrors.push(`${fieldLabels[name]}의 형식이 올바르지 않습니다.`);
     }
-
     return fieldErrors;
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // 실시간 유효성 검사
+    setFormData(prev => ({ ...prev, [name]: value }));
     const fieldErrors = validateField(name, value);
-    setErrors(prev => ({
-      ...prev,
-      [name]: fieldErrors
-    }));
+    setErrors(prev => ({ ...prev, [name]: fieldErrors }));
   };
 
   const validateForm = () => {
     const newErrors = {};
     let isValid = true;
-
     Object.entries(formData).forEach(([name, value]) => {
       const fieldErrors = validateField(name, value);
       if (fieldErrors.length > 0) {
@@ -99,7 +75,6 @@ const Menu1_2 = () => {
         isValid = false;
       }
     });
-
     setErrors(newErrors);
     return isValid;
   };
@@ -115,8 +90,6 @@ const Menu1_2 = () => {
 
     try {
       setSaving(true);
-      
-      // 고객 정보 업데이트
       await customerService.updateCustomer(selectedCustomer.id, {
         ...selectedCustomer,
         name: formData.고인성명한글 || selectedCustomer.name,
@@ -126,14 +99,8 @@ const Menu1_2 = () => {
         funeralDate: formData.발인일시 || selectedCustomer.funeralDate,
         formData: formData
       });
-
       setSuccessMessage('장례 정보가 성공적으로 저장되었습니다.');
-      
-      // 3초 후 목록으로 이동
-      setTimeout(() => {
-        navigate('/menu1-1');
-      }, 2000);
-      
+      setTimeout(() => navigate('/menu1-1'), 2000);
     } catch (error) {
       console.error('Error saving form data:', error);
       setErrorMessage('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
@@ -142,276 +109,209 @@ const Menu1_2 = () => {
     }
   };
 
-  const handleCancel = () => {
-    navigate('/menu1-1');
-  };
-
-  const getFieldType = (fieldName) => {
-    return fieldTypes[fieldName] || 'text';
-  };
-
-  const getGroupIcon = (groupName) => {
-    const icons = {
-      상조회사정보: <Users size={20} />,
-      고객정보: <User size={20} />,
-      고인기본정보: <FileText size={20} />,
-      신고인정보: <Phone size={20} />,
-      제출인정보: <FileText size={20} />,
-      장례정보: <MapPin size={20} />
-    };
-    return icons[groupName] || <FileText size={20} />;
-  };
+  const handleCancel = () => navigate('/menu1-1');
+  const getFieldType = (fieldName) => fieldTypes[fieldName] || 'text';
+  const getGroupIcon = (groupName) => ({
+    상조회사정보: <Users size={20} />,
+    고객정보: <User size={20} />,
+    고인기본정보: <FileText size={20} />,
+    신고인정보: <Phone size={20} />,
+    제출인정보: <FileText size={20} />,
+    장례정보: <MapPin size={20} />
+  }[groupName] || <FileText size={20} />);
 
   if (!selectedCustomer) {
-    return (
-      <div className="page-wrapper" style={{
-        '--navbar-height': '70px',
-        height: 'calc(100vh - var(--navbar-height))',
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div className="text-center">
-          <h3>선택된 고객이 없습니다</h3>
-          <Button variant="primary" onClick={() => navigate('/menu1-1')}>
-            고객 목록으로 돌아가기
-          </Button>
-        </div>
-      </div>
-    );
+    return <div>고객 정보를 불러오는 중...</div>;
   }
 
   return (
     <div className="page-wrapper" style={{
-      '--navbar-height': '70px',
+      '--navbar-height': '62px',
       height: 'calc(100vh - var(--navbar-height))',
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: '24px',
+      padding: '20px',
+      boxSizing: 'border-box',
       display: 'flex',
+      alignItems: 'center',
       justifyContent: 'center',
-      alignItems: 'flex-start'
     }}>
-      <div style={{
+      <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{
         position: 'relative',
         zIndex: 1,
         width: '100%',
-        maxWidth: '1400px',
+        maxWidth: '1600px',
+        height: '100%',
+        margin: '0 auto',
+        display: 'flex',
+        boxSizing: 'border-box',
         background: 'rgba(255, 255, 255, 0.7)',
-        backdropFilter: 'blur(8px)',
-        borderRadius: '20px',
         boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-        padding: '32px',
-        transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
-        opacity: animateCard ? 1 : 0,
-        transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255, 255, 255, 0.18)',
+        borderRadius: '20px',
+        padding: '20px',
+        gap: '20px',
+        overflow: 'hidden',
       }}>
-        {/* 헤더 */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          marginBottom: '32px',
-          paddingBottom: '24px',
-          borderBottom: '2px solid rgba(102, 126, 234, 0.1)'
-        }}>
-          <button
-            onClick={handleCancel}
-            style={{
-              marginRight: '20px',
-              background: 'rgba(102, 126, 234, 0.1)',
-              color: '#667eea',
-              border: 'none',
-              padding: '12px 20px',
-              borderRadius: '12px',
-              fontSize: '1rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(102, 126, 234, 0.15)';
-              e.target.style.transform = 'translateX(-3px)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'rgba(102, 126, 234, 0.1)';
-              e.target.style.transform = 'translateX(0)';
-            }}
-          >
-            <ArrowLeft size={16} style={{ marginRight: '6px' }} />
-            돌아가기
-          </button>
-          <h1 style={{
-            fontSize: '2.2rem',
-            fontWeight: '700',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            margin: 0
+        {/* 왼쪽 사이드바 */}
+        <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
+          <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#343a40', paddingLeft: '10px' }}>
+            장례정보 등록
+          </h4>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: '15px',
+            padding: '20px',
+            height: 'min-content',
+            position: 'sticky',
+            top: '20px'
           }}>
-            장례정보 등록 - {selectedCustomer.name}
-          </h1>
-        </div>
-
-        {/* 알림 메시지 */}
-        {successMessage && (
-          <Alert variant="success" className="mb-4">
-            {successMessage}
-          </Alert>
-        )}
-        {errorMessage && (
-          <Alert variant="danger" className="mb-4">
-            {errorMessage}
-          </Alert>
-        )}
-
-        {/* 폼 콘텐츠 */}
-        <div style={{
-          background: 'white',
-          borderRadius: '20px',
-          padding: '32px',
-          maxHeight: '70vh',
-          overflowY: 'auto',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
-          border: '1px solid rgba(229, 231, 235, 0.8)'
-        }}>
-          {/* 그룹별 폼 필드 */}
-          {Object.entries(formGroups).map(([groupName, fields]) => (
-            <Card key={groupName} className="mb-4" style={{
-              border: '1px solid rgba(229, 231, 235, 0.5)',
-              borderRadius: '16px',
-              overflow: 'hidden'
+            <div style={{
+              width: '120px', height: '120px', background: 'rgba(111, 66, 193, 0.2)',
+              borderRadius: '50%', margin: '0 auto 30px', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
             }}>
-              <Card.Header style={{
-                background: 'linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%)',
-                border: 'none',
-                padding: '16px 24px'
-              }}>
-                <h5 style={{
-                  margin: 0,
-                  color: '#374151',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}>
-                  {getGroupIcon(groupName)}
-                  <span style={{ marginLeft: '8px' }}>{groupName}</span>
-                </h5>
-              </Card.Header>
-              <Card.Body style={{ padding: '24px' }}>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                  gap: '20px'
-                }}>
-                  {fields.map((fieldName) => (
-                    <Form.Group key={fieldName}>
-                      <Form.Label style={{
-                        fontWeight: '600',
-                        color: '#374151',
-                        marginBottom: '8px',
-                        fontSize: '0.95rem'
-                      }}>
-                        {fieldLabels[fieldName] || fieldName}
-                        {validationRules.required?.includes(fieldName) && (
-                          <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
-                        )}
-                      </Form.Label>
-                      <Form.Control
-                        type={getFieldType(fieldName)}
-                        name={fieldName}
-                        value={formData[fieldName]}
-                        onChange={handleInputChange}
-                        placeholder={`${fieldLabels[fieldName] || fieldName} 입력`}
-                        isInvalid={errors[fieldName]?.length > 0}
-                        style={{
-                          padding: '14px 16px',
-                          borderRadius: '12px',
-                          fontSize: '0.95rem',
-                          backgroundColor: '#fafafa',
-                          border: '2px solid #e5e7eb',
-                          transition: 'all 0.3s ease'
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = '#667eea';
-                          e.target.style.backgroundColor = 'white';
-                          e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = errors[fieldName]?.length > 0 ? '#dc3545' : '#e5e7eb';
-                          e.target.style.backgroundColor = '#fafafa';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                      />
-                      {errors[fieldName] && (
-                        <Form.Control.Feedback type="invalid">
-                          {errors[fieldName].join(', ')}
-                        </Form.Control.Feedback>
-                      )}
-                    </Form.Group>
-                  ))}
-                </div>
-              </Card.Body>
-            </Card>
-          ))}
+              <FileText size={48} style={{ color: '#6f42c1' }} />
+            </div>
+            <h2 style={{ fontWeight: '700', fontSize: '1.8rem', textAlign: 'center', color: '#343a40' }}>
+              {selectedCustomer.name}님 정보
+            </h2>
+            <p style={{ fontSize: '16px', lineHeight: '1.6', opacity: 0.7, textAlign: 'center', color: '#6c757d' }}>
+              고객님의 장례정보를<br/>
+              정확하게 입력해주세요.
+            </p>
+            <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px'}}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                <User size={16} style={{ color: '#6f42c1', marginRight: '10px' }} />
+                <span style={{fontWeight: 500}}>{selectedCustomer.name} (향년 {selectedCustomer.age}세)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                <Phone size={16} style={{ color: '#6f42c1', marginRight: '10px' }} />
+                <span style={{fontWeight: 500}}>{selectedCustomer.phone}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                <Calendar size={16} style={{ color: '#6f42c1', marginRight: '10px' }} />
+                <span style={{fontWeight: 500}}>별세일: {customerUtils.formatDate(selectedCustomer.funeralDate)}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <MapPin size={16} style={{ color: '#6f42c1', marginRight: '10px' }} />
+                <span style={{fontWeight: 500}}>주소 : {selectedCustomer.location}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* 하단 버튼 */}
-        <div style={{
-          marginTop: '32px',
+        {/* 오른쪽 메인 콘텐츠 */}
+        <div className="dashboard-right" style={{
+          flex: '1',
+          height: '100%',
           display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '16px'
+          flexDirection: 'column'
         }}>
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={handleCancel}
-            disabled={saving}
-            style={{
-              borderRadius: '12px',
-              fontWeight: '600',
-              padding: '12px 24px'
-            }}
-          >
-            취소
-          </Button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0 20px 0', borderBottom: '1px solid rgba(229, 231, 235, 0.5)', marginBottom: '20px', flexShrink: 0 }}>
+            <h3 style={{ color: '#374151', fontWeight: '600', fontSize: '1.5rem', margin: 0, display: 'flex', alignItems: 'center' }}>
+              <button onClick={handleCancel} style={{ all: 'unset', cursor: 'pointer', marginRight: '16px', color: '#6f42c1' }}>
+                <ArrowLeft size={24} />
+              </button>
+              상세 정보 입력
+            </h3>
+            <div className="d-flex gap-2">
+              <Button variant="outline-secondary" size="sm" onClick={handleCancel} disabled={saving}>
+                취소
+              </Button>
+              <Button size="sm" className="btn-purple" onClick={handleSave} disabled={saving}>
+                {saving ? '저장 중...' : <><Save size={14} className="me-2" /> 저장</>}
+              </Button>
+            </div>
+          </div>
+          
+          {successMessage && <Alert variant="success" className="mb-4 flex-shrink-0">{successMessage}</Alert>}
+          {errorMessage && <Alert variant="danger" className="mb-4 flex-shrink-0">{errorMessage}</Alert>}
 
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              borderRadius: '12px',
-              fontWeight: '600',
-              padding: '12px 24px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none'
-            }}
-          >
-            {saving ? (
-              <>
-                <div className="spinner-border spinner-border-sm me-2" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-                저장 중...
-              </>
-            ) : (
-              <>
-                <Save size={16} style={{ marginRight: '6px' }} />
-                저장
-              </>
-            )}
-          </Button>
+          <div className="form-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
+            {Object.entries(formGroups).map(([groupName, fields]) => (
+              <Card key={groupName} className="mb-4">
+                <Card.Header>
+                  <h5 style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+                    {getGroupIcon(groupName)}
+                    <span style={{ marginLeft: '8px' }}>{groupName}</span>
+                  </h5>
+                </Card.Header>
+                <Card.Body>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+                    {fields.map((fieldName) => (
+                      <Form.Group key={fieldName}>
+                        <Form.Label>
+                          {fieldLabels[fieldName] || fieldName}
+                          {validationRules.required?.includes(fieldName) && <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>}
+                        </Form.Label>
+                        <Form.Control
+                          type={getFieldType(fieldName)}
+                          name={fieldName}
+                          value={formData[fieldName]}
+                          onChange={handleInputChange}
+                          placeholder={`${fieldLabels[fieldName] || fieldName} 입력`}
+                          isInvalid={errors[fieldName]?.length > 0}
+                        />
+                        {errors[fieldName] && <Form.Control.Feedback type="invalid">{errors[fieldName].join(', ')}</Form.Control.Feedback>}
+                      </Form.Group>
+                    ))}
+                  </div>
+                </Card.Body>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
 
       <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .dashboard-container { opacity: 0; }
+        .dashboard-container.animate-in {
+          opacity: 1;
+          animation: fadeIn 0.6s ease-out;
+        }
+
+        .form-scroll-area::-webkit-scrollbar { width: 6px; }
+        .form-scroll-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .form-scroll-area::-webkit-scrollbar-thumb { background-color: rgba(108, 117, 125, 0.5); border-radius: 10px; }
+        
         .form-control:focus {
           box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
           border-color: #667eea !important;
+        }
+        @media (max-width: 1200px) {
+          .page-wrapper { height: auto; min-height: calc(100vh - var(--navbar-height)); }
+          .dashboard-container { flex-direction: column; height: auto; }
+          .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
+          .dashboard-right { height: auto; max-height: none; }
+        }
+
+        .btn-purple {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+            }
+            .btn-purple:hover {
+                            background-color: transparent;
+            background-color: #5a32a3;
+            border-color: #5a32a3;
+            color: white;
+            }
+
+            .btn-outline-purple {
+            background-color: transparent;
+            border-color: #6f42c1;
+            color: #6f42c1;
+            }
+            .btn-outline-purple:hover {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+            }
         }
       `}</style>
     </div>
