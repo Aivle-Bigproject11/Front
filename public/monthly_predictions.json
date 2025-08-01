@@ -1,0 +1,76 @@
+{
+  "model_info": {
+    "model_type": "Linear Trend + Seasonal Pattern",
+    "description": "선형 트렌드와 월별 계절성을 결합한 단순 모델",
+    "training_period": "2009-10 ~ 2023-12",
+    "prediction_period": "2024-01 ~ 2024-12"
+  },
+  "predictions": [
+    {
+      "date": "2024-01",
+      "predicted_deaths": 32639,
+      "formatted_deaths": "32,639명"
+    },
+    {
+      "date": "2024-02",
+      "predicted_deaths": 29095,
+      "formatted_deaths": "29,095명"
+    },
+    {
+      "date": "2024-03",
+      "predicted_deaths": 32764,
+      "formatted_deaths": "32,764명"
+    },
+    {
+      "date": "2024-04",
+      "predicted_deaths": 30137,
+      "formatted_deaths": "30,137명"
+    },
+    {
+      "date": "2024-05",
+      "predicted_deaths": 29549,
+      "formatted_deaths": "29,549명"
+    },
+    {
+      "date": "2024-06",
+      "predicted_deaths": 27500,
+      "formatted_deaths": "27,500명"
+    },
+    {
+      "date": "2024-07",
+      "predicted_deaths": 28462,
+      "formatted_deaths": "28,462명"
+    },
+    {
+      "date": "2024-08",
+      "predicted_deaths": 29782,
+      "formatted_deaths": "29,782명"
+    },
+    {
+      "date": "2024-09",
+      "predicted_deaths": 29029,
+      "formatted_deaths": "29,029명"
+    },
+    {
+      "date": "2024-10",
+      "predicted_deaths": 30657,
+      "formatted_deaths": "30,657명"
+    },
+    {
+      "date": "2024-11",
+      "predicted_deaths": 30488,
+      "formatted_deaths": "30,488명"
+    },
+    {
+      "date": "2024-12",
+      "predicted_deaths": 32851,
+      "formatted_deaths": "32,851명"
+    }
+  ],
+  "summary": {
+    "average_monthly": 30246,
+    "total_12months": 362958,
+    "max_month": 32851,
+    "min_month": 27500
+  }
+}

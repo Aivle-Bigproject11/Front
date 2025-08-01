@@ -7,57 +7,115 @@ import './App.css';
 import Navbar from './components/Layout/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import Menu1 from './pages/Menu1';
+import FindId from './pages/FindId';
+import FindPassword from './pages/FindPassword';
+import Menu1_1 from './pages/Menu1-1';
+import Menu1_2 from './pages/Menu1-2';
+import Menu1_3 from './pages/Menu1-3';
 import Menu2 from './pages/Menu2';
 import Menu3 from './pages/Menu3';
 import Menu4 from './pages/Menu4';
+import Menu5 from './pages/Menu5';
+import Menu5_1 from './pages/Menu5_1'; 
+import Menu5_2 from './pages/Menu5_2';
+import MemorialDetail from './pages/MemorialDetail';
+import MemorialConfig from './pages/MemorialConfig';
+import Lobby from './pages/Lobby';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
+
+// Login 컴포넌트와 SignUp 컴포넌트를 임포트합니다.
+import SignUp from './pages/SignUp';
+
 function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/*" element={<MainLayout />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
-  );
+    return (
+        <AuthProvider>
+            <Router>
+                <div className="App">
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/findId" element={<FindId />} />
+                        <Route path="/findPassword" element={<FindPassword />} />
+                        {/* 회원가입 페이지 경로추가 */}
+                        <Route path="/signup" element={<SignUp />} />
+                        {/* 유저용 페이지들 (네비게이션 바 없음) */}
+                        <Route path="/lobby" element={<UserLayout><Lobby /></UserLayout>} />
+                        <Route path="/user-memorial/:id" element={<UserLayout><MemorialDetail /></UserLayout>} />
+                        {/* 고유번호로 접근하는 페이지 (로그인 없이, 네비게이션 바 없음) */}
+                        <Route path="/memorial/:id/guest" element={<GuestLayout><MemorialDetail /></GuestLayout>} />
+                        <Route path="/*" element={<MainLayout />} />
+                    </Routes>
+                </div>
+            </Router>
+        </AuthProvider>
+    );
 }
 
 const MainLayout = () => {
-  const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, loading } = useAuth();
 
-  if (loading) {
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center min-vh-100">
+                <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
+        <>
+            <Navbar />
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/menu1-1" element={<Menu1_1 />} />
+                <Route path="/menu1-2" element={<Menu1_2 />} />
+                <Route path="/menu1-3" element={<Menu1_3 />} />
+                <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
+                <Route path="/menu2" element={<Menu2 />} />
+                <Route path="/menu3" element={<Menu3 />} />
+                <Route path="/menu4" element={<Menu4 />} />
+                <Route path="/menu5" element={<Menu5 />} />
+                <Route path="/menu5_1" element={<Menu5_1 />} />
+                <Route path="/menu5_2" element={<Menu5_2 />} />
+
+                <Route path="/memorial/:id" element={<MemorialDetail />} />
+                <Route path="/memorial/:id/settings" element={<MemorialConfig />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </>
     );
-  }
+};
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+const UserLayout = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
 
-  return (
-    <>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/menu1" element={<Menu1 />} />
-        <Route path="/menu2" element={<Menu2 />} />
-        <Route path="/menu3" element={<Menu3 />} />
-        <Route path="/menu4" element={<Menu4 />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </>
-  );
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center min-vh-100">
+                <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    // 네비게이션 바 없이 직접 컴포넌트 렌더링
+    return children;
+};
+
+const GuestLayout = ({ children }) => {
+    // 로그인 없이 고유번호로 접근한 경우 - 네비게이션 바 없음
+    return children;
 };
 
 export default App;

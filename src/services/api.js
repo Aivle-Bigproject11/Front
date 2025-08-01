@@ -68,7 +68,7 @@ export const dummyData = {
           birthOfDate: "1998-03-15",
           deceasedDate: "2023-12-01",
           gender: "FEMALE",
-          imageUrl: "/images/memorial1.jpg",
+          imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=300&fit=crop&crop=face",
           customerId: 1001,
           _links: {
             memorial: { href: "http://localhost:8080/memorials/1" },
@@ -77,16 +77,100 @@ export const dummyData = {
         },
         {
           id: 2,
-          name: "준호",
+          name: "현종",
           age: 32,
           birthOfDate: "1991-08-22",
           deceasedDate: "2024-01-15",
           gender: "MALE",
-          imageUrl: "/images/memorial2.jpg",
+          imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&crop=face",
           customerId: 1002,
           _links: {
             memorial: { href: "http://localhost:8080/memorials/2" },
             self: { href: "http://localhost:8080/memorials/2" }
+          }
+        },
+        {
+          id: 3,
+          name: "도형",
+          age: 28,
+          birthOfDate: "1995-11-08",
+          deceasedDate: "2024-02-20",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=300&fit=crop&crop=face",
+          customerId: 1003,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/3" },
+            self: { href: "http://localhost:8080/memorials/3" }
+          }
+        },
+        {
+          id: 4,
+          name: "시훈",
+          age: 30,
+          birthOfDate: "1993-07-12",
+          deceasedDate: "2024-03-10",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=300&fit=crop&crop=face",
+          customerId: 1004,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/4" },
+            self: { href: "http://localhost:8080/memorials/4" }
+          }
+        },
+        {
+          id: 5,
+          name: "수연",
+          age: 27,
+          birthOfDate: "1996-04-18",
+          deceasedDate: "2024-01-25",
+          gender: "FEMALE",
+          imageUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b17c?w=400&h=300&fit=crop&crop=face",
+          customerId: 1005,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/5" },
+            self: { href: "http://localhost:8080/memorials/5" }
+          }
+        },
+        {
+          id: 6,
+          name: "성현",
+          age: 31,
+          birthOfDate: "1992-09-03",
+          deceasedDate: "2024-02-14",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=300&fit=crop&crop=face",
+          customerId: 1006,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/6" },
+            self: { href: "http://localhost:8080/memorials/6" }
+          }
+        },
+        {
+          id: 7,
+          name: "근우",
+          age: 29,
+          birthOfDate: "1994-12-25",
+          deceasedDate: "2024-03-05",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=300&fit=crop&crop=face",
+          customerId: 1007,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/7" },
+            self: { href: "http://localhost:8080/memorials/7" }
+          }
+        },
+        {
+          id: 8,
+          name: "헌준",
+          age: 26,
+          birthOfDate: "1997-05-14",
+          deceasedDate: "2024-04-12",
+          gender: "MALE",
+          imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=300&fit=crop&crop=face",
+          customerId: 1008,
+          _links: {
+            memorial: { href: "http://localhost:8080/memorials/8" },
+            self: { href: "http://localhost:8080/memorials/8" }
           }
         }
       ]
@@ -98,7 +182,7 @@ export const dummyData = {
     page: {
       number: 0,
       size: 20,
-      totalElements: 2,
+      totalElements: 8,
       totalPages: 1
     }
   },
@@ -120,7 +204,111 @@ export const dummyData = {
     monthlyMemorials: [65, 78, 90, 81, 56, 75],
     memorialsByGender: { male: 80, female: 70 },
     dailyVisits: [120, 190, 300, 500, 200, 300, 150]
-  }
+  },
+
+  // 전체 회원 목록 (유가족 검색용)
+  members: [
+    {
+      id: 1001,
+      name: "김철수",
+      phone: "010-1234-5678",
+      email: "kim.chulsoo@example.com",
+      address: "서울시 강남구 역삼동",
+      birthDate: "1985-03-15",
+      gender: "MALE",
+      joinDate: "2023-01-10"
+    },
+    {
+      id: 1002,
+      name: "이영희",
+      phone: "010-9876-5432",
+      email: "lee.younghee@example.com",
+      address: "서울시 서초구 서초동",
+      birthDate: "1990-07-22",
+      gender: "FEMALE",
+      joinDate: "2023-02-15"
+    },
+    {
+      id: 1003,
+      name: "박민수",
+      phone: "010-5555-1234",
+      email: "park.minsu@example.com",
+      address: "서울시 송파구 잠실동",
+      birthDate: "1988-12-08",
+      gender: "MALE",
+      joinDate: "2023-03-20"
+    },
+    {
+      id: 1004,
+      name: "최수정",
+      phone: "010-7777-8888",
+      email: "choi.sujung@example.com",
+      address: "서울시 마포구 홍대입구",
+      birthDate: "1992-05-30",
+      gender: "FEMALE",
+      joinDate: "2023-04-05"
+    },
+    {
+      id: 1005,
+      name: "정현우",
+      phone: "010-3333-9999",
+      email: "jung.hyunwoo@example.com",
+      address: "경기도 성남시 분당구",
+      birthDate: "1987-09-14",
+      gender: "MALE",
+      joinDate: "2023-05-12"
+    },
+    {
+      id: 1006,
+      name: "윤미라",
+      phone: "010-1111-2222",
+      email: "yoon.mira@example.com",
+      address: "인천시 연수구 송도동",
+      birthDate: "1993-11-25",
+      gender: "FEMALE",
+      joinDate: "2023-06-18"
+    },
+    {
+      id: 1007,
+      name: "강동혁",
+      phone: "010-4444-5555",
+      email: "kang.donghyuk@example.com",
+      address: "부산시 해운대구 우동",
+      birthDate: "1989-04-17",
+      gender: "MALE",
+      joinDate: "2023-07-22"
+    },
+    {
+      id: 1008,
+      name: "송지은",
+      phone: "010-6666-7777",
+      email: "song.jieun@example.com",
+      address: "대구시 수성구 범어동",
+      birthDate: "1991-08-03",
+      gender: "FEMALE",
+      joinDate: "2023-08-15"
+    },
+    {
+      id: 1009,
+      name: "임태호",
+      phone: "010-8888-9999",
+      email: "lim.taeho@example.com",
+      address: "대전시 유성구 도룡동",
+      birthDate: "1986-02-28",
+      gender: "MALE",
+      joinDate: "2023-09-10"
+    },
+    {
+      id: 1010,
+      name: "한소영",
+      phone: "010-2222-3333",
+      email: "han.soyoung@example.com",
+      address: "광주시 북구 일곡동",
+      birthDate: "1994-06-12",
+      gender: "FEMALE",
+      joinDate: "2023-10-05"
+    }
+  ]
 };
 
 export default api;

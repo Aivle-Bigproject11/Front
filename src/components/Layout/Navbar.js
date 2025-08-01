@@ -17,6 +17,9 @@ const Navbar = () => {
     return null;
   }
 
+  // '고객 관리' 메뉴 활성화
+  const isCustomerManagementActive = location.pathname.startsWith('/menu5');
+
   return (
     <BootstrapNavbar expand="lg" bg="dark" variant="dark">
       <Container>
@@ -35,8 +38,8 @@ const Navbar = () => {
             </Nav.Link>
             <Nav.Link 
               as={Link} 
-              to="/menu1" 
-              active={location.pathname === "/menu1"}
+              to="/menu1-1" 
+              active={location.pathname.startsWith("/menu1")}
             >
               장례서류작성
             </Nav.Link>
@@ -60,6 +63,13 @@ const Navbar = () => {
               active={location.pathname === "/menu4"}
             >
               디지털 추모관
+            </Nav.Link>
+              <Nav.Link 
+              as={Link} 
+              to="/menu5" 
+              active={isCustomerManagementActive}
+            >
+              고객 관리 
             </Nav.Link>
           </Nav>
           <Nav>

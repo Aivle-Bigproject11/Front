@@ -13,13 +13,8 @@ body {
   border: none;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
   transition: all 0.3s ease;
-}
 
-.card:hover {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
 }
-
 .card-body {
   padding: 1.5rem;
 }
@@ -31,10 +26,15 @@ body {
 }
 
 .btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-/* 점보트론 스타일 */
+.ribbon-body:hover {
+  transform: translateY(-5px);
+}
+
+/* 전체 애플리케이션 스타일 */
 .jumbotron {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 10px;
@@ -89,6 +89,172 @@ body {
   height: 400px;
 }
 
+/* 로그인 페이지 스타일 */
+.login-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  max-width: 900px;
+  width: 100%;
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  margin: 0 auto;
+}
+
+.login-tabs {
+  background-color: #e9ecef;
+  border-radius: 0;
+  padding: 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.login-tab {
+  background-color: #e9ecef;
+  border: none;
+  padding: 15px 30px;
+  color: #6c757d;
+  font-weight: 500;
+  border-radius: 0;
+  transition: all 0.3s ease;
+  flex: 0 0 auto;
+}
+
+.login-tab.active {
+  background-color: #6c9bd1;
+  color: white;
+}
+
+.login-form-area {
+  padding: 40px;
+  flex: 1;
+}
+
+.login-content {
+  display: flex;
+  min-height: 500px;
+}
+
+.login-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 0 0 0 10px;
+}
+
+.login-right {
+  flex: 1;
+  background-color: white;
+  border-radius: 0 0 10px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-image-placeholder {
+  width: 200px;
+  height: 200px;
+  border: 2px dashed #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 18px;
+  border-radius: 10px;
+}
+
+.login-form-group {
+  margin-bottom: 20px;
+}
+
+.login-form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.login-form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.login-form-control:focus {
+  outline: none;
+  border-color: #6c9bd1;
+  box-shadow: 0 0 0 0.2rem rgba(108, 155, 209, 0.25);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #6c9bd1;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-btn:hover {
+  background-color: #5a8bc4;
+}
+
+.login-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.login-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.login-checkbox input {
+  margin: 0;
+}
+
+.login-links {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.login-link {
+  color: #6c9bd1;
+  text-decoration: none;
+  font-size: 14px;
+  margin: 0 15px;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}
+
+.unique-number-info {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #6c757d;
+}
+
 /* 반응형 유틸리티 */
 @media (max-width: 768px) {
   .card-body {
@@ -135,4 +301,462 @@ body {
 .progress {
   height: 1rem;
   border-radius: 0.5rem;
+}
+
+/* 추모관 카드 스타일 */
+.memorial-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.memorial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.memorial-header {
+  position: relative;
+  border-radius: 12px 12px 0 0;
+}
+
+.memorial-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  z-index: 1;
+}
+
+.memorial-info {
+  font-size: 0.9rem;
+}
+
+.memorial-info .row {
+  align-items: center;
+}
+
+.memorial-info small {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 추모관 카드 버튼 스타일 */
+.memorial-card .btn-outline-info:hover {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: white;
+}
+
+.memorial-card .btn-outline-primary:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.memorial-card .btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+/* 추모관 카드 드롭다운 스타일 */
+.memorial-card .dropdown-toggle::after {
+  display: none;
+}
+
+.memorial-card .dropdown-menu {
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  min-width: 150px;
+}
+
+.memorial-card .dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.memorial-card .dropdown-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(5px);
+}
+
+.memorial-card .dropdown-item i {
+  width: 16px;
+}
+
+/* 유가족 관리 모달 스타일 */
+.family-management-modal .modal-dialog {
+  max-width: 900px;
+}
+
+.family-management-modal .table {
+  margin-bottom: 0;
+}
+
+.family-management-modal .table td {
+  vertical-align: middle;
+  padding: 1rem 0.75rem;
+}
+
+.family-management-modal .badge {
+  font-size: 0.8rem;
+}
+
+/* 회원 검색 드롭다운 스타일 */
+.family-management-modal .list-group-item {
+  border: none;
+  padding: 0.75rem 1rem;
+}
+
+.family-management-modal .list-group-item:hover {
+  background-color: #f8f9fa;
+}
+
+.family-management-modal .list-group-item:first-child {
+  border-top-left-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
+}
+
+.family-management-modal .list-group-item:last-child {
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+/* 선택된 회원 정보 알림 스타일 */
+.family-management-modal .alert-info {
+  background-color: #e7f3ff;
+  border-color: #b3d9ff;
+  color: #0c5460;
+}
+
+/* 추모 상세 페이지 스타일 */
+.memorial-detail-page {
+  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 50%);
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.memorial-profile-section {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.memorial-profile-image {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.memorial-basic-info .info-item {
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.memorial-video-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.memorial-video-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.05) 0px,
+    rgba(255,255,255,0.05) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+  z-index: 1;
+}
+
+.memorial-video-container > div {
+  position: relative;
+  z-index: 2;
+}
+
+/* 16:9 비디오 컨테이너 반응형 */
+@media (max-width: 768px) {
+  .memorial-video-container {
+    margin: 0 1rem !important;
+  }
+  
+  .memorial-video-container h4 {
+    font-size: 1.2rem;
+  }
+  
+  .memorial-video-container p {
+    font-size: 0.9rem;
+  }
+  
+  .memorial-video-container .btn {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+  }
+}
+
+.memorial-photos-grid .memorial-photo-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.guestbook-entry {
+  transition: all 0.3s ease;
+}
+
+.guestbook-entry:hover {
+  background-color: #e9ecef !important;
+  transform: translateX(5px);
+}
+
+.memorial-menu-list .btn:hover {
+  transform: translateX(10px);
+}
+
+/* 추모 탭 스타일 */
+.memorial-tabs-container {
+  position: relative;
+}
+
+.memorial-tabs-header .tab-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.memorial-tabs-header .tab-header:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 -4px 15px rgba(0,0,0,0.15) !important;
+}
+
+.memorial-tabs-content .tab-content {
+  transition: all 0.5s ease;
+}
+
+/* 탭 전환 버튼 스타일 */
+.memorial-tabs-container .btn {
+  transition: all 0.3s ease;
+}
+
+.memorial-tabs-container .btn:hover {
+  transform: translateY(-50%) scale(1.1) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+}
+
+/* 추모사 스타일 */
+.memorial-eulogy {
+  background: linear-gradient(135deg, #f8f9ff 0%, #fff5f5 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.eulogy-title h6 {
+  position: relative;
+  display: inline-block;
+}
+
+.eulogy-title h6::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 1px;
+}
+
+.eulogy-content p {
+  text-align: justify;
+  text-indent: 1rem;
+}
+
+.eulogy-footer {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+/* 리본 방명록 스타일 */
+.ribbon-guestbook-container {
+  position: relative;
+  max-width: 1400px; /* 컨테이너 최대 너비 */
+  margin: 0 auto; /* 중앙 정렬 */
+}
+
+.ribbon-scroll-container {
+  position: relative;
+  transform-style: preserve-3d;
+  overflow: hidden;
+  cursor: grab;
+  background: transparent; /* 배경 투명하게 */
+  padding: 0; /* 패딩 제거 */
+  margin: 0; /* 마진 제거 */
+}
+
+.ribbon-scroll-container:active {
+  cursor: grabbing;
+}
+
+.ribbon-items-wrapper {
+  transform-style: preserve-3d;
+  width: max-content; /* 콘텐츠에 맞는 너비 */
+  height: 280px; /* 리본 카드와 같은 높이 */
+  align-items: flex-start;
+}
+
+.ribbon-item {
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  flex-shrink: 0; /* 크기 변경 방지 */
+}
+
+.ribbon-item:hover {
+  animation-play-state: paused !important;
+}
+
+.ribbon-item::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  bottom: -2px;
+  left: -2px;
+  background: linear-gradient(45deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.ribbon-item:hover::before {
+  opacity: 1;
+}
+
+/* 리본 애니메이션 효과 */
+@keyframes ribbonFloat {
+  0%, 100% { 
+    transform: translateY(0) rotateY(0deg);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  }
+  50% { 
+    transform: translateY(-8px) rotateY(-2deg);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+  }
+}
+
+.ribbon-item:nth-child(even) {
+  animation: ribbonFloat 8s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.ribbon-item:nth-child(odd) {
+  animation: ribbonFloat 8s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+/* 호버시 애니메이션 정지 */
+.ribbon-scroll-container:hover .ribbon-item {
+  animation-play-state: paused;
+}
+
+/* 리본 바디 스타일 */
+.ribbon-body {
+  transition: all 0.3s ease;
+  overflow: visible !important;
+  border-radius: 12px !important; /* 전체 모서리 둥글게 */
+  position: relative;
+  min-height: 280px;
+}
+
+.ribbon-body::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.1);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.ribbon-body:hover {
+  transform: translateY(-5px);
+}
+
+/* 리본 꼬리 통합 애니메이션 */
+.ribbon-item:hover .ribbon-tail-wrapper {
+  transform: translateY(-5px);
+}
+
+.ribbon-item:hover .ribbon-tail-main {
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4)) !important;
+}
+
+.ribbon-item:hover .ribbon-tail-left,
+.ribbon-item:hover .ribbon-tail-right {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+/* 반응형 리본 */
+@media (max-width: 768px) {
+  .ribbon-item {
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
+    height: 300px !important;
+  }
+  
+  .ribbon-scroll-container {
+    height: 300px !important; /* 높이 더 감소 */
+  }
+  
+  .ribbon-items-wrapper {
+    gap: 15px !important;
+  }
+  
+  .ribbon-body {
+    height: 200px !important;
+    padding: 15px 10px !important;
+    font-size: 0.85rem;
+  }
+}
+
+/* 대형 화면에서의 추가 제한 */
+@media (min-width: 1400px) {
+  .ribbon-guestbook-container {
+    max-width: 1200px;
+  }
+  
+  .ribbon-scroll-container {
+    max-width: 1200px;
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .memorial-card {
+    margin-bottom: 1rem;
+  }
+  
+  .memorial-header {
+    height: 180px !important;
+  }
+  
+  .memorial-info {
+    font-size: 0.8rem;
+  }
 }

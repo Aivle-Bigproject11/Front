@@ -1,252 +1,124 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, ProgressBar } from 'react-bootstrap';
-import { Line, Doughnut } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from 'chart.js';
-import { dummyData } from '../services/api';
+// src/pages/Menu2.js
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
+import React, { useState, useEffect } from 'react';
+import InteractiveMap from '../components/InteractiveMap';
+import RegionDataDisplay from '../components/RegionDataDisplay';
 
 const Menu2 = () => {
-  const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedRegion, setSelectedRegion] = useState('전체');
+  const [animateCard, setAnimateCard] = useState(false);
 
   useEffect(() => {
-    // TODO: 실제 API 호출로 교체
-    setTimeout(() => {
-      setDashboardData(dummyData.dashboard);
-      setLoading(false);
-    }, 1000);
+    setAnimateCard(true);
   }, []);
 
-  const lineChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: '월별 추모관 생성 현황',
-      },
-    },
-  };
-
-  const lineChartData = {
-    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
-    datasets: [
-      {
-        label: '추모관 수',
-        data: dummyData.analytics.monthlyMemorials,
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const doughnutChartData = {
-    labels: ['남성', '여성'],
-    datasets: [
-      {
-        data: [dummyData.analytics.memorialsByGender.male, dummyData.analytics.memorialsByGender.female],
-        backgroundColor: [
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 99, 132, 0.8)',
-        ],
-        borderColor: [
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 99, 132, 1)',
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  if (loading) {
-    return (
-      <Container className="mt-4">
-        <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-2">대시보드 데이터를 불러오는 중...</p>
-        </div>
-      </Container>
-    );
-  }
-
   return (
-    <Container className="mt-4">
-      <Row>
-        <Col>
-          <h1>대시보드</h1>
-          <p className="lead">추모관 서비스 현황을 한눈에 확인하세요.</p>
-        </Col>
-      </Row>
+    <div className="page-wrapper" style={{
+      '--navbar-height': '62px',
+      height: 'calc(100vh - var(--navbar-height))', 
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      padding: '20px',
+      boxSizing: 'border-box',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{
+        position: 'relative',
+        zIndex: 1,
+        width: '100%',
+        maxWidth: '1600px',
+        height: '100%', 
+        margin: '0 auto',
+        display: 'flex',
+        boxSizing: 'border-box',
+        background: 'rgba(255, 255, 255, 0.7)',
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255, 255, 255, 0.18)',
+        borderRadius: '20px',
+        opacity: animateCard ? 1 : 0,
+        transition: 'opacity 0.6s ease-out', 
+        padding: '20px',
+        gap: '20px',
+        overflow: 'hidden', 
+      }}>
+        <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
+          <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#343a40', paddingLeft: '10px' }}>
+            통합 대시보드
+          </h4>
+          <div className="dashboard-left" style={{
+            background: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: '15px',
+            padding: '20px',
+            height: 'min-content',
+            position: 'sticky',
+            top: '20px'
+          }}>
+            <InteractiveMap
+              selectedRegion={selectedRegion}
+              onRegionSelect={setSelectedRegion}
+            />
+          </div>
+        </div>
 
-      {/* 통계 카드 */}
-      <Row className="mt-4">
-        <Col md={3}>
-          <Card className="text-white bg-primary">
-            <Card.Body>
-              <div className="d-flex justify-content-between">
-                <div>
-                  <h4>{dashboardData?.totalMemorials || 0}</h4>
-                  <small>총 추모관</small>
-                </div>
-                <i className="fas fa-heart fa-2x"></i>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-white bg-success">
-            <Card.Body>
-              <div className="d-flex justify-content-between">
-                <div>
-                  <h4>{dashboardData?.activeMemorials || 0}</h4>
-                  <small>활성 추모관</small>
-                </div>
-                <i className="fas fa-chart-line fa-2x"></i>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-white bg-info">
-            <Card.Body>
-              <div className="d-flex justify-content-between">
-                <div>
-                  <h4>{dashboardData?.systemUptime || 0}%</h4>
-                  <small>시스템 가동률</small>
-                </div>
-                <i className="fas fa-server fa-2x"></i>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-white bg-warning">
-            <Card.Body>
-              <div className="d-flex justify-content-between">
-                <div>
-                  <h4>{dashboardData?.notifications || 0}</h4>
-                  <small>알림</small>
-                </div>
-                <i className="fas fa-bell fa-2x"></i>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+        <div className="dashboard-right" style={{
+          flex: '1',
+          overflowY: 'auto',
+          height: '100%', 
+          paddingRight: '10px'
+        }}>
+          <RegionDataDisplay region={selectedRegion} />
+        </div>
+      </div>
 
-      {/* 차트 섹션 */}
-      <Row className="mt-4">
-        <Col md={8}>
-          <Card>
-            <Card.Header>
-              <h5>월별 추모관 생성 추이</h5>
-            </Card.Header>
-            <Card.Body>
-              <Line options={lineChartOptions} data={lineChartData} />
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card>
-            <Card.Header>
-              <h5>성별 분포</h5>
-            </Card.Header>
-            <Card.Body>
-              <Doughnut data={doughnutChartData} />
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        .animate-in {
+          animation: fadeIn 0.6s ease-out;
+        }
 
-      {/* 최근 활동 */}
-      <Row className="mt-4">
-        <Col md={8}>
-          <Card>
-            <Card.Header>
-              <h5>최근 활동</h5>
-            </Card.Header>
-            <Card.Body>
-              <Table responsive>
-                <thead>
-                  <tr>
-                    <th>시간</th>
-                    <th>사용자</th>
-                    <th>활동</th>
-                    <th>상태</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dashboardData?.recentActivities?.map((activity, index) => (
-                    <tr key={index}>
-                      <td>{activity.time}</td>
-                      <td>{activity.user}</td>
-                      <td>{activity.action}</td>
-                      <td>
-                        <span className={`badge ${
-                          activity.status === '성공' || activity.status === '완료' 
-                            ? 'bg-success' 
-                            : activity.status === '진행중' 
-                              ? 'bg-warning' 
-                              : 'bg-secondary'
-                        }`}>
-                          {activity.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card>
-            <Card.Header>
-              <h5>시스템 상태</h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="mb-3">
-                <label>CPU 사용률</label>
-                <ProgressBar now={45} label="45%" />
-              </div>
-              <div className="mb-3">
-                <label>메모리 사용률</label>
-                <ProgressBar now={67} variant="warning" label="67%" />
-              </div>
-              <div className="mb-3">
-                <label>디스크 사용률</label>
-                <ProgressBar now={23} variant="success" label="23%" />
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+        .dashboard-right::-webkit-scrollbar {
+          width: 6px;
+        }
+        .dashboard-right::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.05);
+          border-radius: 10px;
+        }
+        .dashboard-right::-webkit-scrollbar-thumb {
+          background-color: rgba(108, 117, 125, 0.5);
+          border-radius: 10px;
+        }
+
+        @media (max-width: 1200px) {
+          .page-wrapper {
+            height: auto;
+            min-height: calc(100vh - var(--navbar-height));
+          }
+          .dashboard-container {
+            flex-direction: column;
+            height: auto;
+          }
+          .dashboard-left {
+            position: static;
+            width: 100%;
+            flex: 0 0 auto;
+          }
+          .dashboard-right {
+            height: auto;
+            max-height: none;
+          }
+        }
+      `}</style>
+    </div>
   );
 };
 

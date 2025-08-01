@@ -1,17 +1,18 @@
-# Memorial Service - React Frontend
+# Golden Gate 황금 혼문 - React Frontend
 
-Saja boys 사자보이즈 서비스 개발
-
-상조서비스를 위한 React 기반 프론트엔드 애플리케이션입니다.
-
+- 프론트 총괄 및 개발 : 김시훈
+- 프론트 개발 팀원 : 양성현, 박수연
 
 ## 🎯 프로젝트 개요
 
-- **프론트엔드**: React 19.1.0 SPA 애플리케이션 (포트 3000)
+- **프론트엔드**: React 18.3.1 SPA 애플리케이션 (포트 3000)
 - **백엔드 API**: Spring Boot API 서버 연동 준비 (포트 8080)
-- **4개 메뉴 페이지**: 장례서류작성, 대시보드, 전환서비스추천, 디지털 추모관
+- **주요 페이지**: 장례서류작성, 대시보드, 전환서비스추천, 디지털 추모관
 - **API 통신**: Axios를 통한 RESTful API 호출 (현재 더미 데이터 사용)
 - **UI 프레임워크**: React Bootstrap 5 + Chart.js
+- **라우팅**: React Router DOM 6.28.0 기반 SPA
+- **상태관리**: React Context API + Local Storage
+- **스타일링**: Bootstrap 5.3.7 + Font Awesome + 커스텀 CSS
 
 ## 🚀 실행 방법
 
@@ -37,31 +38,46 @@ npm run test   # 테스트 실행
 ## 🔧 프로젝트 구조
 
 ```
-c:\Github\Front/                    # React 프론트엔드 프로젝트
+프로젝트 루트/                      # React 프론트엔드 프로젝트
 ├── public/                         # 정적 파일
 │   ├── index.html                  # HTML 템플릿
 │   ├── favicon.ico                 # 파비콘
 │   └── manifest.json               # PWA 설정
 ├── src/                           # 소스 코드
 │   ├── components/                # 재사용 가능한 컴포넌트
-│   │   └── Layout/
-│   │       └── Navbar.js          # 네비게이션 바
+│   │   ├── Layout/                # 레이아웃 컴포넌트
+│   │   │   └── Navbar.js          # 네비게이션 바
+│   │   ├── InteractiveMap.js      # 인터랙티브 지도 컴포넌트
+│   │   └── RegionDataDisplay.js   # 지역 데이터 표시 컴포넌트
 │   ├── contexts/                  # React Context
 │   │   └── AuthContext.js         # 인증 상태 관리
 │   ├── pages/                     # 페이지 컴포넌트
 │   │   ├── Home.js                # 메인 페이지 (/)
 │   │   ├── Login.js               # 로그인 페이지 (/login)
+│   │   ├── SignUp.js              # 회원가입 페이지 (/signup)
+│   │   ├── FindId.js              # 아이디 찾기 페이지
+│   │   ├── FindPassword.js        # 비밀번호 찾기 페이지
 │   │   ├── Menu1.js               # 장례서류작성 (/menu1)
 │   │   ├── Menu2.js               # 대시보드 (/menu2)
+│   │   ├── Menu2.css              # 대시보드 스타일
+│   │   ├── Menu2 copy.js          # 대시보드 백업 파일
 │   │   ├── Menu3.js               # 전환서비스추천 (/menu3)
-│   │   └── Menu4.js               # 디지털 추모관 (/menu4)
+│   │   ├── Menu4.js               # 디지털 추모관 (/menu4)
+│   │   └── MemorialDetail.js      # 개별 추모관 상세 페이지
 │   ├── services/                  # API 서비스 레이어
 │   │   └── api.js                 # API 통신 + 더미 데이터
 │   ├── App.js                     # 메인 애플리케이션 컴포넌트
 │   ├── App.css                    # 커스텀 스타일
-│   └── index.js                   # React 진입점
+│   ├── App.test.js                # App 컴포넌트 테스트
+│   ├── index.js                   # React 진입점
+│   ├── index.css                  # 전역 스타일
+│   ├── logo.svg                   # React 로고
+│   ├── reportWebVitals.js         # 성능 측정
+│   └── setupTests.js              # 테스트 설정
 ├── package.json                   # npm 의존성 및 스크립트
-├── .env                          # 환경 변수 설정
+├── package-lock.json              # 의존성 잠금 파일
+├── .gitignore                     # Git 무시 파일
+├── .env                          # 환경 변수 설정 (생성 필요)
 └── README.md                     # 프로젝트 문서
 ```
 ## 🎨 주요 기능
@@ -87,23 +103,39 @@ c:\Github\Front/                    # React 프론트엔드 프로젝트
 ## 🛠️ 기술 스택
 
 **Frontend (React)**
-- React 19.1.0
-- React Router DOM 7.7.1 (SPA 라우팅)
+- React 18.3.1 (UI 라이브러리)
+- React Router DOM 6.28.0 (SPA 라우팅)
 - React Bootstrap 2.10.10 (UI 컴포넌트)
 - Bootstrap 5.3.7 (CSS 프레임워크)
 - Chart.js 4.5.0 & react-chartjs-2 5.3.0 (데이터 시각화)
 - Axios 1.11.0 (HTTP 클라이언트)
-- Font Awesome 6.0.0 (아이콘)
+- Font Awesome 6.0.0 (아이콘 라이브러리)
+- PapaParse 5.4.1 (CSV 파싱)
 
 **Development Tools**
-- Create React App (개발 환경)
+- Create React App 5.0.1 (개발 환경)
+- React Scripts 5.0.1 (빌드 도구)
 - React Testing Library (테스팅)
 - Jest (단위 테스트)
+- Web Vitals (성능 측정)
+
+**CSS & Styling**
+- CSS3 (커스텀 스타일)
+- Bootstrap Icons
+- 반응형 디자인 (모바일 퍼스트)
+- CSS Grid & Flexbox
+
+**State Management & Routing**
+- React Context API (전역 상태 관리)
+- React Hooks (useState, useEffect, useContext)
+- Protected Routes (인증 기반 라우팅)
+- Local Storage (토큰 저장)
 
 **Backend Integration Ready**
 - Spring Boot REST API 연동 준비
 - JWT 토큰 인증 구조
 - HAL 포맷 API 응답 지원
+- CORS 설정 준비
 
 ## 📝 로그인 정보
 
@@ -113,27 +145,43 @@ c:\Github\Front/                    # React 프론트엔드 프로젝트
 
 ## 🔄 개발 상태
 
-### ✅ 완료된 기능
-- ✨ **React SPA 구조**: React Router 기반 단일 페이지 애플리케이션 완성
-- 🔐 **인증 시스템**: localStorage 기반 토큰 관리 (더미 로그인: user/password)
-- 🎨 **반응형 UI**: Bootstrap 5 기반 모바일 친화적 디자인
-- 📊 **데이터 시각화**: Chart.js 라인/도넛 차트 구현
-- 🗂️ **4개 핵심 페이지**: 모든 주요 기능 페이지 구현 완료
-- 🔄 **상태 관리**: Context API를 통한 전역 상태 관리
-- 📡 **API 서비스**: Axios 기반 HTTP 클라이언트 + 더미 데이터
-- 🎯 **완전한 프론트엔드**: 백엔드 없이도 모든 기능 테스트 가능
+### 개발 진척상황 공유
 
-### 🚧 개발 중인 기능
-- 🔌 **백엔드 API 연동**: Spring Boot REST API 연결
-- 🔑 **JWT 인증**: 실제 토큰 기반 보안 인증
-- 🤖 **AI 기능**: 추모영상/추모사 생성 API 통합
-- 📁 **파일 업로드**: 이미지 업로드 및 관리
+- menu 2,3,4 개발 진행중
+- menu 1 부분 개발 대기중
 
-### 📋 향후 계획
-- 📱 **PWA 지원**: 모바일 앱처럼 설치 가능
-- 🔔 **실시간 알림**: WebSocket 기반 실시간 기능
-- ⚡ **성능 최적화**: 코드 스플리팅, 이미지 최적화
-- 🧪 **테스트 코드**: Jest, React Testing Library 도입
+#### 🏠 **홈페이지 테스트** (`/`)
+- [ ] 4개 메뉴 카드가 정상 표시되는지 확인
+- [ ] 각 메뉴 버튼 클릭 시 해당 페이지로 이동 확인
+- [ ] 반응형 디자인 테스트 (모바일/태블릿 화면)
+
+####  **장례서류작성 테스트** (`/menu1`)
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+
+#### 📊 **대시보드 테스트** (`/menu2`)
+- [ ] 지역별 선택 버튼 기능 테스트
+- [ ] 주요지역 현황 요약
+- [ ] CSV, JSON 데이터 시각화
+- [ ] 예측 통계 검증
+- [ ] 
+
+#### 🎯 **전환서비스추천 테스트** (`/menu3`)
+- [ ] 고객 정보 필터링 조회
+- [ ] 고객 샘플 더미 데이터
+- [ ] 메시지 자동 생성 미리보기, 수정
+- [ ] 고객 이름 클릭 시 고객 정보 및 메시지 발송 기록 팝업 화면
+- [ ] (수정예정) CSS 재구성 필요, 메시지 수정 시 폼 변하지 않도록 수정 필요
+
+#### 💝 **디지털 추모관 테스트** (`/menu4`)
+- [ ] 추모관 목록 표시 확인
+- [ ] 드롭다운 메뉴 개발 
+- [ ] 추모관 수정/진입 기능 테스트
+- [ ] 유가족 관리 메뉴 개발
+- [ ] 개인추모관 개발 (`/MemorialDetail.js`)
+
 
 ## 🧪 프론트엔드 테스트 방법
 
@@ -155,40 +203,9 @@ URL: http://localhost:3000/login
 비밀번호: password
 ```
 
-### 2. 📋 기능별 테스트 시나리오
 
-#### 🏠 **홈페이지 테스트** (`/`)
-- [ ] 4개 메뉴 카드가 정상 표시되는지 확인
-- [ ] 각 메뉴 버튼 클릭 시 해당 페이지로 이동 확인
-- [ ] 반응형 디자인 테스트 (모바일/태블릿 화면)
 
-#### � **장례서류작성 테스트** (`/menu1`)
-- [ ] 사망신고서 폼 입력 테스트
-- [ ] 필수 항목 유효성 검사 확인
-- [ ] 저장 버튼 클릭 시 성공 알림 표시
-- [ ] 문서 생성 버튼 기능 확인
-
-#### 📊 **대시보드 테스트** (`/menu2`)
-- [ ] 통계 카드 4개 정상 표시 (총 추모관, 활성 추모관, 시스템 가동률, 알림)
-- [ ] 월별 추이 라인 차트 렌더링 확인
-- [ ] 성별 분포 도넛 차트 렌더링 확인
-- [ ] 최근 활동 테이블 데이터 표시 확인
-- [ ] 시스템 상태 진행바 표시 확인
-
-#### 🎯 **전환서비스추천 테스트** (`/menu3`)
-- [ ] 고객 정보 입력 폼 테스트
-- [ ] "추천 서비스 찾기" 버튼 클릭 시 추천 목록 표시
-- [ ] 추천 서비스 "자세히 보기" 모달 창 테스트
-- [ ] 서비스 유형별 필터링 확인
-
-#### 💝 **디지털 추모관 테스트** (`/menu4`)
-- [ ] 추모관 목록 테이블 표시 확인
-- [ ] "새 추모관 만들기" 모달 폼 테스트
-- [ ] 추모관 생성/수정/삭제 기능 테스트
-- [ ] AI 추모영상/추모사 생성 버튼 기능 확인
-- [ ] 상세보기 모달의 탭 전환 기능 테스트
-
-### 3. � 개발자 테스트 도구
+### 3.  개발자 테스트 도구
 
 #### React Developer Tools 설치
 ```bash
@@ -259,10 +276,6 @@ console.log('User Data:', localStorage.getItem('user'));
    - Desktop (1920x1080)
 ```
 
-#### 터치 기능 테스트
-- [ ] 모바일에서 버튼 터치 반응성
-- [ ] 스크롤 및 스와이프 동작
-- [ ] 모달 창 터치 조작
 
 ### 6. 🔗 백엔드와 함께 테스트
 
@@ -287,17 +300,6 @@ GET  /api/analytics     # 분석 데이터
 POST /api/auth/login    # 로그인 인증
 ```
 
-#### 통합 테스트 시나리오
-1. **데이터 흐름 테스트**
-   - 프론트엔드에서 API 요청 → 백엔드 응답 → UI 업데이트
-   - 브라우저 Network 탭에서 HTTP 요청/응답 확인
-
-2. **인증 플로우 테스트**
-   - 로그인 → JWT 토큰 발급 → API 인증 → 데이터 접근
-
-3. **CRUD 작업 테스트**
-   - 추모관 생성 → DB 저장 → 목록 새로고침
-   - 수정/삭제 작업 → 실시간 UI 반영
 
 ### 7. 🎯 성능 테스트
 
@@ -330,7 +332,7 @@ BROWSER=none  # 자동 브라우저 실행 방지
 ```
 
 ### API 서비스 구조
-프로젝트는 실제 백엔드 연동을 위한 구조를 갖추고 있습니다:
+프로젝트는 실제 백엔드 연동을 위한 구조를 임시로 제작한 API 구조입니다:
 
 ```javascript
 // src/services/api.js
@@ -341,9 +343,6 @@ export const apiService = {
   
   // 대시보드 데이터
   getDashboardData: () => api.get('/dashboard'),
-  
-  // 분석 데이터
-  getAnalyticsData: () => api.get('/analytics')
 };
 
 // 현재는 더미 데이터 사용
@@ -386,35 +385,15 @@ console.log('Environment:', environment);
 - `PUT /api/memorials/{id}` - 추모관 수정
 - `DELETE /api/memorials/{id}` - 추모관 삭제
 - `GET /api/dashboard` - 대시보드 통계 데이터
-- `GET /api/analytics` - 분석 데이터 (차트용)
 
-### 프로젝트 특징
-- ✅ **완전한 SPA 구조**: React Router 기반 단일 페이지 애플리케이션
-- ✅ **더미 데이터 지원**: 백엔드 없이도 완전한 기능 테스트 가능
-- ✅ **백엔드 연동 준비**: Spring Boot REST API 연결 구조 완비
-- ✅ **반응형 디자인**: Bootstrap 5 기반 모바일 친화적 UI
-- ✅ **컴포넌트 기반**: 재사용 가능한 모듈러 설계
-- ✅ **상태 관리**: Context API 기반 전역 상태 관리
-- ✅ **보안 준비**: JWT 토큰 인증 구조 설계
-- ✅ **개발자 친화적**: 상세한 문서화 및 테스트 가이드
 
-### 🎯 테스트 커버리지
-
-#### UI 컴포넌트 테스트 현황
-- ✅ **로그인 페이지**: 폼 입력, 유효성 검사, 인증 플로우
-- ✅ **홈페이지**: 메뉴 카드, 네비게이션, 반응형 레이아웃
-- ✅ **장례서류작성**: 다단계 폼, 탭 인터페이스, 문서 생성
-- ✅ **대시보드**: 차트 렌더링, 데이터 시각화, 실시간 업데이트
-- ✅ **서비스추천**: 조건부 렌더링, 모달 인터페이스, 필터링
-- ✅ **디지털추모관**: CRUD 작업, 테이블 조작, 상세 뷰
-
-#### API 통신 테스트 준비
+### API 통신 테스트 준비
 - ✅ **HTTP 클라이언트**: Axios 기반 API 서비스 레이어
 - ✅ **에러 핸들링**: 네트워크 오류, 타임아웃, 인증 실패 처리
 - ✅ **로딩 상태**: 스피너, 스켈레톤 UI, 사용자 피드백
 - ✅ **데이터 변환**: HAL 포맷 → React 컴포넌트 데이터 매핑
 
-## 🤝 백엔드 개발자를 위한 가이드
+## 🤝 백엔드 가이드
 
 ### API 명세 (Spring Data REST HAL 포맷)
 백엔드에서 구현해야 할 API 엔드포인트:
@@ -479,7 +458,7 @@ Request: {
 Response: {"message": "Memorial created successfully"}
 ```
 
-#### 2. 대시보드 데이터
+#### 2. 대시보드 데이터 (임의로 생성한 규격)
 ```json
 GET /dashboard
 Response: {
@@ -494,15 +473,6 @@ Response: {
 }
 ```
 
-#### 3. 분석 데이터
-```json
-GET /analytics
-Response: {
-  "monthlyMemorials": [65, 78, 90, 81, 56, 75],
-  "memorialsByGender": {"male": 80, "female": 70},
-  "dailyVisits": [120, 190, 300, 500, 200, 300, 150]
-}
-```
 
 ### 설정 요구사항
 1. **Spring Data REST** 사용 권장
@@ -583,29 +553,3 @@ npm list react react-dom react-router-dom axios bootstrap react-bootstrap chart.
 # 모든 의존성 설치 확인
 npm install
 ```
-
-### 🆘 도움 요청 시 제공할 정보
-
-문제 발생 시 다음 정보를 함께 제공해주세요:
-
-1. **환경 정보**
-   ```bash
-   node --version
-   npm --version
-   java --version
-   ```
-
-2. **오류 메시지**
-   - 콘솔 전체 오류 로그
-   - 브라우저 개발자 도구 에러 메시지
-
-3. **실행 단계**
-   - 어떤 명령어를 실행했는지
-   - 어느 시점에서 오류가 발생했는지
-
-4. **프로젝트 상태**
-   ```bash
-   # 프로젝트 구조 확인
-   ls -la
-   ls -la frontend-react/
-   ```
