@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, Badge, Modal, Row, Col } from 'react-bootstrap';
-import { ArrowLeft, FileText, Calendar, Eye, Printer, Download, Check, Loader, User, Phone, MapPin, Files } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, Printer, Download, Check, Loader, User, Phone, MapPin, Files } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { customerService, customerUtils } from '../services/customerService';
 import { documentService, documentUtils } from '../services/documentService';
@@ -84,7 +84,32 @@ const Menu1_3 = () => {
         }
     };
 
-    // ✅ 일괄 작업 로직 복구
+    const handleDownload = async (docType) => {
+        try {
+            const blob = await documentService.downloadDocument(1);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${documentUtils.getDocumentName(docType)}_${selectedCustomer.name}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            setSuccessMessage(`${documentUtils.getDocumentName(docType)}이(가) 다운로드되었습니다.`);
+        } catch (error) {
+            setErrorMessage('다운로드 중 오류가 발생했습니다.');
+        }
+    };
+
+    const handlePrint = async (docType) => {
+        try {
+            await documentService.printDocument(1);
+            setSuccessMessage(`${documentUtils.getDocumentName(docType)} 인쇄 대화상자가 열렸습니다.`);
+        } catch (error) {
+            setErrorMessage('인쇄 중 오류가 발생했습니다.');
+        }
+    };
+
     const handleBulkAction = (action) => {
         setBulkAction(action);
         setShowConfirmModal(true);
@@ -95,13 +120,12 @@ const Menu1_3 = () => {
         try {
             setGenerating(true);
             if (bulkAction === 'generateAll') {
-                // 이 부분은 간결하게 표현하기 위해 Promise.all을 사용할 수 있습니다.
-                await Promise.all(['obituary', 'deathCertificate', 'schedule'].map(docType => 
+                await Promise.all(['obituary', 'deathCertificate', 'schedule'].map(docType =>
                     handleGenerateDocument(docType)
                 ));
                 setSuccessMessage('모든 서류가 성공적으로 생성되었습니다.');
             } else if (bulkAction === 'printAll') {
-                await documentService.printDocument(1); // Mock
+                await documentService.printDocument(1);
                 setSuccessMessage('완성된 서류를 모두 인쇄합니다.');
             }
         } catch (error) {
@@ -111,8 +135,6 @@ const Menu1_3 = () => {
         }
     };
 
-    const handleDownload = async (docType) => { /* ... */ };
-    const handlePrint = async (docType) => { /* ... */ };
     const isDocumentGenerated = (docType) => selectedCustomer?.documents?.[docType] || false;
     if (loading) return <div>페이지 로딩 중...</div>;
     if (!selectedCustomer) return <div>고객 정보 없음...</div>;
@@ -162,19 +184,10 @@ const Menu1_3 = () => {
                                     </button>
                                 ))}
                             </div>
-                            {/* ✅ 일괄 작업 버튼 복구 및 배치 */}
                             <hr className="my-3"/>
                             <Row className="g-2">
-                                <Col>
-                                    <Button className="w-100 btn-purple" size="sm" onClick={() => handleBulkAction('generateAll')} disabled={generating}>
-                                        {generating ? <Loader size={14} className="spinner" /> : <FileText size={14} />}<span className="ms-2">전체 생성</span>
-                                    </Button>
-                                </Col>
-                                <Col>
-                                    <Button className="w-100 btn-outline-purple" size="sm" onClick={() => handleBulkAction('printAll')}>
-                                        <Printer size={14} /><span className="ms-2">일괄 인쇄</span>
-                                    </Button>
-                                </Col>
+                                <Col><Button className="w-100 btn-purple" size="sm" onClick={() => handleBulkAction('generateAll')} disabled={generating}>{generating ? <Loader size={14} className="spinner" /> : <FileText size={14} />}<span className="ms-2">전체 서류 일괄 제작</span></Button></Col>
+                                <Col><Button className="w-100 btn-outline-purple" size="sm" onClick={() => handleBulkAction('printAll')}><Printer size={14} /><span className="ms-2">완성된 서류 일괄 인쇄</span></Button></Col>
                             </Row>
                         </div>
                     </div>
@@ -182,18 +195,46 @@ const Menu1_3 = () => {
 
                 <div className="dashboard-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, paddingBottom: '20px', borderBottom: '1px solid rgba(229, 231, 235, 0.5)', marginBottom: '20px' }}>
-                        <h3 style={{ color: '#374151', fontWeight: '600', fontSize: '1.5rem', margin: 0, display: 'flex', alignItems: 'center' }}>
-                            <button onClick={() => navigate('/menu1-1')} style={{ all: 'unset', cursor: 'pointer', marginRight: '16px', color: '#6f42c1' }}><ArrowLeft size={24} /></button>
-                            {documentUtils.getDocumentName(selectedDoc)} 미리보기
-                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <button
+                                onClick={() => navigate('/menu1-1')}
+                                style={{
+                                    background: 'rgba(102, 126, 234, 0.1)',
+                                    color: '#667eea',
+                                    border: 'none',
+                                    padding: '12px 20px',
+                                    borderRadius: '12px',
+                                    fontSize: '1rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.15)';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }}
+                            >
+                                <ArrowLeft size={16} style={{ marginRight: '6px' }} />
+                                돌아가기
+                            </button>
+                            <h3 style={{ color: '#374151', fontWeight: '600', fontSize: '1.5rem', margin: 0 }}>
+                                {documentUtils.getDocumentName(selectedDoc)} 미리보기
+                            </h3>
+                        </div>
                         <div className="d-flex gap-2">
                             <Button variant="outline-primary" size="sm" onClick={() => handleGenerateDocument(selectedDoc)} disabled={generating}>{generating ? <Loader size={14} className='spinner me-2' /> : <Check size={14} className='me-2' />}{isDocumentGenerated(selectedDoc) ? '재생성' : '생성'}</Button>
                             <Button variant="outline-secondary" size="sm" onClick={() => handleDownload(selectedDoc)}><Download size={14} className='me-2' />다운로드</Button>
                             <Button variant="outline-secondary" size="sm" onClick={() => handlePrint(selectedDoc)}><Printer size={14} className='me-2' />인쇄</Button>
                         </div>
                     </div>
-                    {successMessage && <Alert variant="success" className="mb-3 flex-shrink-0">{successMessage}</Alert>}
-                    {errorMessage && <Alert variant="danger" className="mb-3 flex-shrink-0">{errorMessage}</Alert>}
+                    {successMessage && <Alert variant="success" className="mb-3 flex-shrink-0" dismissible onClose={() => setSuccessMessage('')}>{successMessage}</Alert>}
+                    {errorMessage && <Alert variant="danger" className="mb-3 flex-shrink-0" dismissible onClose={() => setErrorMessage('')}>{errorMessage}</Alert>}
                     <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', background: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '24px' }}>
                         {previewContent ? (
                             <div style={{ background: 'white', fontFamily: 'serif', padding: '32px', minHeight: '100%', border: '1px solid #ddd' }}>
@@ -217,8 +258,22 @@ const Menu1_3 = () => {
                 </Modal.Footer>
             </Modal>
 
-            <style>{`
-                /* ... 스타일은 이전과 동일 ... */
+            <style jsx global>{`
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                .dashboard-container { opacity: 0; }
+                .dashboard-container.animate-in { animation: fadeIn 0.6s ease-out forwards; }
+                .spinner { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .content-scroll-area::-webkit-scrollbar,
+                .sidebar-scroll-area::-webkit-scrollbar { width: 6px; }
+                .content-scroll-area::-webkit-scrollbar-track,
+                .sidebar-scroll-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+                .content-scroll-area::-webkit-scrollbar-thumb,
+                .sidebar-scroll-area::-webkit-scrollbar-thumb { background-color: rgba(108, 117, 125, 0.5); border-radius: 10px; }
+                .btn-purple { background-color: #6f42c1; border-color: #6f42c1; color: white; }
+                .btn-purple:hover { background-color: #5a32a3; border-color: #5a32a3; color: white; }
+                .btn-outline-purple { background-color: transparent; border-color: #6f42c1; color: #6f42c1; }
+                .btn-outline-purple:hover { background-color: #6f42c1; border-color: #6f42c1; color: white; }
             `}</style>
         </div>
     );
