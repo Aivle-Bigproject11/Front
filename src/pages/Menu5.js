@@ -15,7 +15,7 @@ const allCustomers = [
 const Menu5 = () => {
   const [filters, setFilters] = useState({
     id: '',
-    name: '', // 이름 필터 상태 추가
+    name: '',
     age: '',
     gender: [],
     disease: [],
@@ -31,31 +31,25 @@ const Menu5 = () => {
   useEffect(() => {
     let result = allCustomers;
 
-    // 고객 고유번호 필터
     if (filters.id) {
       result = result.filter(c => c.id.toLowerCase().includes(filters.id.toLowerCase()));
     }
-    // 이름 필터 (추가된 부분)
     if (filters.name) {
       result = result.filter(c => c.name.toLowerCase().includes(filters.name.toLowerCase()));
     }
-    // 나이대 필터
     if (filters.age) {
       const [minAge, maxAge] = filters.age.split('-').map(Number);
       result = result.filter(c => c.age >= minAge && c.age <= maxAge);
     }
-    // 성별 필터
     if (filters.gender.length > 0) {
         result = result.filter(c => filters.gender.includes(c.gender));
     }
-    // 질병 필터
     if (filters.disease.length > 0) {
         const hasDisease = filters.disease.includes('유');
         const noDisease = filters.disease.includes('무');
         if (hasDisease && !noDisease) result = result.filter(c => c.hasDisease);
         if (!hasDisease && noDisease) result = result.filter(c => !c.hasDisease);
     }
-    // 가족구성원 필터
     if (filters.family.length > 0) {
         result = result.filter(c => {
             if (filters.family.includes('미혼') && c.family === '미혼') return true;
@@ -85,7 +79,7 @@ const Menu5 = () => {
 
   return (
     <div className="page-wrapper" style={{
-      '--navbar-height': '70px',
+      '--navbar-height': '62px',
       height: 'calc(100vh - var(--navbar-height))', 
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       padding: '20px',
@@ -94,7 +88,7 @@ const Menu5 = () => {
       <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{
         width: '100%',
         maxWidth: '1600px',
-        height: '100%', 
+        height: '100%',
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
@@ -112,7 +106,6 @@ const Menu5 = () => {
           고객 관리
         </h2>
 
-        {/* 필터링 검색 창 */}
         <Card className="mb-3" style={{ flexShrink: 0, background: 'rgba(255, 255, 255, 0.8)', border: 'none' }}>
           <Card.Body>
             <Form>
@@ -122,7 +115,6 @@ const Menu5 = () => {
                     <Form.Control name="id" value={filters.id} onChange={handleInputChange} placeholder="고객 고유번호" />
                   </InputGroup>
                 </Col>
-                {/* 이름 입력 필드 추가 */}
                 <Col md={2}>
                   <InputGroup>
                     <Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" />
@@ -159,7 +151,6 @@ const Menu5 = () => {
           </Card.Body>
         </Card>
 
-        {/* 고객 정보 리스트 */}
         <div className="customer-list-wrapper" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
           {filteredCustomers.map(customer => (
             <Card key={customer.id} className="mb-3" style={{ background: 'rgba(255, 255, 255, 0.9)' }}>
@@ -189,7 +180,6 @@ const Menu5 = () => {
           ))}
         </div>
 
-        {/* 하단 고객 추가 버튼 */}
         <div className="text-end mt-3" style={{ flexShrink: 0 }}>
           <Button variant="primary" size="lg">고객 추가</Button>
         </div>

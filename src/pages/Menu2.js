@@ -14,7 +14,7 @@ const Menu2 = () => {
 
   return (
     <div className="page-wrapper" style={{
-      '--navbar-height': '70px',
+      '--navbar-height': '62px',
       height: 'calc(100vh - var(--navbar-height))', 
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       padding: '20px',
