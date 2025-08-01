@@ -1,9 +1,7 @@
-# Memorial Service - React Frontend
+# Golden Gate 황금 혼문 - React Frontend
 
-Saja boys 사자보이즈 서비스 개발
-
-상조서비스를 위한 React 기반 프론트엔드 애플리케이션입니다.
-
+프론트 총괄 및 개발 : 김시훈
+프론트 개발 팀원 : 양성현, 박수연
 
 ## 🎯 프로젝트 개요
 
