@@ -20,6 +20,7 @@ import Menu5_1 from './pages/Menu5_1';
 import Menu5_2 from './pages/Menu5_2';
 import MemorialDetail from './pages/MemorialDetail';
 import MemorialConfig from './pages/MemorialConfig';
+import Lobby from './pages/Lobby';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 
@@ -37,6 +38,11 @@ function App() {
                         <Route path="/findPassword" element={<FindPassword />} />
                         {/* 회원가입 페이지 경로추가 */}
                         <Route path="/signup" element={<SignUp />} />
+                        {/* 유저용 페이지들 (네비게이션 바 없음) */}
+                        <Route path="/lobby" element={<UserLayout><Lobby /></UserLayout>} />
+                        <Route path="/user-memorial/:id" element={<UserLayout><MemorialDetail /></UserLayout>} />
+                        {/* 고유번호로 접근하는 페이지 (로그인 없이, 네비게이션 바 없음) */}
+                        <Route path="/memorial/:id/guest" element={<GuestLayout><MemorialDetail /></GuestLayout>} />
                         <Route path="/*" element={<MainLayout />} />
                     </Routes>
                 </div>
@@ -84,6 +90,32 @@ const MainLayout = () => {
             </Routes>
         </>
     );
+};
+
+const UserLayout = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center min-vh-100">
+                <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    // 네비게이션 바 없이 직접 컴포넌트 렌더링
+    return children;
+};
+
+const GuestLayout = ({ children }) => {
+    // 로그인 없이 고유번호로 접근한 경우 - 네비게이션 바 없음
+    return children;
 };
 
 export default App;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getMemorialByCode } from '../services/memorialService';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -10,16 +11,32 @@ const Login = () => {
   const [activeTab, setActiveTab] = useState('employee'); // 'employee' or 'user'
   const [rememberMe, setRememberMe] = useState(false);
   const [animateCard, setAnimateCard] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const [joinCode, setJoinCode] = useState(''); // 고유번호 입력용
+  const [joinLoading, setJoinLoading] = useState(false); // 고유번호 입장 로딩
+  const { loginByType, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
+    if (isAuthenticated && user) {
+      // 사용자 타입에 따른 리다이렉트
+      if (user.userType === 'employee') {
+        navigate('/'); // 직원은 홈으로
+      } else {
+        navigate('/lobby'); // 사용자는 로비로
+      }
     }
     // 카드 애니메이션 효과
     setAnimateCard(true);
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
+
+  // 탭 전환시 테스트 계정 정보 자동 입력
+  useEffect(() => {
+    if (activeTab === 'employee') {
+      setCredentials({ username: 'admin', password: 'password' });
+    } else {
+      setCredentials({ username: 'user', password: 'password' });
+    }
+  }, [activeTab]);
 
   const handleChange = (e) => {
     setCredentials({
@@ -33,15 +50,46 @@ const Login = () => {
     setLoading(true);
     setError('');
 
-    const result = await login(credentials.username, credentials.password);
+    const result = await loginByType(credentials.username, credentials.password, activeTab);
     
     if (result.success) {
-      navigate('/');
+      // 사용자 타입에 따른 리다이렉트
+      if (activeTab === 'employee') {
+        navigate('/'); // 직원은 기존 홈으로
+      } else {
+        navigate('/lobby'); // 사용자는 로비로
+      }
     } else {
       setError(result.message);
     }
     
     setLoading(false);
+  };
+
+  const handleJoinByCode = async () => {
+    if (!joinCode.trim()) {
+      setError('고유 번호를 입력해주세요.예: MEM001');
+      return;
+    }
+    
+    try {
+      setJoinLoading(true);
+      setError('');
+      
+      // 실제 서비스 사용 - 고유번호로 추모관 검색
+      const memorial = await getMemorialByCode(joinCode.trim());
+      
+      if (memorial) {
+        // 고유번호로 접근한 경우 guest 라우트로 이동
+        navigate(`/memorial/${memorial.id}/guest`);
+      } else {
+        setError('유효하지 않은 고유번호입니다.');
+      }
+    } catch (err) {
+      setError('추모관을 찾는데 실패했습니다. 고유번호를 확인해주세요.');
+    } finally {
+      setJoinLoading(false);
+    }
   };
 
   return (
@@ -255,6 +303,25 @@ const Login = () => {
                 </Alert>
               )}
 
+              {/* 테스트 계정 안내 */}
+              <div style={{
+                textAlign: 'center',
+                padding: '15px',
+                background: 'rgba(102, 126, 234, 0.1)',
+                borderRadius: '8px',
+                border: '1px solid rgba(102, 126, 234, 0.2)'
+              }}>
+                <p style={{
+                  fontSize: '12px',
+                  color: '#667eea',
+                  margin: 0,
+                  fontWeight: '500'
+                }}>
+                  <i className="fas fa-info-circle me-2"></i>
+                  테스트용 계정: {activeTab === 'employee' ? 'admin / password' : 'user / password'}
+                </p>
+              </div>
+
               {/* 폼 */}
               <form onSubmit={handleSubmit} style={{ flex: 1 }}>
                 <div className="login-form-group" style={{ marginBottom: '25px' }}>
@@ -424,6 +491,13 @@ const Login = () => {
                   <input 
                     type="text" 
                     placeholder="고유번호 입력" 
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleJoinByCode();
+                      }
+                    }}
                     style={{
                       flex: 1,
                       padding: '10px 15px',
@@ -434,19 +508,53 @@ const Login = () => {
                     }}
                     onFocus={(e) => e.target.style.borderColor = '#667eea'}
                     onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                    disabled={joinLoading}
                   />
-                  <button style={{
-                    padding: '10px 20px',
-                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}>입장</button>
+                  <button 
+                    onClick={handleJoinByCode}
+                    disabled={joinLoading}
+                    style={{
+                      padding: '10px 20px',
+                      background: joinLoading 
+                        ? '#6c757d' 
+                        : 'linear-gradient(135deg, #667eea, #764ba2)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: joinLoading ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.3s ease',
+                      minWidth: '80px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    {joinLoading ? (
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid transparent',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }}></div>
+                    ) : (
+                      '입장'
+                    )}
+                  </button>
                 </div>
+                {joinCode && (
+                  <div style={{
+                    marginTop: '10px',
+                    fontSize: '12px',
+                    color: '#6c757d'
+                  }}>
+                    <i className="fas fa-info-circle me-1"></i>
+                    입력된 고유번호: {joinCode}
+                  </div>
+                )}
               </div>
 
               {/* 회원가입 링크 */}
@@ -488,24 +596,6 @@ const Login = () => {
                 )}
               </div>
 
-              {/* 테스트 계정 안내 */}
-              <div style={{
-                textAlign: 'center',
-                padding: '15px',
-                background: 'rgba(102, 126, 234, 0.1)',
-                borderRadius: '8px',
-                border: '1px solid rgba(102, 126, 234, 0.2)'
-              }}>
-                <p style={{
-                  fontSize: '12px',
-                  color: '#667eea',
-                  margin: 0,
-                  fontWeight: '500'
-                }}>
-                  <i className="fas fa-info-circle me-2"></i>
-                  테스트용 계정: user / password
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -521,6 +611,11 @@ const Login = () => {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
         
         .animate-in {
