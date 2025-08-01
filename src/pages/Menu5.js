@@ -232,13 +232,17 @@ const Menu5 = () => {
       </div>
 
       <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         
+        .dashboard-container {
+          opacity: 0;
+        }
+
         .dashboard-container.animate-in {
-          animation: fadeInUp 0.6s ease-out forwards;
+          animation: fadeIn 0.6s ease-out forwards;
         }
 
         .customer-list-wrapper::-webkit-scrollbar {
