@@ -10,7 +10,7 @@ const Login = () => {
   const [activeTab, setActiveTab] = useState('employee'); // 'employee' or 'user'
   const [rememberMe, setRememberMe] = useState(false);
   const [animateCard, setAnimateCard] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { loginByType, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,10 +33,15 @@ const Login = () => {
     setLoading(true);
     setError('');
 
-    const result = await login(credentials.username, credentials.password);
+    const result = await loginByType(credentials.username, credentials.password, activeTab);
     
     if (result.success) {
-      navigate('/');
+      // 사용자 타입에 따른 리다이렉트
+      if (activeTab === 'employee') {
+        navigate('/'); // 직원은 기존 홈으로
+      } else {
+        navigate('/lobby'); // 사용자는 로비로
+      }
     } else {
       setError(result.message);
     }

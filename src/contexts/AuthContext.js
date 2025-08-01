@@ -3,8 +3,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
     getUserByCredentials, 
+    getEmployeeByCredentials,
     getUserByNameAndEmail,
-    updatePasswordByLoginId } 
+    getEmployeeByNameAndEmail,
+    updateUserPasswordByLoginId,
+    updateEmployeePasswordByLoginId } 
 from '../services/userService';
 
 const AuthContext = createContext();
@@ -38,16 +41,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
-   * @description 로그인을 처리합니다. 
+   * @description 사용자 타입에 따른 로그인을 처리합니다. 
    */
-  const login = async (loginId, loginPassword) => {
+  const loginByType = async (loginId, loginPassword, userType) => {
     try {
-      const foundUser = await getUserByCredentials(loginId, loginPassword);
+      const loginFunction = userType === 'employee' ? getEmployeeByCredentials : getUserByCredentials;
+      const foundUser = await loginFunction(loginId, loginPassword);
       
       const userData = {                // 백엔드 연동시 데이터에 맞춰야됨
         id: foundUser.id, 
         loginId: foundUser.loginId, 
-        name: foundUser.name            
+        name: foundUser.name,
+        userType: foundUser.userType   // 서비스에서 자동으로 설정됨
       };
       const token = 'dummy-auth-token'; // 백엔드 연동시 수정 필요
 
@@ -75,7 +80,59 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * @description 아이디 찾기를 처리합니다. (반환값의 키 변경)
+   * @description 기존 로그인 (하위 호환성을 위해 유지)
+   */
+  const login = async (loginId, loginPassword) => {
+    try {
+      const foundUser = await getUserByCredentials(loginId, loginPassword);
+      
+      const userData = {                // 백엔드 연동시 데이터에 맞춰야됨
+        id: foundUser.id, 
+        loginId: foundUser.loginId, 
+        name: foundUser.name,
+        userType: foundUser.userType   // 서비스에서 자동으로 설정됨
+      };
+      const token = 'dummy-auth-token'; // 백엔드 연동시 수정 필요
+
+        // ex =================================================================
+        // const foundUser = await getUserByCredentials(loginId, loginPassword);
+
+        // // 백엔드가 { user: {...}, token: '...' } 형태로 응답한다고 가정
+        // const userData = foundUser.user;
+        // const token = foundUser.token; //  더미 데이터 대신 실제 응답에서 받은 토큰 사용
+
+        // localStorage.setItem('token', token);
+        // ==============================================================
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      setIsAuthenticated(true);
+      setUser(userData);
+      
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return { success: false, message: error.message };
+    }
+  };
+
+  /**
+   * @description 사용자 타입에 따른 아이디 찾기를 처리합니다.
+   */
+  const findIdByType = async (name, email, userType) => {
+    try {
+      const findFunction = userType === 'employee' ? getEmployeeByNameAndEmail : getUserByNameAndEmail;
+      const foundUser = await findFunction(name, email);
+      return { success: true, loginId: foundUser.loginId };
+    } catch (error) {
+      console.error(error);
+      return { success: false, message: error.message };
+    }
+  };
+
+  /**
+   * @description 아이디 찾기를 처리합니다. (하위 호환성을 위해 유지)
    */
   const findId = async (name, email) => {
     try {
@@ -98,11 +155,25 @@ export const AuthProvider = ({ children }) => {
   };
 
     /**
-   * @description 비밀번호 변경을 처리합니다.
+   * @description 사용자 타입에 따른 비밀번호 변경을 처리합니다.
+   */
+  const changePasswordByType = async (loginId, newPassword, userType) => {
+    try {
+      const updateFunction = userType === 'employee' ? updateEmployeePasswordByLoginId : updateUserPasswordByLoginId;
+      const result = await updateFunction(loginId, newPassword);
+      return result; // { success: true, message: '...' }
+    } catch (error) {
+      console.error(error);
+      return { success: false, message: error.message };
+    }
+  };
+
+    /**
+   * @description 비밀번호 변경을 처리합니다. (하위 호환성을 위해 유지)
    */
   const changePassword = async (loginId, newPassword) => {
     try {
-      const result = await updatePasswordByLoginId(loginId, newPassword);
+      const result = await updateUserPasswordByLoginId(loginId, newPassword);
       return result; // { success: true, message: '...' }
     } catch (error) {
       console.error(error);
@@ -115,9 +186,12 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     login,
+    loginByType,
     logout,
     findId,
-    changePassword
+    findIdByType,
+    changePassword,
+    changePasswordByType
   };
 
   return (
