@@ -35,8 +35,8 @@ const Navbar = () => {
             </Nav.Link>
             <Nav.Link 
               as={Link} 
-              to="/menu1" 
-              active={location.pathname === "/menu1"}
+              to="/menu1-1" 
+              active={location.pathname.startsWith("/menu1")}
             >
               장례서류작성
             </Nav.Link>
