@@ -74,6 +74,10 @@ const MainLayout = () => {
                 <Route path="/menu2" element={<Menu2 />} />
                 <Route path="/menu3" element={<Menu3 />} />
                 <Route path="/menu4" element={<Menu4 />} />
+                <Route path="/menu5" element={<Menu5 />} />
+                <Route path="/menu5_1" element={<Menu5_1 />} />
+                <Route path="/menu5_2" element={<Menu5_2 />} />
+
                 <Route path="/memorial/:id" element={<MemorialDetail />} />
                 <Route path="/memorial/:id/settings" element={<MemorialConfig />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
