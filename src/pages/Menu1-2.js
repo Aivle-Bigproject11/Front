@@ -215,10 +215,12 @@ const Menu1_2 = () => {
               </button>
               상세 정보 입력
             </h3>
-            <div>
-              <Button variant="secondary" onClick={handleCancel} disabled={saving} style={{marginRight: '10px'}}>취소</Button>
-              <Button variant="primary" onClick={handleSave} disabled={saving}>
-                {saving ? '저장 중...' : <><Save size={16} style={{ marginRight: '6px' }} /> 저장</>}
+            <div className="d-flex gap-2">
+              <Button variant="outline-secondary" size="sm" onClick={handleCancel} disabled={saving}>
+                취소
+              </Button>
+              <Button size="sm" className="btn-purple" onClick={handleSave} disabled={saving}>
+                {saving ? '저장 중...' : <><Save size={14} className="me-2" /> 저장</>}
               </Button>
             </div>
           </div>
@@ -286,6 +288,30 @@ const Menu1_2 = () => {
           .dashboard-container { flex-direction: column; height: auto; }
           .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
           .dashboard-right { height: auto; max-height: none; }
+        }
+
+        .btn-purple {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+            }
+            .btn-purple:hover {
+                            background-color: transparent;
+            background-color: #5a32a3;
+            border-color: #5a32a3;
+            color: white;
+            }
+
+            .btn-outline-purple {
+            background-color: transparent;
+            border-color: #6f42c1;
+            color: #6f42c1;
+            }
+            .btn-outline-purple:hover {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+            }
         }
       `}</style>
     </div>
