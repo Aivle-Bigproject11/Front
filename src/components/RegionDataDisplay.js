@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Table } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import Papa from 'papaparse';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+
 
 
 // 데이터 처리 로직 시작
@@ -130,7 +131,6 @@ const RegionDataDisplay = ({ region }) => {
   }, []);
 
 // 기존 데이터 처리 로직 끝
-
   if (loading || !processedData) {
     return <div className="p-5 text-center"><h5>데이터를 불러오는 중입니다...</h5></div>;
   }
@@ -141,10 +141,23 @@ const RegionDataDisplay = ({ region }) => {
     return <div className="p-5 text-center"><h5>{region} 지역의 데이터가 없습니다.</h5></div>;
   }
 
-  const chartOptions = { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } };
+  const chartOptions = { 
+    responsive: true, 
+    maintainAspectRatio: true, 
+    plugins: { legend: { position: 'top' } },
+  };
   const longTermChartData = {
     labels: data.charts.longTermTrend.labels,
-    datasets: [{ label: '사망자 수', data: data.charts.longTermTrend.data, backgroundColor: 'rgba(102, 126, 234, 0.2)', borderColor: 'rgba(102, 126, 234, 1)', borderWidth: 2, pointBackgroundColor: 'rgba(102, 126, 234, 1)', tension: 0.4, fill: true }],
+    datasets: [{ 
+      label: '사망자 수', 
+      data: data.charts.longTermTrend.data, 
+      backgroundColor: 'rgba(102, 126, 234, 0.2)', 
+      borderColor: 'rgba(102, 126, 234, 1)', 
+      borderWidth: 2, 
+      pointBackgroundColor: 'rgba(102, 126, 234, 1)', 
+      tension: 0.4, 
+      fill: true 
+    }],
   };
   const predictionChartData = {
     labels: data.charts.predictionTrend.labels,
@@ -153,29 +166,40 @@ const RegionDataDisplay = ({ region }) => {
       { label: '예측 데이터', data: data.charts.predictionTrend.predictedData, borderDash: [5, 5], backgroundColor: 'rgba(255, 99, 132, 0.2)', borderColor: 'rgb(255, 99, 132)', borderWidth: 2, pointBackgroundColor: 'rgb(255, 99, 132)', tension: 0.4 },
     ],
   };
-
   const renderChange = (value) => {
     if (value === 'N/A' || value === null) return <td className="text-muted">{value}</td>;
-    const color = value > 0 ? '#d32f2f' : '#1976d2';
+    const color = value > 0 ? '#d32f2f' : '#1976d2'; 
     const sign = value > 0 ? '▲' : '▼';
     return <td style={{ color, fontWeight: '600' }}>{sign} {Math.abs(value)}%</td>;
   };
 
+
+  // 요약 카드 컴포넌트 
   const SummaryCard = ({ title, value }) => (
     <div className="text-center p-3" style={{ background: '#f8f9fa', borderRadius: '10px', border: '1px solid #e9ecef' }}>
       <h6 style={{ color: '#6c757d', fontSize: '0.9rem', marginBottom: '8px' }}>{title}</h6>
-      <p className="fs-5 fw-bold mb-0" style={{ color: '#667eea' }}>{value}</p>
+      <p className="fs-5 fw-bold mb-0" style={{ color: '#b59221ff' }}>{value}</p>
     </div>
   );
 
+  // 카드 스타일
+  const cardStyle = {
+    background: 'white',
+    borderRadius: '15px', 
+    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+  };
+  // ▲▲▲▲▲ 스타일 원복 ▲▲▲▲▲
+
   return (
     <div>
+      {/* 제목  */}
       <h2 className="mb-4" style={{ fontWeight: '700', color: '#343a40' }}>
-        <i className="fas fa-map-marker-alt me-2" style={{ color: '#667eea' }}></i>
+        <i className="fas fa-map-marker-alt me-2" style={{ color: '#D4AF37' }}></i>
         {region} 예측 결과 분석
       </h2>
 
-      <div className="p-4 mb-4" style={{ background: 'white', borderRadius: '15px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+      {/* 주요지역 현황 요약 */}
+      <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600' }}>주요지역 현황 요약</h5>
         <Row>
           {data.regionStatus.map((status, index) => (
@@ -189,7 +213,8 @@ const RegionDataDisplay = ({ region }) => {
         </Row>
       </div>
       
-      <div className="p-4 mb-4" style={{ background: 'white', borderRadius: '15px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+      {/* 차트 영역 */}
+      <div className="p-4 mb-4" style={cardStyle}>
         <Row>
           <Col md={12} className="mb-5">
             <h5 style={{ fontWeight: '600' }}>전체 시계열 데이터</h5>
@@ -202,7 +227,8 @@ const RegionDataDisplay = ({ region }) => {
         </Row>
       </div>
 
-      <div className="p-4 mb-4" style={{ background: 'white', borderRadius: '15px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+      {/* 테이블 영역 */}
+      <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600' }}>월별 예측 상세 결과</h5>
         <Table hover responsive>
           <thead style={{ background: '#f8f9fa' }}>
@@ -223,7 +249,8 @@ const RegionDataDisplay = ({ region }) => {
         </Table>
       </div>
 
-      <div className="p-4 mb-4" style={{ background: 'white', borderRadius: '15px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+      {/* 예측 요약 통계 */}
+      <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600' }}>예측 요약 통계</h5>
         <Row>
           <Col md={3} className="mb-3"><SummaryCard title="평균 월별 예상" value={data.predictionSummary.avg} /></Col>
