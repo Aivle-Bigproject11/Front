@@ -181,28 +181,28 @@ const Menu5 = () => {
     }
 
     return (
-        <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', padding: '20px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-            <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{width: '100%', maxWidth: '1600px', height: '100%', margin: '0 auto', display: 'flex', boxSizing: 'border-box', background: 'rgba(255, 255, 255, 0.7)', boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.18)', borderRadius: '20px', padding: '20px', gap: '20px', overflow: 'hidden'}}>
+        <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', padding: '20px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{width: '100%', maxWidth: '1600px', height: '100%', margin: '0 auto', display: 'flex', boxSizing: 'border-box', background: 'rgba(255, 251, 235, 0.95)', boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)', backdropFilter: 'blur(15px)', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '28px', padding: '20px', gap: '20px', overflow: 'hidden'}}>
                 {/* 좌측 필터링 UI 영역 */}
                 <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
-                    <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#343a40', paddingLeft: '10px', flexShrink: 0 }}>고객 관리</h4>
-                    <div className="sidebar-scroll-area" style={{ background: 'rgba(255, 255, 255, 0.8)', borderRadius: '15px', padding: '20px', flex: 1, overflowY: 'auto', minHeight: 0 }}>
-                        <div style={{ width: '120px', height: '120px', background: 'rgba(111, 66, 193, 0.2)', borderRadius: '50%', margin: '0 auto 30px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}><Search size={48} style={{ color: '#6f42c1' }} /></div>
-                        <h2 style={{fontWeight: '700', marginBottom: '15px', fontSize: '1.8rem', textAlign: 'center', color: '#343a40'}}>고객 조회</h2>
+                    <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px', flexShrink: 0 }}>고객 관리</h4>
+                    <div className="sidebar-scroll-area" style={{ background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)', borderRadius: '15px', padding: '20px', flex: 1, overflowY: 'auto', minHeight: 0, border: '1px solid rgba(184, 134, 11, 0.2)' }}>
+                        <div style={{ width: '120px', height: '120px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 30px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)' }}><Search size={48} style={{ color: '#B8860B' }} /></div>
+                        <h2 style={{fontWeight: '700', marginBottom: '15px', fontSize: '1.8rem', textAlign: 'center', color: '#2C1F14'}}>고객 조회</h2>
                         <hr className="my-4"/>
                         <Form>
                             <Row className="g-3 mb-3">
-                                <Col xs={6}><Form.Label>고객 고유번호</Form.Label><Form.Control name="customerId" value={filters.customerId} onChange={handleInputChange} placeholder="고유번호" /></Col>
-                                <Col xs={6}><Form.Label>이름</Form.Label><Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" /></Col>
+                                <Col xs={6}><Form.Label style={{color: '#4A3728'}}>고객 고유번호</Form.Label><Form.Control name="customerId" value={filters.customerId} onChange={handleInputChange} placeholder="고유번호" /></Col>
+                                <Col xs={6}><Form.Label style={{color: '#4A3728'}}>이름</Form.Label><Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" /></Col>
                             </Row>
                             <Row className="g-3 mb-3">
-                                <Col xs={12}><Form.Label>나이대</Form.Label><Form.Select name="age" value={filters.age} onChange={handleInputChange}><option value="">전체</option><option value="20-29">20대</option><option value="30-39">30대</option><option value="40-49">40대</option><option value="50-59">50대</option><option value="60-150">60대 이상</option></Form.Select></Col>
+                                <Col xs={12}><Form.Label style={{color: '#4A3728'}}>나이대</Form.Label><Form.Select name="age" value={filters.age} onChange={handleInputChange}><option value="">전체</option><option value="20-29">20대</option><option value="30-39">30대</option><option value="40-49">40대</option><option value="50-59">50대</option><option value="60-150">60대 이상</option></Form.Select></Col>
                             </Row>
-                            <hr /><Form.Label>상세 조건</Form.Label>
-                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px'}}>성별:</strong><Form.Check inline type="checkbox" label="남" name="gender" value="남" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여" name="gender" value="여" onChange={handleCheckboxChange} /></div>
-                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" onChange={handleCheckboxChange} /></div>
-                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" onChange={handleCheckboxChange} /></div>
-                            <div className="d-flex align-items-center"><strong className="me-3" style={{minWidth: '40px'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" onChange={handleCheckboxChange} /></div>
+                            <hr /><Form.Label style={{color: '#4A3728'}}>상세 조건</Form.Label>
+                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>성별:</strong><Form.Check inline type="checkbox" label="남" name="gender" value="남" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여" name="gender" value="여" onChange={handleCheckboxChange} /></div>
+                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" onChange={handleCheckboxChange} /></div>
+                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" onChange={handleCheckboxChange} /></div>
+                            <div className="d-flex align-items-center"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" onChange={handleCheckboxChange} /></div>
                         </Form>
                     </div>
                 </div>
@@ -210,18 +210,18 @@ const Menu5 = () => {
                 {/* 우측 고객 목록 UI 영역 */}
                 <div className="dashboard-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, paddingBottom: '10px' }}>
-                        <h5 style={{ fontWeight: '600', color: '#343a40' }}>고객 목록 ({filteredCustomers.length}명)</h5>
-                        <Button className="btn-purple" onClick={() => navigate('/menu5_2')}>고객 추가</Button>
+                        <h5 style={{ fontWeight: '600', color: '#2C1F14' }}>고객 목록 ({filteredCustomers.length}명)</h5>
+                        <Button className="btn-golden" onClick={() => navigate('/menu5_2')}>고객 추가</Button>
                     </div>
                     <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
                         {filteredCustomers.length > 0 ? (
                             filteredCustomers.map(customer => (
-                                <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(255, 255, 255, 0.9)' }}>
+                                <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
                                     <Card.Body>
                                         <Row className="align-items-center">
                                             <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3">
                                                 <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.customerId}</p>
-                                                <h5 className="fw-bold mb-0">{customer.name}</h5>
+                                                <h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5>
                                             </Col>
                                             <Col md={7}>
                                                 <Row>
@@ -256,9 +256,22 @@ const Menu5 = () => {
                 .content-scroll-area::-webkit-scrollbar-track,
                 .sidebar-scroll-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
                 .content-scroll-area::-webkit-scrollbar-thumb,
-                .sidebar-scroll-area::-webkit-scrollbar-thumb { background-color: rgba(108, 117, 125, 0.5); border-radius: 10px; }
-                .btn-purple { background-color: #6f42c1; border-color: #6f42c1; color: white; }
-                .btn-purple:hover { background-color: #5a32a3; border-color: #5a32a3; color: white; }
+                .sidebar-scroll-area::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
+                
+                .btn-golden {
+                    background: linear-gradient(135deg, #D4AF37, #F5C23E);
+                    border: none;
+                    color: #2C1F14;
+                    font-weight: 700;
+                    box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35);
+                    transition: all 0.3s ease;
+                }
+                .btn-golden:hover {
+                    background: linear-gradient(135deg, #CAA230, #E8B530);
+                    color: #2C1F14;
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
+                }
             `}</style>
         </div>
     );
