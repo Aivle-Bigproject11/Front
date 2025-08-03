@@ -26,6 +26,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Login 컴포넌트와 SignUp 컴포넌트를 임포트합니다.
 import SignUp from './pages/SignUp';
+import UserConfig from './pages/UserConfig';
 
 function App() {
     return (
@@ -86,6 +87,7 @@ const MainLayout = () => {
 
                 <Route path="/memorial/:id" element={<MemorialDetail />} />
                 <Route path="/memorial/:id/settings" element={<MemorialConfig />} />
+                <Route path="/user-config" element={<UserConfig />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </>
