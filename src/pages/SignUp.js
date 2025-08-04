@@ -151,7 +151,7 @@ function SignUp() {
               {/* 입력 필드 섹션 */}
               <div className="input-section">
 
-                <div className="input-group">
+                <div className="signup-input-group">
                   {/* 라벨, 인풋, 버튼을 감싸는 컨테이너 추가 */}
                   <div className="id-layout-wrapper">
                     <label htmlFor="userId">아이디</label>
@@ -165,28 +165,28 @@ function SignUp() {
                   </div>
                 </div>
 
-                <div className="input-group">
+                <div className="signup-input-group">
                   <label htmlFor="password">비밀번호</label>
                   <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} onFocus={handleInputFocus} onBlur={handleInputBlur} required />
                   <p className="warning-text">*영문, 숫자, 특수문자 중 2종류 조합 시 10자리, 3종류 조합 시 8자리 이상으로 구성해주세요.</p>
                 </div>
 
-                <div className="input-group">
+                <div className="signup-input-group">
                   <label htmlFor="confirmPassword">비밀번호 확인</label>
                   <input type="password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onFocus={handleInputFocus} onBlur={handleInputBlur} required />
                 </div>
 
-                <div className="input-group">
+                <div className="signup-input-group">
                   <label htmlFor="name">이름</label>
                   <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} onFocus={handleInputFocus} onBlur={handleInputBlur} required />
                 </div>
 
-                <div className="input-group">
+                <div className="signup-input-group">
                   <label htmlFor="email">이메일</label>
                   <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} onFocus={handleInputFocus} onBlur={handleInputBlur} required />
                 </div>
 
-                <div className="input-group">
+                <div className="signup-input-group">
                   <label htmlFor="phone">전화번호</label>
                   <input type="tel" id="phone" value={phone} onChange={handlePhoneChange} placeholder="'-' 없이 숫자 11자리 입력" maxLength="11" onFocus={handleInputFocus} onBlur={handleInputBlur} required />
                 </div>
@@ -310,21 +310,21 @@ function SignUp() {
             display: flex;
             flex-direction: column;
         }
-        .input-group {
+        .signup-input-group {
           margin-bottom: 18px;
         }
-        .input-group label {
+        .signup-input-group label {
           display: block;
           margin-bottom: 8px;
           font-weight: 700;
           color: #2C1F14;
           font-size: 14px;
         }
-        .input-group input { 
+        .signup-input-group input { 
           width: 100%;
           padding: 0 20px;
           border: 2px solid rgba(184, 134, 11, 0.35);
-          border-radius: 12px; /*입력창 모서리 둥글??*/
+          border-radius: 12px; /*입력창 모서리 둥글*/
           font-size: 16px;
           box-sizing: border-box;
           height: 55px; 
