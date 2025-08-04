@@ -213,7 +213,7 @@ const Menu5_2 = () => {
       <style jsx global>{`
         /* 전역 및 레이아웃 */
         .page-wrapper {
-          min-height: 100vh;
+          min-height: calc(100vh - 62px);;
           background: linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%);
           display: flex;
           align-items: center;
@@ -235,13 +235,11 @@ const Menu5_2 = () => {
           padding: 30px 40px;
           border-radius: 28px;
           border: 1px solid rgba(184, 134, 11, 0.25);
-          transform: translateY(30px);
           opacity: 0;
-          transition: all 0.6s ease-out;
+          transition: opacity 0.6s ease-out;
         }
 
         .form-card-container.animate-in {
-          transform: translateY(0);
           opacity: 1;
         }
         
