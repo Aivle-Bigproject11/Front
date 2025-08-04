@@ -24,7 +24,7 @@ const Home = () => {
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
   };
 
-  // 서비스별 버튼 스타일 정의 
+  // 서비스별 버튼 스타일 정의
   const buttonBaseStyle = {
     color: '#FFFFFF',
     border: 'none',
@@ -80,15 +80,14 @@ const Home = () => {
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(184, 134, 11, 0.25)',
         borderRadius: '20px',
-        transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
         opacity: animateCard ? 1 : 0,
-        transition: 'all 0.6s ease-out',
+        transition: 'opacity 0.6s ease-out',
         padding: '20px',
         gap: '20px',
         justifyContent: 'center',
       }}>
         {/* Jumbotron 헤더 스타일 변경 */}
-        <div className="jumbotron p-4 rounded mb-4" style={{
+        <div className="jumbotron p-3 rounded mb-4" style={{
           flexShrink: 0,
           background: 'linear-gradient(135deg, #B8860B, #CD853F)',
           color: '#FFFBEB',
@@ -107,7 +106,7 @@ const Home = () => {
           gap: '20px',
           justifyContent: 'center',
           flexGrow: 1,
-          alignItems: 'center',
+          alignItems: 'stretch', 
         }}>
           {/* Card 1: 장례 서류 작성 */}
           <Card style={cardStyle} className="menu-card">
@@ -207,8 +206,8 @@ const Home = () => {
         {/* 팀 정보 카드 스타일 변경 */}
         <div style={{ flexShrink: 0, marginTop: '20px' }}>
           <Card style={{
-             background: 'rgba(255, 251, 235, 0.9)',
-             border: '1px solid rgba(184, 134, 11, 0.25)',
+            background: 'rgba(255, 251, 235, 0.9)',
+            border: '1px solid rgba(184, 134, 11, 0.25)',
           }}>
             <Card.Header style={{
               background: 'transparent',
@@ -231,19 +230,17 @@ const Home = () => {
 
       {/* Global Styles 수정 */}
       <style jsx global>{`
-        @keyframes fadeInUp {
+        @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(30px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
           }
         }
 
         .animate-in {
-          animation: fadeInUp 0.6s ease-out;
+          animation: fadeIn 0.6s ease-out;
         }
 
         .menu-card:hover {
@@ -257,28 +254,12 @@ const Home = () => {
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
-        /* 스크롤바 스타일 변경 */
-        .dashboard-container > div:nth-child(2)::-webkit-scrollbar {
-          width: 8px;
-        }
-        .dashboard-container > div:nth-child(2)::-webkit-scrollbar-track {
-          background: rgba(184, 134, 11, 0.1);
-          border-radius: 10px;
-        }
-        .dashboard-container > div:nth-child(2)::-webkit-scrollbar-thumb {
-          background-color: rgba(184, 134, 11, 0.6);
-          border-radius: 10px;
-          border: 2px solid transparent;
-          background-clip: content-box;
-        }
-        .dashboard-container > div:nth-child(2)::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(184, 134, 11, 0.8);
-        }
 
         @media (max-width: 1200px) {
           .page-wrapper {
             height: auto;
             min-height: calc(100vh - var(--navbar-height));
+            overflow: auto;
           }
           .dashboard-container {
             flex-direction: column;
