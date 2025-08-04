@@ -31,6 +31,27 @@ const Menu5 = () => {
         customerId: '', name: '', age: '', gender: [], disease: [], isMarried: [], hasChildren: [],
     });
 
+    // =================================================================
+    // [테스트용 함수]: 가상으로 API 통신을 흉내 냅니다.
+    // 실제 백엔드 연동 시 이 함수 전체를 주석 처리하거나 제거하세요.
+    // =================================================================
+    const fetchInitialDataWithMock = () => {
+        console.log("API 요청 시작 (가상)");
+        setLoading(true);
+        setError(null); // 재시도를 위해 에러 초기화
+        setTimeout(() => {
+            try {
+                setAllCustomers(mockApiData);
+                setFilteredCustomers(mockApiData);
+            } catch (err) {
+                setError("Mock 데이터 로딩에 실패했습니다.");
+                console.error(err);
+            } finally {
+                setLoading(false);
+                setAnimateCard(true);
+            }
+        }, 500);
+    };
 
     // === 데이터 로딩 및 필터링 로직 (useEffect) ===
 
@@ -59,28 +80,6 @@ const Menu5 = () => {
             }
         };
         */
-
-        // =================================================================
-        // [테스트용 함수]: 가상으로 API 통신을 흉내 냅니다.
-        // 실제 백엔드 연동 시 이 함수 전체를 주석 처리하거나 제거하세요.
-        // =================================================================
-        const fetchInitialDataWithMock = () => {
-            console.log("API 요청 시작 (가상)");
-            setLoading(true);
-            setTimeout(() => {
-                try {
-                    setAllCustomers(mockApiData);
-                    setFilteredCustomers(mockApiData);
-                    setError(null);
-                } catch (err) {
-                    setError("Mock 데이터 로딩에 실패했습니다.");
-                    console.error(err);
-                } finally {
-                    setLoading(false);
-                    setAnimateCard(true);
-                }
-            }, 500);
-        };
 
         // --- 함수 호출 ---
         // 실제 연동 시: fetchAllCustomers();
@@ -172,12 +171,27 @@ const Menu5 = () => {
     
     // 로딩 중일 때 표시할 UI
     if (loading) {
-        return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}><h2>데이터를 불러오는 중입니다...</h2></div>;
+        return (
+            <div className="page-wrapper" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
+                <div className="text-center" style={{ color: '#4A3728' }}>
+                    <div className="spinner-border" role="status" style={{ width: '3rem', height: '3rem', color: '#B8860B' }}>
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-3" style={{ fontSize: '1.2rem' }}>고객 정보를 불러오는 중입니다...</p>
+                </div>
+            </div>
+        );
     }
 
     // 에러 발생 시 표시할 UI
     if (error) {
-        return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}><h2 style={{color: 'red'}}>{error}</h2></div>;
+        return (
+            <div className="page-wrapper" style={{display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
+                <h3 style={{color: '#d9534f'}}>오류가 발생했습니다</h3>
+                <p style={{color: '#4A3728'}}>{error}</p>
+                <Button className="btn-golden" onClick={fetchInitialDataWithMock}>다시 시도</Button>
+            </div>
+        );
     }
 
     return (
