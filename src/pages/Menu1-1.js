@@ -393,51 +393,66 @@ const Menu1_1 = () => {
         </div>
       </div>
 
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .dashboard-container { opacity: 0; }
-        .dashboard-container.animate-in {
-          opacity: 1;
-          animation: fadeIn 0.6s ease-out forwards;
-        }
-        .dashboard-right::-webkit-scrollbar { width: 6px; }
-        .dashboard-right::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
-        .dashboard-right::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
-        @media (max-width: 1200px) {
-          .page-wrapper { height: auto; min-height: calc(100vh - var(--navbar-height)); }
-          .dashboard-container { flex-direction: column; height: auto; }
-          .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
-          .dashboard-right { height: auto; max-height: none; }
-        }
+        <style>{`
+            @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+            }
+            .dashboard-container { opacity: 0; }
+            .dashboard-container.animate-in {
+            opacity: 1;
+            animation: fadeIn 0.6s ease-out forwards;
+            }
+            .dashboard-right::-webkit-scrollbar { width: 6px; }
+            .dashboard-right::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+            .dashboard-right::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
+            @media (max-width: 1200px) {
+            .page-wrapper { height: auto; min-height: calc(100vh - var(--navbar-height)); }
+            .dashboard-container { flex-direction: column; height: auto; }
+            .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
+            .dashboard-right { height: auto; max-height: none; }
+            }
 
-        .btn-golden {
-            background: linear-gradient(135deg, #D4AF37, #F5C23E);
-            border: none;
-            color: #2C1F14;
-            font-weight: 700;
-            transition: all 0.3s ease;
-        }
-        .btn-golden:hover {
-            background: linear-gradient(135deg, #CAA230, #E8B530);
-            color: #2C1F14;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(184, 134, 11, 0.25);
-        }
-        .btn-outline-golden {
-            background-color: transparent;
-            border: 1px solid #B8860B;
-            color: #B8860B;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-outline-golden:hover {
-            background-color: #B8860B;
-            border-color: #B8860B;
-            color: white;
-        }
+            .btn-golden {
+                background: linear-gradient(135deg, #D4AF37, #F5C23E);
+                border: none;
+                color: #2C1F14;
+                font-weight: 700;
+                transition: all 0.3s ease;
+            }
+            .btn-golden:hover {
+                background: linear-gradient(135deg, #CAA230, #E8B530);
+                color: #2C1F14;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 15px rgba(184, 134, 11, 0.25);
+            }
+            .btn-outline-golden {
+                background-color: transparent !important;
+                border: 1px solid #B8860B !important;
+                color: #B8860B !important;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                box-shadow: none !important;
+            }
+            .btn-outline-golden:hover {
+                background-color: #B8860B !important;
+                border-color: #B8860B !important;
+                color: white !important;
+            }
+            .btn-outline-golden:active,
+            .btn-outline-golden:focus,
+            .btn-check:focus+.btn-outline-golden, .btn-outline-golden:focus {
+                background-color: transparent !important;
+                border-color: #B8860B !important;
+                color: #B8860B !important;
+                box-shadow: 0 0 0 0.25rem rgba(184, 134, 11, 0.2) !important; 
+            }
+
+            .btn-outline-golden.active {
+                background-color: #B8860B !important;
+                border-color: #B8860B !important;
+                color: white !important;
+            }
         `}</style>
     </div>
   );
