@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom'; // 실제 환경에서는 이 줄의 주석을 해제하세요.
+
+// --- Mock useNavigate for demonstration purposes ---
+// 실제 프로젝트에서는 react-router-dom의 useNavigate를 사용해야 합니다.
+const useNavigate = () => {
+    return (path) => console.log(`Navigating to: ${path}`);
+};
+// --- End of Mock ---
 
 
-// Font Awesome 아이콘을 위한 라이브러리 (실제 프로젝트에서는 설치 필요)
-// 여기서는 간단한 SVG로 대체합니다.
+// 아이콘 SVG 컴포넌트
 const PlusIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-plus-lg" viewBox="0 0 16 16">
     <path fillRule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
@@ -22,86 +28,72 @@ const BackArrowIcon = () => (
     </svg>
 );
 
+// 커스텀 팝업 컴포넌트
+const CustomPopup = ({ message, type, onConfirm, onCancel }) => (
+    <div className="popup-overlay">
+        <div className="popup-content">
+            <p>{message}</p>
+            {type === 'confirm' ? (
+                <div className="popup-button-group">
+                    <button onClick={onCancel} className="popup-button cancel">취소</button>
+                    <button onClick={onConfirm} className="popup-button confirm">확인</button>
+                </div>
+            ) : (
+                <button onClick={onConfirm} className="popup-button confirm">확인</button>
+            )}
+        </div>
+    </div>
+);
+
 
 const Menu5_1 = () => {
   const navigate = useNavigate();
-  // 카드 등장 애니메이션을 위한 상태
   const [animateCard, setAnimateCard] = useState(false);
-
-  // 폼 데이터 상태 관리 (수정 페이지이므로 기존 데이터가 있다고 가정)
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    birthYear: '',
-    birthMonth: '',
-    birthDay: '',
-    occupation: '',
-    address: '',
-    gender: '남',
-    maritalStatus: '미혼',
-    hasChildren: '무',
+    name: '', email: '', phone: '', birthYear: '', birthMonth: '', birthDay: '',
+    occupation: '', address: '', gender: '남', maritalStatus: '미혼', hasChildren: '무',
   });
   
-  const [uniqueId] = useState('SB-2002'); // 수정 불가한 고유 번호
+  const [uniqueId] = useState('SB-2002');
   const [diseases, setDiseases] = useState([]);
   const [currentDisease, setCurrentDisease] = useState('');
+  
+  // 팝업 상태 관리
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    message: '',
+    type: 'alert', // 'alert' 또는 'confirm'
+    onConfirm: () => {},
+  });
 
-  // 컴포넌트 마운트 시 애니메이션 및 데이터 로드
   useEffect(() => {
     setAnimateCard(true);
-    
-    // --- 테스트용 데이터 로드 ---
-    // 실제 애플리케이션에서는 여기서 API를 호출하여
-    // 특정 고객의 데이터를 불러와 상태를 설정합니다.
     const mockCustomerData = {
-        name: '김시훈',
-        email: 'acid@gmail.com',
-        phone: '01012341234',
-        birthYear: '1990',
-        birthMonth: '1',
-        birthDay: '1',
-        occupation: '개발자',
-        address: '전농 KT플라자 4층',
-        gender: '남',
-        maritalStatus: '미혼',
-        hasChildren: '무',
-        diseases: ['질병 01', '질병 02']
+        name: '김시훈', email: 'acid@gmail.com', phone: '01012341234',
+        birthYear: '1990', birthMonth: '1', birthDay: '1', occupation: '개발자',
+        address: '전농 KT플라자 4층', gender: '남', maritalStatus: '미혼',
+        hasChildren: '무', diseases: ['질병 01', '질병 02']
     };
-    
     setFormData({
-        name: mockCustomerData.name,
-        email: mockCustomerData.email,
-        phone: mockCustomerData.phone,
-        birthYear: mockCustomerData.birthYear,
-        birthMonth: mockCustomerData.birthMonth,
-        birthDay: mockCustomerData.birthDay,
-        occupation: mockCustomerData.occupation,
-        address: mockCustomerData.address,
-        gender: mockCustomerData.gender,
-        maritalStatus: mockCustomerData.maritalStatus,
-        hasChildren: mockCustomerData.hasChildren,
+        name: mockCustomerData.name, email: mockCustomerData.email, phone: mockCustomerData.phone,
+        birthYear: mockCustomerData.birthYear, birthMonth: mockCustomerData.birthMonth, birthDay: mockCustomerData.birthDay,
+        occupation: mockCustomerData.occupation, address: mockCustomerData.address,
+        gender: mockCustomerData.gender, maritalStatus: mockCustomerData.maritalStatus, hasChildren: mockCustomerData.hasChildren,
     });
     setDiseases(mockCustomerData.diseases);
-    // --- 테스트용 데이터 로드 끝 ---
-
   }, []);
 
-  // 폼 입력 변경 핸들러
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
-  
-  // 질병 입력 변경 핸들러
-  const handleDiseaseChange = (e) => {
-    setCurrentDisease(e.target.value);
+  const closePopup = () => {
+    setPopup({ isOpen: false, message: '', type: 'alert', onConfirm: () => {} });
   };
 
-  // 질병 추가 핸들러
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevState => ({ ...prevState, [name]: value }));
+  };
+  
+  const handleDiseaseChange = (e) => setCurrentDisease(e.target.value);
+
   const handleAddDisease = () => {
     if (currentDisease.trim() !== '' && !diseases.includes(currentDisease.trim())) {
       setDiseases([...diseases, currentDisease.trim()]);
@@ -109,74 +101,71 @@ const Menu5_1 = () => {
     }
   };
 
-  // 질병 삭제 핸들러
   const handleRemoveDisease = (diseaseToRemove) => {
     setDiseases(diseases.filter(disease => disease !== diseaseToRemove));
   };
   
-  // 폼 제출 (수정) 핸들러
+  // 수정 핸들러
   const handleUpdate = (e) => {
     e.preventDefault();
-    const completeFormData = {
-      ...formData,
-      uniqueId,
-      diseases
-    };
+    const completeFormData = { ...formData, uniqueId, diseases };
     console.log('수정된 고객 정보:', completeFormData);
-    alert('고객 정보가 수정되었습니다.');
-    navigate(-1); 
+    
+    setPopup({
+        isOpen: true,
+        message: '고객 정보가 수정되었습니다.',
+        type: 'alert',
+        onConfirm: () => {
+            closePopup();
+            navigate(-1);
+        }
+    });
   };
 
-  // 삭제 핸들러
-  const handleDelete = () => {
-    // 실제로는 확인 모달을 띄우는 것이 좋습니다.
-    if (window.confirm('정말로 이 고객 정보를 삭제하시겠습니까?')) {
-        console.log(uniqueId, '고객 정보 삭제');
-        alert('고객 정보가 삭제되었습니다.');
-        navigate(-1); // 삭제 후 이전 페이지로 이동
-    }
+  // 삭제 실행 함수
+  const executeDelete = () => {
+    console.log(uniqueId, '고객 정보 삭제');
+    setPopup({
+        isOpen: true,
+        message: '고객 정보가 삭제되었습니다.',
+        type: 'alert',
+        onConfirm: () => {
+            closePopup();
+            navigate(-1);
+        }
+    });
   };
 
-  // 생년월일 드롭다운 옵션 생성
+  // 삭제 버튼 클릭 핸들러
+  const handleDeleteClick = () => {
+    setPopup({
+        isOpen: true,
+        message: '정말로 이 고객 정보를 삭제하시겠습니까?',
+        type: 'confirm',
+        onConfirm: executeDelete,
+    });
+  };
+
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
   return (
-    <div className="page-wrapper" style={{
-      '--navbar-height': '62px',
-      height: 'calc(100vh - var(--navbar-height))',
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: '20px',
-      boxSizing: 'border-box',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'auto'
-    }}>
-      <div className={`form-card-container ${animateCard ? 'animate-in' : ''}`} style={{
-        position: 'relative',
-        zIndex: 1,
-        width: '100%',
-        maxWidth: '1200px',
-        height: 'auto',
-        margin: '20px auto',
-        background: 'rgba(255, 255, 255, 0.85)',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.18)',
-        borderRadius: '20px',
-        transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
-        opacity: animateCard ? 1 : 0,
-        transition: 'all 0.6s ease-out',
-        padding: '30px 40px',
-        boxSizing: 'border-box',
-      }}>
+    <div className="page-wrapper">
+      {popup.isOpen && (
+        <CustomPopup 
+            message={popup.message}
+            type={popup.type}
+            onConfirm={popup.onConfirm}
+            onCancel={closePopup}
+        />
+      )}
+      <div className={`form-card-container ${animateCard ? 'animate-in' : ''}`}>
         <div className="card-header">
             <button type="button" className="back-btn" onClick={() => navigate(-1)}>
                 <BackArrowIcon />
-                뒤로가기
+                돌아가기
             </button>
             <h2 className="form-title">고객 수정</h2>
         </div>
@@ -262,7 +251,7 @@ const Menu5_1 = () => {
                     value={currentDisease} 
                     onChange={handleDiseaseChange} 
                     className="form-input" 
-                    placeholder="여기서 질병 입력하면"
+                    placeholder="질병 입력 후 Enter"
                     onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddDisease(); }}}
                   />
                   <button type="button" onClick={handleAddDisease} className="add-btn"><PlusIcon /></button>
@@ -281,65 +270,91 @@ const Menu5_1 = () => {
           
           <div className="submit-button-container">
             <button type="submit" className="update-btn">수정하기</button>
-            <button type="button" className="delete-btn" onClick={handleDelete}>삭제하기</button>
+            <button type="button" className="delete-btn" onClick={handleDeleteClick}>삭제하기</button>
           </div>
         </form>
       </div>
 
       <style jsx global>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        /* 전역 및 레이아웃 */
+        .page-wrapper {
+          min-height: 100vh;
+          background: linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          box-sizing: border-box;
+          overflow: auto;
         }
         
-        .animate-in {
-          animation: fadeInUp 0.6s ease-out forwards;
+        .form-card-container {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          max-width: 1200px;
+          margin: 20px auto;
+          background: rgba(255, 251, 235, 0.9);
+          box-shadow: 0 12px 40px rgba(44, 31, 20, 0.25);
+          backdrop-filter: blur(8px);
+          padding: 30px 40px;
+          border-radius: 28px;
+          border: 1px solid rgba(184, 134, 11, 0.25);
+          transform: translateY(30px);
+          opacity: 0;
+          transition: all 0.6s ease-out;
+        }
+
+        .form-card-container.animate-in {
+          transform: translateY(0);
+          opacity: 1;
         }
         
+        /* 헤더 */
         .card-header {
-            position: relative;
-            margin-bottom: 30px;
-            text-align: center;
+          position: relative;
+          margin-bottom: 30px;
+          text-align: center;
         }
 
         .back-btn {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            transform: translateY(-50%);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            padding: 8px 15px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #495057;
-            background-color: #e9ecef;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+          position: absolute;
+          top: 50%;
+          left: 0;
+          transform: translateY(-50%);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          height: 45px;
+          padding: 0 20px;
+          box-sizing: border-box;
+          background: linear-gradient(135deg, #4A3728, #8B5A2B);
+          border: none;
+          color: white;
+          font-weight: 700;
+          font-size: 14px;
+          box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
+          transition: all 0.3s ease;
+          border-radius: 8px;
+          cursor: pointer;
+          white-space: nowrap;
         }
 
         .back-btn:hover {
-            background-color: #dee2e6;
-            transform: translateY(-50%) scale(1.05);
+          background: linear-gradient(135deg, #3c2d20, #7a4e24);
+          transform: translateY(-51%) scale(1.03);
+          box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
         }
 
         .form-title {
           font-size: 28px;
           font-weight: 700;
-          color: #343a40;
+          color: #2C1F14;
           margin: 0;
           display: inline-block;
         }
-
+        
+        /* 폼 그리드 */
         .form-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -356,39 +371,41 @@ const Menu5_1 = () => {
           display: flex;
           flex-direction: column;
         }
-
+        
+        /* 폼 요소 */
         .form-label {
           margin-bottom: 8px;
           font-size: 14px;
-          font-weight: 600;
-          color: #495057;
+          font-weight: 700;
+          color: #2C1F14;
         }
 
         .form-input, .form-select, .form-input-readonly {
           width: 100%;
-          padding: 12px 15px;
-          border: 1px solid #ced4da;
-          border-radius: 8px;
+          padding: 0 20px;
+          border: 2px solid rgba(184, 134, 11, 0.35);
+          border-radius: 12px;
           font-size: 16px;
-          background-color: #fff;
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
           box-sizing: border-box;
+          height: 55px;
+          transition: all 0.3s ease;
+          outline: none;
+          background-color: rgba(255, 255, 255, 0.95);
         }
         
         .form-input-readonly {
-            background-color: #e9ecef;
-            color: #495057;
-            cursor: not-allowed;
+          background-color: rgba(184, 134, 11, 0.1);
+          color: #4A3728;
+          cursor: not-allowed;
         }
 
         .form-input:focus, .form-select:focus {
-          outline: none;
-          border-color: #86b7fe;
-          box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+          border-color: #D4AF37;
+          box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.3);
         }
         
         .form-input::placeholder {
-            color: #adb5bd;
+           color: #9e8a78;
         }
 
         .birthdate-selects {
@@ -399,24 +416,26 @@ const Menu5_1 = () => {
         .birthdate-selects > select {
           flex: 1;
         }
-
+        
+        /* 질병 입력 */
         .disease-input-group {
           display: flex;
           gap: 10px;
         }
-
+        
         .disease-input-group .form-input {
           flex-grow: 1;
+          height: 45px; /* 버튼과 높이 맞춤 */
         }
 
         .add-btn {
           flex-shrink: 0;
           width: 45px;
           height: 45px;
-          border: 1px solid #ced4da;
-          background-color: #f8f9fa;
-          color: #495057;
-          border-radius: 8px;
+          border: 2px solid rgba(184, 134, 11, 0.35);
+          background-color: rgba(255, 255, 255, 0.95);
+          color: #4A3728;
+          border-radius: 12px;
           cursor: pointer;
           display: flex;
           align-items: center;
@@ -425,8 +444,8 @@ const Menu5_1 = () => {
         }
 
         .add-btn:hover {
-          background-color: #e9ecef;
-          border-color: #adb5bd;
+          background-color: #f7f3e9;
+          border-color: #D4AF37;
         }
 
         .disease-list {
@@ -439,89 +458,151 @@ const Menu5_1 = () => {
           padding-right: 5px;
         }
         
-        .disease-list::-webkit-scrollbar {
-          width: 5px;
-        }
-        .disease-list::-webkit-scrollbar-track {
-          background: rgba(0,0,0,0.05);
-          border-radius: 10px;
-        }
-        .disease-list::-webkit-scrollbar-thumb {
-          background-color: rgba(108, 117, 125, 0.5);
-          border-radius: 10px;
-        }
+        .disease-list::-webkit-scrollbar { width: 6px; }
+        .disease-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .disease-list::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
 
         .disease-item {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background-color: #e9ecef;
+          background-color: rgba(184, 134, 11, 0.1);
           padding: 8px 12px;
-          border-radius: 6px;
+          border-radius: 8px;
           font-size: 14px;
+          color: #4A3728;
         }
 
         .remove-btn {
           background: none;
           border: none;
           cursor: pointer;
-          color: #6c757d;
+          color: #8B5A2B;
           padding: 0;
           line-height: 1;
+          transition: color 0.2s ease;
         }
         
         .remove-btn:hover {
-            color: #dc3545;
+          color: #c82333;
         }
-
+        
+        /* 하단 버튼 */
         .submit-button-container {
           display: flex;
           justify-content: flex-end;
           gap: 10px;
           margin-top: 30px;
           padding-top: 20px;
-          border-top: 1px solid #e9ecef;
+          border-top: 1px solid rgba(184, 134, 11, 0.2);
         }
 
         .update-btn, .delete-btn {
-          padding: 12px 30px;
+          padding: 15px 30px;
           font-size: 16px;
-          font-weight: 600;
+          font-weight: 700;
           border: none;
-          border-radius: 8px;
+          border-radius: 12px;
           cursor: pointer;
           transition: all 0.3s ease;
         }
 
         .update-btn {
-          color: white;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: #2C1F14;
+          background: linear-gradient(135deg, #D4AF37, #F5C23E);
+          box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35);
         }
 
         .update-btn:hover {
-          background: linear-gradient(135deg, #5a6fd8 0%, #673f91 100%);
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
           transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
         }
         
         .delete-btn {
           color: white;
-          background-color: #dc3545;
+          background: linear-gradient(135deg, #b23a48, #932a38);
+          box-shadow: 0 4px 15px rgba(178, 58, 72, 0.35);
         }
 
         .delete-btn:hover {
-          background-color: #c82333;
-          box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
           transform: translateY(-2px);
+          background: linear-gradient(135deg, #a13441, #822531);
+          box-shadow: 0 8px 25px rgba(178, 58, 72, 0.45);
         }
         
+        /* 팝업 */
+        .popup-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.6);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        .popup-content {
+          background-color: #fff9f0;
+          padding: 30px 40px;
+          border-radius: 12px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+          text-align: center;
+          min-width: 320px;
+          border: 1px solid #B8860B;
+        }
+        .popup-content p {
+          color: #2C1F14;
+          font-weight: 500;
+          font-size: 16px;
+          margin: 0 0 25px 0;
+        }
+        .popup-button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .popup-button {
+          padding: 10px 25px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          min-width: 100px;
+        }
+        .popup-button.confirm {
+          background: linear-gradient(135deg, #B8860B, #CD853F);
+          color: #fff;
+        }
+        .popup-button.confirm:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(184, 134, 11, 0.4);
+        }
+        .popup-button.cancel {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .popup-button.cancel:hover {
+            background-color: #dee2e6;
+        }
+        
+        /* 반응형 */
         @media (max-width: 768px) {
+          .form-card-container {
+            padding: 20px;
+          }
           .card-header {
             text-align: left;
-            padding-left: 70px; /* Make space for back button */
+            padding-left: 130px; /* Make space for back button */
+            height: 45px;
+            display: flex;
+            align-items: center;
           }
           .back-btn {
-            transform: translateY(-50%) scale(0.9);
+            transform: translateY(-50%) scale(0.95);
           }
           .form-title {
             font-size: 24px;
@@ -529,10 +610,13 @@ const Menu5_1 = () => {
           .form-grid {
             grid-template-columns: 1fr;
           }
-           .submit-button-container {
+          .submit-button-container {
             flex-direction: column;
             gap: 15px;
           }
+           .update-btn, .delete-btn {
+            width: 100%;
+           }
         }
       `}</style>
     </div>
