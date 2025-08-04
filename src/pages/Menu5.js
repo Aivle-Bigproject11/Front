@@ -172,7 +172,7 @@ const Menu5 = () => {
     // 로딩 중일 때 표시할 UI
     if (loading) {
         return (
-            <div className="page-wrapper" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
+            <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
                 <div className="text-center" style={{ color: '#4A3728' }}>
                     <div className="spinner-border" role="status" style={{ width: '3rem', height: '3rem', color: '#B8860B' }}>
                         <span className="visually-hidden">Loading...</span>
@@ -186,7 +186,7 @@ const Menu5 = () => {
     // 에러 발생 시 표시할 UI
     if (error) {
         return (
-            <div className="page-wrapper" style={{display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
+            <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
                 <h3 style={{color: '#d9534f'}}>오류가 발생했습니다</h3>
                 <p style={{color: '#4A3728'}}>{error}</p>
                 <Button className="btn-golden" onClick={fetchInitialDataWithMock}>다시 시도</Button>
