@@ -155,14 +155,7 @@ const Menu1_2 = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <button
                                 onClick={handleCancel}
-                                style={{
-                                    background: 'rgba(184, 134, 11, 0.1)', color: '#B8860B', border: 'none',
-                                    padding: '12px 20px', borderRadius: '12px', fontSize: '1rem',
-                                    fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease',
-                                    display: 'flex', alignItems: 'center'
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(184, 134, 11, 0.15)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(184, 134, 11, 0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                className="back-btn"
                             >
                                 <ArrowLeft size={16} style={{ marginRight: '6px' }} />
                                 돌아가기
@@ -174,17 +167,7 @@ const Menu1_2 = () => {
                         <Button
                             onClick={handleSave}
                             disabled={saving}
-                            style={{
-                                background: 'linear-gradient(135deg, #D4AF37, #F5C23E)',
-                                border: 'none',
-                                borderRadius: '12px',
-                                fontWeight: '700',
-                                color: '#2C1F14',
-                                padding: '10px 24px',
-                                transition: 'all 0.3s ease',
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(184, 134, 11, 0.25)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                            className="save-btn"
                         >
                             {saving ? '저장 중...' : <><Save size={16} style={{ marginRight: '8px' }} /> 저장</>}
                         </Button>
@@ -231,6 +214,44 @@ const Menu1_2 = () => {
                     .dashboard-container { flex-direction: column; height: auto; }
                     .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
                     .dashboard-right { height: auto; max-height: none; }
+                }
+
+                .back-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 12px 20px;
+                    background: linear-gradient(135deg, #4A3728, #8B5A2B);
+                    border: none;
+                    color: white;
+                    font-weight: 700;
+                    font-size: 14px;
+                    box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
+                    transition: all 0.3s ease;
+                    border-radius: 12px;
+                    cursor: pointer;
+                }
+                .back-btn:hover {
+                    background: linear-gradient(135deg, #3c2d20, #7a4e24);
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
+                }
+
+                .save-btn {
+                    padding: 10px 24px;
+                    font-size: 16px;
+                    font-weight: 700;
+                    border: none;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    color: #2C1F14;
+                    background: linear-gradient(135deg, #D4AF37, #F5C23E);
+                    box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35);
+                }
+                .save-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
                 }
             `}</style>
         </div>

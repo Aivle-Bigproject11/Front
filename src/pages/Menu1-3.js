@@ -213,27 +213,7 @@ const Menu1_3 = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <button
                                 onClick={() => navigate('/menu1-1')}
-                                style={{
-                                    background: 'rgba(184, 134, 11, 0.1)',
-                                    color: '#B8860B',
-                                    border: 'none',
-                                    padding: '12px 20px',
-                                    borderRadius: '12px',
-                                    fontSize: '1rem',
-                                    fontWeight: '600',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    display: 'flex',
-                                    alignItems: 'center'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = 'rgba(184, 134, 11, 0.15)';
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = 'rgba(184, 134, 11, 0.1)';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                }}
+                                className="back-btn"
                             >
                                 <ArrowLeft size={16} style={{ marginRight: '6px' }} />
                                 돌아가기
@@ -286,6 +266,27 @@ const Menu1_3 = () => {
                 .content-scroll-area::-webkit-scrollbar-thumb,
                 .sidebar-scroll-area::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
                 
+                .back-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 12px 20px;
+                    background: linear-gradient(135deg, #4A3728, #8B5A2B);
+                    border: none;
+                    color: white;
+                    font-weight: 700;
+                    font-size: 1rem;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
+                }
+                .back-btn:hover {
+                    background: linear-gradient(135deg, #3c2d20, #7a4e24);
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
+                }
+
                 .btn-golden {
                     background: linear-gradient(135deg, #D4AF37, #F5C23E);
                     border: none;
