@@ -234,23 +234,23 @@ function SignUp() {
       <style jsx>{`
         /* 전역 및 레이아웃 */
         .signup-page-wrapper {
-          min-height: 100vh;
+          height: 100vh;
           background: linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 20px;
+          overflow: hidden; 
         }
         .signup-container {
           position: relative;
           z-index: 1;
           width: 100%;
           max-width: 940px;
-          min-height: 640px;
-          margin: 40px auto;
+          height: 95%;
+          max-height: 880px;
+          margin: 0 auto;
           display: flex;
-          align-items: center;
-          justify-content: center;
           box-sizing: border-box;
           background: rgba(184, 134, 11, 0.1);
           box-shadow: 0 12px 40px rgba(44, 31, 20, 0.25);
@@ -268,16 +268,19 @@ function SignUp() {
         }
         .signup-card {
           width: 100%;
+          height: 100%; 
           background: rgba(255, 251, 235, 0.95);
           border-radius: 20px;
           box-shadow: 0 20px 60px rgba(44, 31, 20, 0.3);
           overflow: hidden;
           border: 1px solid rgba(184, 134, 11, 0.3);
+          display: flex; 
+          flex-direction: column;
         }
         .signup-content {
           display: flex;
           flex-direction: column;
-          min-height: 600px;
+          height: 100%; 
           padding: 30px 0;
         }
 
@@ -286,8 +289,9 @@ function SignUp() {
           width: 100%;
           text-align: center;
           margin-bottom: 20px;
-          padding: 0 20px;
+          padding: 0 40px;
           box-sizing: border-box;
+          flex-shrink: 0; /* Prevent header from shrinking */
         }
         .header h1 {
           font-size: 28px;
@@ -297,11 +301,18 @@ function SignUp() {
         /* 폼 */
         .form-container {
           display: flex;
-          flex: 1;
+          flex: 1; 
           gap: 30px;
           padding: 0 40px;
           flex-wrap: wrap;
+          overflow-y: auto; 
+          min-height: 0; /* Fix for flexbox overflow issue */
         }
+        
+        .form-container::-webkit-scrollbar { width: 6px; }
+        .form-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .form-container::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
+
         .input-section, .terms-section {
           flex: 1;
           min-width: 320px;
@@ -353,10 +364,17 @@ function SignUp() {
           /* 결과 메시지가 아래에 표시되도록 공간 확보 */
           height: 22px; 
         }
-        .feedback-wrapper .available-text,
-        .feedback-wrapper .unavailable-text {
-          padding-left: 50px; /* '아이디' 라벨 너비만큼 들여쓰기 */
+        .feedback-wrapper .available-text {
+          padding-left: 50px;
           margin: 6px 0 0 0;
+          color: #28a745;
+          font-size: 13px;
+        }
+        .feedback-wrapper .unavailable-text {
+          padding-left: 50px;
+          margin: 6px 0 0 0;
+          color: #dc3545;
+          font-size: 13px;
         }
         
         .warning-text {
@@ -421,6 +439,7 @@ function SignUp() {
           padding: 0 40px; 
           box-sizing: border-box;
           margin-top: 20px;
+          flex-shrink: 0; /* Prevent button container from shrinking */
         }
          .btn-golden {
           height: 45px; /* 높이 줄이기 */
@@ -506,8 +525,8 @@ function SignUp() {
           border: 1px solid #B8860B;
         }
         .popup-content p {
-            color: #2C1F14;
-            font-weight: 500;
+           color: #2C1F14;
+           font-weight: 500;
         }
         .popup-button {
           padding: 10px 25px;
@@ -522,8 +541,33 @@ function SignUp() {
           transition: all 0.3s ease;
         }
         .popup-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(184, 134, 11, 0.4);
+           transform: translateY(-2px);
+           box-shadow: 0 4px 15px rgba(184, 134, 11, 0.4);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+          .signup-page-wrapper {
+            height: auto;
+            min-height: calc(100vh - 60px);
+            padding: 10px;
+          }
+          .signup-container {
+            height: auto;
+            max-height: none;
+            padding: 10px;
+          }
+          .signup-content {
+            padding: 20px 0;
+          }
+          .form-container {
+            flex-direction: column;
+            padding: 0 20px;
+            overflow-y: visible; /* 모바일에서는 스크롤을 다시 외부로 */
+          }
+          .header, .button-container {
+            padding: 0 20px;
+          }
         }
       `}</style>
     </div>
