@@ -102,6 +102,14 @@ const Menu1_1 = () => {
       </div>
     );
   }
+  
+  // Define background colors based on status
+  const statusBackgrounds = {
+    pending: 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)',      
+    inProgress: 'linear-gradient(135deg, #0c61e0ff 0%, #0a58ca 100%)',  
+    completed: 'linear-gradient(135deg, #198754 0%, #146c43 100%)',   
+  };
+  const defaultBackground = 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)'; 
 
   return (
     <div className="page-wrapper" style={{
@@ -269,7 +277,6 @@ const Menu1_1 = () => {
               gap: '16px'
             }}>
               {filteredCustomers.map((customer) => {
-                const urgency = customerUtils.getUrgencyLevel(customer.funeralDate);
                 return (
                   <div key={customer.id} style={{
                     background: 'white',
@@ -282,25 +289,8 @@ const Menu1_1 = () => {
                     position: 'relative',
                   }}
                   >
-                    {urgency === 'urgent' && (
-                      <div style={{
-                        position: 'absolute', top: '12px', right: '12px',
-                        background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
-                        color: 'white', padding: '4px 8px', borderRadius: '12px',
-                        fontSize: '11px', fontWeight: '600', zIndex: 10,
-                        boxShadow: '0 2px 8px rgba(220, 53, 69, 0.3)'
-                      }}>
-                        <Clock size={12} style={{ marginRight: '2px' }} />
-                        긴급
-                      </div>
-                    )}
-
                     <div style={{
-                      background: urgency === 'urgent'
-                        ? 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)'
-                        : urgency === 'warning'
-                          ? 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)'
-                          : 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)',
+                      background: statusBackgrounds[customer.status] || defaultBackground,
                       padding: '20px', color: 'white', display: 'flex', flexDirection: 'column',
                       justifyContent: 'center', minWidth: '200px', position: 'relative'
                     }}>
@@ -314,9 +304,14 @@ const Menu1_1 = () => {
                             고인
                           </Badge>
                         </h4>
-                        <Badge className={customerUtils.getStatusColor(customer.status)} 
-                               style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
-                          {customerUtils.getStatusText(customer.status)}
+                        <Badge 
+                            className={`${customerUtils.getStatusColor(customer.status)} text-white`} 
+                            style={{ 
+                                fontSize: '0.8rem', 
+                                padding: '4px 8px',
+                                border: '1px solid white'
+                            }}>
+                            {customerUtils.getStatusText(customer.status)}
                         </Badge>
                       </div>
                       <div style={{
@@ -438,7 +433,7 @@ const Menu1_1 = () => {
             color: white;
             }
             .btn-purple:hover {
-                            background-color: transparent;
+                        background-color: transparent;
             background-color: #5a32a3;
             border-color: #5a32a3;
             color: white;
