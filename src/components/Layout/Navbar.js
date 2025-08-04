@@ -2,6 +2,7 @@ import React from 'react';
 import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; 
+import icon from '../../assets/logo/icon01.png';
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -58,7 +59,14 @@ const Navbar = () => {
   return (
     <BootstrapNavbar expand="lg" variant="dark" style={navbarStyle} sticky="top">
       <Container>
-        <BootstrapNavbar.Brand as={Link} to="/" style={{...linkStyle, fontWeight: 'bold'}}>
+        <BootstrapNavbar.Brand as={Link} to="/" style={{...linkStyle, fontWeight: 'bold'}} className="d-flex align-items-center">
+           <img
+            src={icon}
+            width="30"
+            height="30"
+            className="d-inline-block align-top me-2" // 이미지와 텍스트 사이에 여백을 줍니다.
+            alt="Golden Gate logo"
+          />
           Golden Gate
         </BootstrapNavbar.Brand>
         <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
