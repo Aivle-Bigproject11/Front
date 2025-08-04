@@ -221,7 +221,18 @@ ${detailedUrlText}`;
     };
 
     // === 렌더링(JSX) ===
-    if (loading) return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}><h2>데이터를 불러오는 중입니다...</h2></div>;
+    if (loading) {
+        return (
+            <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
+                <div className="text-center" style={{ color: '#4A3728' }}>
+                    <div className="spinner-border" role="status" style={{ width: '3rem', height: '3rem', color: '#B8860B' }}>
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-3" style={{ fontSize: '1.2rem' }}>데이터를 불러오는 중입니다...</p>
+                </div>
+            </div>
+        );
+    }
     if (error) return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}><h2 style={{color: 'red'}}>{error}</h2></div>;
 
     return (
