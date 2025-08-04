@@ -10,6 +10,11 @@ const Menu2 = () => {
     setAnimateCard(true);
   }, []);
 
+  const handleRefresh = () => {
+    // 분석 새로고침 로직을 여기에 추가할 수 있습니다.
+    console.log(`'${selectedRegion}' 지역 분석을 새로고침합니다.`);
+  };
+
   return (
     <div className="page-wrapper" style={{
       '--navbar-height': '62px',
@@ -48,7 +53,7 @@ const Menu2 = () => {
         gap: '20px',
         overflow: 'hidden'
       }}>
-        {/* 왼쪽 영역 (지도) */}
+        {/* 왼쪽 영역 (지도와 버튼) */}
         <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
           <h4 className="mb-3" style={{ 
             fontSize: '30px', 
@@ -72,6 +77,9 @@ const Menu2 = () => {
               onRegionSelect={setSelectedRegion}
             />
           </div>
+          <button className="refresh-btn" onClick={handleRefresh}>
+            분석 새로고침
+          </button>
         </div>
 
         {/* 오른쪽 영역 (데이터) */}
@@ -106,7 +114,33 @@ const Menu2 = () => {
         .animate-in {
           animation: fadeIn 0.6s ease-out forwards;
         }
-      {/* ▲▲▲▲▲ 3. 애니메이션 스타일 fadeIn으로 원복 ▲▲▲▲▲ */}
+
+        .refresh-btn {
+          width: 100%;
+          margin-top: 20px; /* 지도 컴포넌트와의 간격 */
+          padding: 12px 20px;
+          font-size: 16px;
+          font-weight: 600;
+          color: #fff;
+          background: linear-gradient(135deg, #b8860b, #965a25);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 12px;
+          cursor: pointer;
+          box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+          transition: all 0.3s ease;
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .refresh-btn:hover {
+          background: linear-gradient(135deg, #c9971c, #a86b36);
+          box-shadow: 0 6px 20px rgba(44, 31, 20, 0.3);
+          transform: translateY(-2px);
+        }
+        
+        .refresh-btn:active {
+          transform: translateY(0);
+          box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+        }
 
         .dashboard-right::-webkit-scrollbar {
           width: 6px;
