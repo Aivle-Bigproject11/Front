@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// import { useNavigate } from 'react-router-dom'; // 실제 환경에서는 이 줄의 주석을 해제하세요.
-
-// --- Mock useNavigate for demonstration purposes ---
-// 실제 프로젝트에서는 react-router-dom의 useNavigate를 사용해야 합니다.
-const useNavigate = () => {
-    return (path) => console.log(`Navigating to: ${path}`);
-};
-// --- End of Mock ---
-
+import { useNavigate } from 'react-router-dom';
 
 // 아이콘 SVG 컴포넌트
 const PlusIcon = () => (
