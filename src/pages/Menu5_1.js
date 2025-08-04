@@ -270,7 +270,7 @@ const Menu5_1 = () => {
       <style jsx global>{`
         /* 전역 및 레이아웃 */
         .page-wrapper {
-          min-height: 100vh;
+          min-height: calc(100vh - 62px);
           background: linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%);
           display: flex;
           align-items: center;
