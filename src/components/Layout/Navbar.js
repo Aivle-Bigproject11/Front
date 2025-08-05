@@ -1,7 +1,9 @@
 import React from 'react';
 import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext'; 
+import icon from '../../assets/logo/icon01.png';
+import { DoorOpen } from 'lucide-react';
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -13,74 +15,93 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  // --- 스타일 정의 ---
+  // Jumbotron과 유사한 골드 그라데이션 스타일
+  const navbarStyle = {
+    background: 'linear-gradient(135deg, #3c2d20, #7a4e24)',                
+
+    boxShadow: '0 4px 12px rgba(44, 31, 20, 0.2)',
+    padding: '0.5rem 0',
+  };
+
+  // 기본 링크 스타일
+  const linkStyle = {
+    color: '#FFFBEB',
+    fontWeight: '500',
+    textShadow: '1px 1px 2px rgba(44, 31, 20, 0.5)',
+    margin: '0 10px',
+    transition: 'color 0.3s ease',
+  };
+
+  // 활성화된 링크 스타일
+  const activeLinkStyle = {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  };
+  
+  // 사용자 환영 메시지 스타일
+  const welcomeTextStyle = {
+    color: '#FFFBEB',
+    textShadow: '1px 1px 2px rgba(44, 31, 20, 0.5)',
+  };
+
+  // 로그아웃 버튼 스타일
+  const logoutButtonStyle = {
+    borderColor: '#FFFBEB',
+    color: '#FFFBEB',
+    transition: 'all 0.3s ease',
+  };
+
+  // 로그인하지 않은 경우 Navbar를 렌더링하지 않음
   if (!isAuthenticated) {
     return null;
   }
 
-  // '고객 관리' 메뉴 활성화
-  const isCustomerManagementActive = location.pathname.startsWith('/menu5');
-
   return (
-    <BootstrapNavbar expand="lg" bg="dark" variant="dark">
-      <Container>
-        <BootstrapNavbar.Brand as={Link} to="/">
-          추모관 시스템
+    <BootstrapNavbar expand="lg" variant="dark" style={navbarStyle} sticky="top">
+      <Container style={{ maxWidth: '1600px' }}>
+        <BootstrapNavbar.Brand as={Link} to="/" style={{...linkStyle, fontWeight: 'bold'}} className="d-flex align-items-center">
+           <img
+            src={icon}
+            width="30"
+            height="30"
+            className="d-inline-block align-top me-2" // 이미지와 텍스트 사이에 여백
+            alt="Golden Gate logo"
+          />
+          Golden Gate
         </BootstrapNavbar.Brand>
         <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
         <BootstrapNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link 
-              as={Link} 
-              to="/" 
-              active={location.pathname === "/"}
-            >
-              홈
-            </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/menu1-1" 
-              active={location.pathname.startsWith("/menu1")}
-            >
-              장례서류작성
-            </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/menu2" 
-              active={location.pathname === "/menu2"}
-            >
-              대시보드
-            </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/menu3" 
-              active={location.pathname === "/menu3"}
-            >
-              전환서비스추천
-            </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/menu4" 
-              active={location.pathname === "/menu4"}
-            >
-              디지털 추모관
-            </Nav.Link>
-              <Nav.Link 
-              as={Link} 
-              to="/menu5" 
-              active={isCustomerManagementActive}
-            >
-              고객 관리 
-            </Nav.Link>
+            {/* 각 메뉴 링크에 현재 경로와 비교하여 활성 스타일을 동적으로 적용합니다. */}
+            <Nav.Link as={Link} to="/" style={location.pathname === "/" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>홈</Nav.Link>
+            <Nav.Link as={Link} to="/menu1-1" style={location.pathname.startsWith("/menu1") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>장례서류작성</Nav.Link>
+            <Nav.Link as={Link} to="/menu2" style={location.pathname === "/menu2" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>대시보드</Nav.Link>
+            <Nav.Link as={Link} to="/menu3" style={location.pathname === "/menu3" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>전환서비스추천</Nav.Link>
+            <Nav.Link as={Link} to="/menu4" style={location.pathname === "/menu4" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>디지털 추모관</Nav.Link>
+            <Nav.Link as={Link} to="/menu5" style={location.pathname.startsWith("/menu5") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>고객 관리</Nav.Link>
           </Nav>
           <Nav>
-            <BootstrapNavbar.Text className="me-3">
+            <BootstrapNavbar.Text className="me-3" style={welcomeTextStyle}>
               환영합니다, {user?.username || user?.name}님!
             </BootstrapNavbar.Text>
-            <Button variant="outline-light" size="sm" as={Link} to="/password-check" className="me-2 d-flex align-items-center">
-              Config
-            </Button>
-            <Button variant="outline-light" size="sm" onClick={handleLogout}>
+            <Button 
+              variant="outline-light" 
+              size="sm" 
+              onClick={handleLogout}
+              style={logoutButtonStyle}
+              className="d-flex align-items-center" // 아이콘과 텍스트 정렬을 위해 추가
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#FFFBEB';
+              }}
+            >
               로그아웃
+              <DoorOpen size={16} className="ms-2" /> {/* 아이콘 추가 및 왼쪽 여백(ms-2) 설정 */}
             </Button>
           </Nav>
         </BootstrapNavbar.Collapse>
