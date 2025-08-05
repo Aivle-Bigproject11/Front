@@ -17,7 +17,7 @@ const Navbar = () => {
   // --- 스타일 정의 ---
   // Jumbotron과 유사한 골드 그라데이션 스타일
   const navbarStyle = {
-    background: 'linear-gradient(135deg, #B8860B, #CD853F)',                
+    background: 'linear-gradient(135deg, #3c2d20, #7a4e24)',                
 
     boxShadow: '0 4px 12px rgba(44, 31, 20, 0.2)',
     padding: '0.5rem 0',
