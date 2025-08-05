@@ -89,7 +89,7 @@ const Menu1_1 = () => {
     inProgress: 'linear-gradient(135deg, #133d6cff, #133d6cff', 
     completed: 'linear-gradient(135deg, #146c43 0%, #146c43 100%)', 
   };
-  const defaultBackground = 'linear-gradient(135deg, #b08d57, #a8814f)'; 
+  const defaultBackground = 'linear-gradient(135deg, #B8860B, #B8860B)'; 
 
   return (
     <div className="page-wrapper" style={{
@@ -183,9 +183,10 @@ const Menu1_1 = () => {
                     key={filter.key}
                     onClick={() => filterCustomers(filter.key)}
                     style={{
-                      background: activeFilter === filter.key ? '#B8860B' : 'transparent',
-                      color: activeFilter === filter.key ? 'white' : '#4A3728',
-                      border: `1px solid ${activeFilter === filter.key ? '#B8860B' : 'rgba(184, 134, 11, 0.2)'}`,
+                      background: activeFilter === filter.key
+                        ? (statusBackgrounds[filter.key] || defaultBackground) : 'transparent', 
+                      color: activeFilter === filter.key ? 'white' : '#6c757d',
+                      border: '1px solid rgba(111, 66, 193, 0.2)',
                       borderRadius: '8px',
                       padding: '8px 12px',
                       fontSize: '14px',
