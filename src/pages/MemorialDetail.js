@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge, Carousel } from 'react-bootstrap';
+import { ArrowLeft } from 'lucide-react';
 import { dummyData } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -242,37 +243,6 @@ const MemorialDetail = () => {
         border: '2px solid rgba(184, 134, 11, 0.35)',
         overflow: 'auto'
       }}>
-        {/* 상단 헤더 */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          marginBottom: '24px' 
-        }}>
-          <div style={{ flex: 1 }}>
-            {/* 빈 공간 */}
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            {canAccessSettings && (
-              <Button
-                style={{
-                  background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  color: '#fff',
-                  fontWeight: '600',
-                  borderRadius: '12px',
-                  padding: '8px 24px',
-                  fontSize: '16px',
-                  boxShadow: '0 4px 15px rgba(44, 31, 20, 0.2)'
-                }}
-                onClick={goToSettings}
-              >
-                관리 페이지
-              </Button>
-            )}
-          </div>
-        </div>
-
         {/* 프로필 섹션 */}
         <div style={{ marginBottom: '24px' }}>
           <div className="memorial-profile-section p-4" style={{
@@ -283,29 +253,43 @@ const MemorialDetail = () => {
             color: '#2C1F14',
             position: 'relative'
           }}>
-            <Button 
-              variant="outline-dark"
-              size="sm" 
+            {canAccessSettings && (
+              <Button
+                style={{
+                  position: 'absolute',
+                  top: '24px',
+                  right: '24px',
+                  background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+                  fontWeight: '600',
+                  borderRadius: '12px',
+                  padding: '8px 24px',
+                  fontSize: '16px',
+                  boxShadow: '0 4px 15px rgba(44, 31, 20, 0.2)',
+                  zIndex: 10
+                }}
+                onClick={goToSettings}
+              >
+                관리 페이지
+              </Button>
+            )}
+            <button
+              type="button"
+              className="back-btn"
               onClick={() => {
                 if (isGuestAccess) {
-                  window.history.back(); // 고유번호 접근시 브라우저 뒤로가기
+                  window.history.back();
                 } else if (isUserAccess) {
-                  navigate('/lobby'); // 유저는 로비로
+                  navigate('/lobby');
                 } else if (isAdminAccess) {
-                  navigate('/menu4'); // 관리자는 메뉴4로
+                  navigate('/menu4');
                 }
               }}
-              className="mb-3"
-              style={{
-                background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                color: '#fff',
-                fontWeight: '600'
-              }}
             >
-              <i className="fas fa-arrow-left me-2"></i>
-              목록으로
-            </Button>
+              <ArrowLeft size={16} style={{ marginRight: '6px' }} />
+              돌아가기
+            </button>
             
             <Row className="align-items-center">
               <Col md={3} className="text-center">
@@ -1211,14 +1195,40 @@ const MemorialDetail = () => {
           animation: fadeIn 0.6s ease-out forwards;
         }
 
-        .page-wrapper::-webkit-scrollbar {
+        .back-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          height: 45px;
+          padding: 0 20px;
+          margin-bottom: 1rem;
+          box-sizing: border-box;
+          background: linear-gradient(135deg, #4A3728, #8B5A2B);
+          border: none;
+          color: white;
+          font-weight: 700;
+          font-size: 14px;
+          box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
+          transition: all 0.3s ease;
+          border-radius: 8px;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+
+        .back-btn:hover {
+          background: linear-gradient(135deg, #3c2d20, #7a4e24);
+          transform: scale(1.03);
+          box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
+        }
+
+        .memorial-container::-webkit-scrollbar {
           width: 6px;
         }
-        .page-wrapper::-webkit-scrollbar-track {
+        .memorial-container::-webkit-scrollbar-track {
           background: rgba(0,0,0,0.05);
           border-radius: 10px;
         }
-        .page-wrapper::-webkit-scrollbar-thumb {
+        .memorial-container::-webkit-scrollbar-thumb {
           background-color: rgba(184, 134, 11, 0.5);
           border-radius: 10px;
         }
