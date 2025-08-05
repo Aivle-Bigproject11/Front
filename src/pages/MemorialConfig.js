@@ -57,7 +57,11 @@ const MemorialConfig = () => {
 
                 if (!hasAccess) {
                     alert('유가족 또는 관리자만 접근 가능한 페이지입니다.');
-                    navigate(`/memorial/${id}`);
+                    if (isUserAccess) {
+                        navigate(`/user-memorial/${id}`);
+                    } else {
+                        navigate(`/memorial/${id}`);
+                    }
                     return;
                 }
 
@@ -70,7 +74,11 @@ const MemorialConfig = () => {
 
                 if (!foundMemorial) {
                     alert('추모관을 찾을 수 없습니다.');
-                    navigate(`/memorial/${id}`);
+                    if (isUserAccess) {
+                        navigate(`/user-memorial/${id}`);
+                    } else {
+                        navigate(`/memorial/${id}`);
+                    }
                     return;
                 }
 
@@ -88,7 +96,11 @@ const MemorialConfig = () => {
             } catch (error) {
                 console.error('Error loading memorial config:', error);
                 alert('오류가 발생했습니다. 다시 시도해주세요.');
-                navigate(`/memorial/${id}`);
+                if (isUserAccess) {
+                    navigate(`/user-memorial/${id}`);
+                } else {
+                    navigate(`/memorial/${id}`);
+                }
             } finally {
                 setAccessChecking(false);
                 setLoading(false);
@@ -194,7 +206,13 @@ const MemorialConfig = () => {
             <Container className="mt-4">
                 <div className="text-center">
                     <h4>추모관을 찾을 수 없습니다.</h4>
-                    <Button variant="primary" onClick={() => navigate(`/memorial/${id}`)}>
+                    <Button variant="primary" onClick={() => {
+                        if (isUserAccess) {
+                            navigate(`/user-memorial/${id}`);
+                        } else {
+                            navigate(`/memorial/${id}`);
+                        }
+                    }}>
                         목록으로 돌아가기
                     </Button>
                 </div>
@@ -215,7 +233,13 @@ const MemorialConfig = () => {
                         <Button
                             variant="light"
                             size="sm"
-                            onClick={() => navigate(`/memorial/${id}`)}
+                            onClick={() => {
+                                if (isUserAccess) {
+                                    navigate(`/user-memorial/${id}`);
+                                } else {
+                                    navigate(`/memorial/${id}`);
+                                }
+                            }}
                             className="mb-3"
                         >
                             <i className="fas fa-arrow-left me-2"></i>
@@ -561,7 +585,11 @@ const MemorialConfig = () => {
                                                             dummyData.memorials._embedded.memorials[memorialIndex].videoUrl = generatedVideoUrl;
                                                         }
                                                         alert('영상이 등록되었습니다!');
-                                                        navigate(`/memorial/${id}`);
+                                                        if (isUserAccess) {
+                                                            navigate(`/user-memorial/${id}`);
+                                                        } else {
+                                                            navigate(`/memorial/${id}`);
+                                                        }
                                                     }}
                                                 >
                                                     영상 등록
@@ -626,7 +654,11 @@ const MemorialConfig = () => {
                                                             dummyData.memorials._embedded.memorials[memorialIndex].eulogy = generatedEulogy;
                                                         }
                                                         alert('추모사가 등록되었습니다!');
-                                                        navigate(`/memorial/${id}`);
+                                                        if (isUserAccess) {
+                                                            navigate(`/user-memorial/${id}`);
+                                                        } else {
+                                                            navigate(`/memorial/${id}`);
+                                                        }
                                                     }}
                                                 >
                                                     추모사 등록
@@ -641,7 +673,13 @@ const MemorialConfig = () => {
                                 <div className="d-flex justify-content-between">
                                     <Button
                                         variant="outline-secondary"
-                                        onClick={() => navigate(`/memorial/${id}`)}
+                                        onClick={() => {
+                                            if (isUserAccess) {
+                                                navigate(`/user-memorial/${id}`);
+                                            } else {
+                                                navigate(`/memorial/${id}`);
+                                            }
+                                        }}
                                         style={{ borderRadius: '8px', padding: '12px 24px' }}
                                     >
                                         <i className="fas fa-times me-2"></i>
