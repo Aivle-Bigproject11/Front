@@ -30,7 +30,11 @@ const Menu4 = () => {
   useEffect(() => {
     // TODO: 실제 API 호출로 교체
     setTimeout(() => {
-      setMemorials(dummyData.memorials._embedded.memorials);
+      const memorialsWithCode = dummyData.memorials._embedded.memorials.map(m => ({
+        ...m,
+        joinCode: `MEM${String(m.id).padStart(3, '0')}`
+      }));
+      setMemorials(memorialsWithCode);
       setLoading(false);
     }, 1000);
   }, []);
@@ -245,19 +249,7 @@ const Menu4 = () => {
                   소중한 분들을 영원히 기억할 수 있는 디지털 공간입니다
                 </p>
               </div>
-              <Button 
-                size="lg"
-                variant="light" 
-                onClick={openCreateModal}
-                style={{
-                  borderRadius: '12px',
-                  padding: '12px 24px',
-                  fontWeight: '600',
-                  boxShadow: '0 4px 15px rgba(255,255,255,0.2)'
-                }}
-              >
-                <i className="fas fa-plus me-2"></i> 새 추모관 만들기
-              </Button>
+              
             </div>
           </div>
         </Col>
@@ -319,21 +311,7 @@ const Menu4 = () => {
                   <p className="text-muted mb-4" style={{ fontSize: '1.1rem' }}>
                     소중한 분을 기리는 첫 번째 추모관을 만들어보세요
                   </p>
-                  <Button 
-                    variant="primary" 
-                    size="lg"
-                    onClick={openCreateModal}
-                    style={{
-                      borderRadius: '12px',
-                      padding: '12px 32px',
-                      fontWeight: '600',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      border: 'none'
-                    }}
-                  >
-                    <i className="fas fa-plus me-2"></i>
-                    새 추모관 만들기
-                  </Button>
+                  
                 </div>
               ) : (
                 <Row>
@@ -401,7 +379,7 @@ const Menu4 = () => {
                               </Col>
                               <Col xs={6}>
                                 <small className="text-muted">
-                                  <i className="fas fa-id-card me-1"></i>고객ID
+                                  <i className="fas fa-user-tie me-1"></i>고객ID
                                 </small>
                                 <div className="fw-bold">{memorial.customerId}</div>
                               </Col>
@@ -429,7 +407,22 @@ const Menu4 = () => {
                           {/* 하단 버튼들 */}
                           <div className="mt-auto">
                             <hr className="mb-3" />
-                            <div className="d-flex justify-content-end align-items-center">
+                            <div className="d-flex justify-content-between align-items-center">
+                              {/* 추모관 고유번호 */}
+                              <div>
+                                <small className="text-muted" style={{ fontSize: '0.8rem' }}>추모관 고유번호</small>
+                                <div 
+                                  className="fw-bold" 
+                                  style={{ 
+                                    color: '#667eea', 
+                                    fontSize: '1rem', 
+                                    letterSpacing: '0.5px' 
+                                  }}
+                                >
+                                  {memorial.joinCode}
+                                </div>
+                              </div>
+                              
                               {/* 더보기 메뉴 */}
                               <Dropdown align="end" onClick={(e) => e.stopPropagation()}>
                                 <Dropdown.Toggle
