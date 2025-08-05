@@ -127,7 +127,11 @@ const MemorialDetail = () => {
 
   // 관리페이지 이동
   const goToSettings = () => {
-    navigate(`/memorial/${id}/settings`);
+    if (isUserAccess) {
+      navigate(`/user-memorial/${id}/settings`);
+    } else {
+      navigate(`/memorial/${id}/settings`);
+    }
   };
 
   if (loading) {

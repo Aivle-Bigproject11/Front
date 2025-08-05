@@ -43,6 +43,7 @@ function App() {
                         {/* 유저용 페이지들 (네비게이션 바 없음) */}
                         <Route path="/lobby" element={<UserLayout><Lobby /></UserLayout>} />
                         <Route path="/user-memorial/:id" element={<UserLayout><MemorialDetail /></UserLayout>} />
+                        <Route path="/user-memorial/:id/settings" element={<UserLayout><MemorialConfig /></UserLayout>} />
                         {/* 고유번호로 접근하는 페이지 (로그인 없이, 네비게이션 바 없음) */}
                         <Route path="/memorial/:id/guest" element={<GuestLayout><MemorialDetail /></GuestLayout>} />
                         <Route path="/*" element={<MainLayout />} />

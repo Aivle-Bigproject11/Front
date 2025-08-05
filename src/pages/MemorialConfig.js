@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, Alert } from 'react-bootstrap';
 import { dummyData } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const MemorialConfig = () => {
     const { id } = useParams();
+    const { user } = useAuth();
     const navigate = useNavigate();
+    
+    // 접근 모드 확인: 유저(유가족) 또는 관리자
+    const isUserAccess = user && user.userType === 'user'; // 유저로 로그인 (유가족)
+    const isAdminAccess = user && user.userType === 'employee'; // 관리자로 로그인
+    
     const [memorial, setMemorial] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('basic'); // 'basic', 'video', 'memorial'
@@ -49,7 +56,7 @@ const MemorialConfig = () => {
                 const hasAccess = await checkFamilyAccess(id);
 
                 if (!hasAccess) {
-                    alert('유가족만 접근 가능한 페이지입니다.');
+                    alert('유가족 또는 관리자만 접근 가능한 페이지입니다.');
                     navigate(`/memorial/${id}`);
                     return;
                 }
@@ -63,7 +70,7 @@ const MemorialConfig = () => {
 
                 if (!foundMemorial) {
                     alert('추모관을 찾을 수 없습니다.');
-                    navigate('/menu4');
+                    navigate(`/memorial/${id}`);
                     return;
                 }
 
@@ -91,13 +98,17 @@ const MemorialConfig = () => {
         checkAccessAndLoadData();
     }, [id, navigate]);
 
-    // 유가족 권한 확인 함수 (실제 API 구현 필요)
+    // 유가족 및 관리자 권한 확인 함수 (실제 API 구현 필요)
     const checkFamilyAccess = async (memorialId) => {
         // TODO: 실제 API 호출로 교체
         return new Promise((resolve) => {
             setTimeout(() => {
-                // 테스트용: 항상 true 반환
-                resolve(true);
+                // 관리자나 유저(유가족)인 경우 접근 허용
+                if (isAdminAccess || isUserAccess) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
             }, 500);
         });
     };
@@ -183,7 +194,7 @@ const MemorialConfig = () => {
             <Container className="mt-4">
                 <div className="text-center">
                     <h4>추모관을 찾을 수 없습니다.</h4>
-                    <Button variant="primary" onClick={() => navigate('/menu4')}>
+                    <Button variant="primary" onClick={() => navigate(`/memorial/${id}`)}>
                         목록으로 돌아가기
                     </Button>
                 </div>
@@ -227,7 +238,7 @@ const MemorialConfig = () => {
                 <Col>
                     <Alert variant="info">
                         <i className="fas fa-info-circle me-2"></i>
-                        이 페이지는 유가족만 접근 가능합니다. 추모관의 기본 정보 수정, 영상 생성, 추모사 생성 기능을 이용할 수 있습니다.
+                        이 페이지는 유가족 또는 관리자만 접근 가능합니다. 추모관의 기본 정보 수정, 영상 생성, 추모사 생성 기능을 이용할 수 있습니다.
                     </Alert>
                 </Col>
             </Row>
