@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 
-// PNG 이미지 크기에 맞춰 각 지역의 좌표를 퍼센트(%)로 조정
 const regionPositions = {
   '서울': { top: '20%', left: '35%' },
   '경기': { top: '11%', left: '37%' },
@@ -17,6 +16,16 @@ const regionPositions = {
 
 const KoreaMap = ({ selectedRegion, onRegionSelect }) => {
   const [hoveredRegion, setHoveredRegion] = useState(null);
+  
+  const themeColors = {
+    primaryGradient: 'linear-gradient(135deg, #D4AF37, #F5C23E)',
+    activeBackground: 'linear-gradient(135deg, #B8860B, #CD853F)',
+    defaultBackground: 'rgba(255, 251, 235, 0.9)',
+    defaultColor: '#4A3728',
+    activeColor: '#FFFFFF',
+    borderColor: 'rgba(184, 134, 11, 0.5)',
+    shadowColor: 'rgba(184, 134, 11, 0.45)',
+  };
 
   return (
     <div style={{ position: 'relative', width: '90%', margin: '20px auto 0' }}>
@@ -30,15 +39,15 @@ const KoreaMap = ({ selectedRegion, onRegionSelect }) => {
           left: '-15px',
           zIndex: 10,
           padding: '6px 14px',
-          border: 'none',
+          border: `1px solid ${themeColors.borderColor}`,
           borderRadius: '8px',
           cursor: 'pointer',
           fontWeight: '600',
           fontSize: '14px',
           transition: 'all 0.2s ease',
-          background: selectedRegion === '전체' ? 'linear-gradient(135deg, #667eea, #764ba2)' : '#f1f3f5',
-          color: selectedRegion === '전체' ? 'white' : '#495057',
-          boxShadow: selectedRegion === '전체' || hoveredRegion === '전체' ? '0 8px 25px rgba(102, 126, 234, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)',
+          background: selectedRegion === '전체' ? themeColors.activeBackground : themeColors.defaultBackground,
+          color: selectedRegion === '전체' ? themeColors.activeColor : themeColors.defaultColor,
+          boxShadow: selectedRegion === '전체' || hoveredRegion === '전체' ? `0 8px 25px ${themeColors.shadowColor}` : '0 2px 4px rgba(0,0,0,0.1)',
           transform: selectedRegion === '전체' || hoveredRegion === '전체' ? 'translateY(-2px)' : 'translateY(0)',
         }}
       >
@@ -48,7 +57,7 @@ const KoreaMap = ({ selectedRegion, onRegionSelect }) => {
       <img 
         src="/SouthKoreaGreyMap.png" 
         alt="대한민국 지도" 
-        style={{ width: '100%', height: 'auto', display: 'block' }} 
+        style={{ width: '100%', height: 'auto', display: 'block', filter: 'opacity(0.7)' }} 
       />
 
       {Object.entries(regionPositions).map(([region, pos]) => {
@@ -66,19 +75,19 @@ const KoreaMap = ({ selectedRegion, onRegionSelect }) => {
               top: pos.top,
               left: pos.left,
               transform: `translate(-50%, -50%) translateY(${isActive || isHovered ? -3 : 0}px)`,
-              boxShadow: isActive || isHovered ? '0 8px 25px rgba(102, 126, 234, 0.4)' : '0 4px 8px rgba(0,0,0,0.2)',
+              boxShadow: isActive || isHovered ? `0 8px 25px ${themeColors.shadowColor}` : '0 4px 8px rgba(44, 31, 20, 0.3)',
               zIndex: isActive || isHovered ? 10 : 5,
               width: 'auto',
               height: 'auto',
               padding: '6px 12px',
-              border: '2px solid white',
+              border: `2px solid ${isActive ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)'}`,
               borderRadius: '16px',
               cursor: 'pointer',
               fontWeight: 'bold',
               fontSize: '14px',
               transition: 'all 0.2s ease',
-              background: isActive ? '#764ba2' : '#667eea',
-              color: 'white',
+              background: isActive ? themeColors.activeBackground : themeColors.primaryGradient,
+              color: isActive ? themeColors.activeColor : '#2C1F14',
               whiteSpace: 'nowrap',
             }}
           >
