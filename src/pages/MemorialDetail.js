@@ -19,6 +19,7 @@ const MemorialDetail = () => {
   });
   const [guestbookList, setGuestbookList] = useState([]);
   const [activeTab, setActiveTab] = useState('video'); // 'video' 또는 'photos'
+  const [videoUrl, setVideoUrl] = useState('');
   const [ribbonScrollIndex, setRibbonScrollIndex] = useState(0);
   const ribbonItemsPerView = 4; // 화면에 보이는 리본 개수
   const ribbonItemWidth = 220; // 리본 너비 + 간격
@@ -40,6 +41,9 @@ const MemorialDetail = () => {
         m => m.id === parseInt(id)
       );
       setMemorial(foundMemorial);
+      if (foundMemorial && foundMemorial.videoUrl) {
+        setVideoUrl(foundMemorial.videoUrl);
+      }
       
       // 더미 방명록 데이터
       setGuestbookList([
@@ -86,7 +90,7 @@ const MemorialDetail = () => {
           date: '2024-01-14'
         }
       ]);
-      
+
       setLoading(false);
     }, 1000);
   }, [id]);
@@ -408,26 +412,30 @@ const MemorialDetail = () => {
                       minHeight: '350px'
                     }}
                   >
-                    <div className="memorial-video-container" style={{
-                      width: '100%',
-                      aspectRatio: '16 / 9',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white'
-                    }}>
-                      <div className="text-center">
-                        <i className="fas fa-play-circle fa-3x mb-2" style={{ opacity: 0.8 }}></i>
-                        <h5>추모영상</h5>
-                        <p className="small">AI로 생성된 추모영상</p>
-                        <Button variant="light">
-                          <i className="fas fa-play me-2"></i>
-                          재생하기
-                        </Button>
-                      </div>
-                    </div>
+                    {videoUrl ? (
+                        <video src={videoUrl} controls style={{ width: '100%', borderRadius: '12px' }} />
+                    ) : (
+                        <div className="memorial-video-container" style={{
+                          width: '100%',
+                          aspectRatio: '16 / 9',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          borderRadius: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white'
+                        }}>
+                          <div className="text-center">
+                            <i className="fas fa-play-circle fa-3x mb-2" style={{ opacity: 0.8 }}></i>
+                            <h5>추모영상</h5>
+                            <p className="small">AI로 생성된 추모영상</p>
+                            <Button variant="light">
+                              <i className="fas fa-play me-2"></i>
+                              재생하기
+                            </Button>
+                          </div>
+                        </div>
+                    )}
                   </div>
 
                   {/* 사진첩 콘텐츠 */}
@@ -753,52 +761,20 @@ const MemorialDetail = () => {
             </Card.Header>
             <Card.Body className="p-4" style={{ maxHeight: '500px', overflowY: 'auto' }}>
               <div className="memorial-eulogy">
-                <div className="eulogy-title mb-3 text-center">
-                  <h6 className="text-primary mb-2" style={{ fontWeight: '600' }}>
-                    사랑하고 존경하는 우리 아버지, {memorial.name}님.
-                  </h6>
-                </div>
-                
-                <div className="eulogy-content" style={{ 
-                  lineHeight: '1.8', 
-                  fontSize: '0.9rem',
-                  color: '#495057'
-                }}>
-                  <p className="mb-3">
-                    늘 저희의 든든한 버팀목이 되어 주셨던 아버지를 이렇게 보내드려야 한다는 사실이 
-                    아직도 실감 나지 않습니다. 아버지는 저희에게 세상에서 가장 크고 단단한 산과 같은 분이셨습니다.
-                  </p>
-                  
-                  <p className="mb-3">
-                    언제나 말없이 묵묵히 가족을 위해 헌신하셨던 아버지의 깊은 사랑을 이제야 더 절실히 깨닫게 됩니다. 
-                    저희에게 보여주셨던 정직함과 성실함은 앞으로 저희가 세상을 살아가는 데 가장 큰 가르침이 될 것입니다.
-                  </p>
-                  
-                  <p className="mb-3">
-                    아버지, 이제 모든 무거운 짐을 내려놓으시고 하늘에서는 부디 평안히 쉬십시오. 
-                    저희에게 베풀어주신 크나큰 사랑, 가슴 깊이 간직하며 열심히 살아가겠습니다.
-                  </p>
-                  
-                  <div className="text-center mt-4">
-                    <p className="mb-0" style={{ 
-                      fontStyle: 'italic', 
-                      fontWeight: '500',
-                      color: '#6c757d'
+                {memorial.eulogy ? (
+                    <div className="eulogy-content" style={{ 
+                      lineHeight: '1.8', 
+                      fontSize: '0.9rem',
+                      color: '#495057',
+                      whiteSpace: 'pre-line'
                     }}>
-                      영원히 사랑하고 기억하겠습니다.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="eulogy-footer mt-4 pt-3" style={{ 
-                  borderTop: '1px solid #e9ecef',
-                  textAlign: 'right'
-                }}>
-                  <small className="text-muted">
-                    <i className="fas fa-calendar-alt me-1"></i>
-                    작성일: {new Date().toLocaleDateString('ko-KR')}
-                  </small>
-                </div>
+                        {memorial.eulogy}
+                    </div>
+                ) : (
+                    <div className="text-center text-muted">
+                        <p>등록된 추모사가 없습니다.</p>
+                    </div>
+                )}
               </div>
             </Card.Body>
           </Card>

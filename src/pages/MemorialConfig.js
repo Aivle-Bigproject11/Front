@@ -23,20 +23,19 @@ const MemorialConfig = () => {
     const [videoData, setVideoData] = useState({
         title: '',
         description: '',
-        photos: [],
         music: '',
         style: 'classic'
     });
+    const [slideshowPhotos, setSlideshowPhotos] = useState([]);
+    const [animatedPhoto, setAnimatedPhoto] = useState(null);
+    const [keywords, setKeywords] = useState(['', '', '', '', '']);
+    const [generatedVideoUrl, setGeneratedVideoUrl] = useState('');
+    const [isVideoLoading, setIsVideoLoading] = useState(false);
 
     // 추모사 생성 관련 상태
-    const [memorialText, setMemorialText] = useState({
-        relationship: '',
-        tone: 'formal',
-        length: 'medium',
-        keywords: '',
-        customText: '',
-        generatedText: ''
-    });
+    const [eulogyKeywords, setEulogyKeywords] = useState(['', '', '', '', '']);
+    const [generatedEulogy, setGeneratedEulogy] = useState('');
+    const [isEulogyLoading, setIsEulogyLoading] = useState(false);
 
     // 유가족 권한 확인 (실제로는 API로 확인)
     const [isFamilyMember, setIsFamilyMember] = useState(false);
@@ -117,13 +116,6 @@ const MemorialConfig = () => {
         });
     };
 
-    const handleMemorialTextChange = (e) => {
-        setMemorialText({
-            ...memorialText,
-            [e.target.name]: e.target.value
-        });
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -141,24 +133,29 @@ const MemorialConfig = () => {
                 alert('추모관 정보가 성공적으로 수정되었습니다.');
             } else if (activeTab === 'video') {
                 // 영상 생성 처리
-                alert('영상 생성이 시작되었습니다. 완료되면 알림을 드리겠습니다.');
+                setIsVideoLoading(true);
+                setGeneratedVideoUrl('');
+
+                // Simulate API call
+                setTimeout(() => {
+                    // 백엔드에서 받은 영상 URL이라고 가정
+                    const dummyVideoUrl = 'https://www.w3schools.com/html/mov_bbb.mp4';
+                    setGeneratedVideoUrl(dummyVideoUrl);
+                    setIsVideoLoading(false);
+                    alert('영상이 성공적으로 생성되었습니다.');
+                }, 3000);
             } else if (activeTab === 'memorial') {
                 // 추모사 생성 처리
-                if (memorialText.customText) {
-                    setMemorialText({
-                        ...memorialText,
-                        generatedText: memorialText.customText
-                    });
-                    alert('추모사가 저장되었습니다.');
-                } else {
-                    // AI 추모사 생성 시뮬레이션
-                    const aiGeneratedText = generateMemorialText();
-                    setMemorialText({
-                        ...memorialText,
-                        generatedText: aiGeneratedText
-                    });
+                setIsEulogyLoading(true);
+                setGeneratedEulogy('');
+
+                // Simulate AI eulogy generation
+                setTimeout(() => {
+                    const dummyEulogy = `삼가 故 ${memorial.name}님의 명복을 빕니다.\n\n${eulogyKeywords.filter(k => k).join(', ')}(와)과 함께한 소중한 추억들을 영원히 간직하겠습니다. 하늘에서 편안히 쉬시길 바랍니다.`;
+                    setGeneratedEulogy(dummyEulogy);
+                    setIsEulogyLoading(false);
                     alert('AI 추모사가 생성되었습니다.');
-                }
+                }, 2000);
             }
         } catch (error) {
             console.error('Error processing request:', error);
@@ -166,45 +163,7 @@ const MemorialConfig = () => {
         }
     };
 
-    // AI 추모사 생성 시뮬레이션
-    const generateMemorialText = () => {
-        const templates = {
-            formal: {
-                short: `삼가 故 ${memorial.name}님의 명복을 빕니다. 고인의 따뜻한 마음과 선한 행실을 기억하며, 영원히 그리워하겠습니다.`,
-                medium: `삼가 故 ${memorial.name}님의 명복을 빕니다. 
-                
-고인께서는 생전에 ${memorialText.keywords || '가족과 주변 사람들'}을 사랑으로 돌보시며, 언제나 따뜻한 미소로 우리 곁에 계셨습니다. 
-
-고인의 선한 마음과 아름다운 추억들을 가슴에 간직하며, 하늘에서 편안히 쉬시길 기원합니다.`,
-                long: `삼가 故 ${memorial.name}님의 명복을 빕니다.
-
-고인께서는 ${memorial.birthOfDate}에 태어나시어 ${memorial.age}세의 나이로 ${memorial.deceasedDate}에 하늘의 부르심을 받으셨습니다.
-
-생전에 ${memorialText.keywords || '가족과 주변 사람들'}을 깊이 사랑하시고, 항상 다른 사람을 먼저 생각하시는 따뜻한 마음의 소유자셨습니다. 고인의 선한 행실과 아름다운 인품은 우리 모두의 마음에 영원히 남을 것입니다.
-
-비록 육신은 우리 곁을 떠나셨지만, 고인께서 남겨주신 사랑과 추억은 영원히 우리와 함께할 것입니다. 하늘에서 편안히 쉬시며, 남은 가족들을 지켜보시길 기원합니다.
-
-다시 한 번 삼가 고인의 명복을 빕니다.`
-            },
-            casual: {
-                short: `${memorial.name}님, 좋은 곳에서 편히 쉬세요. 항상 기억하겠습니다.`,
-                medium: `${memorial.name}님과 함께했던 소중한 시간들을 잊지 않겠습니다. 
-
-언제나 밝은 모습으로 우리 곁에 계셨던 ${memorial.name}님의 따뜻한 미소와 ${memorialText.keywords || '친절함'}을 영원히 기억하겠습니다.
-
-좋은 곳에서 편안히 쉬시길 바랍니다.`,
-                long: `${memorial.name}님께,
-
-함께 보낸 시간들이 정말 소중했습니다. ${memorial.name}님의 ${memorialText.keywords || '밝은 성격과 따뜻한 마음'}은 주변 모든 사람들에게 큰 힘이 되었습니다.
-
-비록 이제는 만날 수 없지만, ${memorial.name}님과의 아름다운 추억들은 우리 마음속에 영원히 살아있을 것입니다. 그 추억들을 소중히 간직하며 살아가겠습니다.
-
-하늘에서 편안히 쉬시고, 언제나 우리를 지켜봐 주세요. 정말 감사했습니다.`
-            }
-        };
-
-        return templates[memorialText.tone][memorialText.length];
-    };
+    
 
     if (accessChecking || loading) {
         return (
@@ -510,106 +469,94 @@ const MemorialConfig = () => {
                                     <>
                                         <Alert variant="info" className="mb-4">
                                             <i className="fas fa-info-circle me-2"></i>
-                                            AI 기술을 활용하여 고인의 사진들로 감동적인 추모 영상을 제작합니다.
+                                            AI 기술을 활용하여 고인의 사진들로 감동적인 추모 영상을 제작합니다. 9장의 사진과 움직일 사진 1장을 선택하고, 키워드 5개를 입력해주세요.
                                         </Alert>
-                                        
+
                                         <Row>
                                             <Col md={6}>
                                                 <Form.Group className="mb-3">
                                                     <Form.Label className="fw-bold">
-                                                        <i className="fas fa-heading me-2"></i>영상 제목 *
-                                                    </Form.Label>
-                                                    <Form.Control
-                                                        type="text"
-                                                        name="title"
-                                                        value={videoData.title}
-                                                        onChange={handleVideoDataChange}
-                                                        placeholder={`${memorial.name}님을 기억하며`}
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
-                                                    />
-                                                </Form.Group>
-
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-music me-2"></i>배경음악
-                                                    </Form.Label>
-                                                    <Form.Select
-                                                        name="music"
-                                                        value={videoData.music}
-                                                        onChange={handleVideoDataChange}
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
-                                                    >
-                                                        <option value="">음악 선택</option>
-                                                        <option value="peaceful">평화로운 선율</option>
-                                                        <option value="classical">클래식</option>
-                                                        <option value="nature">자연의 소리</option>
-                                                        <option value="hymn">찬송가</option>
-                                                        <option value="custom">직접 업로드</option>
-                                                    </Form.Select>
-                                                </Form.Group>
-
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-palette me-2"></i>영상 스타일
-                                                    </Form.Label>
-                                                    <Form.Select
-                                                        name="style"
-                                                        value={videoData.style}
-                                                        onChange={handleVideoDataChange}
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
-                                                    >
-                                                        <option value="classic">클래식</option>
-                                                        <option value="modern">모던</option>
-                                                        <option value="vintage">빈티지</option>
-                                                        <option value="elegant">우아한</option>
-                                                    </Form.Select>
-                                                </Form.Group>
-                                            </Col>
-
-                                            <Col md={6}>
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-align-left me-2"></i>영상 설명
-                                                    </Form.Label>
-                                                    <Form.Control
-                                                        as="textarea"
-                                                        rows={3}
-                                                        name="description"
-                                                        value={videoData.description}
-                                                        onChange={handleVideoDataChange}
-                                                        placeholder="영상에 대한 간단한 설명을 입력하세요"
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
-                                                    />
-                                                </Form.Group>
-
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-images me-2"></i>사진 업로드
+                                                        <i className="fas fa-images me-2"></i>슬라이드쇼 사진 (9장)
                                                     </Form.Label>
                                                     <Form.Control
                                                         type="file"
                                                         multiple
                                                         accept="image/*"
+                                                        onChange={(e) => setSlideshowPhotos(Array.from(e.target.files).slice(0, 9))}
                                                         style={{ borderRadius: '8px', padding: '12px' }}
                                                     />
                                                     <Form.Text className="text-muted">
-                                                        여러 장의 사진을 선택할 수 있습니다. (최대 20장)
+                                                        영상에 포함될 9장의 사진을 선택하세요.
                                                     </Form.Text>
                                                 </Form.Group>
 
-                                                <div className="video-preview p-3" style={{
-                                                    background: '#f8f9fa',
-                                                    borderRadius: '8px',
-                                                    border: '2px dashed #dee2e6'
-                                                }}>
-                                                    <div className="text-center">
-                                                        <i className="fas fa-video fa-3x text-muted mb-2"></i>
-                                                        <p className="text-muted mb-0">영상 미리보기</p>
-                                                        <small className="text-muted">사진을 업로드하면 미리보기가 표시됩니다</small>
-                                                    </div>
-                                                </div>
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="fw-bold">
+                                                        <i className="fas fa-running me-2"></i>움직이는 사진 (1장)
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => setAnimatedPhoto(e.target.files[0])}
+                                                        style={{ borderRadius: '8px', padding: '12px' }}
+                                                    />
+                                                    <Form.Text className="text-muted">
+                                                        영상에서 움직이는 효과를 적용할 사진 1장을 선택하세요.
+                                                    </Form.Text>
+                                                </Form.Group>
+                                            </Col>
+
+                                            <Col md={6}>
+                                                <Form.Label className="fw-bold">
+                                                    <i className="fas fa-tags me-2"></i>키워드 (5개)
+                                                </Form.Label>
+                                                {keywords.map((keyword, index) => (
+                                                    <Form.Group className="mb-2" key={index}>
+                                                        <Form.Control
+                                                            type="text"
+                                                            value={keyword}
+                                                            onChange={(e) => {
+                                                                const newKeywords = [...keywords];
+                                                                newKeywords[index] = e.target.value;
+                                                                setKeywords(newKeywords);
+                                                            }}
+                                                            placeholder={`키워드 #${index + 1}`}
+                                                            style={{ borderRadius: '8px', padding: '12px' }}
+                                                        />
+                                                    </Form.Group>
+                                                ))}
                                             </Col>
                                         </Row>
+
+                                        {isVideoLoading && (
+                                            <div className="text-center my-4">
+                                                <div className="spinner-border" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p className="mt-2">영상을 생성 중입니다. 잠시만 기다려주세요...</p>
+                                            </div>
+                                        )}
+
+                                        {generatedVideoUrl && (
+                                            <div className="mt-4">
+                                                <h5 className="fw-bold">생성된 영상</h5>
+                                                <video src={generatedVideoUrl} controls style={{ width: '100%', borderRadius: '8px' }} />
+                                                <Button
+                                                    variant="success"
+                                                    className="mt-2"
+                                                    onClick={() => {
+                                                        const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
+                                                        if (memorialIndex !== -1) {
+                                                            dummyData.memorials._embedded.memorials[memorialIndex].videoUrl = generatedVideoUrl;
+                                                        }
+                                                        alert('영상이 등록되었습니다!');
+                                                        navigate(`/memorial/${id}`);
+                                                    }}
+                                                >
+                                                    영상 등록
+                                                </Button>
+                                            </div>
+                                        )}
                                     </>
                                 )}
 
@@ -618,129 +565,63 @@ const MemorialConfig = () => {
                                     <>
                                         <Alert variant="info" className="mb-4">
                                             <i className="fas fa-info-circle me-2"></i>
-                                            AI가 고인의 정보를 바탕으로 감동적인 추모사를 작성해드립니다.
+                                            AI가 고인을 기리는 감동적인 추모사를 작성해드립니다. 5개의 키워드를 입력하고 생성 버튼을 눌러주세요.
                                         </Alert>
-                                        
-                                        <Row>
-                                            <Col md={6}>
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-users me-2"></i>작성자와의 관계
-                                                    </Form.Label>
-                                                    <Form.Select
-                                                        name="relationship"
-                                                        value={memorialText.relationship}
-                                                        onChange={handleMemorialTextChange}
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
-                                                    >
-                                                        <option value="">관계 선택</option>
-                                                        <option value="family">가족</option>
-                                                        <option value="friend">친구</option>
-                                                        <option value="colleague">동료</option>
-                                                        <option value="acquaintance">지인</option>
-                                                    </Form.Select>
-                                                </Form.Group>
 
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-font me-2"></i>문체
-                                                    </Form.Label>
-                                                    <Form.Select
-                                                        name="tone"
-                                                        value={memorialText.tone}
-                                                        onChange={handleMemorialTextChange}
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
-                                                    >
-                                                        <option value="formal">격식있는 문체</option>
-                                                        <option value="casual">친근한 문체</option>
-                                                    </Form.Select>
-                                                </Form.Group>
+                                        <Form.Label className="fw-bold">
+                                            <i className="fas fa-tags me-2"></i>키워드 (5개)
+                                        </Form.Label>
+                                        {eulogyKeywords.map((keyword, index) => (
+                                            <Form.Group className="mb-2" key={index}>
+                                                <Form.Control
+                                                    type="text"
+                                                    value={keyword}
+                                                    onChange={(e) => {
+                                                        const newKeywords = [...eulogyKeywords];
+                                                        newKeywords[index] = e.target.value;
+                                                        setEulogyKeywords(newKeywords);
+                                                    }}
+                                                    placeholder={`키워드 #${index + 1}`}
+                                                    style={{ borderRadius: '8px', padding: '12px' }}
+                                                />
+                                            </Form.Group>
+                                        ))}
 
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-ruler me-2"></i>추모사 길이
-                                                    </Form.Label>
-                                                    <Form.Select
-                                                        name="length"
-                                                        value={memorialText.length}
-                                                        onChange={handleMemorialTextChange}
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
-                                                    >
-                                                        <option value="short">짧게 (2-3줄)</option>
-                                                        <option value="medium">보통 (1-2문단)</option>
-                                                        <option value="long">길게 (3-4문단)</option>
-                                                    </Form.Select>
-                                                </Form.Group>
+                                        {isEulogyLoading && (
+                                            <div className="text-center my-4">
+                                                <div className="spinner-border" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p className="mt-2">추모사를 생성 중입니다. 잠시만 기다려주세요...</p>
+                                            </div>
+                                        )}
 
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-tags me-2"></i>포함할 키워드
-                                                    </Form.Label>
-                                                    <Form.Control
-                                                        type="text"
-                                                        name="keywords"
-                                                        value={memorialText.keywords}
-                                                        onChange={handleMemorialTextChange}
-                                                        placeholder="예: 친절함, 따뜻한 마음, 봉사정신"
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
-                                                    />
-                                                    <Form.Text className="text-muted">
-                                                        쉼표로 구분하여 여러 키워드를 입력하세요
-                                                    </Form.Text>
-                                                </Form.Group>
-                                            </Col>
-
-                                            <Col md={6}>
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-edit me-2"></i>직접 작성 (선택사항)
-                                                    </Form.Label>
-                                                    <Form.Control
-                                                        as="textarea"
-                                                        rows={6}
-                                                        name="customText"
-                                                        value={memorialText.customText}
-                                                        onChange={handleMemorialTextChange}
-                                                        placeholder="추모사를 직접 작성하거나, AI 생성 후 수정할 수 있습니다"
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
-                                                    />
-                                                </Form.Group>
-
-                                                {memorialText.generatedText && (
-                                                    <div className="generated-text p-3" style={{
-                                                        background: '#f8f9fa',
-                                                        borderRadius: '8px',
-                                                        border: '1px solid #dee2e6'
-                                                    }}>
-                                                        <Form.Label className="fw-bold mb-2">
-                                                            <i className="fas fa-robot me-2"></i>AI 생성 추모사
-                                                        </Form.Label>
-                                                        <div style={{
-                                                            background: 'white',
-                                                            padding: '15px',
-                                                            borderRadius: '6px',
-                                                            border: '1px solid #e9ecef',
-                                                            whiteSpace: 'pre-line',
-                                                            lineHeight: '1.6'
-                                                        }}>
-                                                            {memorialText.generatedText}
-                                                        </div>
-                                                        <div className="mt-2">
-                                                            <Button
-                                                                variant="outline-primary"
-                                                                size="sm"
-                                                                onClick={() => setMemorialText({
-                                                                    ...memorialText,
-                                                                    customText: memorialText.generatedText
-                                                                })}
-                                                            >
-                                                                편집하기
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </Col>
-                                        </Row>
+                                        {generatedEulogy && (
+                                            <div className="mt-4">
+                                                <h5 className="fw-bold">생성된 추모사</h5>
+                                                <Form.Control
+                                                    as="textarea"
+                                                    rows={8}
+                                                    value={generatedEulogy}
+                                                    onChange={(e) => setGeneratedEulogy(e.target.value)}
+                                                    style={{ borderRadius: '8px', padding: '12px', whiteSpace: 'pre-line' }}
+                                                />
+                                                <Button
+                                                    variant="success"
+                                                    className="mt-2"
+                                                    onClick={() => {
+                                                        const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
+                                                        if (memorialIndex !== -1) {
+                                                            dummyData.memorials._embedded.memorials[memorialIndex].eulogy = generatedEulogy;
+                                                        }
+                                                        alert('추모사가 등록되었습니다!');
+                                                        navigate(`/memorial/${id}`);
+                                                    }}
+                                                >
+                                                    추모사 등록
+                                                </Button>
+                                            </div>
+                                        )}
                                     </>
                                 )}
 
