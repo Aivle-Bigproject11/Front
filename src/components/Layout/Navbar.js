@@ -3,6 +3,7 @@ import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstr
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; 
 import icon from '../../assets/logo/icon01.png';
+import { DoorOpen } from 'lucide-react';
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -58,13 +59,13 @@ const Navbar = () => {
 
   return (
     <BootstrapNavbar expand="lg" variant="dark" style={navbarStyle} sticky="top">
-      <Container>
+      <Container style={{ maxWidth: '1600px' }}>
         <BootstrapNavbar.Brand as={Link} to="/" style={{...linkStyle, fontWeight: 'bold'}} className="d-flex align-items-center">
            <img
             src={icon}
             width="30"
             height="30"
-            className="d-inline-block align-top me-2" // 이미지와 텍스트 사이에 여백을 줍니다.
+            className="d-inline-block align-top me-2" // 이미지와 텍스트 사이에 여백
             alt="Golden Gate logo"
           />
           Golden Gate
@@ -89,6 +90,7 @@ const Navbar = () => {
               size="sm" 
               onClick={handleLogout}
               style={logoutButtonStyle}
+              className="d-flex align-items-center" // 아이콘과 텍스트 정렬을 위해 추가
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
                 e.currentTarget.style.color = '#FFFFFF';
@@ -99,6 +101,7 @@ const Navbar = () => {
               }}
             >
               로그아웃
+              <DoorOpen size={16} className="ms-2" /> {/* 아이콘 추가 및 왼쪽 여백(ms-2) 설정 */}
             </Button>
           </Nav>
         </BootstrapNavbar.Collapse>
