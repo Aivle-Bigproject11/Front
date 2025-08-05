@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import menu01 from '../assets/images/menu01.png';
 import menu02 from '../assets/images/menu02.png';
@@ -14,17 +14,57 @@ const Home = () => {
     setAnimateCard(true);
   }, []);
 
+  // 카드 스타일 정의
+  const cardStyle = {
+    flex: '1 1 calc(20% - 16px)',
+    height: '350px',
+    background: 'rgba(255, 251, 235, 0.95)',
+    border: '1px solid rgba(184, 134, 11, 0.35)',
+    boxShadow: '0 8px 30px rgba(44, 31, 20, 0.15)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+  };
+
+  // 서비스별 버튼 스타일 정의
+  const buttonBaseStyle = {
+    color: '#FFFFFF',
+    border: 'none',
+    fontWeight: '700',
+    transition: 'all 0.3s ease',
+    textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)',
+    marginBottom: '1rem',
+  }
+
+  const redButtonStyle = { ...buttonBaseStyle, background: 'linear-gradient(135deg, #C62828, #A91E1E)' };
+  const orangeButtonStyle = { ...buttonBaseStyle, background: 'linear-gradient(135deg, #D58512, #B5651D)' };
+  const greenButtonStyle = { ...buttonBaseStyle, background: 'linear-gradient(135deg, #2E7D32, #1B5E20)' };
+  const blueButtonStyle = { ...buttonBaseStyle, background: 'linear-gradient(135deg, #1565C0, #0D47A1)' };
+  const purpleButtonStyle = { ...buttonBaseStyle, background: 'linear-gradient(135deg, #6A1B9A, #4A148C)' };
+
+
   return (
     <div className="page-wrapper" style={{
       '--navbar-height': '62px',
-      height: 'calc(100vh - var(--navbar-height))',
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      minHeight: 'calc(100vh - var(--navbar-height))',
+      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
       padding: '20px',
       boxSizing: 'border-box',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
+      {/* 배경 패턴 */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'url("data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23B8860B" fill-opacity="0.1"%3E%3Cpath d="M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+        opacity: 0.7
+      }}></div>
+
       <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{
         position: 'relative',
         zIndex: 1,
@@ -35,142 +75,149 @@ const Home = () => {
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
-        background: 'rgba(255, 255, 255, 0.7)',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255, 255, 255, 0.18)',
+        background: 'rgba(255, 251, 235, 0.85)',
+        boxShadow: '0 12px 40px rgba(44, 31, 20, 0.25)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(184, 134, 11, 0.25)',
         borderRadius: '20px',
-        transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
         opacity: animateCard ? 1 : 0,
-        transition: 'all 0.6s ease-out',
+        transition: 'opacity 0.6s ease-out',
         padding: '20px',
         gap: '20px',
         justifyContent: 'center',
       }}>
-        {/* Jumbotron content as a header */}
-        <div className="jumbotron bg-primary text-white p-4 rounded mb-4" style={{ flexShrink: 0 }}>
-          <h1 className="display-5">환영합니다!</h1>
-          <p className="lead">
-            추모관 서비스 플랫폼입니다. 아래 메뉴를 통해 다양한 기능을 이용하실 수 있습니다.
+        {/* Jumbotron 헤더 스타일 변경 */}
+        <div className="jumbotron p-3 rounded mb-4" style={{
+          flexShrink: 0,
+          background: 'linear-gradient(135deg, #3c2d20, #7a4e24)',
+          color: '#FFFBEB',
+          textShadow: '1px 1px 2px rgba(44, 31, 20, 0.5)'
+        }}>
+          <h1 className="display-5" style={{ fontWeight: '600' }}>환영합니다!</h1>
+          <p className="lead" style={{ fontWeight: '400' }}>
+            Golden Gate 상조회사 서비스 플랫폼입니다. 아래 메뉴를 통해 다양한 기능을 이용하실 수 있습니다.
           </p>
         </div>
 
-        {/* Menu Cards - arranged in a flex row, wrapping */}
+        {/* 메뉴 카드 - 골드 테마 적용 */}
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '20px',
           justifyContent: 'center',
           flexGrow: 1,
-          alignItems: 'center',
+          alignItems: 'stretch', 
         }}>
           {/* Card 1: 장례 서류 작성 */}
-          <Card style={{ flex: '1 1 calc(20% - 16px)', height: '350px' }}>
+          <Card style={cardStyle} className="menu-card">
             <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '80px' }}>
-                <img src={menu01} alt="장례 서류 작성" style={{ width: '60px', height: '60px', marginRight: '10px' }} />
-                <i className="fas fa-file-alt fa-2x text-primary"></i>
+              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px',  paddingTop: '50px' }}>
+                <img src={menu01} alt="장례 서류 작성" style={{ width: '100px', height: '100px' }} />
               </div>
               <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3">장례 서류 작성</Card.Title>
-                <Card.Text className="mb-3">
-                  - 템플릿을 통한 장례 관련 서류 자동 작성
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>장례 서류 작성</Card.Title>
+                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
+                  - 장례 관련 서류 자동 작성
                 </Card.Text>
               </div>
-              <Button as={Link} to="/menu1" variant="primary" className="w-75">
+              <Button as={Link} to="/menu1" style={redButtonStyle} className="w-75 service-button">
                 바로가기
               </Button>
             </Card.Body>
           </Card>
 
           {/* Card 2: 대시보드 */}
-          <Card style={{ flex: '1 1 calc(20% - 16px)', height: '350px' }}>
+          <Card style={cardStyle} className="menu-card">
             <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '80px' }}>
-                <img src={menu02} alt="대시보드" style={{ width: '60px', height: '60px', marginRight: '10px' }} />
-                <i className="fas fa-chart-bar fa-2x text-success"></i>
+              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px', paddingTop: '50px' }}>
+                <img src={menu02} alt="대시보드" style={{ width: '100px', height: '100px' }} />
               </div>
               <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3">대시보드</Card.Title>
-                <Card.Text className="mb-3">
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>대시보드</Card.Title>
+                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
                   - 추모관 현황 대시보드<br />
                   - 실시간 통계 및 분석
                 </Card.Text>
               </div>
-              <Button as={Link} to="/menu2" variant="success" className="w-75">
+              <Button as={Link} to="/menu2" style={orangeButtonStyle} className="w-75 service-button">
                 바로가기
               </Button>
             </Card.Body>
           </Card>
 
           {/* Card 3: 전환 서비스 추천 */}
-          <Card style={{ flex: '1 1 calc(20% - 16px)', height: '350px' }}>
+          <Card style={cardStyle} className="menu-card">
             <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '80px' }}>
-                <img src={menu03} alt="전환 서비스 추천" style={{ width: '60px', height: '60px', marginRight: '10px' }} />
-                <i className="fas fa-chart-line fa-2x text-info"></i>
+              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px', paddingTop: '50px'}}>
+                <img src={menu03} alt="전환 서비스 추천" style={{ width: '100px', height: '100px' }} />
               </div>
               <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3">전환 서비스 추천</Card.Title>
-                <Card.Text className="mb-3">
-                  - 정보 조회<br />
-                  - 맞춤 전환 서비스 메시지 생성
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>전환 서비스 추천</Card.Title>
+                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
+                  - 맞춤 전환 서비스 메시지 생성<br />
+                  - 고객 메시지 발송 기록 조회
                 </Card.Text>
               </div>
-              <Button as={Link} to="/menu3" variant="info" className="w-75">
+              <Button as={Link} to="/menu3" style={greenButtonStyle} className="w-75 service-button">
                 바로가기
               </Button>
             </Card.Body>
           </Card>
 
           {/* Card 4: 디지털 추모관 */}
-          <Card style={{ flex: '1 1 calc(20% - 16px)', height: '350px' }}>
+          <Card style={cardStyle} className="menu-card">
             <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '80px' }}>
-                <img src={menu04} alt="디지털 추모관" style={{ width: '60px', height: '60px', marginRight: '10px' }} />
-                <i className="fas fa-video fa-2x text-warning"></i>
+              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px', paddingTop: '50px' }}>
+                <img src={menu04} alt="디지털 추모관" style={{ width: '100px', height: '100px' }} />
               </div>
               <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3">디지털 추모관</Card.Title>
-                <Card.Text className="mb-3">
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>디지털 추모관</Card.Title>
+                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
                   - 추모관 관리<br />
                   - AI 추모영상/추모사 생성
                 </Card.Text>
               </div>
-              <Button as={Link} to="/menu4" variant="warning" className="w-75">
+              <Button as={Link} to="/menu4" style={blueButtonStyle} className="w-75 service-button">
                 바로가기
               </Button>
             </Card.Body>
           </Card>
 
           {/* Card 5: 고객 관리 */}
-          <Card style={{ flex: '1 1 calc(20% - 16px)', height: '350px' }}>
+          <Card style={cardStyle} className="menu-card">
             <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '80px' }}>
-                <img src={menu05} alt="고객 관리" style={{ width: '60px', height: '60px', marginRight: '10px' }} />
-                <i className="fas fa-users-cog fa-2x text-danger"></i>
+              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px', paddingTop: '50px' }}>
+                <img src={menu05} alt="고객 관리" style={{ width: '100px', height: '100px' }} />
               </div>
               <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3">고객 관리</Card.Title>
-                <Card.Text className="mb-3">
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>고객 관리</Card.Title>
+                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
                   - 고객 정보 조회<br />
                   - 고객 문의 관리
                 </Card.Text>
               </div>
-              <Button as={Link} to="/menu5" variant="danger" className="w-75">
+              <Button as={Link} to="/menu5" style={purpleButtonStyle} className="w-75 service-button">
                 바로가기
               </Button>
             </Card.Body>
           </Card>
         </div>
 
-        {/* Recent Announcements */}
+        {/* 팀 정보 카드 스타일 변경 */}
         <div style={{ flexShrink: 0, marginTop: '20px' }}>
-          <Card>
-            <Card.Header>
+          <Card style={{
+            background: 'rgba(255, 251, 235, 0.9)',
+            border: '1px solid rgba(184, 134, 11, 0.25)',
+          }}>
+            <Card.Header style={{
+              background: 'transparent',
+              borderBottom: '1px solid rgba(184, 134, 11, 0.2)',
+              color: '#2C1F14',
+              fontWeight: 'bold',
+            }}>
               <h5>Golden Gate Frontend Team</h5>
             </Card.Header>
-            <Card.Body>
+            <Card.Body style={{color: '#4A3728'}}>
               <ul>
                 <li>김시훈</li>
                 <li>양성현</li>
@@ -181,46 +228,44 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Global Styles from Menu2.js */}
+      {/* Global Styles 수정 */}
       <style jsx global>{`
-        @keyframes fadeInUp {
+        @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(30px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
           }
         }
 
         .animate-in {
-          animation: fadeInUp 0.6s ease-out;
+          animation: fadeIn 0.6s ease-out;
         }
 
-        /* Scrollbar styles for the menu cards container */
-        .dashboard-container > div:nth-child(2)::-webkit-scrollbar {
-          width: 6px;
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(44, 31, 20, 0.2);
         }
-        .dashboard-container > div:nth-child(2)::-webkit-scrollbar-track {
-          background: rgba(0,0,0,0.05);
-          border-radius: 10px;
+
+        .service-button:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-        .dashboard-container > div:nth-child(2)::-webkit-scrollbar-thumb {
-          background-color: rgba(108, 117, 125, 0.5);
-          border-radius: 10px;
-        }
+
 
         @media (max-width: 1200px) {
           .page-wrapper {
             height: auto;
             min-height: calc(100vh - var(--navbar-height));
+            overflow: auto;
           }
           .dashboard-container {
             flex-direction: column;
             height: auto;
           }
-          /* Adjust card flex basis for smaller screens if needed */
+          /* 카드 반응형 스타일 유지 */
           .dashboard-container > div:nth-child(2) > .card {
             flex: 1 1 100% !important;
             max-width: none !important;
