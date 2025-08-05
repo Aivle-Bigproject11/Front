@@ -89,7 +89,7 @@ const Home = () => {
         {/* Jumbotron 헤더 스타일 변경 */}
         <div className="jumbotron p-3 rounded mb-4" style={{
           flexShrink: 0,
-          background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+          background: 'linear-gradient(135deg, #3c2d20, #7a4e24)',
           color: '#FFFBEB',
           textShadow: '1px 1px 2px rgba(44, 31, 20, 0.5)'
         }}>
