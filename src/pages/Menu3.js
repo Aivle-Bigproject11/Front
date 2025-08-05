@@ -49,7 +49,6 @@ const Menu3 = () => {
     const [messagePreview, setMessagePreview] = useState('');
     const [showTransmissionCompletePopup, setShowTransmissionCompletePopup] = useState(false);
     const [showEditCompletePopup, setShowEditCompletePopup] = useState(false);
-    const [showResendCompletePopup, setShowResendCompletePopup] = useState(false); // 재전송 완료 팝업
 
     // === 데이터 로딩 및 필터링 로직 (useEffect) ===
 
@@ -214,11 +213,6 @@ ${detailedUrlText}`;
         setShowTransmissionCompletePopup(true);
     };
 
-    const handleResendMessage = (messageId) => {
-        console.log(`${messageId} 메시지 재전송`);
-        // 실제 재전송 API 호출 로직
-        setShowResendCompletePopup(true);
-    };
 
     // === 렌더링(JSX) ===
     if (loading) {
@@ -304,11 +298,7 @@ ${detailedUrlText}`;
                                                 ))}
                                             </div>
                                             <p style={{whiteSpace: 'pre-wrap', fontSize: '0.9rem'}}>{history.messageContent}</p>
-                                            <div className="text-end">
-                                                <Button className="btn-golden" size="sm" onClick={() => handleResendMessage(history.messageId)}>
-                                                    <Send size={16} className="me-1" /> 재전송
-                                                </Button>
-                                            </div>
+                                            
                                             <hr/>
                                         </div>
                                     ))
@@ -325,7 +315,6 @@ ${detailedUrlText}`;
             
             <Modal show={showTransmissionCompletePopup} onHide={() => setShowTransmissionCompletePopup(false)} centered><Modal.Header closeButton><Modal.Title>알림</Modal.Title></Modal.Header><Modal.Body>메시지 전송이 완료되었습니다.</Modal.Body><Modal.Footer><Button className="btn-golden" onClick={() => setShowTransmissionCompletePopup(false)}>확인</Button></Modal.Footer></Modal>
             <Modal show={showEditCompletePopup} onHide={() => setShowEditCompletePopup(false)} centered><Modal.Header closeButton><Modal.Title>알림</Modal.Title></Modal.Header><Modal.Body>메시지 수정이 완료되었습니다.</Modal.Body><Modal.Footer><Button className="btn-golden" onClick={() => setShowEditCompletePopup(false)}>확인</Button></Modal.Footer></Modal>
-            <Modal show={showResendCompletePopup} onHide={() => setShowResendCompletePopup(false)} centered><Modal.Header closeButton><Modal.Title>알림</Modal.Title></Modal.Header><Modal.Body>메시지 재전송이 완료되었습니다.</Modal.Body><Modal.Footer><Button className="btn-golden" onClick={() => setShowResendCompletePopup(false)}>확인</Button></Modal.Footer></Modal>
 
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
