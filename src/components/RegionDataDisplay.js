@@ -10,9 +10,9 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 // 데이터 처리 로직 시작
 const nationalRegionStatus = [
-  { level: '고위험 지역', color: 'rgba(183, 28, 28, 0.8)', regions: ['서울', '경기', '부산'] },
-  { level: '주의 지역', color: 'rgba(251, 192, 45, 0.8)', regions: ['대구', '인천', '충남'] },
-  { level: '안정 지역', color: 'rgba(51, 105, 30, 0.8)', regions: ['광주', '울산', '세종'] },
+  { level: '고위험 지역', color: 'rgba(183, 28, 28, 0.2)', regions: ['서울', '경기', '부산'] },
+  { level: '주의 지역', color: 'rgba(251, 192, 45, 0.2)', regions: ['대구', '인천', '충남'] },
+  { level: '안정 지역', color: 'rgba(51, 105, 30, 0.2)', regions: ['광주', '울산', '세종'] },
 ];
 
 const generateRegionalData = (baseData, multiplier, regionName) => {
@@ -177,8 +177,8 @@ const RegionDataDisplay = ({ region }) => {
   // 요약 카드 컴포넌트 
   const SummaryCard = ({ title, value }) => (
     <div className="text-center p-3" style={{ background: '#f8f9fa', borderRadius: '10px', border: '1px solid #e9ecef' }}>
-      <h6 style={{ color: '#6c757d', fontSize: '0.9rem', marginBottom: '8px' }}>{title}</h6>
-      <p className="fs-5 fw-bold mb-0" style={{ color: '#b59221ff' }}>{value}</p>
+      <h6 style={{ color: '#17191aff', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 'bold' }}>{title}</h6>
+      <p className="fs-5 fw-bold mb-0" style={{ color: '#7a5128ff' }}>{value}</p>
     </div>
   );
 
@@ -188,7 +188,6 @@ const RegionDataDisplay = ({ region }) => {
     borderRadius: '15px', 
     boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
   };
-  // ▲▲▲▲▲ 스타일 원복 ▲▲▲▲▲
 
   return (
     <div>
@@ -204,22 +203,29 @@ const RegionDataDisplay = ({ region }) => {
         <Row>
           {data.regionStatus.map((status, index) => (
             <Col md={4} key={index} className="mb-2">
-              <div className="p-3 text-white rounded d-flex flex-column" style={{ backgroundColor: status.color, height: '100%' }}>
-                <h6 className="mb-1" style={{ fontWeight: 'bold' }}>{status.level}</h6>
-                <p className="fs-6 mb-0">{status.regions.join(', ')}</p>
+              <div className="p-3 text-black rounded d-flex flex-column" style={{ backgroundColor: status.color, height: '100%' }}>
+                <h6 className="mb-1" style={{ fontWeight: 'bold', fontSize: '15px', color: '#505050ff' }}>{status.level}</h6>
+                <p className="mb-0" style={{ fontWeight: 'bold', fontSize: '20px' }}>{status.regions.join(', ')}</p>
               </div>
             </Col>
           ))}
+        </Row>
+      </div>
+
+    {/* 예측 요약 통계 */}
+      <div className="p-4 mb-4" style={cardStyle}>
+        <h5 className="mb-3" style={{ fontWeight: '600' }}>예측 요약 통계</h5>
+        <Row>
+          <Col md={3} className="mb-3"><SummaryCard title="평균 월별 예상" value={data.predictionSummary.avg} /></Col>
+          <Col md={3} className="mb-3"><SummaryCard title="월 최대 예상" value={data.predictionSummary.max} /></Col>
+          <Col md={3} className="mb-3"><SummaryCard title="월 최소 예상" value={data.predictionSummary.min} /></Col>
+          <Col md={3} className="mb-3"><SummaryCard title="향후 12개월 총 예상" value={data.predictionSummary.totalNext12} /></Col>
         </Row>
       </div>
       
       {/* 차트 영역 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <Row>
-          <Col md={12} className="mb-5">
-            <h5 style={{ fontWeight: '600' }}>전체 시계열 데이터</h5>
-            <Line options={chartOptions} data={longTermChartData} height={100} />
-          </Col>
           <Col md={12}>
             <h5 style={{ fontWeight: '600' }}>최근 24개월 실제 데이터 + 향후 12개월 예측</h5>
             <Line options={chartOptions} data={predictionChartData} height={100} />
@@ -249,16 +255,17 @@ const RegionDataDisplay = ({ region }) => {
         </Table>
       </div>
 
-      {/* 예측 요약 통계 */}
+        {/* 차트 영역 */}
       <div className="p-4 mb-4" style={cardStyle}>
-        <h5 className="mb-3" style={{ fontWeight: '600' }}>예측 요약 통계</h5>
         <Row>
-          <Col md={3} className="mb-3"><SummaryCard title="평균 월별 예상" value={data.predictionSummary.avg} /></Col>
-          <Col md={3} className="mb-3"><SummaryCard title="월 최대 예상" value={data.predictionSummary.max} /></Col>
-          <Col md={3} className="mb-3"><SummaryCard title="월 최소 예상" value={data.predictionSummary.min} /></Col>
-          <Col md={3} className="mb-3"><SummaryCard title="향후 12개월 총 예상" value={data.predictionSummary.totalNext12} /></Col>
+          <Col md={12} className="mb-5">
+            <h5 style={{ fontWeight: '600' }}>전체 시계열 데이터</h5>
+            <Line options={chartOptions} data={longTermChartData} height={100} />
+          </Col>
         </Row>
       </div>
+
+
     </div>
   );
 };
