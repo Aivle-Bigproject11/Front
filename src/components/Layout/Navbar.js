@@ -76,6 +76,9 @@ const Navbar = () => {
             <BootstrapNavbar.Text className="me-3">
               환영합니다, {user?.username || user?.name}님!
             </BootstrapNavbar.Text>
+            <Button variant="outline-light" size="sm" as={Link} to="/password-check" className="me-2 d-flex align-items-center">
+              Config
+            </Button>
             <Button variant="outline-light" size="sm" onClick={handleLogout}>
               로그아웃
             </Button>
