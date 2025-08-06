@@ -182,11 +182,11 @@ const Menu5 = () => {
         );
     }
 
-    return (
+   return (
         <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', padding: '20px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
             <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{width: '100%', maxWidth: '1600px', height: '100%', margin: '0 auto', display: 'flex', boxSizing: 'border-box', background: 'rgba(255, 251, 235, 0.95)', boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)', backdropFilter: 'blur(15px)', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '28px', padding: '20px', gap: '20px', overflow: 'hidden'}}>
                 {/* 좌측 필터링 UI 영역 */}
-                <div className="dashboard-left">
+                <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
                     <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px', flexShrink: 0 }}>고객 관리</h4>
                     <div className="sidebar-scroll-area" style={{ background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)', borderRadius: '15px', padding: '20px', flex: 1, overflowY: 'auto', minHeight: 0, border: '1px solid rgba(184, 134, 11, 0.2)' }}>
                         <div style={{width: '100px', height: '100px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)' }}><Search size={40} style={{ color: '#B8860B' }} /></div>
@@ -194,7 +194,7 @@ const Menu5 = () => {
                         <p style={{fontSize: '16px', lineHeight: '1.6', margin: 0, opacity: 0.7, textAlign: 'center', color: '#4A3728'}}>조건별로 고객을 검색하고<br/>상세 정보를 확인하세요.</p>
                         <hr className="my-4"/>
                         <Form>
-                            <Row className="g-3 mb-3 customer-id-name-row">
+                            <Row className="g-3 mb-3">
                                 <Col xs={6}><Form.Label style={{color: '#4A3728'}}>고객 고유번호</Form.Label><Form.Control name="customerId" value={filters.customerId} onChange={handleInputChange} placeholder="고유번호" /></Col>
                                 <Col xs={6}><Form.Label style={{color: '#4A3728'}}>이름</Form.Label><Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" /></Col>
                             </Row>
@@ -268,21 +268,7 @@ const Menu5 = () => {
 
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-           
-                 .dashboard-container { 
-                    opacity: 0;
-                    display: flex;
-                    overflow: hidden;
-                }
-                .dashboard-container.animate-in { animation: fadeIn 0.6s ease-out forwards; }
-
-                /* [추가] 좌측 패널 기본 스타일 */
-                .dashboard-left {
-                    flex: 0 1 400px;
-                    display: flex;
-                    flex-direction: column;
-                }
-
+                .dashboard-container { opacity: 0; }
                 .dashboard-container.animate-in { animation: fadeIn 0.6s ease-out forwards; }
                 .content-scroll-area::-webkit-scrollbar,
                 .sidebar-scroll-area::-webkit-scrollbar { width: 6px; }
@@ -306,7 +292,7 @@ const Menu5 = () => {
                     box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
                 }
 
-                /* 조회 버튼 스타일 */
+                /* [추가] 조회 버튼 스타일 */
                 .btn-search {
                     width: 100%;
                     margin-top: 20px;
@@ -334,6 +320,42 @@ const Menu5 = () => {
                 .btn-search:active {
                     transform: translateY(0);
                     box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+                }
+                    
+                /* 반응형 레이아웃 */
+                @media (max-width: 1200px) {
+                    .page-wrapper {
+                        height: auto !important;
+                        min-height: calc(100vh - var(--navbar-height));
+                        align-items: flex-start !important;
+                    }
+                    .dashboard-container {
+                        flex-direction: column;
+                        height: auto !important;
+                        overflow: visible;
+                    }
+                    .dashboard-left {
+                        flex: 1 1 auto; /* 세로로 쌓일 때 너비 제약을 해제하고 전체 너비를 차지하도록 함 */
+                        margin-bottom: 20px;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .dashboard-container {
+                        padding: 10px;
+                        gap: 15px;
+                    }
+                    .customer-id-name-row {
+                        flex-direction: column;
+                    }
+                    .customer-id-name-row > .col-6 {
+                        width: 100%;
+                        padding-left: 12px;
+                        padding-right: 12px;
+                    }
+                     .customer-id-name-row > .col-6:first-of-type {
+                        margin-bottom: 1rem;
+                    }
                 }
             `}</style>
         </div>
