@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Form, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import { dummyData } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -190,14 +190,30 @@ const MemorialConfig = () => {
 
     if (accessChecking || loading) {
         return (
-            <Container className="mt-4">
-                <div className="text-center">
-                    <div className="spinner-border" role="status">
+            <div className="page-wrapper" style={{
+                '--navbar-height': '62px',
+                height: 'calc(100vh - var(--navbar-height))',
+                background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
+                <div style={{
+                    position: 'absolute',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'url("data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23B8860B\' fill-opacity=\'0.12\'%3E%3Cpath d=\'M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+                    opacity: 0.7
+                }}></div>
+                <div className="text-center" style={{ position: 'relative', zIndex: 1 }}>
+                    <div className="spinner-border" role="status" style={{ color: '#b8860b' }}>
                         <span className="visually-hidden">Loading...</span>
                     </div>
-                    <p className="mt-2">권한 확인 및 데이터 로드 중...</p>
+                    <p className="mt-2" style={{ color: '#2C1F14', fontWeight: '600' }}>권한 확인 및 데이터 로드 중...</p>
                 </div>
-            </Container>
+            </div>
         );
     }
 
@@ -221,17 +237,36 @@ const MemorialConfig = () => {
     }
 
     return (
-        <Container className="mt-4">
+        <div className="page-wrapper" style={{
+            '--navbar-height': '62px',
+            minHeight: 'calc(100vh - var(--navbar-height))',
+            background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+            padding: '20px',
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
+            {/* 배경 패턴 */}
+            <div style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                background: 'url("data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23B8860B\' fill-opacity=\'0.12\'%3E%3Cpath d=\'M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+                opacity: 0.7
+            }}></div>
+            
+            <Container className="mt-4" style={{ position: 'relative', zIndex: 1 }}>
             {/* 헤더 섹션 */}
             <Row className="mb-4">
                 <Col>
                     <div className="config-header-section p-4" style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        borderRadius: '15px',
-                        color: 'white'
+                        background: 'rgba(255, 251, 235, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(184, 134, 11, 0.25)',
+                        boxShadow: '0 8px 32px rgba(44, 31, 20, 0.15)',
+                        color: '#2C1F14'
                     }}>
                         <Button
-                            variant="light"
+                            variant="outline-secondary"
                             size="sm"
                             onClick={() => {
                                 if (isUserAccess) {
@@ -241,16 +276,29 @@ const MemorialConfig = () => {
                                 }
                             }}
                             className="mb-3"
+                            style={{
+                                borderRadius: '12px',
+                                padding: '8px 16px',
+                                border: '1px solid rgba(184, 134, 11, 0.3)',
+                                color: '#B8860B',
+                                display: 'flex',
+                                alignItems: 'center'
+                            }}
                         >
                             <i className="fas fa-arrow-left me-2"></i>
                             추모관으로 돌아가기
                         </Button>
 
-                        <h1 className="mb-2" style={{ fontWeight: '700' }}>
-                            <i className="fas fa-edit me-3"></i>
+                        <h1 className="mb-2" style={{ 
+                            fontWeight: '700',
+                            background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent'
+                        }}>
+                            <i className="fas fa-edit me-3" style={{ color: '#B8860B' }}></i>
                             추모관 관리
                         </h1>
-                        <p className="lead mb-0">
+                        <p className="lead mb-0" style={{ color: '#4A3728', fontSize: '1.1rem' }}>
                             {memorial.name}님의 추모관을 관리할 수 있습니다
                         </p>
                     </div>
@@ -260,10 +308,16 @@ const MemorialConfig = () => {
             {/* 권한 안내 */}
             <Row className="mb-4">
                 <Col>
-                    <Alert variant="info">
-                        <i className="fas fa-info-circle me-2"></i>
+                    <div style={{
+                        background: 'rgba(184, 134, 11, 0.08)',
+                        border: '1px solid rgba(184, 134, 11, 0.2)',
+                        borderRadius: '16px',
+                        padding: '20px',
+                        color: '#2C1F14'
+                    }}>
+                        <i className="fas fa-info-circle me-2" style={{ color: '#B8860B' }}></i>
                         이 페이지는 유가족 또는 관리자만 접근 가능합니다. 추모관의 기본 정보 수정, 영상 생성, 추모사 생성 기능을 이용할 수 있습니다.
-                    </Alert>
+                    </div>
                 </Col>
             </Row>
 
@@ -272,27 +326,33 @@ const MemorialConfig = () => {
                 <Col>
                     <div className="config-tabs" style={{
                         display: 'flex',
-                        background: '#f8f9fa',
-                        borderRadius: '12px',
-                        padding: '6px',
-                        gap: '4px'
+                        background: 'rgba(255, 251, 235, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: '20px',
+                        padding: '8px',
+                        gap: '6px',
+                        border: '1px solid rgba(184, 134, 11, 0.2)',
+                        boxShadow: '0 4px 20px rgba(44, 31, 20, 0.08)'
                     }}>
                         <button 
                             className={`config-tab ${activeTab === 'basic' ? 'active' : ''}`}
                             onClick={() => setActiveTab('basic')}
                             style={{
                                 flex: 1,
-                                padding: '12px 20px',
+                                padding: '16px 20px',
                                 border: 'none',
-                                borderRadius: '8px',
+                                borderRadius: '14px',
                                 background: activeTab === 'basic' 
-                                    ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+                                    ? 'linear-gradient(135deg, #B8860B, #CD853F)' 
                                     : 'transparent',
-                                color: activeTab === 'basic' ? 'white' : '#6c757d',
+                                color: activeTab === 'basic' ? 'white' : '#4A3728',
                                 fontWeight: '600',
                                 fontSize: '16px',
                                 transition: 'all 0.3s ease',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                boxShadow: activeTab === 'basic' 
+                                    ? '0 4px 15px rgba(184, 134, 11, 0.3)' 
+                                    : 'none'
                             }}
                         >
                             <i className="fas fa-cog me-2"></i>
@@ -303,17 +363,20 @@ const MemorialConfig = () => {
                             onClick={() => setActiveTab('video')}
                             style={{
                                 flex: 1,
-                                padding: '12px 20px',
+                                padding: '16px 20px',
                                 border: 'none',
-                                borderRadius: '8px',
+                                borderRadius: '14px',
                                 background: activeTab === 'video' 
-                                    ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+                                    ? 'linear-gradient(135deg, #B8860B, #CD853F)' 
                                     : 'transparent',
-                                color: activeTab === 'video' ? 'white' : '#6c757d',
+                                color: activeTab === 'video' ? 'white' : '#4A3728',
                                 fontWeight: '600',
                                 fontSize: '16px',
                                 transition: 'all 0.3s ease',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                boxShadow: activeTab === 'video' 
+                                    ? '0 4px 15px rgba(184, 134, 11, 0.3)' 
+                                    : 'none'
                             }}
                         >
                             <i className="fas fa-video me-2"></i>
@@ -324,17 +387,20 @@ const MemorialConfig = () => {
                             onClick={() => setActiveTab('memorial')}
                             style={{
                                 flex: 1,
-                                padding: '12px 20px',
+                                padding: '16px 20px',
                                 border: 'none',
-                                borderRadius: '8px',
+                                borderRadius: '14px',
                                 background: activeTab === 'memorial' 
-                                    ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+                                    ? 'linear-gradient(135deg, #B8860B, #CD853F)' 
                                     : 'transparent',
-                                color: activeTab === 'memorial' ? 'white' : '#6c757d',
+                                color: activeTab === 'memorial' ? 'white' : '#4A3728',
                                 fontWeight: '600',
                                 fontSize: '16px',
                                 transition: 'all 0.3s ease',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                boxShadow: activeTab === 'memorial' 
+                                    ? '0 4px 15px rgba(184, 134, 11, 0.3)' 
+                                    : 'none'
                             }}
                         >
                             <i className="fas fa-pen-fancy me-2"></i>
@@ -347,18 +413,26 @@ const MemorialConfig = () => {
             {/* 탭 컨텐츠 */}
             <Row>
                 <Col>
-                    <Card style={{ borderRadius: '15px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                    <Card style={{ 
+                        borderRadius: '20px', 
+                        border: 'none', 
+                        boxShadow: '0 8px 32px rgba(44, 31, 20, 0.15)',
+                        background: 'rgba(255, 251, 235, 0.95)',
+                        backdropFilter: 'blur(10px)'
+                    }}>
                         <Card.Header style={{
-                            background: activeTab === 'basic' ? 'linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%)' :
-                                      activeTab === 'video' ? 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)' :
-                                      'linear-gradient(90deg, #f3e5f5 0%, #e1bee7 100%)',
-                            borderRadius: '15px 15px 0 0',
-                            padding: '1.5rem'
+                            background: activeTab === 'basic' ? 'linear-gradient(135deg, rgba(184, 134, 11, 0.1) 0%, rgba(205, 133, 63, 0.05) 100%)' :
+                                      activeTab === 'video' ? 'linear-gradient(135deg, rgba(184, 134, 11, 0.1) 0%, rgba(205, 133, 63, 0.05) 100%)' :
+                                      'linear-gradient(135deg, rgba(184, 134, 11, 0.1) 0%, rgba(205, 133, 63, 0.05) 100%)',
+                            borderRadius: '20px 20px 0 0',
+                            padding: '1.5rem',
+                            border: 'none',
+                            borderBottom: '1px solid rgba(184, 134, 11, 0.15)'
                         }}>
-                            <h5 className="mb-0">
-                                {activeTab === 'basic' && <><i className="fas fa-user-edit me-2"></i>추모관 기본 정보</>}
-                                {activeTab === 'video' && <><i className="fas fa-video me-2"></i>AI 추모 영상 생성</>}
-                                {activeTab === 'memorial' && <><i className="fas fa-pen-fancy me-2"></i>AI 추모사 생성</>}
+                            <h5 className="mb-0" style={{ color: '#2C1F14', fontWeight: '700' }}>
+                                {activeTab === 'basic' && <><i className="fas fa-user-edit me-2" style={{ color: '#B8860B' }}></i>추모관 기본 정보</>}
+                                {activeTab === 'video' && <><i className="fas fa-video me-2" style={{ color: '#B8860B' }}></i>AI 추모 영상 생성</>}
+                                {activeTab === 'memorial' && <><i className="fas fa-pen-fancy me-2" style={{ color: '#B8860B' }}></i>AI 추모사 생성</>}
                             </h5>
                         </Card.Header>
                         <Card.Body style={{ padding: '2rem' }}>
@@ -368,8 +442,8 @@ const MemorialConfig = () => {
                                     <Row>
                                         <Col md={6}>
                                             <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold">
-                                                    <i className="fas fa-user me-2"></i>성함 *
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-user me-2" style={{ color: '#B8860B' }}></i>성함 *
                                                 </Form.Label>
                                                 <Form.Control
                                                     type="text"
@@ -377,13 +451,19 @@ const MemorialConfig = () => {
                                                     value={formData.name}
                                                     onChange={handleInputChange}
                                                     required
-                                                    style={{ borderRadius: '8px', padding: '12px' }}
+                                                    style={{ 
+                                                        borderRadius: '12px', 
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
                                                 />
                                             </Form.Group>
 
                                             <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold">
-                                                    <i className="fas fa-birthday-cake me-2"></i>나이 *
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-birthday-cake me-2" style={{ color: '#B8860B' }}></i>나이 *
                                                 </Form.Label>
                                                 <Form.Control
                                                     type="number"
@@ -391,20 +471,32 @@ const MemorialConfig = () => {
                                                     value={formData.age}
                                                     onChange={handleInputChange}
                                                     required
-                                                    style={{ borderRadius: '8px', padding: '12px' }}
+                                                    style={{ 
+                                                        borderRadius: '12px', 
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
                                                 />
                                             </Form.Group>
 
                                             <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold">
-                                                    <i className="fas fa-venus-mars me-2"></i>성별 *
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-venus-mars me-2" style={{ color: '#B8860B' }}></i>성별 *
                                                 </Form.Label>
                                                 <Form.Select
                                                     name="gender"
                                                     value={formData.gender}
                                                     onChange={handleInputChange}
                                                     required
-                                                    style={{ borderRadius: '8px', padding: '12px' }}
+                                                    style={{ 
+                                                        borderRadius: '12px', 
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
                                                 >
                                                     <option value="">성별 선택</option>
                                                     <option value="MALE">남성</option>
@@ -413,8 +505,8 @@ const MemorialConfig = () => {
                                             </Form.Group>
 
                                             <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold">
-                                                    <i className="fas fa-id-card me-2"></i>고객ID *
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-id-card me-2" style={{ color: '#B8860B' }}></i>고객ID *
                                                 </Form.Label>
                                                 <Form.Control
                                                     type="number"
@@ -422,15 +514,21 @@ const MemorialConfig = () => {
                                                     value={formData.customerId}
                                                     onChange={handleInputChange}
                                                     required
-                                                    style={{ borderRadius: '8px', padding: '12px' }}
+                                                    style={{ 
+                                                        borderRadius: '12px', 
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
                                                 />
                                             </Form.Group>
                                         </Col>
 
                                         <Col md={6}>
                                             <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold">
-                                                    <i className="fas fa-calendar-alt me-2"></i>생년월일 *
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-calendar-alt me-2" style={{ color: '#B8860B' }}></i>생년월일 *
                                                 </Form.Label>
                                                 <Form.Control
                                                     type="date"
@@ -438,13 +536,19 @@ const MemorialConfig = () => {
                                                     value={formData.birthOfDate}
                                                     onChange={handleInputChange}
                                                     required
-                                                    style={{ borderRadius: '8px', padding: '12px' }}
+                                                    style={{ 
+                                                        borderRadius: '12px', 
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
                                                 />
                                             </Form.Group>
 
                                             <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold">
-                                                    <i className="fas fa-cross me-2"></i>별세일 *
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-cross me-2" style={{ color: '#B8860B' }}></i>별세일 *
                                                 </Form.Label>
                                                 <Form.Control
                                                     type="date"
@@ -452,13 +556,19 @@ const MemorialConfig = () => {
                                                     value={formData.deceasedDate}
                                                     onChange={handleInputChange}
                                                     required
-                                                    style={{ borderRadius: '8px', padding: '12px' }}
+                                                    style={{ 
+                                                        borderRadius: '12px', 
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
                                                 />
                                             </Form.Group>
 
                                             <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold">
-                                                    <i className="fas fa-image me-2"></i>프로필 이미지 URL
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-image me-2" style={{ color: '#B8860B' }}></i>프로필 이미지 URL
                                                 </Form.Label>
                                                 <Form.Control
                                                     type="url"
@@ -466,7 +576,13 @@ const MemorialConfig = () => {
                                                     value={formData.imageUrl}
                                                     onChange={handleInputChange}
                                                     placeholder="https://example.com/image.jpg"
-                                                    style={{ borderRadius: '8px', padding: '12px' }}
+                                                    style={{ 
+                                                        borderRadius: '12px', 
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
                                                 />
                                                 <Form.Text className="text-muted">
                                                     이미지 URL을 입력하시면 프로필 사진이 표시됩니다.
@@ -476,7 +592,7 @@ const MemorialConfig = () => {
                                             {/* 현재 이미지 미리보기 */}
                                             {formData.imageUrl && (
                                                 <div className="mb-3">
-                                                    <Form.Label className="fw-bold">미리보기</Form.Label>
+                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>미리보기</Form.Label>
                                                     <div className="text-center">
                                                         <img
                                                             src={formData.imageUrl}
@@ -502,23 +618,36 @@ const MemorialConfig = () => {
                                 {/* 영상 생성 탭 */}
                                 {activeTab === 'video' && (
                                     <>
-                                        <Alert variant="info" className="mb-4">
-                                            <i className="fas fa-info-circle me-2"></i>
+                                        <div style={{
+                                            background: 'rgba(184, 134, 11, 0.08)',
+                                            border: '1px solid rgba(184, 134, 11, 0.2)',
+                                            borderRadius: '16px',
+                                            padding: '20px',
+                                            color: '#2C1F14',
+                                            marginBottom: '24px'
+                                        }}>
+                                            <i className="fas fa-info-circle me-2" style={{ color: '#B8860B' }}></i>
                                             AI 기술을 활용하여 고인의 사진들로 감동적인 추모 영상을 제작합니다. 9장의 사진과 움직일 사진 1장을 선택하고, 키워드 5개를 입력해주세요.
-                                        </Alert>
+                                        </div>
 
                                         <Row>
                                             <Col md={6}>
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-images me-2"></i>슬라이드쇼 사진 (9장)
+                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                        <i className="fas fa-images me-2" style={{ color: '#B8860B' }}></i>슬라이드쇼 사진 (9장)
                                                     </Form.Label>
                                                     <Form.Control
                                                         type="file"
                                                         multiple
                                                         accept="image/*"
                                                         onChange={(e) => setSlideshowPhotos(Array.from(e.target.files).slice(0, 9))}
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
+                                                        style={{ 
+                                                            borderRadius: '12px', 
+                                                            padding: '12px 16px',
+                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                            background: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2C1F14'
+                                                        }}
                                                     />
                                                     <Form.Text className="text-muted">
                                                         영상에 포함될 9장의 사진을 선택하세요.
@@ -526,14 +655,20 @@ const MemorialConfig = () => {
                                                 </Form.Group>
 
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold">
-                                                        <i className="fas fa-running me-2"></i>움직이는 사진 (1장)
+                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                        <i className="fas fa-running me-2" style={{ color: '#B8860B' }}></i>움직이는 사진 (1장)
                                                     </Form.Label>
                                                     <Form.Control
                                                         type="file"
                                                         accept="image/*"
                                                         onChange={(e) => setAnimatedPhoto(e.target.files[0])}
-                                                        style={{ borderRadius: '8px', padding: '12px' }}
+                                                        style={{ 
+                                                            borderRadius: '12px', 
+                                                            padding: '12px 16px',
+                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                            background: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2C1F14'
+                                                        }}
                                                     />
                                                     <Form.Text className="text-muted">
                                                         영상에서 움직이는 효과를 적용할 사진 1장을 선택하세요.
@@ -542,8 +677,8 @@ const MemorialConfig = () => {
                                             </Col>
 
                                             <Col md={6}>
-                                                <Form.Label className="fw-bold">
-                                                    <i className="fas fa-tags me-2"></i>키워드 (5개)
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-tags me-2" style={{ color: '#B8860B' }}></i>키워드 (5개)
                                                 </Form.Label>
                                                 {keywords.map((keyword, index) => (
                                                     <Form.Group className="mb-2" key={index}>
@@ -556,7 +691,13 @@ const MemorialConfig = () => {
                                                                 setKeywords(newKeywords);
                                                             }}
                                                             placeholder={`키워드 #${index + 1}`}
-                                                            style={{ borderRadius: '8px', padding: '12px' }}
+                                                            style={{ 
+                                                                borderRadius: '12px', 
+                                                                padding: '12px 16px',
+                                                                border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                                background: 'rgba(255, 255, 255, 0.9)',
+                                                                color: '#2C1F14'
+                                                            }}
                                                         />
                                                     </Form.Group>
                                                 ))}
@@ -565,20 +706,27 @@ const MemorialConfig = () => {
 
                                         {isVideoLoading && (
                                             <div className="text-center my-4">
-                                                <div className="spinner-border" role="status">
+                                                <div className="spinner-border" role="status" style={{ color: '#B8860B' }}>
                                                     <span className="visually-hidden">Loading...</span>
                                                 </div>
-                                                <p className="mt-2">영상을 생성 중입니다. 잠시만 기다려주세요...</p>
+                                                <p className="mt-2" style={{ color: '#2C1F14' }}>영상을 생성 중입니다. 잠시만 기다려주세요...</p>
                                             </div>
                                         )}
 
                                         {generatedVideoUrl && (
                                             <div className="mt-4">
-                                                <h5 className="fw-bold">생성된 영상</h5>
-                                                <video src={generatedVideoUrl} controls style={{ width: '100%', borderRadius: '8px' }} />
+                                                <h5 className="fw-bold" style={{ color: '#2C1F14' }}>생성된 영상</h5>
+                                                <video src={generatedVideoUrl} controls style={{ width: '100%', borderRadius: '12px' }} />
                                                 <Button
-                                                    variant="success"
                                                     className="mt-2"
+                                                    style={{
+                                                        background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                        border: 'none',
+                                                        borderRadius: '12px',
+                                                        padding: '12px 24px',
+                                                        fontWeight: '600',
+                                                        boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
+                                                    }}
                                                     onClick={() => {
                                                         const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
                                                         if (memorialIndex !== -1) {
@@ -602,13 +750,20 @@ const MemorialConfig = () => {
                                 {/* 추모사 생성 탭 */}
                                 {activeTab === 'memorial' && (
                                     <>
-                                        <Alert variant="info" className="mb-4">
-                                            <i className="fas fa-info-circle me-2"></i>
+                                        <div style={{
+                                            background: 'rgba(184, 134, 11, 0.08)',
+                                            border: '1px solid rgba(184, 134, 11, 0.2)',
+                                            borderRadius: '16px',
+                                            padding: '20px',
+                                            color: '#2C1F14',
+                                            marginBottom: '24px'
+                                        }}>
+                                            <i className="fas fa-info-circle me-2" style={{ color: '#B8860B' }}></i>
                                             AI가 고인을 기리는 감동적인 추모사를 작성해드립니다. 5개의 키워드를 입력하고 생성 버튼을 눌러주세요.
-                                        </Alert>
+                                        </div>
 
-                                        <Form.Label className="fw-bold">
-                                            <i className="fas fa-tags me-2"></i>키워드 (5개)
+                                        <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                            <i className="fas fa-tags me-2" style={{ color: '#B8860B' }}></i>키워드 (5개)
                                         </Form.Label>
                                         {eulogyKeywords.map((keyword, index) => (
                                             <Form.Group className="mb-2" key={index}>
@@ -621,33 +776,53 @@ const MemorialConfig = () => {
                                                         setEulogyKeywords(newKeywords);
                                                     }}
                                                     placeholder={`키워드 #${index + 1}`}
-                                                    style={{ borderRadius: '8px', padding: '12px' }}
+                                                    style={{ 
+                                                        borderRadius: '12px', 
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
                                                 />
                                             </Form.Group>
                                         ))}
 
                                         {isEulogyLoading && (
                                             <div className="text-center my-4">
-                                                <div className="spinner-border" role="status">
+                                                <div className="spinner-border" role="status" style={{ color: '#B8860B' }}>
                                                     <span className="visually-hidden">Loading...</span>
                                                 </div>
-                                                <p className="mt-2">추모사를 생성 중입니다. 잠시만 기다려주세요...</p>
+                                                <p className="mt-2" style={{ color: '#2C1F14' }}>추모사를 생성 중입니다. 잠시만 기다려주세요...</p>
                                             </div>
                                         )}
 
                                         {generatedEulogy && (
                                             <div className="mt-4">
-                                                <h5 className="fw-bold">생성된 추모사</h5>
+                                                <h5 className="fw-bold" style={{ color: '#2C1F14' }}>생성된 추모사</h5>
                                                 <Form.Control
                                                     as="textarea"
                                                     rows={8}
                                                     value={generatedEulogy}
                                                     onChange={(e) => setGeneratedEulogy(e.target.value)}
-                                                    style={{ borderRadius: '8px', padding: '12px', whiteSpace: 'pre-line' }}
+                                                    style={{ 
+                                                        borderRadius: '12px', 
+                                                        padding: '16px', 
+                                                        whiteSpace: 'pre-line',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
                                                 />
                                                 <Button
-                                                    variant="success"
                                                     className="mt-2"
+                                                    style={{
+                                                        background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                        border: 'none',
+                                                        borderRadius: '12px',
+                                                        padding: '12px 24px',
+                                                        fontWeight: '600',
+                                                        boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
+                                                    }}
                                                     onClick={() => {
                                                         const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
                                                         if (memorialIndex !== -1) {
@@ -680,19 +855,26 @@ const MemorialConfig = () => {
                                                 navigate(`/memorial/${id}`);
                                             }
                                         }}
-                                        style={{ borderRadius: '8px', padding: '12px 24px' }}
+                                        style={{ 
+                                            borderRadius: '12px', 
+                                            padding: '12px 24px',
+                                            border: '2px solid rgba(184, 134, 11, 0.3)',
+                                            color: '#B8860B',
+                                            fontWeight: '600'
+                                        }}
                                     >
                                         <i className="fas fa-times me-2"></i>
                                         취소
                                     </Button>
                                     <Button
                                         type="submit"
-                                        variant="primary"
                                         style={{
-                                            borderRadius: '8px',
+                                            borderRadius: '12px',
                                             padding: '12px 24px',
-                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                            border: 'none'
+                                            background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
+                                            border: 'none',
+                                            fontWeight: '600',
+                                            boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
                                         }}
                                     >
                                         <i className={`fas ${
@@ -711,6 +893,7 @@ const MemorialConfig = () => {
                 </Col>
             </Row>
         </Container>
+        </div>
     );
 };
 

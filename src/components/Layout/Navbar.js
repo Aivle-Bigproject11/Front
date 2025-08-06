@@ -3,7 +3,7 @@ import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstr
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; 
 import icon from '../../assets/logo/icon01.png';
-import { DoorOpen } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -82,27 +82,13 @@ const Navbar = () => {
             <Nav.Link as={Link} to="/menu5" style={location.pathname.startsWith("/menu5") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>고객 관리</Nav.Link>
           </Nav>
           <Nav>
-            <BootstrapNavbar.Text className="me-3" style={welcomeTextStyle}>
-              환영합니다, {user?.username || user?.name}님!
-            </BootstrapNavbar.Text>
-            <Button 
-              variant="outline-light" 
-              size="sm" 
-              onClick={handleLogout}
-              style={logoutButtonStyle}
-              className="d-flex align-items-center" // 아이콘과 텍스트 정렬을 위해 추가
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.color = '#FFFFFF';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#FFFBEB';
-              }}
-            >
-              로그아웃
-              <DoorOpen size={16} className="ms-2" /> {/* 아이콘 추가 및 왼쪽 여백(ms-2) 설정 */}
-            </Button>
+            <span className="welcome-text">환영합니다, {user?.username || user?.name}님!</span>
+            <button onClick={() => navigate('/user-config')} className="lobby-logout-button user-config-button">
+                <User size={16} style={{ marginRight: '6px' }} />내 정보
+            </button>
+            <button onClick={handleLogout} className="lobby-logout-button">
+                <LogOut size={16} style={{ marginRight: '6px' }} />로그아웃
+            </button>
           </Nav>
         </BootstrapNavbar.Collapse>
       </Container>
