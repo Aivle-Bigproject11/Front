@@ -81,7 +81,7 @@ const Lobby = () => {
   return (
     <div className="lobby-wrapper" style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
       padding: '20px'
     }}>
       {/* 헤더 */}
@@ -97,12 +97,12 @@ const Lobby = () => {
         alignItems: 'center'
       }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Heart size={32} style={{ color: '#667eea', marginRight: '12px' }} />
+          <Heart size={32} style={{ color: '#B8860B', marginRight: '12px' }} />
           <h1 style={{
             margin: 0,
             fontSize: '2rem',
             fontWeight: '700',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
@@ -111,13 +111,13 @@ const Lobby = () => {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <div style={{
-            background: 'rgba(102, 126, 234, 0.1)',
+            background: 'rgba(184, 134, 11, 0.1)',
             padding: '8px 16px',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center'
           }}>
-            <User size={16} style={{ marginRight: '8px', color: '#667eea' }} />
+            <User size={16} style={{ marginRight: '8px', color: '#B8860B' }} />
             <span style={{ fontWeight: '600', color: '#333' }}>{user?.name || '사용자'}님</span>
           </div>
           <Button
@@ -159,9 +159,9 @@ const Lobby = () => {
             alignItems: 'center',
             marginBottom: '25px',
             paddingBottom: '20px',
-            borderBottom: '2px solid rgba(102, 126, 234, 0.1)'
+            borderBottom: '2px solid rgba(184, 134, 11, 0.1)'
           }}>
-            <Calendar size={24} style={{ color: '#667eea', marginRight: '12px' }} />
+            <Calendar size={24} style={{ color: '#B8860B', marginRight: '12px' }} />
             <h2 style={{
               margin: 0,
               fontSize: '1.5rem',
@@ -185,7 +185,7 @@ const Lobby = () => {
               alignItems: 'center',
               height: '300px'
             }}>
-              <Spinner animation="border" size="lg" style={{ color: '#667eea' }} />
+              <Spinner animation="border" size="lg" style={{ color: '#B8860B' }} />
               <span style={{ marginLeft: '15px', fontSize: '1.1rem' }}>추모관을 불러오는 중...</span>
             </div>
           ) : memorialHalls.length === 0 ? (
@@ -229,7 +229,7 @@ const Lobby = () => {
                 >
                   <div style={{
                     background: memorial.status === 'active' 
-                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      ? 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)'
                       : memorial.status === 'completed'
                       ? 'linear-gradient(135deg, #6c757d 0%, #495057 100%)'
                       : 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)',
@@ -278,7 +278,7 @@ const Lobby = () => {
                         <div 
                           className="fw-bold" 
                           style={{ 
-                            color: '#667eea', 
+                            color: '#B8860B', 
                             fontSize: '1rem', 
                             letterSpacing: '0.5px' 
                           }}
@@ -286,7 +286,7 @@ const Lobby = () => {
                           {memorial.joinCode}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', color: '#667eea' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B' }}>
                         <span style={{ fontSize: '0.9rem', fontWeight: '600', marginRight: '5px' }}>
                           입장하기
                         </span>
@@ -317,9 +317,9 @@ const Lobby = () => {
             alignItems: 'center',
             marginBottom: '25px',
             paddingBottom: '20px',
-            borderBottom: '2px solid rgba(102, 126, 234, 0.1)'
+            borderBottom: '2px solid rgba(184, 134, 11, 0.1)'
           }}>
-            <Search size={24} style={{ color: '#667eea', marginRight: '12px' }} />
+            <Search size={24} style={{ color: '#B8860B', marginRight: '12px' }} />
             <h3 style={{
               margin: 0,
               fontSize: '1.3rem',
@@ -354,8 +354,8 @@ const Lobby = () => {
                 outline: 'none'
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#667eea';
-                e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                e.target.style.borderColor = '#B8860B';
+                e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.1)';
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = '#e5e7eb';
@@ -371,18 +371,18 @@ const Lobby = () => {
               padding: '12px',
               borderRadius: '12px',
               fontWeight: '600',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
               border: 'none',
-              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+              boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
               transition: 'all 0.3s ease'
             }}
             onMouseEnter={(e) => {
               e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+              e.target.style.boxShadow = '0 6px 20px rgba(184, 134, 11, 0.4)';
             }}
             onMouseLeave={(e) => {
               e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+              e.target.style.boxShadow = '0 4px 15px rgba(184, 134, 11, 0.3)';
             }}
           >
             <Search size={16} style={{ marginRight: '8px' }} />
@@ -392,11 +392,11 @@ const Lobby = () => {
           <div style={{
             marginTop: '30px',
             padding: '20px',
-            background: 'rgba(102, 126, 234, 0.05)',
+            background: 'rgba(184, 134, 11, 0.05)',
             borderRadius: '12px',
-            border: '1px solid rgba(102, 126, 234, 0.1)'
+            border: '1px solid rgba(184, 134, 11, 0.1)'
           }}>
-            <h6 style={{ color: '#667eea', marginBottom: '10px', fontWeight: '600' }}>
+            <h6 style={{ color: '#B8860B', marginBottom: '10px', fontWeight: '600' }}>
               안내사항
             </h6>
             <ul style={{
