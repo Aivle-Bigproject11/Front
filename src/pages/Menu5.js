@@ -182,7 +182,7 @@ const Menu5 = () => {
         );
     }
 
-    return (
+   return (
         <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', padding: '20px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
             <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{width: '100%', maxWidth: '1600px', height: '100%', margin: '0 auto', display: 'flex', boxSizing: 'border-box', background: 'rgba(255, 251, 235, 0.95)', boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)', backdropFilter: 'blur(15px)', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '28px', padding: '20px', gap: '20px', overflow: 'hidden'}}>
                 {/* 좌측 필터링 UI 영역 */}
@@ -320,6 +320,42 @@ const Menu5 = () => {
                 .btn-search:active {
                     transform: translateY(0);
                     box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+                }
+                    
+                /* 반응형 레이아웃 */
+                @media (max-width: 1200px) {
+                    .page-wrapper {
+                        height: auto !important;
+                        min-height: calc(100vh - var(--navbar-height));
+                        align-items: flex-start !important;
+                    }
+                    .dashboard-container {
+                        flex-direction: column;
+                        height: auto !important;
+                        overflow: visible;
+                    }
+                    .dashboard-left {
+                        flex: 1 1 auto; /* 세로로 쌓일 때 너비 제약을 해제하고 전체 너비를 차지하도록 함 */
+                        margin-bottom: 20px;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .dashboard-container {
+                        padding: 10px;
+                        gap: 15px;
+                    }
+                    .customer-id-name-row {
+                        flex-direction: column;
+                    }
+                    .customer-id-name-row > .col-6 {
+                        width: 100%;
+                        padding-left: 12px;
+                        padding-right: 12px;
+                    }
+                     .customer-id-name-row > .col-6:first-of-type {
+                        margin-bottom: 1rem;
+                    }
                 }
             `}</style>
         </div>
