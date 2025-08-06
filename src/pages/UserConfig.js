@@ -51,15 +51,17 @@ const UserConfig = () => {
   };
 
   return (
-    <div className="login-page-wrapper" style={{
-      minHeight: '100vh',
+    <div className="page-wrapper" style={{
+      '--navbar-height': '62px',
+      height: 'calc(100vh - var(--navbar-height))',
       background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+      padding: '20px',
+      boxSizing: 'border-box',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
     }}>
       {/* 배경 패턴 */}
       <div style={{
@@ -68,30 +70,30 @@ const UserConfig = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'url("data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23B8860B" fill-opacity="0.12"%3E%3Cpath d="M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+        background: 'url("data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23B8860B" fill-opacity="0.1"%3E%3Cpath d="M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
         opacity: 0.7
       }}></div>
-      
-      <div className={`login-container ${animateCard ? 'animate-in' : ''}`} style={{
+
+      <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{
         position: 'relative',
         zIndex: 1,
         width: '100%',
         maxWidth: '940px',
-        minHeight: '640px',
+        height: '100%',
+        overflowY: 'auto',
         margin: '0 auto',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        flexDirection: 'column',
         boxSizing: 'border-box',
-        background: 'rgba(184, 134, 11, 0.18)',
-        boxShadow: '0 12px 40px rgba(44, 31, 20, 0.35)',
-        backdropFilter: 'blur(12px)',
-        padding: '24px',
-        borderRadius: '28px',
+        background: 'rgba(255, 251, 235, 0.85)',
+        boxShadow: '0 12px 40px rgba(44, 31, 20, 0.25)',
+        backdropFilter: 'blur(10px)',
         border: '1px solid rgba(184, 134, 11, 0.25)',
-        transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
+        borderRadius: '20px',
         opacity: animateCard ? 1 : 0,
-        transition: 'all 0.6s ease-out'
+        transition: 'opacity 0.6s ease-out',
+        padding: '20px',
+        gap: '20px',
       }}>
         <div className="login-card" style={{
           background: 'rgba(255, 251, 235, 0.98)',
@@ -99,11 +101,12 @@ const UserConfig = () => {
           boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)',
           backdropFilter: 'blur(15px)',
           overflow: 'hidden',
-          border: '2px solid rgba(184, 134, 11, 0.35)'
+          border: '2px solid rgba(184, 134, 11, 0.35)',
+          height: '100%'
         }}>
           <div className="login-content" style={{
             display: 'flex',
-            minHeight: '600px'
+            height: '100%'
           }}>
             {/* 왼쪽 이미지 영역 */}
             <div className="login-left" style={{
