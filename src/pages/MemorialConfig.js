@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Form, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import { dummyData } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -190,14 +190,30 @@ const MemorialConfig = () => {
 
     if (accessChecking || loading) {
         return (
-            <Container className="mt-4">
-                <div className="text-center">
-                    <div className="spinner-border" role="status">
+            <div className="page-wrapper" style={{
+                '--navbar-height': '62px',
+                height: 'calc(100vh - var(--navbar-height))',
+                background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
+                <div style={{
+                    position: 'absolute',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'url("data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23B8860B\' fill-opacity=\'0.12\'%3E%3Cpath d=\'M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+                    opacity: 0.7
+                }}></div>
+                <div className="text-center" style={{ position: 'relative', zIndex: 1 }}>
+                    <div className="spinner-border" role="status" style={{ color: '#b8860b' }}>
                         <span className="visually-hidden">Loading...</span>
                     </div>
-                    <p className="mt-2">권한 확인 및 데이터 로드 중...</p>
+                    <p className="mt-2" style={{ color: '#2C1F14', fontWeight: '600' }}>권한 확인 및 데이터 로드 중...</p>
                 </div>
-            </Container>
+            </div>
         );
     }
 
