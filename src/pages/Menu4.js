@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Modal, Form, Badge, Dropdown } from 'react-bootstrap';
+import { Row, Col, Card, Button, Modal, Form, Badge, Dropdown, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { dummyData } from '../services/api';
 
@@ -180,12 +180,10 @@ const Menu4 = () => {
           border: '1px solid rgba(184, 134, 11, 0.2)'
         }}>
           {loading ? (
-             <div className="text-center p-5">
-                <div className="spinner-border" role="status" style={{color: '#b8860b'}}>
-                    <span className="visually-hidden">Loading...</span>
-                </div>
-                <p className="mt-2" style={{color: '#2C1F14'}}>추모관 목록을 불러오는 중...</p>
-             </div>
+             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+              <Spinner animation="border" role="status" className="me-2" />
+              <span>추모관 목록을 불러오는 중...</span>
+            </div>
           ) : memorials.length === 0 ? (
             <div className="text-center p-5">
               <i className="fas fa-heart fa-3x mb-3" style={{color: '#b8860b'}}></i>
