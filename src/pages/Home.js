@@ -44,7 +44,7 @@ const Home = () => {
   return (
     <div className="page-wrapper" style={{
       '--navbar-height': '62px',
-      minHeight: 'calc(100vh - var(--navbar-height))',
+      height: 'calc(100vh - var(--navbar-height))',
       background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
       padding: '20px',
       boxSizing: 'border-box',
@@ -71,6 +71,7 @@ const Home = () => {
         width: '100%',
         maxWidth: '1600px',
         height: '100%',
+        overflowY: 'auto',
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
@@ -84,7 +85,6 @@ const Home = () => {
         transition: 'opacity 0.6s ease-out',
         padding: '20px',
         gap: '20px',
-        justifyContent: 'center',
       }}>
         {/* Jumbotron 헤더 스타일 변경 */}
         <div className="jumbotron p-3 rounded mb-4" style={{
@@ -254,16 +254,28 @@ const Home = () => {
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
+        .dashboard-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .dashboard-container::-webkit-scrollbar-track {
+            background: rgba(44, 31, 20, 0.08);
+            border-radius: 10px;
+        }
+        .dashboard-container::-webkit-scrollbar-thumb {
+            background-color: rgba(184, 134, 11, 0.6);
+            border-radius: 10px;
+            background-clip: content-box;
+        }
+        .dashboard-container::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(184, 134, 11, 0.8);
+        }
+
 
         @media (max-width: 1200px) {
           .page-wrapper {
-            height: auto;
-            min-height: calc(100vh - var(--navbar-height));
-            overflow: auto;
           }
           .dashboard-container {
             flex-direction: column;
-            height: auto;
           }
           /* 카드 반응형 스타일 유지 */
           .dashboard-container > div:nth-child(2) > .card {
