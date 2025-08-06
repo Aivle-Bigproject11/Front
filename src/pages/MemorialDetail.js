@@ -368,7 +368,7 @@ const MemorialDetail = () => {
         </div>
 
         {/* 메인 콘텐츠 영역 */}
-        <div className="memorial-detail-scroll-area" style={{ flex: '1', overflowY: 'auto', height: '100%' }}>
+        <div className="memorial-detail-scroll-area" style={{ flex: '1', overflowY: 'auto', overflowX: 'hidden', height: '100%' }}>
           <Row>
           {/* 좌측: 영상/사진첩 + 방명록 리본 */}
           <Col lg={8}>
