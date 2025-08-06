@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Form, Button, Modal } from 'react-bootstrap';
-import { Mail, Send } from 'lucide-react';
+import { Mail, Send, Search } from 'lucide-react';
 // [실제 백엔드 연동 시] axios가 설치되어 있는지 확인하세요. (npm install axios)
 import axios from 'axios';
 
@@ -38,6 +38,7 @@ const Menu3 = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [animateCard, setAnimateCard] = useState(false);
+    const [isSearched, setIsSearched] = useState(false); // 조회 버튼 클릭 여부 상태
 
     const [filters, setFilters] = useState({
         id: '', name: '', age: '', gender: [], disease: [], isMarried: [], hasChildren: []
@@ -52,14 +53,14 @@ const Menu3 = () => {
 
     // === 데이터 로딩 및 필터링 로직 (useEffect) ===
 
-    // 1. 최초 데이터 로딩
+    // 1. 최초 전체 고객 데이터 로딩 (화면에 표시는 안 함)
     useEffect(() => {
         const fetchInitialDataWithMock = () => {
             setLoading(true);
             setTimeout(() => {
                 try {
+                    // 전체 고객 데이터를 `allCustomers` 상태에만 저장
                     setAllCustomers(mockApiData);
-                    setFilteredCustomers(mockApiData);
                     setError(null);
                 } catch (err) {
                     setError("Mock 데이터 로딩에 실패했습니다.");
@@ -73,8 +74,39 @@ const Menu3 = () => {
         fetchInitialDataWithMock();
     }, []);
 
-    // 2. 필터링 로직
-    useEffect(() => {
+    // === 핸들러 및 헬퍼 함수 ===
+    const handleInputChange = (e) => setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const handleCheckboxChange = (e) => {
+        const { name, value, checked } = e.target;
+        setFilters(prev => {
+            const currentValues = prev[name] || [];
+            const newValues = checked ? [...currentValues, value] : currentValues.filter(v => v !== value);
+            return { ...prev, [name]: newValues };
+        });
+    };
+
+    // 2. 조회 버튼 클릭 시 필터링 수행
+    const handleSearch = () => {
+        // --- [실제 백엔드 연동 시] 여기서 API를 호출하여 필터링된 데이터를 가져옵니다. ---
+        /*
+        const fetchFilteredData = async () => {
+            setLoading(true);
+            try {
+                // GET 요청 시 params로 필터 객체를 전달
+                const response = await axios.get('/api/customers', { params: filters });
+                setFilteredCustomers(response.data);
+                setIsSearched(true);
+            } catch (err) {
+                setError("데이터 조회에 실패했습니다.");
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchFilteredData();
+        */
+
+        // --- [테스트용] Mock 데이터 필터링 로직 ---
         if (loading) return;
         let result = [...allCustomers];
         if (filters.id) { result = result.filter(c => String(c.customerId).toLowerCase().includes(filters.id.toLowerCase())); }
@@ -109,18 +141,11 @@ const Menu3 = () => {
             });
         }
         setFilteredCustomers(result);
-    }, [filters, allCustomers, loading]);
-
-    // === 핸들러 및 헬퍼 함수 ===
-    const handleInputChange = (e) => setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    const handleCheckboxChange = (e) => {
-        const { name, value, checked } = e.target;
-        setFilters(prev => {
-            const currentValues = prev[name] || [];
-            const newValues = checked ? [...currentValues, value] : currentValues.filter(v => v !== value);
-            return { ...prev, [name]: newValues };
-        });
+        setIsSearched(true); // 조회가 수행되었음을 표시
+        setSelectedCustomers([]); // 새로운 조회 시 선택 초기화
     };
+
+
     const handleCustomerSelect = (customerId) => setSelectedCustomers(prev => prev.includes(customerId) ? prev.filter(id => id !== customerId) : [...prev, customerId]);
     const handleSelectAll = (e) => setSelectedCustomers(e.target.checked ? filteredCustomers.map(c => c.customerId) : []);
     const getFamilyInfo = (customer) => `${customer.isMarried ? '기혼' : '미혼'}, ${customer.hasChildren ? '자녀 있음' : '자녀 없음'}`;
@@ -215,7 +240,7 @@ ${detailedUrlText}`;
 
 
     // === 렌더링(JSX) ===
-    if (loading) {
+    if (loading && !animateCard) { // animateCard가 false일 때만 전체 로딩 화면 표시
         return (
             <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
                 <div className="text-center" style={{ color: '#4A3728' }}>
@@ -236,18 +261,24 @@ ${detailedUrlText}`;
                 <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
                     <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px', flexShrink: 0 }}>전환서비스 추천</h4>
                     <div className="sidebar-scroll-area" style={{background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)', borderRadius: '15px', padding: '20px', flex: 1, overflowY: 'auto', minHeight: 0, border: '1px solid rgba(184, 134, 11, 0.2)'}}>
-                        <div style={{width: '120px', height: '120px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 30px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)'}}><Mail size={48} style={{ color: '#B8860B' }} /></div>
+                        <div style={{width: '100px', height: '100px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)'}}><Mail size={40} style={{ color: '#B8860B' }} /></div>
                         <h2 style={{fontWeight: '700', marginBottom: '15px', fontSize: '1.8rem', textAlign: 'center', color: '#2C1F14'}}>고객 조회</h2>
                         <p style={{fontSize: '16px', lineHeight: '1.6', margin: 0, opacity: 0.7, textAlign: 'center', color: '#4A3728'}}>조건별로 고객을 검색하고<br/>메시지를 발송하세요.</p>
                         <hr className="my-4"/>
                         <Form>
                             <Row className="g-3 mb-3"><Col xs={6}><Form.Label style={{color: '#4A3728'}}>고객 고유번호</Form.Label><Form.Control name="id" value={filters.id} onChange={handleInputChange} placeholder="고유번호" /></Col><Col xs={6}><Form.Label style={{color: '#4A3728'}}>이름</Form.Label><Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" /></Col></Row>
                             <Row className="g-3 mb-3"><Col xs={12}><Form.Label style={{color: '#4A3728'}}>나이대</Form.Label><Form.Select name="age" value={filters.age} onChange={handleInputChange}><option value="">전체</option><option value="20-29">20대</option><option value="30-39">30대</option><option value="40-49">40대</option><option value="50-59">50대</option><option value="60-150">60대 이상</option></Form.Select></Col></Row>
-                            <hr /><Form.Label style={{color: '#4A3728'}}>상세 조건</Form.Label>
+                            <hr className="my-4"/><Form.Label style={{color: '#4A3728'}}>상세 조건</Form.Label>
                             <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>성별:</strong><Form.Check inline type="checkbox" label="남" name="gender" value="남" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여" name="gender" value="여" onChange={handleCheckboxChange} /></div>
                             <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" onChange={handleCheckboxChange} /></div>
                             <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" onChange={handleCheckboxChange} /></div>
                             <div className="d-flex align-items-center"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" onChange={handleCheckboxChange} /></div>
+                            
+                            {/* 조회 버튼 추가 */}
+                            <Button className="btn-search" onClick={handleSearch}>
+                                <Search size={18} className="me-2" />
+                                고객 조회
+                            </Button>
                         </Form>
                     </div>
                 </div>
@@ -255,32 +286,52 @@ ${detailedUrlText}`;
                 {/* 오른쪽 메인 콘텐츠 */}
                 <div className="dashboard-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, paddingBottom: '10px' }}>
-                        <div className="d-flex align-items-center"><h5 style={{ fontWeight: '600', color: '#2C1F14', margin: 0 }}>고객 목록 ({filteredCustomers.length}명)</h5><Form.Check type="checkbox" label={`전체 선택 (${selectedCustomers.length}명)`} className="ms-3" checked={filteredCustomers.length > 0 && selectedCustomers.length === filteredCustomers.length} onChange={handleSelectAll}/></div>
+                        <div className="d-flex align-items-center">
+                           <h5 style={{ fontWeight: '600', color: '#2C1F14', margin: 0 }}>고객 목록 ({isSearched ? filteredCustomers.length : 0}명)</h5>
+                           {isSearched && filteredCustomers.length > 0 && (
+                             <Form.Check type="checkbox" label={`전체 선택 (${selectedCustomers.length}명)`} className="ms-3" checked={filteredCustomers.length > 0 && selectedCustomers.length === filteredCustomers.length} onChange={handleSelectAll}/>
+                           )}
+                        </div>
                         <Button className="btn-golden" onClick={handleGenerateMessage}>선택 고객 메시지 생성</Button>
                     </div>
                     
-                    <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
-                        {filteredCustomers.map(customer => (
-                            <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
-                                <Card.Body>
-                                    <Row className="align-items-center">
-                                        <Col xs="auto" className="pe-0"><Form.Check type="checkbox" checked={selectedCustomers.includes(customer.customerId)} onChange={() => handleCustomerSelect(customer.customerId)} /></Col>
-                                        <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.customerId}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
-                                        <Col>
-                                            <Row>
-                                                <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthOfDate} (만 {customer.age}세)</Col>
-                                                <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
-                                                <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
-                                                <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
-                                                <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
-                                                <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
-                                            </Row>
-                                        </Col>
-                                        <Col md="auto" className="text-center text-md-end"><Button variant="secondary" size="sm" onClick={() => handleHistoryClick(customer)}>발송기록</Button></Col>
-                                    </Row>
-                                </Card.Body>
-                            </Card>
-                        ))}
+                    <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px' }}>
+                        {!isSearched ? (
+                            <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
+                                <div>
+                                    <Search size={48} className="mb-3" />
+                                    <p>좌측 필터에서 조건을 선택하고<br/>'고객 조회' 버튼을 눌러주세요.</p>
+                                </div>
+                            </div>
+                        ) : filteredCustomers.length > 0 ? (
+                            filteredCustomers.map(customer => (
+                                <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
+                                    <Card.Body>
+                                        <Row className="align-items-center">
+                                            <Col xs="auto" className="pe-0"><Form.Check type="checkbox" checked={selectedCustomers.includes(customer.customerId)} onChange={() => handleCustomerSelect(customer.customerId)} /></Col>
+                                            <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.customerId}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
+                                            <Col>
+                                                <Row>
+                                                    <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthOfDate} (만 {customer.age}세)</Col>
+                                                    <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
+                                                    <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
+                                                    <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
+                                                    <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
+                                                    <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
+                                                </Row>
+                                            </Col>
+                                            <Col md="auto" className="text-center text-md-end"><Button variant="secondary" size="sm" onClick={() => handleHistoryClick(customer)}>발송기록</Button></Col>
+                                        </Row>
+                                    </Card.Body>
+                                </Card>
+                            ))
+                        ) : (
+                             <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
+                                <div>
+                                    <p>선택하신 조건에 맞는 고객 정보가 없습니다.</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="mt-3" style={{ flexShrink: 0 }}>
@@ -324,6 +375,36 @@ ${detailedUrlText}`;
                 .content-scroll-area::-webkit-scrollbar-thumb, .sidebar-scroll-area::-webkit-scrollbar-thumb, .card-body::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
                 .btn-golden { background: linear-gradient(135deg, #D4AF37, #F5C23E); border: none; color: #2C1F14; font-weight: 700; box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35); transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; }
                 .btn-golden:hover { background: linear-gradient(135deg, #CAA230, #E8B530); color: #2C1F14; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45); }
+                
+                /* 조회 버튼 스타일 추가 */
+                .btn-search {
+                    width: 100%;
+                    margin-top: 20px; /* 필터 항목과의 간격 */
+                    padding: 10px 15px;
+                    font-size: 15px;
+                    font-weight: 600;
+                    color: #fff;
+                    background: linear-gradient(135deg, #b8860b, #965a25);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 12px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+                    transition: all 0.3s ease;
+                    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .btn-search:hover {
+                    background: linear-gradient(135deg, #c9971c, #a86b36);
+                    box-shadow: 0 6px 20px rgba(44, 31, 20, 0.3);
+                    transform: translateY(-2px);
+                    color: #fff;
+                }
+                .btn-search:active {
+                    transform: translateY(0);
+                    box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+                }
             `}</style>
         </div>
     );

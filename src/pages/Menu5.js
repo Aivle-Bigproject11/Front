@@ -17,7 +17,6 @@ const mockApiData = [
     { customerId: 2005, name: '박영희', age: 42, phone: '010-5678-9012', job: '주부', address: '경기도 성남시', gender: '여', birthOfDate: '1982.05.10', hasChildren: false, isMarried: true, term: '2021.03.15 ~ 2026.03.14', hasDisease: false },
 ];
 
-
 const Menu5 = () => {
     const navigate = useNavigate();
 
@@ -27,22 +26,21 @@ const Menu5 = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [animateCard, setAnimateCard] = useState(false);
+    const [isSearched, setIsSearched] = useState(false); // 조회 버튼 클릭 여부 상태 추가
     const [filters, setFilters] = useState({
         customerId: '', name: '', age: '', gender: [], disease: [], isMarried: [], hasChildren: [],
     });
 
     // =================================================================
     // [테스트용 함수]: 가상으로 API 통신을 흉내 냅니다.
-    // 실제 백엔드 연동 시 이 함수 전체를 주석 처리하거나 제거하세요.
     // =================================================================
     const fetchInitialDataWithMock = () => {
-        console.log("API 요청 시작 (가상)");
         setLoading(true);
-        setError(null); // 재시도를 위해 에러 초기화
+        setError(null);
         setTimeout(() => {
             try {
                 setAllCustomers(mockApiData);
-                setFilteredCustomers(mockApiData);
+                setFilteredCustomers([]); // [수정] 처음에는 빈 배열로 설정
             } catch (err) {
                 setError("Mock 데이터 로딩에 실패했습니다.");
                 console.error(err);
@@ -53,24 +51,18 @@ const Menu5 = () => {
         }, 500);
     };
 
-    // === 데이터 로딩 및 필터링 로직 (useEffect) ===
-
+    // === 데이터 로딩 (useEffect) ===
     // 1. 최초 데이터 로딩: 컴포넌트가 처음 마운트될 때 한 번만 실행
     useEffect(() => {
-        
-        // =================================================================
         // [실제 백엔드 연동 시 사용할 함수]
-        // 아래 주석을 풀고, 바로 아래 있는 [테스트용 함수]를 주석 처리하세요.
-        // =================================================================
         /*
         const fetchAllCustomers = async () => {
             setLoading(true);
             setError(null);
             try {
-                // 실제 백엔드 API 엔드포인트에 요청
                 const response = await axios.get('/api/customers/all'); 
                 setAllCustomers(response.data);
-                setFilteredCustomers(response.data);
+                setFilteredCustomers([]); // [수정] 처음에는 빈 배열로 설정
             } catch (err) {
                 setError("데이터 로딩에 실패했습니다.");
                 console.error(err);
@@ -83,14 +75,30 @@ const Menu5 = () => {
 
         // --- 함수 호출 ---
         // 실제 연동 시: fetchAllCustomers();
-        // 테스트 시: fetchInitialDataWithMock();
         fetchInitialDataWithMock(); // 현재는 테스트용 함수를 호출합니다.
 
     }, []); // 빈 배열: 최초 1회만 실행
 
 
-    // 2. 필터링 로직: 이 부분은 테스트/실제 연동 시 동일하게 작동합니다.
-    useEffect(() => {
+    // === 핸들러 및 헬퍼 함수 (공통) ===
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleCheckboxChange = (e) => {
+        const { name, value, checked } = e.target;
+        setFilters(prev => {
+            const currentValues = prev[name] || [];
+            const newValues = checked
+                ? [...currentValues, value]
+                : currentValues.filter(v => v !== value);
+            return { ...prev, [name]: newValues };
+        });
+    };
+
+    // 조회 버튼 클릭 시 필터링을 수행하는 함수
+    const handleSearch = () => {
         if (loading) return;
 
         let result = [...allCustomers];
@@ -141,24 +149,7 @@ const Menu5 = () => {
         }
 
         setFilteredCustomers(result);
-    }, [filters, allCustomers, loading]);
-
-
-    // === 핸들러 및 헬퍼 함수 (공통) ===
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleCheckboxChange = (e) => {
-        const { name, value, checked } = e.target;
-        setFilters(prev => {
-            const currentValues = prev[name] || [];
-            const newValues = checked
-                ? [...currentValues, value]
-                : currentValues.filter(v => v !== value);
-            return { ...prev, [name]: newValues };
-        });
+        setIsSearched(true); // 조회가 수행되었음을 표시
     };
     
     const getFamilyInfo = (customer) => {
@@ -168,9 +159,7 @@ const Menu5 = () => {
     };
 
     // === 렌더링(JSX) (공통) ===
-    
-    // 로딩 중일 때 표시할 UI
-    if (loading) {
+    if (loading && !animateCard) {
         return (
             <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
                 <div className="text-center" style={{ color: '#4A3728' }}>
@@ -183,7 +172,6 @@ const Menu5 = () => {
         );
     }
 
-    // 에러 발생 시 표시할 UI
     if (error) {
         return (
             <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
@@ -201,8 +189,9 @@ const Menu5 = () => {
                 <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
                     <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px', flexShrink: 0 }}>고객 관리</h4>
                     <div className="sidebar-scroll-area" style={{ background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)', borderRadius: '15px', padding: '20px', flex: 1, overflowY: 'auto', minHeight: 0, border: '1px solid rgba(184, 134, 11, 0.2)' }}>
-                        <div style={{ width: '120px', height: '120px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 30px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)' }}><Search size={48} style={{ color: '#B8860B' }} /></div>
+                        <div style={{width: '100px', height: '100px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)' }}><Search size={40} style={{ color: '#B8860B' }} /></div>
                         <h2 style={{fontWeight: '700', marginBottom: '15px', fontSize: '1.8rem', textAlign: 'center', color: '#2C1F14'}}>고객 조회</h2>
+                        <p style={{fontSize: '16px', lineHeight: '1.6', margin: 0, opacity: 0.7, textAlign: 'center', color: '#4A3728'}}>조건별로 고객을 검색하고<br/>상세 정보를 확인하세요.</p>
                         <hr className="my-4"/>
                         <Form>
                             <Row className="g-3 mb-3">
@@ -217,6 +206,11 @@ const Menu5 = () => {
                             <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" onChange={handleCheckboxChange} /></div>
                             <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" onChange={handleCheckboxChange} /></div>
                             <div className="d-flex align-items-center"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" onChange={handleCheckboxChange} /></div>
+
+                            <Button className="btn-search" onClick={handleSearch}>
+                                <Search size={18} className="me-2" />
+                                고객 조회
+                            </Button>
                         </Form>
                     </div>
                 </div>
@@ -224,11 +218,20 @@ const Menu5 = () => {
                 {/* 우측 고객 목록 UI 영역 */}
                 <div className="dashboard-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, paddingBottom: '10px' }}>
-                        <h5 style={{ fontWeight: '600', color: '#2C1F14' }}>고객 목록 ({filteredCustomers.length}명)</h5>
+                        {/* 조회 후 결과 카운트 표시 */}
+                        <h5 style={{ fontWeight: '600', color: '#2C1F14' }}>고객 목록 ({isSearched ? filteredCustomers.length : 0}명)</h5>
                         <Button className="btn-golden" onClick={() => navigate('/menu5_2')}>고객 추가</Button>
                     </div>
                     <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
-                        {filteredCustomers.length > 0 ? (
+                        {/* 조회 여부에 따른 조건부 렌더링 */}
+                        {!isSearched ? (
+                            <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
+                                <div>
+                                    <Search size={48} className="mb-3" />
+                                    <p>좌측 필터에서 조건을 선택하고<br/>'고객 조회' 버튼을 눌러주세요.</p>
+                                </div>
+                            </div>
+                        ) : filteredCustomers.length > 0 ? (
                             filteredCustomers.map(customer => (
                                 <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
                                     <Card.Body>
@@ -255,7 +258,9 @@ const Menu5 = () => {
                                 </Card>
                             ))
                         ) : (
-                            <div className="text-center p-5">검색 결과가 없습니다.</div>
+                            <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
+                                <p>선택하신 조건에 맞는 고객 정보가 없습니다.</p>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -286,23 +291,39 @@ const Menu5 = () => {
                     transform: translateY(-2px);
                     box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
                 }
+
+                /* [추가] 조회 버튼 스타일 */
+                .btn-search {
+                    width: 100%;
+                    margin-top: 20px;
+                    padding: 10px 15px;
+                    font-size: 15px;
+                    font-weight: 600;
+                    color: #fff;
+                    background: linear-gradient(135deg, #b8860b, #965a25);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 12px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+                    transition: all 0.3s ease;
+                    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .btn-search:hover {
+                    background: linear-gradient(135deg, #c9971c, #a86b36);
+                    box-shadow: 0 6px 20px rgba(44, 31, 20, 0.3);
+                    transform: translateY(-2px);
+                    color: #fff;
+                }
+                .btn-search:active {
+                    transform: translateY(0);
+                    box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+                }
             `}</style>
         </div>
     );
 };
 
 export default Menu5;
-
-
-
-
-// 실제 백엔드 연동 방법 요약
-// 코드 상단의 mockApiData 변수를 제거합니다.
-
-// useEffect 내부의 [테스트용 함수]인 fetchInitialDataWithMock 전체를 주석 처리하거나 삭제합니다.
-
-// useEffect 내부의 [실제 백엔드 연동 시 사용할 함수]인 fetchAllCustomers의 주석을 해제합니다.
-
-// fetchAllCustomers 함수 내의 axios.get('/api/customers/all') 부분에 실제 백엔드 API 주소를 입력합니다.
-
-// useEffect의 마지막 부분에서 fetchInitialDataWithMock() 대신 fetchAllCustomers()를 호출하도록 수정합니다.
