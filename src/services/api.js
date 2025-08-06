@@ -70,6 +70,8 @@ export const dummyData = {
           gender: "FEMALE",
           imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=300&fit=crop&crop=face",
           customerId: 1001,
+          videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+          eulogy: '민서님, 당신과 함께한 모든 순간이 소중했습니다. 하늘에서 편안히 쉬세요.',
           _links: {
             memorial: { href: "http://localhost:8080/memorials/1" },
             self: { href: "http://localhost:8080/memorials/1" }

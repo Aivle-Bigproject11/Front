@@ -76,15 +76,7 @@ const Lobby = () => {
     return <Badge bg="warning">예정</Badge>;
   };
 
-  const getRoleBadge = (role) => {
-    const roleColors = {
-      '가족': 'primary',
-      '친구': 'info',
-      '지인': 'warning',
-      '동료': 'success'
-    };
-    return <Badge bg={roleColors[role] || 'secondary'}>{role}</Badge>;
-  };
+  
 
   return (
     <div className="lobby-wrapper" style={{
@@ -271,7 +263,6 @@ const Lobby = () => {
                         <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
                           {memorial.period}
                         </span>
-                        {getRoleBadge(memorial.role)}
                       </div>
                     </div>
                   </div>
@@ -282,11 +273,18 @@ const Lobby = () => {
                       justifyContent: 'space-between',
                       alignItems: 'center'
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <Users size={16} style={{ color: '#667eea', marginRight: '8px' }} />
-                        <span style={{ color: '#6c757d', fontSize: '0.9rem' }}>
-                          참여자 {memorial.participants}명
-                        </span>
+                      <div>
+                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>추모관 고유번호</small>
+                        <div 
+                          className="fw-bold" 
+                          style={{ 
+                            color: '#667eea', 
+                            fontSize: '1rem', 
+                            letterSpacing: '0.5px' 
+                          }}
+                        >
+                          {memorial.joinCode}
+                        </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', color: '#667eea' }}>
                         <span style={{ fontSize: '0.9rem', fontWeight: '600', marginRight: '5px' }}>
