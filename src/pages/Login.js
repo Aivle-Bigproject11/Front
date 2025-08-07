@@ -742,14 +742,14 @@ const Login = () => {
                   color: '#6B4423',
                   textDecoration: 'none',
                   fontSize: '12px',
-                  fontWeight: '500'
-                }}>개인정보처리방침</a>
+                  fontWeight: '750'
+                }}>Golden Gate 개인정보 처리방침</a>
                 <span style={{ margin: '0 10px', color: '#6B4423', fontSize: '12px' }}>|</span>
-                <a href="#" style={{
+                <a href="/termsOfService" style={{
                   color: '#6B4423',
                   textDecoration: 'none',
                   fontSize: '12px',
-                  fontWeight: '500'
+                  fontWeight: '750'
                 }}>이용약관</a>
               </div>
             </div>

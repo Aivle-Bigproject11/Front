@@ -28,7 +28,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import SignUp from './pages/SignUp';
 import UserConfig from './pages/UserConfig';
 import PasswordCheck from './pages/PasswordCheck';
-import PrivacyPolicy from './pages/privacyPolicy'; // 개인정보처리방침 컴포넌트 임포트
+import PrivacyPolicy from './pages/privacyPolicy';
+import TermsOfService from './pages/termsOfService';
 
 function App() {
     return (
@@ -42,6 +43,7 @@ function App() {
                         {/* 회원가입 페이지 경로추가 */}
                         <Route path="/signup" element={<SignUp />} />
                         <Route path="/privacyPolicy" element={<PrivacyPolicy />} />
+                        <Route path="/termsOfService" element={<TermsOfService />} />
                         {/* 유저용 페이지들 (네비게이션 바 없음) */}
                         <Route path="/lobby" element={<UserLayout><Lobby /></UserLayout>} />
                         <Route path="/user-memorial/:id" element={<UserLayout><MemorialDetail /></UserLayout>} />
