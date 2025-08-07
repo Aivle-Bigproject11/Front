@@ -259,7 +259,6 @@ const Lobby = () => {
                     transition: `all 0.6s ease-out ${index * 0.1}s`,
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
                   }}
-                  onClick={() => handleMemorialClick(memorial)}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-5px)';
                     e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.15)';
@@ -269,14 +268,16 @@ const Lobby = () => {
                     e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
                   }}
                 >
-                  <div style={{
-                    background: memorial.status === 'active' 
-                      ? 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)'
-                      : memorial.status === 'completed'
-                      ? 'linear-gradient(135deg, #6c757d 0%, #495057 100%)'
-                      : 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)',
-                    padding: '20px',
-                    color: 'white'
+                  <div 
+                    onClick={() => handleMemorialClick(memorial)}
+                    style={{
+                      background: memorial.status === 'active' 
+                        ? 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)'
+                        : memorial.status === 'completed'
+                        ? 'linear-gradient(135deg, #6c757d 0%, #495057 100%)'
+                        : 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)',
+                      padding: '20px',
+                      color: 'white'
                   }}>
                     <div style={{
                       display: 'flex',
@@ -309,7 +310,7 @@ const Lobby = () => {
                     </div>
                   </div>
                   
-                  <Card.Body style={{ padding: '20px' }}>
+                  <Card.Body onClick={() => handleMemorialClick(memorial)} style={{ padding: '20px' }}>
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -336,6 +337,22 @@ const Lobby = () => {
                       </div>
                     </div>
                   </Card.Body>
+                  <Card.Footer style={{ background: 'rgba(0,0,0,0.01)', borderTop: '1px solid rgba(0,0,0,0.05)', padding: '10px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: '#555' }}>
+                      <div style={{ fontWeight: '600'}}>서류 작성 상태</div>
+                      <div style={{ display: 'flex', gap: '10px'}}>
+                        <div title="부고장">
+                          {customerDocuments.find(doc => doc.name === memorial.name)?.documents.obituary ? <Check size={18} style={{ color: '#28a745' }} /> : <X size={18} style={{ color: '#dc3545' }} />}
+                        </div>
+                        <div title="일정표">
+                          {customerDocuments.find(doc => doc.name === memorial.name)?.documents.schedule ? <Check size={18} style={{ color: '#28a745' }} /> : <X size={18} style={{ color: '#dc3545' }} />}
+                        </div>
+                        <div title="사망신고서">
+                          {customerDocuments.find(doc => doc.name === memorial.name)?.documents.deathCertificate ? <Check size={18} style={{ color: '#28a745' }} /> : <X size={18} style={{ color: '#dc3545' }} />}
+                        </div>
+                      </div>
+                    </div>
+                  </Card.Footer>
                 </Card>
               ))}
             </div>
@@ -453,268 +470,6 @@ const Lobby = () => {
             </ul>
           </div>
         </div>
-      </div>
-
-      {/* 고인 문서 작성 현황 섹션 */}
-      <div className={`documents-section ${animateCard ? 'animate-in' : ''}`} style={{
-        background: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(10px)',
-        borderRadius: '20px',
-        padding: '30px',
-        marginTop: '30px',
-        maxWidth: '1400px',
-        margin: '30px auto 0',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-        transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
-        opacity: animateCard ? 1 : 0,
-        transition: 'all 0.6s ease-out 0.4s'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          marginBottom: '25px',
-          paddingBottom: '20px',
-          borderBottom: '2px solid rgba(184, 134, 11, 0.1)'
-        }}>
-          <FileText size={24} style={{ color: '#B8860B', marginRight: '12px' }} />
-          <h2 style={{
-            margin: 0,
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: '#333'
-          }}>
-            고인 문서 작성 현황
-          </h2>
-        </div>
-
-        {documentsLoading ? (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '200px'
-          }}>
-            <Spinner animation="border" size="lg" style={{ color: '#B8860B' }} />
-            <span style={{ marginLeft: '15px', fontSize: '1.1rem' }}>문서 현황을 불러오는 중...</span>
-          </div>
-        ) : customerDocuments.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            color: '#6c757d'
-          }}>
-            <FileText size={64} style={{ opacity: 0.3, marginBottom: '20px' }} />
-            <h4>문서 작성이 필요한 고인이 없습니다</h4>
-            <p>현재 유가족으로 등록된 고인의 문서 작성 현황이 없습니다.</p>
-          </div>
-        ) : (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}>
-            {customerDocuments.map((customer, index) => (
-              <div key={customer.id} style={{
-                background: 'rgba(253, 251, 243, 0.92)',
-                borderRadius: '16px',
-                overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(44, 31, 20, 0.1)',
-                border: '1px solid rgba(184, 134, 11, 0.2)',
-                display: 'flex',
-                minHeight: '140px',
-                position: 'relative',
-                transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
-                opacity: animateCard ? 1 : 0,
-                transition: `all 0.6s ease-out ${(index * 0.1) + 0.5}s`
-              }}>
-                <div style={{
-                  background: statusBackgrounds[customer.status] || defaultBackground,
-                  padding: '20px', 
-                  color: 'white', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  justifyContent: 'center', 
-                  minWidth: '200px', 
-                  position: 'relative'
-                }}>
-                  <div style={{ marginBottom: '12px' }}>
-                    <h4 style={{
-                      fontSize: '1.3rem', 
-                      fontWeight: '700', 
-                      margin: '0 0 6px 0',
-                      display: 'flex', 
-                      alignItems: 'center'
-                    }}>
-                      {customer.name}
-                      <Badge bg="light" text="dark" className="ms-2" style={{ fontSize: '0.7rem' }}>
-                        고인
-                      </Badge>
-                    </h4>
-                    {getDocumentStatusBadge(customer.status)}
-                  </div>
-                  
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.15)', 
-                    padding: '10px',
-                    borderRadius: '10px', 
-                    border: '1px solid rgba(255, 255, 255, 0.2)'
-                  }}>
-                    <p style={{ fontSize: '0.95rem', fontWeight: '600', margin: '0 0 2px 0' }}>
-                      향년 {customer.age}세
-                    </p>
-                    <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.9 }}>
-                      {customerUtils.formatDate(customer.funeralDate)}
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{
-                  flex: 1, 
-                  padding: '20px', 
-                  display: 'flex',
-                  flexDirection: 'column', 
-                  justifyContent: 'space-between'
-                }}>
-                  <div>
-                    <div style={{
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                      gap: '8px', 
-                      marginBottom: '12px'
-                    }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        padding: '8px', 
-                        background: 'rgba(184, 134, 11, 0.08)', 
-                        borderRadius: '8px', 
-                        border: '1px solid rgba(184, 134, 11, 0.15)' 
-                      }}>
-                        <Phone size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
-                        <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2C1F14' }}>
-                          {customer.phone}
-                        </span>
-                      </div>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        padding: '8px', 
-                        background: 'rgba(184, 134, 11, 0.08)', 
-                        borderRadius: '8px', 
-                        border: '1px solid rgba(184, 134, 11, 0.15)' 
-                      }}>
-                        <MapPin size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
-                        <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2C1F14' }}>
-                          {customer.location}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                        <FileText size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
-                        <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#2C1F14' }}>
-                          서류 작성 상태
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        {Object.entries(customer.documents).map(([docType, isCompleted]) => {
-                          const docNames = { obituary: '부고장', schedule: '일정표', deathCertificate: '사망신고서' };
-                          return (
-                            <Badge 
-                              key={docType} 
-                              bg={isCompleted ? 'success' : 'danger'}
-                              style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                padding: '4px 8px', 
-                                fontSize: '0.75rem' 
-                              }}
-                            >
-                              {isCompleted ? <Check size={12} style={{ marginRight: '3px' }} /> : <X size={12} style={{ marginRight: '3px' }} />}
-                              {docNames[docType]}
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  justifyContent: 'center',
-                  alignItems: 'center', 
-                  padding: '20px 16px',
-                  background: 'rgba(253, 251, 243, 0.92)',
-                  borderLeft: '1px solid rgba(184, 134, 11, 0.2)',
-                  minWidth: '140px', 
-                  gap: '8px'
-                }}>
-                  <Button
-                    onClick={() => {
-                      localStorage.setItem('selectedCustomer', JSON.stringify(customer));
-                      navigate('/menu1-2');
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '8px',
-                      fontSize: '0.85rem',
-                      fontWeight: '600',
-                      background: 'linear-gradient(135deg, #D4AF37, #F5C23E)',
-                      border: 'none',
-                      color: '#2C1F14',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'linear-gradient(135deg, #CAA230, #E8B530)';
-                      e.target.style.transform = 'translateY(-1px)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(184, 134, 11, 0.25)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'linear-gradient(135deg, #D4AF37, #F5C23E)';
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  >
-                    <FileText size={14} style={{ marginRight: '4px' }} />
-                    정보등록
-                  </Button>
-
-                  <Button 
-                    onClick={() => {
-                      localStorage.setItem('selectedCustomer', JSON.stringify(customer));
-                      navigate('/menu1-3');
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '8px',
-                      fontSize: '0.85rem',
-                      fontWeight: '600',
-                      backgroundColor: 'transparent',
-                      border: '1px solid #B8860B',
-                      color: '#B8860B',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = '#B8860B';
-                      e.target.style.color = 'white';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'transparent';
-                      e.target.style.color = '#B8860B';
-                    }}
-                  >
-                    <Users size={14} style={{ marginRight: '4px' }} />
-                    서류관리
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <style jsx global>{`
