@@ -33,6 +33,10 @@ const MemorialConfig = () => {
         music: '',
         style: 'classic'
     });
+    const [profileImageFile, setProfileImageFile] = useState(null);
+    const [profileImageTitle, setProfileImageTitle] = useState('');
+    const [profileImageDescription, setProfileImageDescription] = useState('');
+    const [imagePreviewUrl, setImagePreviewUrl] = useState('');
     const [slideshowPhotos, setSlideshowPhotos] = useState([]);
     const [animatedPhoto, setAnimatedPhoto] = useState(null);
     const [keywords, setKeywords] = useState(['', '', '', '', '']);
@@ -40,9 +44,14 @@ const MemorialConfig = () => {
     const [isVideoLoading, setIsVideoLoading] = useState(false);
 
     // 추모사 생성 관련 상태
-    const [eulogyKeywords, setEulogyKeywords] = useState(['', '', '', '', '']);
+    const [eulogyKeywords, setEulogyKeywords] = useState([]);
+    const [eulogyKeywordInput, setEulogyKeywordInput] = useState('');
     const [generatedEulogy, setGeneratedEulogy] = useState('');
     const [isEulogyLoading, setIsEulogyLoading] = useState(false);
+    const [basePrompt, setBasePrompt] = useState(
+        `- 고인의 삶과 성품을 존중하며 회고하는 내용이 포함되어야 합니다.\n- 너무 형식적이거나 과장되지 않게, 진정성이 느껴지도록 작성해주세요.\n- 듣는 이가 고인을 자연스럽게 떠올릴 수 있도록 구체적인 표현과 장면을 사용해주세요.\n- 마지막 문장은 고인을 떠나보내는 작별 인사 또는 평안을 비는 말로 마무리해주세요.`
+    );
+    const [isEditingPrompt, setIsEditingPrompt] = useState(false);
 
     // 유가족 권한 확인 (실제로는 API로 확인)
     const [isFamilyMember, setIsFamilyMember] = useState(false);
@@ -152,6 +161,18 @@ const MemorialConfig = () => {
                     customerId: parseInt(formData.customerId)
                 };
 
+                const data = new FormData();
+                data.append('profileImage', profileImageFile);
+                data.append('title', profileImageTitle);
+                data.append('description', profileImageDescription);
+                // Append other memorial data as needed
+                // for (const key in updatedMemorial) {
+                //     data.append(key, updatedMemorial[key]);
+                // }
+
+                // TODO: Implement actual API call
+                // await api.updateMemorial(id, data);
+
                 setMemorial(updatedMemorial);
                 alert('추모관 정보가 성공적으로 수정되었습니다.');
             } else if (activeTab === 'video') {
@@ -172,6 +193,16 @@ const MemorialConfig = () => {
                 setIsEulogyLoading(true);
                 setGeneratedEulogy('');
 
+                const eulogyPrompt = {
+                    keywords: eulogyKeywords.filter(k => k).join(', '),
+                    prompt: basePrompt
+                };
+
+                // TODO: 실제 API 호출로 교체
+                // memorialService.generateEulogy(eulogyPrompt);
+
+                console.log("추모사 생성 요청 데이터:", eulogyPrompt);
+
                 // Simulate AI eulogy generation
                 setTimeout(() => {
                     const dummyEulogy = `삼가 故 ${memorial.name}님의 명복을 빕니다.\n\n${eulogyKeywords.filter(k => k).join(', ')}(와)과 함께한 소중한 추억들을 영원히 간직하겠습니다. 하늘에서 편안히 쉬시길 바랍니다.`;
@@ -184,6 +215,17 @@ const MemorialConfig = () => {
             console.error('Error processing request:', error);
             alert('처리 중 오류가 발생했습니다.');
         }
+    };
+
+    const handleAddEulogyKeyword = () => {
+        if (eulogyKeywordInput && eulogyKeywords.length < 5 && !eulogyKeywords.includes(eulogyKeywordInput)) {
+            setEulogyKeywords([...eulogyKeywords, eulogyKeywordInput]);
+            setEulogyKeywordInput('');
+        }
+    };
+
+    const handleRemoveEulogyKeyword = (keywordToRemove) => {
+        setEulogyKeywords(eulogyKeywords.filter(keyword => keyword !== keywordToRemove));
     };
 
     
@@ -566,51 +608,98 @@ const MemorialConfig = () => {
                                                 />
                                             </Form.Group>
 
-                                            <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                    <i className="fas fa-image me-2" style={{ color: '#B8860B' }}></i>프로필 이미지 URL
-                                                </Form.Label>
-                                                <Form.Control
-                                                    type="url"
-                                                    name="imageUrl"
-                                                    value={formData.imageUrl}
-                                                    onChange={handleInputChange}
-                                                    placeholder="https://example.com/image.jpg"
-                                                    style={{ 
-                                                        borderRadius: '12px', 
-                                                        padding: '12px 16px',
-                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                        background: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2C1F14'
-                                                    }}
-                                                />
-                                                <Form.Text className="text-muted">
-                                                    이미지 URL을 입력하시면 프로필 사진이 표시됩니다.
-                                                </Form.Text>
-                                            </Form.Group>
+                                            <div style={{
+                                                border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                borderRadius: '16px',
+                                                padding: '20px',
+                                                background: 'rgba(255, 255, 255, 0.5)'
+                                            }}>
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                        <i className="fas fa-image me-2" style={{ color: '#B8860B' }}></i>프로필 사진
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files[0];
+                                                            if (file) {
+                                                                setProfileImageFile(file);
+                                                                setImagePreviewUrl(URL.createObjectURL(file));
+                                                            }
+                                                        }}
+                                                        style={{
+                                                            borderRadius: '12px',
+                                                            padding: '12px 16px',
+                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                            background: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2C1F14'
+                                                        }}
+                                                    />
+                                                </Form.Group>
 
-                                            {/* 현재 이미지 미리보기 */}
-                                            {formData.imageUrl && (
-                                                <div className="mb-3">
-                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>미리보기</Form.Label>
-                                                    <div className="text-center">
-                                                        <img
-                                                            src={formData.imageUrl}
-                                                            alt="프로필 미리보기"
-                                                            style={{
-                                                                width: '150px',
-                                                                height: '180px',
-                                                                objectFit: 'cover',
-                                                                borderRadius: '8px',
-                                                                border: '2px solid #e9ecef'
-                                                            }}
-                                                            onError={(e) => {
-                                                                e.target.style.display = 'none';
-                                                            }}
-                                                        />
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                        <i className="fas fa-heading me-2" style={{ color: '#B8860B' }}></i>사진 제목
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        value={profileImageTitle}
+                                                        onChange={(e) => setProfileImageTitle(e.target.value)}
+                                                        placeholder="사진의 제목을 입력하세요"
+                                                        style={{
+                                                            borderRadius: '12px',
+                                                            padding: '12px 16px',
+                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                            background: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2C1F14'
+                                                        }}
+                                                    />
+                                                </Form.Group>
+
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                        <i className="fas fa-align-left me-2" style={{ color: '#B8860B' }}></i>사진 설명
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        as="textarea"
+                                                        rows={3}
+                                                        value={profileImageDescription}
+                                                        onChange={(e) => setProfileImageDescription(e.target.value)}
+                                                        placeholder="사진에 대한 설명을 입력하세요"
+                                                        style={{
+                                                            borderRadius: '12px',
+                                                            padding: '12px 16px',
+                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                            background: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2C1F14'
+                                                        }}
+                                                    />
+                                                </Form.Group>
+
+                                                {/* 현재 이미지 미리보기 */}
+                                                {(imagePreviewUrl || formData.imageUrl) && (
+                                                    <div className="mb-3">
+                                                        <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>미리보기</Form.Label>
+                                                        <div className="text-center">
+                                                            <img
+                                                                src={imagePreviewUrl || formData.imageUrl}
+                                                                alt="프로필 미리보기"
+                                                                style={{
+                                                                    width: '150px',
+                                                                    height: '180px',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '8px',
+                                                                    border: '2px solid #e9ecef'
+                                                                }}
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
+                                                )}
+                                            </div>
                                         </Col>
                                     </Row>
                                 )}
@@ -763,29 +852,114 @@ const MemorialConfig = () => {
                                         </div>
 
                                         <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                            <i className="fas fa-tags me-2" style={{ color: '#B8860B' }}></i>키워드 (5개)
+                                            <i className="fas fa-tags me-2" style={{ color: '#B8860B' }}></i>키워드 (최대 5개)
                                         </Form.Label>
-                                        {eulogyKeywords.map((keyword, index) => (
-                                            <Form.Group className="mb-2" key={index}>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={keyword}
-                                                    onChange={(e) => {
-                                                        const newKeywords = [...eulogyKeywords];
-                                                        newKeywords[index] = e.target.value;
-                                                        setEulogyKeywords(newKeywords);
-                                                    }}
-                                                    placeholder={`키워드 #${index + 1}`}
-                                                    style={{ 
-                                                        borderRadius: '12px', 
-                                                        padding: '12px 16px',
-                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                        background: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2C1F14'
-                                                    }}
-                                                />
-                                            </Form.Group>
-                                        ))}
+                                        <div className="d-flex mb-2">
+                                            <Form.Control
+                                                type="text"
+                                                value={eulogyKeywordInput}
+                                                onChange={(e) => setEulogyKeywordInput(e.target.value)}
+                                                placeholder="키워드를 입력하세요"
+                                                style={{
+                                                    borderRadius: '12px 0 0 12px',
+                                                    padding: '12px 16px',
+                                                    border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                    background: 'rgba(255, 255, 255, 0.9)',
+                                                    color: '#2C1F14'
+                                                }}
+                                            />
+                                            <Button
+                                                onClick={handleAddEulogyKeyword}
+                                                style={{
+                                                    borderRadius: '0 12px 12px 0',
+                                                    background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                    border: 'none',
+                                                    fontWeight: '600',
+                                                    boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
+                                                }}
+                                            >
+                                                추가
+                                            </Button>
+                                        </div>
+                                        <div className="d-flex flex-wrap gap-2 mb-3">
+                                            {eulogyKeywords.map((keyword, index) => (
+                                                <div key={index} className="d-flex align-items-center" style={{
+                                                    background: 'rgba(184, 134, 11, 0.1)',
+                                                    borderRadius: '12px',
+                                                    padding: '8px 12px',
+                                                    color: '#2C1F14'
+                                                }}>
+                                                    <span>{keyword}</span>
+                                                    <Button
+                                                        variant="link"
+                                                        size="sm"
+                                                        onClick={() => handleRemoveEulogyKeyword(keyword)}
+                                                        style={{ color: '#B8860B', textDecoration: 'none' }}
+                                                    >
+                                                        &times;
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <Form.Group className="mb-3">
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                <Form.Label className="fw-bold mb-0" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-file-alt me-2" style={{ color: '#B8860B' }}></i>AI 프롬프트
+                                                </Form.Label>
+                                                <div className="d-flex align-items-center">
+                                                    <Form.Text className="text-muted me-2">
+                                                        기본 지침입니다. '편집' 버튼을 눌러 내용을 수정하고 '저장' 버튼을 눌러 반영하세요.
+                                                    </Form.Text>
+                                                    <Button
+                                                        variant={isEditingPrompt ? "success" : "outline-secondary"}
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            if (isEditingPrompt) { // "저장" 버튼 클릭 시
+                                                                const lines = basePrompt.split('\n');
+                                                                const correctedLines = lines
+                                                                    .map(line => line.trim())
+                                                                    .filter(line => line && line !== '-')
+                                                                    .map(line => {
+                                                                        if (line.startsWith('- ')) {
+                                                                            return line;
+                                                                        }
+                                                                        if (line.startsWith('-')) {
+                                                                            return '- ' + line.substring(1).trim();
+                                                                        }
+                                                                        return '- ' + line;
+                                                                    });
+                                                                
+                                                                let finalPrompt = correctedLines.join('\n');
+                                                                if (!finalPrompt) {
+                                                                    finalPrompt = `- 고인의 삶과 성품을 존중하며 회고하는 내용이 포함되어야 합니다.\n- 너무 형식적이거나 과장되지 않게, 진정성이 느껴지도록 작성해주세요.\n- 듣는 이가 고인을 자연스럽게 떠올릴 수 있도록 구체적인 표현과 장면을 사용해주세요.\n- 마지막 문장은 고인을 떠나보내는 작별 인사 또는 평안을 비는 말로 마무리해주세요.`;
+                                                                }
+                                                                setBasePrompt(finalPrompt);
+                                                            }
+                                                            setIsEditingPrompt(!isEditingPrompt);
+                                                        }}
+                                                    >
+                                                        {isEditingPrompt ? '저장' : '편집'}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <Form.Control
+                                                as="textarea"
+                                                rows={5}
+                                                value={basePrompt}
+                                                onChange={(e) => setBasePrompt(e.target.value)}
+                                                readOnly={!isEditingPrompt}
+                                                style={{
+                                                    borderRadius: '12px',
+                                                    padding: '16px',
+                                                    whiteSpace: 'pre-line',
+                                                    border: `2px solid ${isEditingPrompt ? 'rgba(40, 167, 69, 0.5)' : 'rgba(184, 134, 11, 0.2)'}`,
+                                                    background: isEditingPrompt ? 'rgba(255, 255, 255, 1)' : 'rgba(248, 249, 250, 0.7)',
+                                                    color: '#2C1F14',
+                                                    transition: 'all 0.3s ease'
+                                                }}
+                                            />
+                                        </Form.Group>
 
                                         {isEulogyLoading && (
                                             <div className="text-center my-4">
