@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Modal, Form, Badge, Carousel } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Badge } from 'react-bootstrap';
 import { ArrowLeft } from 'lucide-react';
 import { dummyData } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -505,55 +505,30 @@ const MemorialDetail = () => {
                       style={{
                         display: activeTab === 'photos' ? 'block' : 'none',
                         padding: '120px 20px 20px',
-                        minHeight: '350px'
+                        minHeight: '450px',
+                        overflowY: 'auto'
                       }}
                     >
-                      <div className="memorial-photos-grid">
+                      {memorial.photos && memorial.photos.length > 0 ? (
                         <Row>
-                          {[1, 2, 3, 4, 5, 6, 7, 8].map(index => (
-                            <Col md={3} sm={4} xs={6} key={index} className="mb-3">
-                              <div 
-                                className="memorial-photo-item"
-                                style={{
-                                  aspectRatio: '1',
-                                  background: 'rgba(184, 134, 11, 0.1)',
-                                  borderRadius: '8px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  border: '2px solid rgba(184, 134, 11, 0.2)',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.3s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.target.style.transform = 'scale(1.05)';
-                                  e.target.style.boxShadow = '0 4px 15px rgba(44, 31, 20, 0.2)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.target.style.transform = 'scale(1)';
-                                  e.target.style.boxShadow = 'none';
-                                }}
-                              >
-                                <small style={{ color: '#b8860b' }}>사진</small>
-                              </div>
+                          {memorial.photos.map(photo => (
+                            <Col md={4} sm={6} xs={12} key={photo.id} className="mb-4">
+                              <Card className="h-100">
+                                <Card.Img variant="top" src={photo.url} style={{ height: '200px', objectFit: 'cover' }} />
+                                <Card.Body>
+                                  <Card.Title>{photo.title}</Card.Title>
+                                  <Card.Text>{photo.description}</Card.Text>
+                                </Card.Body>
+                              </Card>
                             </Col>
                           ))}
                         </Row>
-                        <div className="text-center mt-3">
-                          <Button 
-                            style={{
-                              background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                              border: '1px solid rgba(255, 255, 255, 0.2)',
-                              color: '#fff',
-                              fontWeight: '600',
-                              borderRadius: '8px'
-                            }}
-                            size="sm"
-                          >
-                            사진 등록하기
-                          </Button>
+                      ) : (
+                        <div className="text-center text-muted p-5">
+                          <i className="fas fa-images fa-3x mb-3"></i>
+                          <p>등록된 사진이 없습니다.</p>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
