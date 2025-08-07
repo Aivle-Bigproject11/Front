@@ -48,6 +48,10 @@ const MemorialConfig = () => {
     const [eulogyKeywordInput, setEulogyKeywordInput] = useState('');
     const [generatedEulogy, setGeneratedEulogy] = useState('');
     const [isEulogyLoading, setIsEulogyLoading] = useState(false);
+    const [basePrompt, setBasePrompt] = useState(
+        `- 고인의 삶과 성품을 존중하며 회고하는 내용이 포함되어야 합니다.\n- 너무 형식적이거나 과장되지 않게, 진정성이 느껴지도록 작성해주세요.\n- 듣는 이가 고인을 자연스럽게 떠올릴 수 있도록 구체적인 표현과 장면을 사용해주세요.\n- 마지막 문장은 고인을 떠나보내는 작별 인사 또는 평안을 비는 말로 마무리해주세요.`
+    );
+    const [isEditingPrompt, setIsEditingPrompt] = useState(false);
 
     // 유가족 권한 확인 (실제로는 API로 확인)
     const [isFamilyMember, setIsFamilyMember] = useState(false);
@@ -188,6 +192,16 @@ const MemorialConfig = () => {
                 // 추모사 생성 처리
                 setIsEulogyLoading(true);
                 setGeneratedEulogy('');
+
+                const eulogyPrompt = {
+                    keywords: eulogyKeywords.filter(k => k),
+                    prompt: basePrompt
+                };
+
+                // TODO: 실제 API 호출로 교체
+                // memorialService.generateEulogy(eulogyPrompt);
+
+                console.log("추모사 생성 요청 데이터:", eulogyPrompt);
 
                 // Simulate AI eulogy generation
                 setTimeout(() => {
@@ -867,7 +881,7 @@ const MemorialConfig = () => {
                                                 추가
                                             </Button>
                                         </div>
-                                        <div className="d-flex flex-wrap gap-2">
+                                        <div className="d-flex flex-wrap gap-2 mb-3">
                                             {eulogyKeywords.map((keyword, index) => (
                                                 <div key={index} className="d-flex align-items-center" style={{
                                                     background: 'rgba(184, 134, 11, 0.1)',
@@ -887,6 +901,65 @@ const MemorialConfig = () => {
                                                 </div>
                                             ))}
                                         </div>
+
+                                        <Form.Group className="mb-3">
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                <Form.Label className="fw-bold mb-0" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-file-alt me-2" style={{ color: '#B8860B' }}></i>AI 프롬프트
+                                                </Form.Label>
+                                                <div className="d-flex align-items-center">
+                                                    <Form.Text className="text-muted me-2">
+                                                        기본 지침입니다. '편집' 버튼을 눌러 내용을 수정하고 '저장' 버튼을 눌러 반영하세요.
+                                                    </Form.Text>
+                                                    <Button
+                                                        variant={isEditingPrompt ? "success" : "outline-secondary"}
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            if (isEditingPrompt) { // "저장" 버튼 클릭 시
+                                                                const lines = basePrompt.split('\n');
+                                                                const correctedLines = lines
+                                                                    .map(line => line.trim())
+                                                                    .filter(line => line && line !== '-')
+                                                                    .map(line => {
+                                                                        if (line.startsWith('- ')) {
+                                                                            return line;
+                                                                        }
+                                                                        if (line.startsWith('-')) {
+                                                                            return '- ' + line.substring(1).trim();
+                                                                        }
+                                                                        return '- ' + line;
+                                                                    });
+                                                                
+                                                                let finalPrompt = correctedLines.join('\n');
+                                                                if (!finalPrompt) {
+                                                                    finalPrompt = `- 고인의 삶과 성품을 존중하며 회고하는 내용이 포함되어야 합니다.\n- 너무 형식적이거나 과장되지 않게, 진정성이 느껴지도록 작성해주세요.\n- 듣는 이가 고인을 자연스럽게 떠올릴 수 있도록 구체적인 표현과 장면을 사용해주세요.\n- 마지막 문장은 고인을 떠나보내는 작별 인사 또는 평안을 비는 말로 마무리해주세요.`;
+                                                                }
+                                                                setBasePrompt(finalPrompt);
+                                                            }
+                                                            setIsEditingPrompt(!isEditingPrompt);
+                                                        }}
+                                                    >
+                                                        {isEditingPrompt ? '저장' : '편집'}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <Form.Control
+                                                as="textarea"
+                                                rows={5}
+                                                value={basePrompt}
+                                                onChange={(e) => setBasePrompt(e.target.value)}
+                                                readOnly={!isEditingPrompt}
+                                                style={{
+                                                    borderRadius: '12px',
+                                                    padding: '16px',
+                                                    whiteSpace: 'pre-line',
+                                                    border: `2px solid ${isEditingPrompt ? 'rgba(40, 167, 69, 0.5)' : 'rgba(184, 134, 11, 0.2)'}`,
+                                                    background: isEditingPrompt ? 'rgba(255, 255, 255, 1)' : 'rgba(248, 249, 250, 0.7)',
+                                                    color: '#2C1F14',
+                                                    transition: 'all 0.3s ease'
+                                                }}
+                                            />
+                                        </Form.Group>
 
                                         {isEulogyLoading && (
                                             <div className="text-center my-4">
