@@ -44,7 +44,8 @@ const MemorialConfig = () => {
     const [isVideoLoading, setIsVideoLoading] = useState(false);
 
     // 추모사 생성 관련 상태
-    const [eulogyKeywords, setEulogyKeywords] = useState(['', '', '', '', '']);
+    const [eulogyKeywords, setEulogyKeywords] = useState([]);
+    const [eulogyKeywordInput, setEulogyKeywordInput] = useState('');
     const [generatedEulogy, setGeneratedEulogy] = useState('');
     const [isEulogyLoading, setIsEulogyLoading] = useState(false);
 
@@ -200,6 +201,17 @@ const MemorialConfig = () => {
             console.error('Error processing request:', error);
             alert('처리 중 오류가 발생했습니다.');
         }
+    };
+
+    const handleAddEulogyKeyword = () => {
+        if (eulogyKeywordInput && eulogyKeywords.length < 5 && !eulogyKeywords.includes(eulogyKeywordInput)) {
+            setEulogyKeywords([...eulogyKeywords, eulogyKeywordInput]);
+            setEulogyKeywordInput('');
+        }
+    };
+
+    const handleRemoveEulogyKeyword = (keywordToRemove) => {
+        setEulogyKeywords(eulogyKeywords.filter(keyword => keyword !== keywordToRemove));
     };
 
     
@@ -826,29 +838,55 @@ const MemorialConfig = () => {
                                         </div>
 
                                         <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                            <i className="fas fa-tags me-2" style={{ color: '#B8860B' }}></i>키워드 (5개)
+                                            <i className="fas fa-tags me-2" style={{ color: '#B8860B' }}></i>키워드 (최대 5개)
                                         </Form.Label>
-                                        {eulogyKeywords.map((keyword, index) => (
-                                            <Form.Group className="mb-2" key={index}>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={keyword}
-                                                    onChange={(e) => {
-                                                        const newKeywords = [...eulogyKeywords];
-                                                        newKeywords[index] = e.target.value;
-                                                        setEulogyKeywords(newKeywords);
-                                                    }}
-                                                    placeholder={`키워드 #${index + 1}`}
-                                                    style={{ 
-                                                        borderRadius: '12px', 
-                                                        padding: '12px 16px',
-                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                        background: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2C1F14'
-                                                    }}
-                                                />
-                                            </Form.Group>
-                                        ))}
+                                        <div className="d-flex mb-2">
+                                            <Form.Control
+                                                type="text"
+                                                value={eulogyKeywordInput}
+                                                onChange={(e) => setEulogyKeywordInput(e.target.value)}
+                                                placeholder="키워드를 입력하세요"
+                                                style={{
+                                                    borderRadius: '12px 0 0 12px',
+                                                    padding: '12px 16px',
+                                                    border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                    background: 'rgba(255, 255, 255, 0.9)',
+                                                    color: '#2C1F14'
+                                                }}
+                                            />
+                                            <Button
+                                                onClick={handleAddEulogyKeyword}
+                                                style={{
+                                                    borderRadius: '0 12px 12px 0',
+                                                    background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                    border: 'none',
+                                                    fontWeight: '600',
+                                                    boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
+                                                }}
+                                            >
+                                                추가
+                                            </Button>
+                                        </div>
+                                        <div className="d-flex flex-wrap gap-2">
+                                            {eulogyKeywords.map((keyword, index) => (
+                                                <div key={index} className="d-flex align-items-center" style={{
+                                                    background: 'rgba(184, 134, 11, 0.1)',
+                                                    borderRadius: '12px',
+                                                    padding: '8px 12px',
+                                                    color: '#2C1F14'
+                                                }}>
+                                                    <span>{keyword}</span>
+                                                    <Button
+                                                        variant="link"
+                                                        size="sm"
+                                                        onClick={() => handleRemoveEulogyKeyword(keyword)}
+                                                        style={{ color: '#B8860B', textDecoration: 'none' }}
+                                                    >
+                                                        &times;
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
 
                                         {isEulogyLoading && (
                                             <div className="text-center my-4">
