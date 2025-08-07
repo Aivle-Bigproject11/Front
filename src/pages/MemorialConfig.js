@@ -33,6 +33,10 @@ const MemorialConfig = () => {
         music: '',
         style: 'classic'
     });
+    const [profileImageFile, setProfileImageFile] = useState(null);
+    const [profileImageTitle, setProfileImageTitle] = useState('');
+    const [profileImageDescription, setProfileImageDescription] = useState('');
+    const [imagePreviewUrl, setImagePreviewUrl] = useState('');
     const [slideshowPhotos, setSlideshowPhotos] = useState([]);
     const [animatedPhoto, setAnimatedPhoto] = useState(null);
     const [keywords, setKeywords] = useState(['', '', '', '', '']);
@@ -151,6 +155,18 @@ const MemorialConfig = () => {
                     age: parseInt(formData.age),
                     customerId: parseInt(formData.customerId)
                 };
+
+                const data = new FormData();
+                data.append('profileImage', profileImageFile);
+                data.append('title', profileImageTitle);
+                data.append('description', profileImageDescription);
+                // Append other memorial data as needed
+                // for (const key in updatedMemorial) {
+                //     data.append(key, updatedMemorial[key]);
+                // }
+
+                // TODO: Implement actual API call
+                // await api.updateMemorial(id, data);
 
                 setMemorial(updatedMemorial);
                 alert('추모관 정보가 성공적으로 수정되었습니다.');
@@ -568,34 +584,74 @@ const MemorialConfig = () => {
 
                                             <Form.Group className="mb-3">
                                                 <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                    <i className="fas fa-image me-2" style={{ color: '#B8860B' }}></i>프로필 이미지 URL
+                                                    <i className="fas fa-image me-2" style={{ color: '#B8860B' }}></i>프로필 사진
                                                 </Form.Label>
                                                 <Form.Control
-                                                    type="url"
-                                                    name="imageUrl"
-                                                    value={formData.imageUrl}
-                                                    onChange={handleInputChange}
-                                                    placeholder="https://example.com/image.jpg"
-                                                    style={{ 
-                                                        borderRadius: '12px', 
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files[0];
+                                                        if (file) {
+                                                            setProfileImageFile(file);
+                                                            setImagePreviewUrl(URL.createObjectURL(file));
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        borderRadius: '12px',
                                                         padding: '12px 16px',
                                                         border: '2px solid rgba(184, 134, 11, 0.2)',
                                                         background: 'rgba(255, 255, 255, 0.9)',
                                                         color: '#2C1F14'
                                                     }}
                                                 />
-                                                <Form.Text className="text-muted">
-                                                    이미지 URL을 입력하시면 프로필 사진이 표시됩니다.
-                                                </Form.Text>
+                                            </Form.Group>
+
+                                            <Form.Group className="mb-3">
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-heading me-2" style={{ color: '#B8860B' }}></i>사진 제목
+                                                </Form.Label>
+                                                <Form.Control
+                                                    type="text"
+                                                    value={profileImageTitle}
+                                                    onChange={(e) => setProfileImageTitle(e.target.value)}
+                                                    placeholder="사진의 제목을 입력하세요"
+                                                    style={{
+                                                        borderRadius: '12px',
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
+                                                />
+                                            </Form.Group>
+
+                                            <Form.Group className="mb-3">
+                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                    <i className="fas fa-align-left me-2" style={{ color: '#B8860B' }}></i>사진 설명
+                                                </Form.Label>
+                                                <Form.Control
+                                                    as="textarea"
+                                                    rows={3}
+                                                    value={profileImageDescription}
+                                                    onChange={(e) => setProfileImageDescription(e.target.value)}
+                                                    placeholder="사진에 대한 설명을 입력하세요"
+                                                    style={{
+                                                        borderRadius: '12px',
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
+                                                />
                                             </Form.Group>
 
                                             {/* 현재 이미지 미리보기 */}
-                                            {formData.imageUrl && (
+                                            {(imagePreviewUrl || formData.imageUrl) && (
                                                 <div className="mb-3">
                                                     <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>미리보기</Form.Label>
                                                     <div className="text-center">
                                                         <img
-                                                            src={formData.imageUrl}
+                                                            src={imagePreviewUrl || formData.imageUrl}
                                                             alt="프로필 미리보기"
                                                             style={{
                                                                 width: '150px',
