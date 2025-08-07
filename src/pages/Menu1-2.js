@@ -194,12 +194,6 @@ const Menu1_2 = () => {
                 .form-scroll-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
                 .form-scroll-area::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
                 .form-control:focus { box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.2) !important; border-color: #B8860B !important; }
-                @media (max-width: 1200px) {
-                    .page-wrapper { height: auto; min-height: calc(100vh - var(--navbar-height)); }
-                    .dashboard-container { flex-direction: column; height: auto; }
-                    .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
-                    .dashboard-right { height: auto; max-height: none; }
-                }
 
                 .back-btn {
                     display: flex;
@@ -237,6 +231,42 @@ const Menu1_2 = () => {
                 .save-btn:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
+                }
+
+                  /* 반응형 레이아웃 */
+                @media (max-width: 1200px) {
+                    .page-wrapper {
+                        height: auto !important;
+                        min-height: calc(100vh - var(--navbar-height));
+                        align-items: flex-start !important;
+                    }
+                    .dashboard-container {
+                        flex-direction: column;
+                        height: auto !important;
+                        overflow: visible;
+                    }
+                    .dashboard-left {
+                        flex: 1 1 auto; /* 세로로 쌓일 때 너비 제약을 해제하고 전체 너비를 차지하도록 함 */
+                        margin-bottom: 20px;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .dashboard-container {
+                        padding: 10px;
+                        gap: 15px;
+                    }
+                    .customer-id-name-row {
+                        flex-direction: column;
+                    }
+                    .customer-id-name-row > .col-6 {
+                        width: 100%;
+                        padding-left: 12px;
+                        padding-right: 12px;
+                    }
+                     .customer-id-name-row > .col-6:first-of-type {
+                        margin-bottom: 1rem;
+                    }
                 }
             `}</style>
         </div>

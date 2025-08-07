@@ -225,6 +225,41 @@ const Menu1_4 = () => {
                     transform: translateY(-2px);
                     color: #fff;
                 }
+                      /* 반응형 레이아웃 */
+                @media (max-width: 1200px) {
+                    .page-wrapper {
+                        height: auto !important;
+                        min-height: calc(100vh - var(--navbar-height));
+                        align-items: flex-start !important;
+                    }
+                    .dashboard-container {
+                        flex-direction: column;
+                        height: auto !important;
+                        overflow: visible;
+                    }
+                    .dashboard-left {
+                        flex: 1 1 auto; /* 세로로 쌓일 때 너비 제약을 해제하고 전체 너비를 차지하도록 함 */
+                        margin-bottom: 20px;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .dashboard-container {
+                        padding: 10px;
+                        gap: 15px;
+                    }
+                    .customer-id-name-row {
+                        flex-direction: column;
+                    }
+                    .customer-id-name-row > .col-6 {
+                        width: 100%;
+                        padding-left: 12px;
+                        padding-right: 12px;
+                    }
+                     .customer-id-name-row > .col-6:first-of-type {
+                        margin-bottom: 1rem;
+                    }
+                }
             `}</style>
         </>
     );

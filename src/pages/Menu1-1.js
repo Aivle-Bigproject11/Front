@@ -293,6 +293,7 @@ const Menu1_1 = () => {
                     display: 'flex',
                     minHeight: '140px',
                     position: 'relative',
+                    overflowX: 'auto'
                   }}
                   >
                     <div style={{
@@ -427,12 +428,7 @@ const Menu1_1 = () => {
             .dashboard-right::-webkit-scrollbar { width: 6px; }
             .dashboard-right::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
             .dashboard-right::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
-            @media (max-width: 1200px) {
-            .page-wrapper { height: auto; min-height: calc(100vh - var(--navbar-height)); }
-            .dashboard-container { flex-direction: column; height: auto; }
-            .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
-            .dashboard-right { height: auto; max-height: none; }
-            }
+
 
             .btn-golden {
                 background: linear-gradient(135deg, #D4AF37, #F5C23E);
@@ -474,6 +470,41 @@ const Menu1_1 = () => {
                 border-color: #B8860B !important;
                 color: white !important;
             }
+                 /* 반응형 레이아웃 */
+                @media (max-width: 1200px) {
+                    .page-wrapper {
+                        height: auto !important;
+                        min-height: calc(100vh - var(--navbar-height));
+                        align-items: flex-start !important;
+                    }
+                    .dashboard-container {
+                        flex-direction: column;
+                        height: auto !important;
+                        overflow: visible;
+                    }
+                    .dashboard-left {
+                        flex: 1 1 auto; /* 세로로 쌓일 때 너비 제약을 해제하고 전체 너비를 차지하도록 함 */
+                        margin-bottom: 20px;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .dashboard-container {
+                        padding: 10px;
+                        gap: 15px;
+                    }
+                    .customer-id-name-row {
+                        flex-direction: column;
+                    }
+                    .customer-id-name-row > .col-6 {
+                        width: 100%;
+                        padding-left: 12px;
+                        padding-right: 12px;
+                    }
+                     .customer-id-name-row > .col-6:first-of-type {
+                        margin-bottom: 1rem;
+                    }
+                }
         `}</style>
     </div>
   );
