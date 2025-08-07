@@ -87,6 +87,26 @@ const Menu3 = () => {
 
     // 2. 조회 버튼 클릭 시 필터링 수행
     const handleSearch = () => {
+                // --- [실제 백엔드 연동 시] 여기서 API를 호출하여 필터링된 데이터를 가져옵니다. ---
+        /*
+        const fetchFilteredData = async () => {
+            setLoading(true);
+            try {
+                // GET 요청 시 params로 필터 객체를 전달
+                const response = await axios.get('/api/customers', { params: filters });
+                setFilteredCustomers(response.data);
+                setIsSearched(true);
+            } catch (err) {
+                setError("데이터 조회에 실패했습니다.");
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchFilteredData();
+        */
+
+        // --- [테스트용] Mock 데이터 필터링 로직 ---
         if (loading) return;
         let result = [...allCustomers];
         if (filters.id) { result = result.filter(c => String(c.customerId).toLowerCase().includes(filters.id.toLowerCase())); }
@@ -128,12 +148,30 @@ const Menu3 = () => {
     
     const handleHistoryClick = (customer) => {
         setSelectedCustomerForHistory(customer);
-        setMessageHistory([]);
+        setMessageHistory([]); // 기록을 초기화
+
+        // --- [테스트용] Mock 데이터로 발송 기록 표시 ---
+        // '김말똥' 고객일 경우에만 예시 기록을 보여줍니다.
         if (customer.customerId === 'SB2001') {
             setMessageHistory(mockHistoryData);
         } else {
+            // 다른 고객은 기록이 없는 것으로 표시
             setMessageHistory([]);
         }
+        
+        // --- [실제 백엔드 연동 시] 발송 기록 API 호출 ---
+        /*
+        const fetchHistory = async () => {
+            try {
+                const response = await axios.get(`/api/messages/history/${customer.customerId}`);
+                setMessageHistory(response.data);
+            } catch (err) {
+                console.error("발송 기록 로딩에 실패했습니다.", err);
+                setMessageHistory([]); // 에러 발생 시 빈 배열로 설정
+            }
+        };
+        fetchHistory();
+        */
     };
 
     const handleGenerateMessage = () => {
@@ -183,6 +221,27 @@ const Menu3 = () => {
             setMessagePreview(formattedMessage);
             setIsGenerating(false);
         }, 1500); // 1.5초 딜레이
+        
+        // --- [실제 백엔드 연동 시] AI 메시지 생성 API 호출 ---
+        /*
+        const generateMessage = async () => {
+            try {
+                const response = await axios.post('/api/generate-message', { customerIds: selectedCustomers });
+                const { recommendedServices, messageContent, detailedUrlText } = response.data;
+                const formattedMessage = `[추천된 전환서비스]
+${recommendedServices.map(s => `- ${s.serviceName}`).join('\n')}
+
+[메시지 내용]
+${messageContent}
+${detailedUrlText}`;
+                setMessagePreview(formattedMessage);
+            } catch (err) {
+                console.error("메시지 생성에 실패했습니다.", err);
+                setMessagePreview("오류: 메시지를 생성하지 못했습니다.");
+            }
+        };
+        generateMessage();
+        */
     };
     
     const handleEditMessage = () => {
@@ -197,6 +256,8 @@ const Menu3 = () => {
         setShowTransmissionCompletePopup(true);
     };
 
+    
+    // === 렌더링(JSX) ===
     if (loading && !animateCard) {
         return (
             <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
