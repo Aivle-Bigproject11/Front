@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Form, Button, Modal } from 'react-bootstrap';
+import { Row, Col, Card, Form, Button, Modal, Spinner } from 'react-bootstrap';
 import { Mail, Send, Search } from 'lucide-react';
 // [실제 백엔드 연동 시] axios가 설치되어 있는지 확인하세요. (npm install axios)
 import axios from 'axios';
@@ -39,12 +39,12 @@ const Menu3 = () => {
     const [error, setError] = useState(null);
     const [animateCard, setAnimateCard] = useState(false);
     const [isSearched, setIsSearched] = useState(false); // 조회 버튼 클릭 여부 상태
+    const [isGenerating, setIsGenerating] = useState(false); // 메시지 생성 로딩 상태
 
     const [filters, setFilters] = useState({
         id: '', name: '', age: '', gender: [], disease: [], isMarried: [], hasChildren: []
     });
 
-    const [selectedCustomers, setSelectedCustomers] = useState([]);
     const [selectedCustomerForHistory, setSelectedCustomerForHistory] = useState(null);
     const [messageHistory, setMessageHistory] = useState([]);
     const [messagePreview, setMessagePreview] = useState('');
@@ -87,7 +87,7 @@ const Menu3 = () => {
 
     // 2. 조회 버튼 클릭 시 필터링 수행
     const handleSearch = () => {
-        // --- [실제 백엔드 연동 시] 여기서 API를 호출하여 필터링된 데이터를 가져옵니다. ---
+                // --- [실제 백엔드 연동 시] 여기서 API를 호출하여 필터링된 데이터를 가져옵니다. ---
         /*
         const fetchFilteredData = async () => {
             setLoading(true);
@@ -141,13 +141,9 @@ const Menu3 = () => {
             });
         }
         setFilteredCustomers(result);
-        setIsSearched(true); // 조회가 수행되었음을 표시
-        setSelectedCustomers([]); // 새로운 조회 시 선택 초기화
+        setIsSearched(true);
     };
 
-
-    const handleCustomerSelect = (customerId) => setSelectedCustomers(prev => prev.includes(customerId) ? prev.filter(id => id !== customerId) : [...prev, customerId]);
-    const handleSelectAll = (e) => setSelectedCustomers(e.target.checked ? filteredCustomers.map(c => c.customerId) : []);
     const getFamilyInfo = (customer) => `${customer.isMarried ? '기혼' : '미혼'}, ${customer.hasChildren ? '자녀 있음' : '자녀 없음'}`;
     
     const handleHistoryClick = (customer) => {
@@ -162,7 +158,7 @@ const Menu3 = () => {
             // 다른 고객은 기록이 없는 것으로 표시
             setMessageHistory([]);
         }
-
+        
         // --- [실제 백엔드 연동 시] 발송 기록 API 호출 ---
         /*
         const fetchHistory = async () => {
@@ -179,31 +175,53 @@ const Menu3 = () => {
     };
 
     const handleGenerateMessage = () => {
-        if (selectedCustomers.length === 0) {
-            alert("메시지를 생성할 고객을 먼저 선택해주세요.");
+        const noFiltersSet =
+            !filters.id &&
+            !filters.name &&
+            !filters.age &&
+            filters.gender.length === 0 &&
+            filters.disease.length === 0 &&
+            filters.isMarried.length === 0 &&
+            filters.hasChildren.length === 0;
+
+        if (noFiltersSet) {
+            alert('메세지를 보낼 고객의 조건을 정해주세요');
             return;
         }
 
-        // --- [테스트용] 임시 메시지 생성 로직 ---
-        const firstCustomer = allCustomers.find(c => c.customerId === selectedCustomers[0]);
-        const mockAiResponse = {
-            recommendedServices: [
-                { serviceName: '결혼 서비스' },
-                { serviceName: '여행 서비스' }
-            ],
-            messageContent: `[○○상조] ${firstCustomer.name}님, 요즘 자녀가 결혼할 시기시죠? \n아니면 은퇴 후 여행 생각 있으신가요? OO상조에서 맞춤 패키지를 추천드립니다!`,
-            detailedUrlText: `[🔍 상품 자세히 보기]`
-        };
+        if (filteredCustomers.length === 0) {
+            alert("메시지를 생성할 고객이 없습니다. 먼저 고객을 조회해주세요.");
+            return;
+        }
+
+        setIsGenerating(true);
+
+        // AI 메시지 생성 API 호출을 시뮬레이션합니다.
+        setTimeout(() => {
+            const firstCustomer = filteredCustomers[0];
+            let messageContentText;
+            if (filteredCustomers.length === 1) {
+                messageContentText = `[○○상조] ${firstCustomer.name}님, 요즘 자녀가 결혼할 시기시죠? 
+아니면 은퇴 후 여행 생각 있으신가요? OO상조에서 맞춤 패키지를 추천드립니다!`
+            } else {
+                messageContentText = `[○○상조] ${firstCustomer.name}님 외 ${filteredCustomers.length - 1}명에게 추천하는 맞춤 패키지!`
+            }
+
+            const mockAiResponse = {
+                recommendedServices: [
+                    { serviceName: '결혼 서비스' },
+                    { serviceName: '여행 서비스' }
+                ],
+                messageContent: messageContentText,
+                detailedUrlText: `[🔍 상품 자세히 보기]`
+            };
+            
+            const formattedMessage = `[대상 고객: ${filteredCustomers.length}명]\n\n[추천된 전환서비스]\n- ${mockAiResponse.recommendedServices[0].serviceName}\n- ${mockAiResponse.recommendedServices[1].serviceName}\n\n[메시지 내용]\n${mockAiResponse.messageContent}\n${mockAiResponse.detailedUrlText}`;
+            
+            setMessagePreview(formattedMessage);
+            setIsGenerating(false);
+        }, 1500); // 1.5초 딜레이
         
-        const formattedMessage = `[추천된 전환서비스]
-- ${mockAiResponse.recommendedServices[0].serviceName}
-- ${mockAiResponse.recommendedServices[1].serviceName}
-
-[메시지 내용]
-${mockAiResponse.messageContent}
-${mockAiResponse.detailedUrlText}`;
-        setMessagePreview(formattedMessage);
-
         // --- [실제 백엔드 연동 시] AI 메시지 생성 API 호출 ---
         /*
         const generateMessage = async () => {
@@ -238,9 +256,9 @@ ${detailedUrlText}`;
         setShowTransmissionCompletePopup(true);
     };
 
-
+    
     // === 렌더링(JSX) ===
-    if (loading && !animateCard) { // animateCard가 false일 때만 전체 로딩 화면 표시
+    if (loading && !animateCard) {
         return (
             <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
                 <div className="text-center" style={{ color: '#4A3728' }}>
@@ -255,120 +273,125 @@ ${detailedUrlText}`;
     if (error) return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}><h2 style={{color: 'red'}}>{error}</h2></div>;
 
     return (
-        <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', padding: '20px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-            <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{width: '100%', maxWidth: '1600px', height: '100%', margin: '0 auto', display: 'flex', boxSizing: 'border-box', background: 'rgba(255, 251, 235, 0.95)', boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)', backdropFilter: 'blur(15px)', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '28px', padding: '20px', gap: '20px', overflow: 'hidden'}}>
-                {/* 좌측 필터링 UI */}
-                <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
-                    <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px', flexShrink: 0 }}>전환서비스 추천</h4>
-                    <div className="sidebar-scroll-area" style={{background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)', borderRadius: '15px', padding: '20px', flex: 1, overflowY: 'auto', minHeight: 0, border: '1px solid rgba(184, 134, 11, 0.2)'}}>
-                        <div style={{width: '100px', height: '100px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)'}}><Mail size={40} style={{ color: '#B8860B' }} /></div>
-                        <h2 style={{fontWeight: '700', marginBottom: '15px', fontSize: '1.8rem', textAlign: 'center', color: '#2C1F14'}}>고객 조회</h2>
-                        <p style={{fontSize: '16px', lineHeight: '1.6', margin: 0, opacity: 0.7, textAlign: 'center', color: '#4A3728'}}>조건별로 고객을 검색하고<br/>메시지를 발송하세요.</p>
-                        <hr className="my-4"/>
-                        <Form>
-                            <Row className="g-3 mb-3"><Col xs={6}><Form.Label style={{color: '#4A3728'}}>고객 고유번호</Form.Label><Form.Control name="id" value={filters.id} onChange={handleInputChange} placeholder="고유번호" /></Col><Col xs={6}><Form.Label style={{color: '#4A3728'}}>이름</Form.Label><Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" /></Col></Row>
-                            <Row className="g-3 mb-3"><Col xs={12}><Form.Label style={{color: '#4A3728'}}>나이대</Form.Label><Form.Select name="age" value={filters.age} onChange={handleInputChange}><option value="">전체</option><option value="20-29">20대</option><option value="30-39">30대</option><option value="40-49">40대</option><option value="50-59">50대</option><option value="60-150">60대 이상</option></Form.Select></Col></Row>
-                            <hr className="my-4"/><Form.Label style={{color: '#4A3728'}}>상세 조건</Form.Label>
-                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>성별:</strong><Form.Check inline type="checkbox" label="남" name="gender" value="남" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여" name="gender" value="여" onChange={handleCheckboxChange} /></div>
-                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" onChange={handleCheckboxChange} /></div>
-                            <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" onChange={handleCheckboxChange} /></div>
-                            <div className="d-flex align-items-center"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" onChange={handleCheckboxChange} /></div>
-                            
-                            {/* 조회 버튼 추가 */}
-                            <Button className="btn-search" onClick={handleSearch}>
-                                <Search size={18} className="me-2" />
-                                고객 조회
-                            </Button>
-                        </Form>
-                    </div>
-                </div>
-
-                {/* 오른쪽 메인 콘텐츠 */}
-                <div className="dashboard-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, paddingBottom: '10px' }}>
-                        <div className="d-flex align-items-center">
-                           <h5 style={{ fontWeight: '600', color: '#2C1F14', margin: 0 }}>고객 목록 ({isSearched ? filteredCustomers.length : 0}명)</h5>
-                           {isSearched && filteredCustomers.length > 0 && (
-                             <Form.Check type="checkbox" label={`전체 선택 (${selectedCustomers.length}명)`} className="ms-3" checked={filteredCustomers.length > 0 && selectedCustomers.length === filteredCustomers.length} onChange={handleSelectAll}/>
-                           )}
+        <>
+            <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', padding: '20px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{width: '100%', maxWidth: '1600px', height: '100%', margin: '0 auto', display: 'flex', boxSizing: 'border-box', background: 'rgba(255, 251, 235, 0.95)', boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)', backdropFilter: 'blur(15px)', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '28px', padding: '20px', gap: '20px', overflow: 'hidden'}}>
+                    {/* 좌측 필터링 UI */} 
+                    <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
+                        <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px', flexShrink: 0 }}>전환서비스 추천</h4>
+                        <div className="sidebar-scroll-area" style={{background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)', borderRadius: '15px', padding: '20px', flex: 1, overflowY: 'auto', minHeight: 0, border: '1px solid rgba(184, 134, 11, 0.2)'}}>
+                            <div style={{width: '100px', height: '100px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)'}}><Mail size={40} style={{ color: '#B8860B' }} /></div>
+                            <h2 style={{fontWeight: '700', marginBottom: '15px', fontSize: '1.8rem', textAlign: 'center', color: '#2C1F14'}}>고객 조회</h2>
+                            <p style={{fontSize: '16px', lineHeight: '1.6', margin: 0, opacity: 0.7, textAlign: 'center', color: '#4A3728'}}>조건별로 고객을 검색하고<br/>메시지를 발송하세요.</p>
+                            <hr className="my-4"/>
+                            <Form>
+                                <Row className="g-3 mb-3"><Col xs={6}><Form.Label style={{color: '#4A3728'}}>고객 고유번호</Form.Label><Form.Control name="id" value={filters.id} onChange={handleInputChange} placeholder="고유번호" /></Col><Col xs={6}><Form.Label style={{color: '#4A3728'}}>이름</Form.Label><Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" /></Col></Row>
+                                <hr className="my-4"/><Form.Label style={{color: '#4A3728'}}>상세 조건</Form.Label>
+                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>성별:</strong><Form.Check inline type="checkbox" label="남" name="gender" value="남" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여" name="gender" value="여" onChange={handleCheckboxChange} /></div>
+                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" onChange={handleCheckboxChange} /></div>
+                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" onChange={handleCheckboxChange} /></div>
+                                <div className="d-flex align-items-center mb-3"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" onChange={handleCheckboxChange} /></div>
+                                <Row className="g-3"><Col xs={12}><Form.Label style={{color: '#4A3728'}}>나이대</Form.Label><Form.Select name="age" value={filters.age} onChange={handleInputChange}><option value="">전체</option><option value="20-29">20대</option><option value="30-39">30대</option><option value="40-49">40대</option><option value="50-59">50대</option><option value="60-150">60대 이상</option></Form.Select></Col></Row>
+                                
+                                <Button className="btn-search" onClick={handleSearch}>
+                                    <Search size={18} className="me-2" />
+                                    고객 조회
+                                </Button>
+                            </Form>
                         </div>
-                        <Button className="btn-golden" onClick={handleGenerateMessage}>선택 고객 메시지 생성</Button>
-                    </div>
-                    
-                    <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px' }}>
-                        {!isSearched ? (
-                            <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
-                                <div>
-                                    <Search size={48} className="mb-3" />
-                                    <p>좌측 필터에서 조건을 선택하고<br/>'고객 조회' 버튼을 눌러주세요.</p>
-                                </div>
-                            </div>
-                        ) : filteredCustomers.length > 0 ? (
-                            filteredCustomers.map(customer => (
-                                <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
-                                    <Card.Body>
-                                        <Row className="align-items-center">
-                                            <Col xs="auto" className="pe-0"><Form.Check type="checkbox" checked={selectedCustomers.includes(customer.customerId)} onChange={() => handleCustomerSelect(customer.customerId)} /></Col>
-                                            <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.customerId}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
-                                            <Col>
-                                                <Row>
-                                                    <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthOfDate} (만 {customer.age}세)</Col>
-                                                    <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
-                                                    <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
-                                                    <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
-                                                    <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
-                                                    <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
-                                                </Row>
-                                            </Col>
-                                            <Col md="auto" className="text-center text-md-end"><Button variant="secondary" size="sm" onClick={() => handleHistoryClick(customer)}>발송기록</Button></Col>
-                                        </Row>
-                                    </Card.Body>
-                                </Card>
-                            ))
-                        ) : (
-                             <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
-                                <div>
-                                    <p>선택하신 조건에 맞는 고객 정보가 없습니다.</p>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
-                    <div className="mt-3" style={{ flexShrink: 0 }}>
-                        <Row><Col lg={6} className="mb-3 mb-lg-0"><Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%' }}><Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)'}}>메시지 미리보기</Card.Header><Card.Body className="d-flex flex-column"><Form.Control as="textarea" rows={8} value={messagePreview} onChange={(e) => setMessagePreview(e.target.value)} className="mb-3 flex-grow-1" style={{whiteSpace: 'pre-wrap'}} /><div className="d-flex justify-content-end gap-2"><Button variant="secondary" onClick={handleEditMessage}>메시지 수정</Button><Button className="btn-golden" onClick={handleSendMessage}>메시지 전송</Button></div></Card.Body></Card></Col>
-                        <Col lg={6}><Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%' }}><Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)'}}>메시지 발송 기록</Card.Header>
-                        <Card.Body style={{overflowY: 'auto'}}>
-                            {selectedCustomerForHistory ? (
-                                messageHistory.length > 0 ? (
-                                    messageHistory.map(history => (
-                                        <div key={history.messageId} className="mb-4">
-                                            <h6><strong>발송일시:</strong> {history.createMessageDate}</h6>
-                                            <div className="d-flex gap-2 my-2">
-                                                {history.recommendedServices.map(service => (
-                                                    <img key={service.serviceName} src={service.imageUrl} alt={service.serviceName} style={{width: '50%', borderRadius: '8px'}} />
-                                                ))}
-                                            </div>
-                                            <p style={{whiteSpace: 'pre-wrap', fontSize: '0.9rem'}}>{history.messageContent}</p>
-                                            
-                                            <hr/>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-muted"><strong>{selectedCustomerForHistory.name}</strong>님의 발송 기록이 없습니다.</p>
-                                )
+                    {/* 오른쪽 메인 콘텐츠 */} 
+                    <div className="dashboard-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, paddingBottom: '10px' }}>
+                            <div className="d-flex align-items-center">
+                               <h5 style={{ fontWeight: '600', color: '#2C1F14', margin: 0 }}>고객 목록 ({isSearched ? filteredCustomers.length : 0}명)</h5>
+                            </div>
+                            <Button className="btn-golden" onClick={handleGenerateMessage} disabled={!isSearched || filteredCustomers.length === 0}>메시지 생성</Button>
+                        </div>
+                        
+                        <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px' }}>
+                            {!isSearched ? (
+                                <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
+                                    <div>
+                                        <Search size={48} className="mb-3" />
+                                        <p>좌측 필터에서 조건을 선택하고<br/>'고객 조회' 버튼을 눌러주세요.</p>
+                                    </div>
+                                </div>
+                            ) : filteredCustomers.length > 0 ? (
+                                filteredCustomers.map(customer => (
+                                    <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
+                                        <Card.Body>
+                                            <Row className="align-items-center">
+                                                <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.customerId}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
+                                                <Col>
+                                                    <Row>
+                                                        <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthOfDate} (만 {customer.age}세)</Col>
+                                                        <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
+                                                        <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
+                                                        <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
+                                                    </Row>
+                                                </Col>
+                                                <Col md="auto" className="text-center text-md-end"><Button variant="secondary" size="sm" onClick={() => handleHistoryClick(customer)}>발송기록</Button></Col>
+                                            </Row>
+                                        </Card.Body>
+                                    </Card>
+                                ))
                             ) : (
-                                <p className="text-muted">고객 목록에서 '발송기록' 버튼을 클릭하여 확인하세요.</p>
+                                 <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
+                                    <div>
+                                        <p>선택하신 조건에 맞는 고객 정보가 없습니다.</p>
+                                    </div>
+                                </div>
                             )}
-                        </Card.Body></Card></Col></Row>
+                        </div>
+
+                        <div className="mt-3" style={{ flexShrink: 0 }}>
+                            <Row><Col lg={6} className="mb-3 mb-lg-0"><Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%' }}><Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)'}}>메시지 미리보기</Card.Header><Card.Body className="d-flex flex-column"><Form.Control as="textarea" rows={8} value={messagePreview} onChange={(e) => setMessagePreview(e.target.value)} className="mb-3 flex-grow-1" style={{whiteSpace: 'pre-wrap'}} /><div className="d-flex justify-content-end gap-2"><Button variant="secondary" onClick={handleEditMessage}>메시지 수정</Button><Button className="btn-golden" onClick={handleSendMessage}>메시지 전송</Button></div></Card.Body></Card></Col>
+                            <Col lg={6}><Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%' }}><Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)'}}>메시지 발송 기록</Card.Header>
+                            <Card.Body style={{overflowY: 'auto'}}>
+                                {selectedCustomerForHistory ? (
+                                    messageHistory.length > 0 ? (
+                                        messageHistory.map(history => (
+                                            <div key={history.messageId} className="mb-4">
+                                                <h6><strong>발송일시:</strong> {history.createMessageDate}</h6>
+                                                <div className="d-flex gap-2 my-2">
+                                                    {history.recommendedServices.map(service => (
+                                                        <img key={service.serviceName} src={service.imageUrl} alt={service.serviceName} style={{width: '50%', borderRadius: '8px'}} />
+                                                    ))}
+                                                </div>
+                                                <p style={{whiteSpace: 'pre-wrap', fontSize: '0.9rem'}}>{history.messageContent}</p>
+                                                
+                                                <hr/>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-muted"><strong>{selectedCustomerForHistory.name}</strong>님의 발송 기록이 없습니다.</p>
+                                    )
+                                ) : (
+                                    <p className="text-muted">고객 목록에서 '발송기록' 버튼을 클릭하여 확인하세요.</p>
+                                )}
+                            </Card.Body></Card></Col></Row>
+                        </div>
                     </div>
                 </div>
             </div>
             
+            {/* 모달 영역 */} 
+            <Modal show={isGenerating} centered backdrop="static" keyboard={false}> 
+                <Modal.Body className="text-center p-4">
+                    <Spinner animation="border" variant="primary" className="mb-3" />
+                    <h4>메시지가 생성 중입니다...</h4>
+                    <p className="text-muted mb-0">AI가 고객 맞춤 메시지를 만들고 있습니다. 잠시만 기다려 주세요.</p>
+                </Modal.Body>
+            </Modal>
             <Modal show={showTransmissionCompletePopup} onHide={() => setShowTransmissionCompletePopup(false)} centered><Modal.Header closeButton><Modal.Title>알림</Modal.Title></Modal.Header><Modal.Body>메시지 전송이 완료되었습니다.</Modal.Body><Modal.Footer><Button className="btn-golden" onClick={() => setShowTransmissionCompletePopup(false)}>확인</Button></Modal.Footer></Modal>
             <Modal show={showEditCompletePopup} onHide={() => setShowEditCompletePopup(false)} centered><Modal.Header closeButton><Modal.Title>알림</Modal.Title></Modal.Header><Modal.Body>메시지 수정이 완료되었습니다.</Modal.Body><Modal.Footer><Button className="btn-golden" onClick={() => setShowEditCompletePopup(false)}>확인</Button></Modal.Footer></Modal>
 
             <style>{`
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
                 .dashboard-container.animate-in { animation: fadeIn 0.6s ease-out forwards; }
                 .content-scroll-area::-webkit-scrollbar, .sidebar-scroll-area::-webkit-scrollbar, .card-body::-webkit-scrollbar { width: 6px; }
                 .content-scroll-area::-webkit-scrollbar-track, .sidebar-scroll-area::-webkit-scrollbar-track, .card-body::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
@@ -417,7 +440,7 @@ ${detailedUrlText}`;
                         height: auto !important;
                         overflow: visible;
                     }
-                    .dashboard-left {
+                    .dashboard-left { /* Renamed from dashboard-left to match the structure */
                         flex: 1 1 auto; /* 세로로 쌓일 때 너비 제약을 해제하고 전체 너비를 차지하도록 함 */
                         margin-bottom: 20px;
                     }
@@ -441,7 +464,7 @@ ${detailedUrlText}`;
                     }
                 }
             `}</style>
-        </div>
+        </>
     );
 };
 
