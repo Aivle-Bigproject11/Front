@@ -27,6 +27,8 @@ const MemorialDetail = () => {
   const [selectedRibbon, setSelectedRibbon] = useState(null);
   const [showRibbonDetailModal, setShowRibbonDetailModal] = useState(false);
   const [animateCard, setAnimateCard] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   // 접근 모드 확인: 고유번호 접근(guest), 유저 로그인(user), 관리자 로그인(admin)
   const isGuestAccess = !user; // 로그인하지 않고 고유번호로 접근
@@ -108,6 +110,11 @@ const MemorialDetail = () => {
     setGuestbookList([newEntry, ...guestbookList]);
     setGuestbookEntry({ name: '', message: '', relationship: '' });
     setShowGuestbookModal(false);
+  };
+
+  const handlePhotoClick = (photo) => {
+    setSelectedPhoto(photo);
+    setShowPhotoModal(true);
   };
 
   // 탭 전환 함수들
@@ -510,15 +517,19 @@ const MemorialDetail = () => {
                       }}
                     >
                       {memorial.photos && memorial.photos.length > 0 ? (
-                        <Row>
+                        <Row xs={1} sm={2} md={2} lg={2} className="g-4">
                           {memorial.photos.map(photo => (
-                            <Col md={4} sm={6} xs={12} key={photo.id} className="mb-4">
-                              <Card className="h-100">
-                                <Card.Img variant="top" src={photo.url} style={{ height: '200px', objectFit: 'cover' }} />
-                                <Card.Body>
-                                  <Card.Title>{photo.title}</Card.Title>
-                                  <Card.Text>{photo.description}</Card.Text>
-                                </Card.Body>
+                            <Col key={photo.id}>
+                              <Card 
+                                className="h-100 photo-card" 
+                                onClick={() => handlePhotoClick(photo)}
+                                style={{ cursor: 'pointer', overflow: 'hidden' }}
+                              >
+                                <Card.Img 
+                                  variant="top" 
+                                  src={photo.url} 
+                                  style={{ height: '200px', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                                />
                               </Card>
                             </Col>
                           ))}
@@ -1112,6 +1123,21 @@ const MemorialDetail = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* 사진 상세보기 모달 */}
+      <Modal show={showPhotoModal} onHide={() => setShowPhotoModal(false)} size="lg" centered>
+        {selectedPhoto && (
+          <>
+            <Modal.Header closeButton>
+              <Modal.Title>{selectedPhoto.title}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <img src={selectedPhoto.url} alt={selectedPhoto.title} className="img-fluid mb-3" />
+              <p>{selectedPhoto.description}</p>
+            </Modal.Body>
+          </>
+        )}
+      </Modal>
+
       <style jsx global>{`
         @keyframes fadeIn {
           from {
@@ -1166,6 +1192,10 @@ const MemorialDetail = () => {
         .memorial-detail-scroll-area::-webkit-scrollbar-thumb {
           background-color: rgba(184, 134, 11, 0.5);
           border-radius: 10px;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.1);
         }
 
         /* --- 수정된 반응형 코드 --- */
