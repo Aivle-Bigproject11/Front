@@ -194,7 +194,7 @@ const MemorialConfig = () => {
                 setGeneratedEulogy('');
 
                 const eulogyPrompt = {
-                    keywords: eulogyKeywords.filter(k => k),
+                    keywords: eulogyKeywords.filter(k => k).join(', '),
                     prompt: basePrompt
                 };
 
