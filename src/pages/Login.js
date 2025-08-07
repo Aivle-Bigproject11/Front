@@ -313,7 +313,7 @@ const Login = () => {
             {/* 오른쪽 폼 영역 */}
             <div className="login-right" style={{
               flex: '1',
-              padding: '30px 40px',
+              padding: '30px 40px 15px 40px',
               display: 'flex',
               flexDirection: 'column',
               background: activeTab === 'employee' 
@@ -338,7 +338,7 @@ const Login = () => {
                 onClick={() => setActiveTab('employee')} 
                 style={{ 
                     flex: 1, 
-                    padding: '12px 20px', 
+                    padding: '8px 20px', 
                     border: 'none', 
                     borderRadius: '8px', 
                     background: activeTab === 'employee' 
@@ -361,7 +361,7 @@ const Login = () => {
                 onClick={() => setActiveTab('user')} 
                 style={{ 
                     flex: 1, 
-                    padding: '12px 20px', 
+                    padding: '8px 20px', 
                     border: 'none', 
                     borderRadius: '8px', 
                     background: activeTab === 'user' 
@@ -695,11 +695,12 @@ const Login = () => {
 
               {/* 회원가입 링크 */}
               <div className="login-links" style={{ 
-                textAlign: 'center' 
+                textAlign: 'center',
+                marginBottom: '15px'
                 }}>
                 {activeTab === 'employee' && (
                   <button 
-                  onClick={() => navigate('/SignUp', { state: { isEmployee: true } })} 
+                  onClick={() => navigate('/SignUp', { state: { isEmployee: true } })}
                   style={{ 
                     background: 'none',
                     border: 'none',
@@ -715,7 +716,7 @@ const Login = () => {
                 )}
                 {activeTab === 'user' && (
                   <button 
-                  onClick={() => navigate('/SignUp', { state: { isEmployee: false } })} 
+                  onClick={() => navigate('/SignUp', { state: { isEmployee: false } })}
                   style={{ 
                     background: 'none', 
                     border: 'none', 
@@ -729,6 +730,27 @@ const Login = () => {
                     <i className="fas fa-user-plus me-2"></i>사용자 회원가입
                   </button>
                 )}
+              </div>
+
+              {/* 개인정보처리방침 및 이용약관 */}
+              <div className="privacy-links" style={{
+                textAlign: 'center',
+                paddingTop: '15px',
+                borderTop: '1px solid rgba(184, 134, 11, 0.2)'
+              }}>
+                <a href="#" style={{
+                  color: '#6B4423',
+                  textDecoration: 'none',
+                  fontSize: '12px',
+                  fontWeight: '500'
+                }}>개인정보처리방침</a>
+                <span style={{ margin: '0 10px', color: '#6B4423', fontSize: '12px' }}>|</span>
+                <a href="#" style={{
+                  color: '#6B4423',
+                  textDecoration: 'none',
+                  fontSize: '12px',
+                  fontWeight: '500'
+                }}>이용약관</a>
               </div>
             </div>
           </div>
