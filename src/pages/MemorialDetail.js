@@ -384,112 +384,70 @@ const MemorialDetail = () => {
                 }}>
                   
                   {/* 탭 헤더들 */}
-                  <div className="memorial-tabs-header position-absolute" style={{ 
-                    top: '0', 
-                    left: '0', 
-                    right: '0', 
+                  <div className="memorial-tabs-header" style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
                     zIndex: 10,
-                    background: 'rgba(184, 134, 11, 0.1)',
-                    padding: '0'
+                    padding: '20px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '10px',
                   }}>
                     {/* 추모영상 탭 헤더 */}
-                    <div 
+                    <div
                       className={`tab-header ${activeTab === 'video' ? 'active' : ''}`}
                       style={{
-                        position: 'absolute',
-                        top: '20px',
-                        left: '20px',
-                        background: activeTab === 'video' 
-                          ? 'rgba(255, 251, 235, 0.95)' 
+                        flex: '1 1 auto',
+                        textAlign: 'center',
+                        background: activeTab === 'video'
+                          ? 'rgba(255, 251, 235, 0.95)'
                           : 'rgba(248, 249, 250, 0.7)',
-                        borderRadius: '15px 15px 0 0',
+                        borderRadius: '15px',
                         padding: '15px 20px',
                         border: 'none',
-                        boxShadow: activeTab === 'video' ? '0 -2px 10px rgba(44, 31, 20, 0.1)' : 'none',
+                        boxShadow: activeTab === 'video' ? '0 2px 10px rgba(44, 31, 20, 0.15)' : 'none',
                         zIndex: activeTab === 'video' ? 12 : 11,
-                        transform: activeTab === 'video' ? 'translateY(0)' : 'translateY(5px)',
-                        transition: 'all 0.3s ease'
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer',
                       }}
+                      onClick={switchToVideo}
                     >
-                      <h5 className="mb-0" style={{ color: '#2C1F14' }}>
+                      <h5 className="mb-0" style={{ color: '#2C1F14', fontSize: '1rem' }}>
                         <i className="fas fa-play me-2"></i>
                         추모영상 01
                       </h5>
                     </div>
 
                     {/* 사진첩 탭 헤더 */}
-                    <div 
+                    <div
                       className={`tab-header ${activeTab === 'photos' ? 'active' : ''}`}
                       style={{
-                        position: 'absolute',
-                        top: '20px',
-                        left: '180px',
-                        background: activeTab === 'photos' 
-                          ? 'rgba(255, 251, 235, 0.95)' 
+                        flex: '1 1 auto',
+                        textAlign: 'center',
+                        background: activeTab === 'photos'
+                          ? 'rgba(255, 251, 235, 0.95)'
                           : 'rgba(248, 249, 250, 0.7)',
-                        borderRadius: '15px 15px 0 0',
+                        borderRadius: '15px',
                         padding: '15px 20px',
                         border: 'none',
-                        boxShadow: activeTab === 'photos' ? '0 -2px 10px rgba(44, 31, 20, 0.1)' : 'none',
+                        boxShadow: activeTab === 'photos' ? '0 2px 10px rgba(44, 31, 20, 0.15)' : 'none',
                         zIndex: activeTab === 'photos' ? 12 : 11,
-                        transform: activeTab === 'photos' ? 'translateY(0)' : 'translateY(5px)',
-                        transition: 'all 0.3s ease'
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer',
                       }}
+                      onClick={switchToPhotos}
                     >
-                      <div className="d-flex align-items-center">
-                        <h5 className="mb-0 me-3" style={{ color: '#2C1F14' }}>
+                      <div className="d-flex align-items-center justify-content-center">
+                        <h5 className="mb-0 me-2" style={{ color: '#2C1F14', fontSize: '1rem' }}>
                           <i className="fas fa-images me-2"></i>
                           사진첩
                         </h5>
-                        <small className="text-muted">(스크롤 형식)</small>
+                        <small className="text-muted d-none d-sm-inline">(스크롤 형식)</small>
                       </div>
                     </div>
                   </div>
-
-                  {/* 좌우 전환 버튼들 */}
-                  <Button
-                    style={{
-                      position: 'absolute',
-                      left: '20px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      zIndex: 15,
-                      width: '50px',
-                      height: '50px',
-                      borderRadius: '50%',
-                      border: 'none',
-                      background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                      color: '#fff',
-                      boxShadow: '0 4px 15px rgba(44, 31, 20, 0.2)',
-                      opacity: activeTab === 'video' ? 0.5 : 1,
-                      pointerEvents: activeTab === 'video' ? 'none' : 'auto'
-                    }}
-                    onClick={switchToVideo}
-                  >
-                    <i className="fas fa-chevron-left"></i>
-                  </Button>
-
-                  <Button
-                    style={{
-                      position: 'absolute',
-                      right: '20px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      zIndex: 15,
-                      width: '50px',
-                      height: '50px',
-                      borderRadius: '50%',
-                      border: 'none',
-                      background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                      color: '#fff',
-                      boxShadow: '0 4px 15px rgba(44, 31, 20, 0.2)',
-                      opacity: activeTab === 'photos' ? 0.5 : 1,
-                      pointerEvents: activeTab === 'photos' ? 'none' : 'auto'
-                    }}
-                    onClick={switchToPhotos}
-                  >
-                    <i className="fas fa-chevron-right"></i>
-                  </Button>
 
                   {/* 탭 콘텐츠 영역 */}
                   <div className="memorial-tabs-content" style={{ 
@@ -504,7 +462,7 @@ const MemorialDetail = () => {
                       className={`tab-content ${activeTab === 'video' ? 'active' : ''}`}
                       style={{
                         display: activeTab === 'video' ? 'block' : 'none',
-                        padding: '80px 20px 20px',
+                        padding: '120px 20px 20px',
                         minHeight: '350px'
                       }}
                     >
@@ -546,7 +504,7 @@ const MemorialDetail = () => {
                       className={`tab-content ${activeTab === 'photos' ? 'active' : ''}`}
                       style={{
                         display: activeTab === 'photos' ? 'block' : 'none',
-                        padding: '80px 20px 20px',
+                        padding: '120px 20px 20px',
                         minHeight: '350px'
                       }}
                     >
