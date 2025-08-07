@@ -1235,16 +1235,26 @@ const MemorialDetail = () => {
           border-radius: 10px;
         }
 
+        /* --- 수정된 반응형 코드 --- */
         @media (max-width: 1200px) {
           .page-wrapper {
-            height: auto;
+            height: auto !important; /* 고정 높이 해제제 */
             min-height: calc(100vh - var(--navbar-height));
+            overflow-y: auto !important; /* 전체 페이지 스크롤이 가능하도록 변경 */
+            align-items: flex-start !important; /* 컨텐츠를 위쪽으로 정렬 */
           }
           .memorial-container {
-            flex-direction: column;
-            height: auto;
+            height: auto !important; 
+            overflow: visible !important; /* 내용이 넘쳐도 보이도록 설정 */
+          }
+          .memorial-detail-scroll-area {
+            height: auto !important; 
+            overflow: visible !important; /* 내부 스크롤을 제거,전체 스크롤을 따르도록 함 */
+            flex: none !important; /* flex-grow 속성 제거 */
           }
         }
+
+        
       `}</style>
     </div>
   );
