@@ -284,7 +284,7 @@ const Menu1_1 = () => {
             }}>
               {filteredCustomers.map((customer) => {
                 return (
-                  <div key={customer.id} style={{
+                  <div key={customer.id} className="customer-card" style={{
                     background: 'rgba(253, 251, 243, 0.92)',
                     borderRadius: '16px',
                     overflow: 'hidden',
@@ -293,7 +293,6 @@ const Menu1_1 = () => {
                     display: 'flex',
                     minHeight: '140px',
                     position: 'relative',
-                    overflowX: 'auto'
                   }}
                   >
                     <div style={{
@@ -489,6 +488,17 @@ const Menu1_1 = () => {
                 }
                 
                 @media (max-width: 768px) {
+                    .customer-card {
+                        flex-direction: column;
+                    }
+                    .customer-card > div {
+                        min-width: 100% !important;
+                        border-left: none !important;
+                        border-bottom: 1px solid rgba(184, 134, 11, 0.2);
+                    }
+                    .customer-card > div:last-child {
+                        border-bottom: none;
+                    }
                     .dashboard-container {
                         padding: 10px;
                         gap: 15px;
