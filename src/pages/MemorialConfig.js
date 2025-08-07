@@ -582,91 +582,98 @@ const MemorialConfig = () => {
                                                 />
                                             </Form.Group>
 
-                                            <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                    <i className="fas fa-image me-2" style={{ color: '#B8860B' }}></i>프로필 사진
-                                                </Form.Label>
-                                                <Form.Control
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={(e) => {
-                                                        const file = e.target.files[0];
-                                                        if (file) {
-                                                            setProfileImageFile(file);
-                                                            setImagePreviewUrl(URL.createObjectURL(file));
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        borderRadius: '12px',
-                                                        padding: '12px 16px',
-                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                        background: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2C1F14'
-                                                    }}
-                                                />
-                                            </Form.Group>
+                                            <div style={{
+                                                border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                borderRadius: '16px',
+                                                padding: '20px',
+                                                background: 'rgba(255, 255, 255, 0.5)'
+                                            }}>
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                        <i className="fas fa-image me-2" style={{ color: '#B8860B' }}></i>프로필 사진
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files[0];
+                                                            if (file) {
+                                                                setProfileImageFile(file);
+                                                                setImagePreviewUrl(URL.createObjectURL(file));
+                                                            }
+                                                        }}
+                                                        style={{
+                                                            borderRadius: '12px',
+                                                            padding: '12px 16px',
+                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                            background: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2C1F14'
+                                                        }}
+                                                    />
+                                                </Form.Group>
 
-                                            <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                    <i className="fas fa-heading me-2" style={{ color: '#B8860B' }}></i>사진 제목
-                                                </Form.Label>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={profileImageTitle}
-                                                    onChange={(e) => setProfileImageTitle(e.target.value)}
-                                                    placeholder="사진의 제목을 입력하세요"
-                                                    style={{
-                                                        borderRadius: '12px',
-                                                        padding: '12px 16px',
-                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                        background: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2C1F14'
-                                                    }}
-                                                />
-                                            </Form.Group>
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                        <i className="fas fa-heading me-2" style={{ color: '#B8860B' }}></i>사진 제목
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        value={profileImageTitle}
+                                                        onChange={(e) => setProfileImageTitle(e.target.value)}
+                                                        placeholder="사진의 제목을 입력하세요"
+                                                        style={{
+                                                            borderRadius: '12px',
+                                                            padding: '12px 16px',
+                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                            background: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2C1F14'
+                                                        }}
+                                                    />
+                                                </Form.Group>
 
-                                            <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                    <i className="fas fa-align-left me-2" style={{ color: '#B8860B' }}></i>사진 설명
-                                                </Form.Label>
-                                                <Form.Control
-                                                    as="textarea"
-                                                    rows={3}
-                                                    value={profileImageDescription}
-                                                    onChange={(e) => setProfileImageDescription(e.target.value)}
-                                                    placeholder="사진에 대한 설명을 입력하세요"
-                                                    style={{
-                                                        borderRadius: '12px',
-                                                        padding: '12px 16px',
-                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                        background: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2C1F14'
-                                                    }}
-                                                />
-                                            </Form.Group>
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
+                                                        <i className="fas fa-align-left me-2" style={{ color: '#B8860B' }}></i>사진 설명
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        as="textarea"
+                                                        rows={3}
+                                                        value={profileImageDescription}
+                                                        onChange={(e) => setProfileImageDescription(e.target.value)}
+                                                        placeholder="사진에 대한 설명을 입력하세요"
+                                                        style={{
+                                                            borderRadius: '12px',
+                                                            padding: '12px 16px',
+                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                            background: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2C1F14'
+                                                        }}
+                                                    />
+                                                </Form.Group>
 
-                                            {/* 현재 이미지 미리보기 */}
-                                            {(imagePreviewUrl || formData.imageUrl) && (
-                                                <div className="mb-3">
-                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>미리보기</Form.Label>
-                                                    <div className="text-center">
-                                                        <img
-                                                            src={imagePreviewUrl || formData.imageUrl}
-                                                            alt="프로필 미리보기"
-                                                            style={{
-                                                                width: '150px',
-                                                                height: '180px',
-                                                                objectFit: 'cover',
-                                                                borderRadius: '8px',
-                                                                border: '2px solid #e9ecef'
-                                                            }}
-                                                            onError={(e) => {
-                                                                e.target.style.display = 'none';
-                                                            }}
-                                                        />
+                                                {/* 현재 이미지 미리보기 */}
+                                                {(imagePreviewUrl || formData.imageUrl) && (
+                                                    <div className="mb-3">
+                                                        <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>미리보기</Form.Label>
+                                                        <div className="text-center">
+                                                            <img
+                                                                src={imagePreviewUrl || formData.imageUrl}
+                                                                alt="프로필 미리보기"
+                                                                style={{
+                                                                    width: '150px',
+                                                                    height: '180px',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '8px',
+                                                                    border: '2px solid #e9ecef'
+                                                                }}
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
+                                                )}
+                                            </div>
                                         </Col>
                                     </Row>
                                 )}
