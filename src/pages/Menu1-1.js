@@ -227,14 +227,34 @@ const Menu1_1 = () => {
             borderBottom: '1px solid rgba(184, 134, 11, 0.2)',
             marginBottom: '20px'
           }}>
-            <h3 style={{
-              color: '#2C1F14',
-              fontWeight: '600',
-              marginBottom: '8px',
-              fontSize: '1.5rem'
-            }}>
-              {activeFilter === 'all' ? '전체' : customerUtils.getStatusText(activeFilter)} 고객 목록
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{
+                color: '#2C1F14',
+                fontWeight: '600',
+                margin: 0, // marginBottom 제거
+                fontSize: '1.5rem'
+              }}>
+                {activeFilter === 'all' ? '전체' : customerUtils.getStatusText(activeFilter)} 고객 목록
+              </h3>
+              <Button
+                onClick={() => navigate('/menu1-4')}
+                className="save-btn"
+                style={{
+                    padding: '10px 24px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    color: '#2C1F14',
+                    background: 'linear-gradient(135deg, #D4AF37, #F5C23E)',
+                    boxShadow: '0 4px 15px rgba(184, 134, 11, 0.35)'
+                }}
+              >
+                고인 등록
+              </Button>
+            </div>
             <p style={{
               color: '#4A3728',
               fontSize: '14px',
