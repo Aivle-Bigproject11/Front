@@ -227,14 +227,34 @@ const Menu1_1 = () => {
             borderBottom: '1px solid rgba(184, 134, 11, 0.2)',
             marginBottom: '20px'
           }}>
-            <h3 style={{
-              color: '#2C1F14',
-              fontWeight: '600',
-              marginBottom: '8px',
-              fontSize: '1.5rem'
-            }}>
-              {activeFilter === 'all' ? '전체' : customerUtils.getStatusText(activeFilter)} 고객 목록
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{
+                color: '#2C1F14',
+                fontWeight: '600',
+                margin: 0, // marginBottom 제거
+                fontSize: '1.5rem'
+              }}>
+                {activeFilter === 'all' ? '전체' : customerUtils.getStatusText(activeFilter)} 고객 목록
+              </h3>
+              <Button
+                onClick={() => navigate('/menu1-4')}
+                className="save-btn"
+                style={{
+                    padding: '10px 24px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    color: '#2C1F14',
+                    background: 'linear-gradient(135deg, #D4AF37, #F5C23E)',
+                    boxShadow: '0 4px 15px rgba(184, 134, 11, 0.35)'
+                }}
+              >
+                고인 등록
+              </Button>
+            </div>
             <p style={{
               color: '#4A3728',
               fontSize: '14px',
@@ -273,6 +293,7 @@ const Menu1_1 = () => {
                     display: 'flex',
                     minHeight: '140px',
                     position: 'relative',
+                    overflowX: 'auto'
                   }}
                   >
                     <div style={{
@@ -407,12 +428,7 @@ const Menu1_1 = () => {
             .dashboard-right::-webkit-scrollbar { width: 6px; }
             .dashboard-right::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
             .dashboard-right::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
-            @media (max-width: 1200px) {
-            .page-wrapper { height: auto; min-height: calc(100vh - var(--navbar-height)); }
-            .dashboard-container { flex-direction: column; height: auto; }
-            .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
-            .dashboard-right { height: auto; max-height: none; }
-            }
+
 
             .btn-golden {
                 background: linear-gradient(135deg, #D4AF37, #F5C23E);
@@ -454,6 +470,41 @@ const Menu1_1 = () => {
                 border-color: #B8860B !important;
                 color: white !important;
             }
+                 /* 반응형 레이아웃 */
+                @media (max-width: 1200px) {
+                    .page-wrapper {
+                        height: auto !important;
+                        min-height: calc(100vh - var(--navbar-height));
+                        align-items: flex-start !important;
+                    }
+                    .dashboard-container {
+                        flex-direction: column;
+                        height: auto !important;
+                        overflow: visible;
+                    }
+                    .dashboard-left {
+                        flex: 1 1 auto; /* 세로로 쌓일 때 너비 제약을 해제하고 전체 너비를 차지하도록 함 */
+                        margin-bottom: 20px;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .dashboard-container {
+                        padding: 10px;
+                        gap: 15px;
+                    }
+                    .customer-id-name-row {
+                        flex-direction: column;
+                    }
+                    .customer-id-name-row > .col-6 {
+                        width: 100%;
+                        padding-left: 12px;
+                        padding-right: 12px;
+                    }
+                     .customer-id-name-row > .col-6:first-of-type {
+                        margin-bottom: 1rem;
+                    }
+                }
         `}</style>
     </div>
   );

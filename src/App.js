@@ -12,11 +12,12 @@ import FindPassword from './pages/FindPassword';
 import Menu1_1 from './pages/Menu1-1';
 import Menu1_2 from './pages/Menu1-2';
 import Menu1_3 from './pages/Menu1-3';
+import Menu1_4 from './pages/Menu1-4';
 import Menu2 from './pages/Menu2';
 import Menu3 from './pages/Menu3';
 import Menu4 from './pages/Menu4';
 import Menu5 from './pages/Menu5';
-import Menu5_1 from './pages/Menu5_1'; 
+import Menu5_1 from './pages/Menu5_1';
 import Menu5_2 from './pages/Menu5_2';
 import MemorialDetail from './pages/MemorialDetail';
 import MemorialConfig from './pages/MemorialConfig';
@@ -79,6 +80,7 @@ const MainLayout = () => {
                 <Route path="/menu1-1" element={<Menu1_1 />} />
                 <Route path="/menu1-2" element={<Menu1_2 />} />
                 <Route path="/menu1-3" element={<Menu1_3 />} />
+                <Route path="/menu1-4" element={<Menu1_4 />} />
                 <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
                 <Route path="/menu2" element={<Menu2 />} />
                 <Route path="/menu3" element={<Menu3 />} />
