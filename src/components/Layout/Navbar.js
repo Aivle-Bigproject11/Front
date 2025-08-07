@@ -74,7 +74,6 @@ const Navbar = () => {
         <BootstrapNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             {/* 각 메뉴 링크에 현재 경로와 비교하여 활성 스타일을 동적으로 적용합니다. */}
-            <Nav.Link as={Link} to="/" style={location.pathname === "/" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>홈</Nav.Link>
             <Nav.Link as={Link} to="/menu1-1" style={location.pathname.startsWith("/menu1") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>장례서류작성</Nav.Link>
             <Nav.Link as={Link} to="/menu2" style={location.pathname === "/menu2" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>대시보드</Nav.Link>
             <Nav.Link as={Link} to="/menu3" style={location.pathname === "/menu3" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>전환서비스추천</Nav.Link>
@@ -84,10 +83,10 @@ const Navbar = () => {
           <Nav>
             <span className="welcome-text">환영합니다, {user?.username || user?.name}님!</span>
             <button onClick={() => navigate('/user-config')} className="lobby-logout-button user-config-button">
-                <User size={16} style={{ marginRight: '6px' }} />내 정보
+                <User size={12} style={{ marginRight: '6px' }} />내 정보
             </button>
             <button onClick={handleLogout} className="lobby-logout-button">
-                <LogOut size={16} style={{ marginRight: '6px' }} />로그아웃
+                <LogOut size={12} style={{ marginRight: '6px' }} />로그아웃
             </button>
           </Nav>
         </BootstrapNavbar.Collapse>
