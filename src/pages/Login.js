@@ -738,7 +738,7 @@ const Login = () => {
                 paddingTop: '15px',
                 borderTop: '1px solid rgba(184, 134, 11, 0.2)'
               }}>
-                <a href="#" style={{
+                <a href="/privacyPolicy" style={{
                   color: '#6B4423',
                   textDecoration: 'none',
                   fontSize: '12px',
