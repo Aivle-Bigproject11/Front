@@ -87,7 +87,7 @@ const Navbar = () => {
           </Nav>
           <Nav>
             <span className="welcome-text">환영합니다, {maskName(user?.username || user?.name)}님!</span>
-            <button onClick={() => navigate('/user-config')} className="lobby-logout-button user-config-button">
+            <button onClick={() => navigate('/password-check')} className="lobby-logout-button user-config-button">
                 <User size={12} style={{ marginRight: '6px' }} />내 정보
             </button>
             <button onClick={handleLogout} className="lobby-logout-button">
