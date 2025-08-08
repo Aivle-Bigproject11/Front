@@ -119,7 +119,7 @@ const Login = () => {
         position: 'relative',
         zIndex: 1,
         width: '100%',
-        maxWidth: '880px',
+        maxWidth: '1600px',
         minHeight: '640px',
         margin: '0 auto',
         display: 'flex',
@@ -143,14 +143,178 @@ const Login = () => {
           backdropFilter: 'blur(15px)',
           overflow: 'hidden',
           border: '2px solid rgba(184, 134, 11, 0.35)',
-          width: '100%'
+          width: '100%',
+          maxWidth: '1600px'
         }}>
           <div className="login-content" style={{
             display: 'flex',
             minHeight: '600px'
           }}>
+            {/* 왼쪽 빈 공간 - Golden Gate 소개 및 기능 안내 */}
+            {activeTab === 'employee' && (
+              <div className="login-card-left" style={{
+                flex: '1',
+                background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', // 밝은 배경
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '30px',
+                textAlign: 'center',
+                borderRight: '1px solid rgba(184, 134, 11, 0.2)',
+                boxShadow: 'inset -5px 0 15px rgba(0,0,0,0.05)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+
+
+                <h3 style={{
+                  color: '#2C1F14',
+                  fontWeight: '700',
+                  marginBottom: '20px',
+                  fontSize: '1.8rem',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                }}>Golden Gate 관리 시스템</h3>
+                <p style={{
+                  color: '#4A3728',
+                  fontSize: '16px',
+                  lineHeight: '1.8',
+                  marginBottom: '30px',
+                  maxWidth: '400px'
+                }}>
+                  Golden Gate는 소중한 분들을 위한<br/> 
+                  프리미엄 상조 서비스입니다.<br/>
+                  <br/><span style={{ fontSize: '15px'}}>직원 관리 시스템을 통해 효율적인 업무 처리를 지원합니다.</span>
+                </p>
+                <div style={{
+                  width: '100%',
+                  maxWidth: '420px',
+                  textAlign: 'left',
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '15px',
+                  padding: '25px',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+                  border: '1px solid rgba(184, 134, 11, 0.15)'
+                }}>
+                  <h4 style={{
+                    color: '#2C1F14',
+                    fontWeight: '700',
+                    marginBottom: '15px',
+                    fontSize: '1.3rem'
+                  }}>주요 기능</h4>
+                  <ul style={{
+                    listStyle: 'none',
+                    padding: 0,
+                    margin: 0
+                  }}>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-file-alt me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>장례 서류 작성:</strong> 장례 관련 서류를 자동으로 작성합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-chart-line me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>대시보드:</strong> 지역별 월별 사망자 수를 예측하여 실시간 통계 및 분석을 제공합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-comments-dollar me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>전환 서비스 추천:</strong> 고객에게 맞춤 전환 서비스 메시지를 자동으로 생성하고 기록을 조회합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-book-open me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>디지털 추모관:</strong> 디지털 추모관을 관리합니다.
+                    </li>
+                    <li style={{ color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-users me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>고객 관리:</strong> 고객을 조회 및 관리합니다.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'user' && (
+              <div className="login-card-left" style={{
+                flex: '1',
+                background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', // 밝은 배경
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '30px',
+                textAlign: 'center',
+                borderRight: '1px solid rgba(184, 134, 11, 0.2)',
+                boxShadow: 'inset -5px 0 15px rgba(0,0,0,0.05)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+
+
+                <h3 style={{
+                  color: '#2C1F14',
+                  fontWeight: '700',
+                  marginBottom: '20px',
+                  fontSize: '1.8rem',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                }}>Golden Gate 사용자 서비스</h3>
+                <p style={{
+                  color: '#4A3728',
+                  fontSize: '16px',
+                  lineHeight: '1.8',
+                  marginBottom: '30px',
+                  maxWidth: '400px'
+                }}>
+                  Golden Gate는 소중한 분들을 위한<br/>
+                  프리미엄 상조 서비스입니다.<br/>
+                  <br/><span style={{ fontSize: '15px'}}>사용자 서비스를 통해 추모관을 편리하게 이용하실 수 있습니다.</span>
+                </p>
+                <div style={{
+                  width: '100%',
+                  maxWidth: '420px',
+                  textAlign: 'left',
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '15px',
+                  padding: '25px',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+                  border: '1px solid rgba(184, 134, 11, 0.15)'
+                }}>
+                  <h4 style={{
+                    color: '#2C1F14',
+                    fontWeight: '700',
+                    marginBottom: '15px',
+                    fontSize: '1.3rem'
+                  }}>주요 기능</h4>
+                  <ul style={{
+                    listStyle: 'none',
+                    padding: 0,
+                    margin: 0
+                  }}>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-book-open me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>디지털 추모관:</strong> 디지털 추모관을 관리합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-door-open me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>추모관 입장:</strong> 고유번호로 추모관에 입장합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-pen-alt me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>추모사 생성:</strong> 추모사 초안 및 키워드를 입력하면 추모사를 자동으로 생성합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-video me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>추모영상 생성:</strong> 원하는 이미지와 키워드를 입력하면 추모영상을 자동으로 생성합니다.
+                    </li>
+                    <li style={{ color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-file-invoice me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>장례 서류 조회:</strong> 장례 관련 서류를 조회합니다.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {/* 왼쪽 이미지 영역 */}
-            <div className="login-left" style={{
+            <div className="login-card-middle" style={{
               flex: '1',
               background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
               display: 'flex',
@@ -311,7 +475,7 @@ const Login = () => {
             </div>
 
             {/* 오른쪽 폼 영역 */}
-            <div className="login-right" style={{
+            <div className="login-card-right" style={{
               flex: '1',
               padding: '30px 40px 15px 40px',
               display: 'flex',
@@ -319,7 +483,6 @@ const Login = () => {
               background: activeTab === 'employee' 
                 ? 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)' 
                 : 'linear-gradient(135deg, rgba(74, 55, 40, 0.12) 0%, rgba(139, 90, 43, 0.08) 100%)',
-              borderRadius: '16px',
               boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
               border: '1px solid rgba(184, 134, 11, 0.2)',
               overflowY: 'auto'
@@ -583,7 +746,9 @@ const Login = () => {
                                     >
                   {loading ? ( 
                     <> 
-                    <span className="spinner-border spinner-border-sm me-2" role="status"></span> 
+                    <span className="spinner-border spinner-border-sm me-2"
+                    style={{ width: '1rem', height:'1rem'  }} 
+                    role="status"></span> 
                     로그인 중... 
                     </> 
                 ) : ( 
@@ -601,7 +766,8 @@ const Login = () => {
                 background: 'rgba(184, 134, 11, 0.12)', 
                 borderRadius: '12px', 
                 marginBottom: '15px', 
-                border: '1px solid rgba(184, 134, 11, 0.25)' 
+                border: '1px solid rgba(184, 134, 11, 0.25)',
+                visibility: activeTab === 'employee' ? 'hidden' : 'visible' 
                 }}>
                 <h6 style={{ 
                     color: '#2C1F14', 
@@ -659,7 +825,6 @@ const Login = () => {
                     fontSize: '14px', 
                     fontWeight: '700', 
                     cursor: joinLoading ? 'not-allowed' : 'pointer', 
-                    transition: 'all 0.3s ease', 
                     minWidth: '80px', 
                     display: 'flex', 
                     alignItems: 'center', 
@@ -785,14 +950,6 @@ const Login = () => {
         @media (max-width: 768px) {
           .login-content {
             flex-direction: column !important;
-          }
-          
-          .login-left {
-            min-height: auto !important;
-          }
-          
-          .login-right {
-            padding: 30px 20px !important;
           }
         }
       `}</style>
