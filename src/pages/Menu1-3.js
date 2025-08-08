@@ -275,14 +275,14 @@ const Menu1_3 = () => {
                     border: none;
                     color: white;
                     font-weight: 700;
-                    font-size: 1rem;
+                    font-size: 14px;
+                    box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
+                    transition: all 0.3s ease;
                     border-radius: 12px;
                     cursor: pointer;
-                    transition: all 0.3s ease;
-                    box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
                 }
                 .back-btn:hover {
-                    background: linear-gradient(135deg, #3c2d20, #7a4e24);
+                    background: linear: linear-gradient(135deg, #3c2d20, #7a4e24);
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
                 }

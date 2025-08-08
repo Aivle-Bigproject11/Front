@@ -43,6 +43,10 @@ export const apiService = {
   updateMemorial: (id, data) => api.put(`/memorials/${id}`, data),
   deleteMemorial: (id) => api.delete(`/memorials/${id}`),
 
+  // 장례서류 관련 API
+    getFuneralInfos: () => api.get('/funeralInfos'),
+
+
   // 대시보드 데이터
   getDashboardData: () => api.get('/dashboard'),
 
