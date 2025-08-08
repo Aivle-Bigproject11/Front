@@ -34,8 +34,6 @@ const MemorialConfig = () => {
         style: 'classic'
     });
     const [profileImageFile, setProfileImageFile] = useState(null);
-    const [profileImageTitle, setProfileImageTitle] = useState('');
-    const [profileImageDescription, setProfileImageDescription] = useState('');
     const [imagePreviewUrl, setImagePreviewUrl] = useState('');
     const [slideshowPhotos, setSlideshowPhotos] = useState([]);
     const [animatedPhoto, setAnimatedPhoto] = useState(null);
@@ -163,13 +161,7 @@ const MemorialConfig = () => {
 
                 const data = new FormData();
                 data.append('profileImage', profileImageFile);
-                data.append('title', profileImageTitle);
-                data.append('description', profileImageDescription);
-                // Append other memorial data as needed
-                // for (const key in updatedMemorial) {
-                //     data.append(key, updatedMemorial[key]);
-                // }
-
+                
                 // TODO: Implement actual API call
                 // await api.updateMemorial(id, data);
 
@@ -246,9 +238,10 @@ const MemorialConfig = () => {
                 <div style={{
                     position: 'absolute',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'url("data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23B8860B\' fill-opacity=\'0.12\'%3E%3Cpath d=\'M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+                    background: 'url("data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23B8860B\' fill-opacity=\'0.12\' %3E%3Cpath d=\'M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
                     opacity: 0.7
-                }}></div>
+                }}>
+                </div>
                 <div className="text-center" style={{ position: 'relative', zIndex: 1 }}>
                     <div className="spinner-border" role="status" style={{ color: '#b8860b' }}>
                         <span className="visually-hidden">Loading...</span>
@@ -291,9 +284,10 @@ const MemorialConfig = () => {
             <div style={{
                 position: 'absolute',
                 top: 0, left: 0, right: 0, bottom: 0,
-                background: 'url("data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23B8860B\' fill-opacity=\'0.12\'%3E%3Cpath d=\'M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+                background: 'url("data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23B8860B\' fill-opacity=\'0.12\' %3E%3Cpath d=\'M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
                 opacity: 0.7
-            }}></div>
+            }}>
+            </div>
             
             <Container className="mt-4" style={{ position: 'relative', zIndex: 1 }}>
             {/* 헤더 섹션 */}
@@ -638,46 +632,6 @@ const MemorialConfig = () => {
                                                     />
                                                 </Form.Group>
 
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                        <i className="fas fa-heading me-2" style={{ color: '#B8860B' }}></i>사진 제목
-                                                    </Form.Label>
-                                                    <Form.Control
-                                                        type="text"
-                                                        value={profileImageTitle}
-                                                        onChange={(e) => setProfileImageTitle(e.target.value)}
-                                                        placeholder="사진의 제목을 입력하세요"
-                                                        style={{
-                                                            borderRadius: '12px',
-                                                            padding: '12px 16px',
-                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                            background: 'rgba(255, 255, 255, 0.9)',
-                                                            color: '#2C1F14'
-                                                        }}
-                                                    />
-                                                </Form.Group>
-
-                                                <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                        <i className="fas fa-align-left me-2" style={{ color: '#B8860B' }}></i>사진 설명
-                                                    </Form.Label>
-                                                    <Form.Control
-                                                        as="textarea"
-                                                        rows={3}
-                                                        value={profileImageDescription}
-                                                        onChange={(e) => setProfileImageDescription(e.target.value)}
-                                                        placeholder="사진에 대한 설명을 입력하세요"
-                                                        style={{
-                                                            borderRadius: '12px',
-                                                            padding: '12px 16px',
-                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                            background: 'rgba(255, 255, 255, 0.9)',
-                                                            color: '#2C1F14'
-                                                        }}
-                                                    />
-                                                </Form.Group>
-
-                                                {/* 현재 이미지 미리보기 */}
                                                 {(imagePreviewUrl || formData.imageUrl) && (
                                                     <div className="mb-3">
                                                         <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>미리보기</Form.Label>
@@ -702,7 +656,8 @@ const MemorialConfig = () => {
                                             </div>
                                         </Col>
                                     </Row>
-                                )}
+                                )
+                                }
 
                                 {/* 영상 생성 탭 */}
                                 {activeTab === 'video' && (
@@ -1051,7 +1006,7 @@ const MemorialConfig = () => {
                                             boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
                                         }}
                                     >
-                                        <i className={`fas ${
+                                        <i className={`fas ${ 
                                             activeTab === 'basic' ? 'fa-save' :
                                             activeTab === 'video' ? 'fa-play' :
                                             'fa-magic'

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Modal, Form, Badge, Carousel } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Badge } from 'react-bootstrap';
 import { ArrowLeft } from 'lucide-react';
 import { dummyData } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,6 +27,8 @@ const MemorialDetail = () => {
   const [selectedRibbon, setSelectedRibbon] = useState(null);
   const [showRibbonDetailModal, setShowRibbonDetailModal] = useState(false);
   const [animateCard, setAnimateCard] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   // 접근 모드 확인: 고유번호 접근(guest), 유저 로그인(user), 관리자 로그인(admin)
   const isGuestAccess = !user; // 로그인하지 않고 고유번호로 접근
@@ -108,6 +110,11 @@ const MemorialDetail = () => {
     setGuestbookList([newEntry, ...guestbookList]);
     setGuestbookEntry({ name: '', message: '', relationship: '' });
     setShowGuestbookModal(false);
+  };
+
+  const handlePhotoClick = (photo) => {
+    setSelectedPhoto(photo);
+    setShowPhotoModal(true);
   };
 
   // 탭 전환 함수들
@@ -505,55 +512,34 @@ const MemorialDetail = () => {
                       style={{
                         display: activeTab === 'photos' ? 'block' : 'none',
                         padding: '120px 20px 20px',
-                        minHeight: '350px'
+                        minHeight: '450px',
+                        overflowY: 'auto'
                       }}
                     >
-                      <div className="memorial-photos-grid">
-                        <Row>
-                          {[1, 2, 3, 4, 5, 6, 7, 8].map(index => (
-                            <Col md={3} sm={4} xs={6} key={index} className="mb-3">
-                              <div 
-                                className="memorial-photo-item"
-                                style={{
-                                  aspectRatio: '1',
-                                  background: 'rgba(184, 134, 11, 0.1)',
-                                  borderRadius: '8px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  border: '2px solid rgba(184, 134, 11, 0.2)',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.3s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.target.style.transform = 'scale(1.05)';
-                                  e.target.style.boxShadow = '0 4px 15px rgba(44, 31, 20, 0.2)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.target.style.transform = 'scale(1)';
-                                  e.target.style.boxShadow = 'none';
-                                }}
+                      {memorial.photos && memorial.photos.length > 0 ? (
+                        <Row xs={1} sm={2} md={2} lg={2} className="g-4">
+                          {memorial.photos.map(photo => (
+                            <Col key={photo.id}>
+                              <Card 
+                                className="h-100 photo-card" 
+                                onClick={() => handlePhotoClick(photo)}
+                                style={{ cursor: 'pointer', overflow: 'hidden' }}
                               >
-                                <small style={{ color: '#b8860b' }}>사진</small>
-                              </div>
+                                <Card.Img 
+                                  variant="top" 
+                                  src={photo.url} 
+                                  style={{ height: '200px', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                                />
+                              </Card>
                             </Col>
                           ))}
                         </Row>
-                        <div className="text-center mt-3">
-                          <Button 
-                            style={{
-                              background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                              border: '1px solid rgba(255, 255, 255, 0.2)',
-                              color: '#fff',
-                              fontWeight: '600',
-                              borderRadius: '8px'
-                            }}
-                            size="sm"
-                          >
-                            사진 등록하기
-                          </Button>
+                      ) : (
+                        <div className="text-center text-muted p-5">
+                          <i className="fas fa-images fa-3x mb-3"></i>
+                          <p>등록된 사진이 없습니다.</p>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1137,6 +1123,21 @@ const MemorialDetail = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* 사진 상세보기 모달 */}
+      <Modal show={showPhotoModal} onHide={() => setShowPhotoModal(false)} size="lg" centered>
+        {selectedPhoto && (
+          <>
+            <Modal.Header closeButton>
+              <Modal.Title>{selectedPhoto.title}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <img src={selectedPhoto.url} alt={selectedPhoto.title} className="img-fluid mb-3" />
+              <p>{selectedPhoto.description}</p>
+            </Modal.Body>
+          </>
+        )}
+      </Modal>
+
       <style jsx global>{`
         @keyframes fadeIn {
           from {
@@ -1191,6 +1192,10 @@ const MemorialDetail = () => {
         .memorial-detail-scroll-area::-webkit-scrollbar-thumb {
           background-color: rgba(184, 134, 11, 0.5);
           border-radius: 10px;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.1);
         }
 
         /* --- 수정된 반응형 코드 --- */

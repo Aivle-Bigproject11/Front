@@ -76,6 +76,9 @@ export const dummyData = {
           customerId: 1001,
           videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
           eulogy: '민서님, 당신과 함께한 모든 순간이 소중했습니다. 하늘에서 편안히 쉬세요.',
+          photos: [
+            { id: 1, url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=300&fit=crop&crop=face", title: "프로필 사진", description: "고인의 아름다운 미소" },
+          ],
           _links: {
             memorial: { href: "http://localhost:8080/memorials/1" },
             self: { href: "http://localhost:8080/memorials/1" }
@@ -90,6 +93,7 @@ export const dummyData = {
           gender: "MALE",
           imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&crop=face",
           customerId: 1002,
+          photos: [],
           _links: {
             memorial: { href: "http://localhost:8080/memorials/2" },
             self: { href: "http://localhost:8080/memorials/2" }
@@ -104,6 +108,7 @@ export const dummyData = {
           gender: "MALE",
           imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=300&fit=crop&crop=face",
           customerId: 1003,
+          photos: [],
           _links: {
             memorial: { href: "http://localhost:8080/memorials/3" },
             self: { href: "http://localhost:8080/memorials/3" }
@@ -118,6 +123,7 @@ export const dummyData = {
           gender: "MALE",
           imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=300&fit=crop&crop=face",
           customerId: 1004,
+          photos: [],
           _links: {
             memorial: { href: "http://localhost:8080/memorials/4" },
             self: { href: "http://localhost:8080/memorials/4" }
@@ -132,6 +138,7 @@ export const dummyData = {
           gender: "FEMALE",
           imageUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b17c?w=400&h=300&fit=crop&crop=face",
           customerId: 1005,
+          photos: [],
           _links: {
             memorial: { href: "http://localhost:8080/memorials/5" },
             self: { href: "http://localhost:8080/memorials/5" }
@@ -146,6 +153,7 @@ export const dummyData = {
           gender: "MALE",
           imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=300&fit=crop&crop=face",
           customerId: 1006,
+          photos: [],
           _links: {
             memorial: { href: "http://localhost:8080/memorials/6" },
             self: { href: "http://localhost:8080/memorials/6" }
@@ -160,6 +168,7 @@ export const dummyData = {
           gender: "MALE",
           imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=300&fit=crop&crop=face",
           customerId: 1007,
+          photos: [],
           _links: {
             memorial: { href: "http://localhost:8080/memorials/7" },
             self: { href: "http://localhost:8080/memorials/7" }
@@ -174,6 +183,7 @@ export const dummyData = {
           gender: "MALE",
           imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=300&fit=crop&crop=face",
           customerId: 1008,
+          photos: [],
           _links: {
             memorial: { href: "http://localhost:8080/memorials/8" },
             self: { href: "http://localhost:8080/memorials/8" }
