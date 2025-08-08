@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus } from 'lucide-react';
+import { Search, UserPlus, ArrowLeft } from 'lucide-react';
 import { customerService } from '../services/customerService';
 
 const Menu1_4 = () => {
@@ -116,7 +116,16 @@ const Menu1_4 = () => {
 
                     <div className="dashboard-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, paddingBottom: '10px' }}>
-                            <h5 style={{ fontWeight: '600', color: '#2C1F14' }}>고객 목록 ({isSearched ? filteredCustomers.length : 0}명)</h5>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <button
+                                    onClick={() => navigate(-1)}
+                                    className="back-btn"
+                                >
+                                    <ArrowLeft size={16} style={{ marginRight: '6px' }} />
+                                    돌아가기
+                                </button>
+                                <h5 style={{ fontWeight: '600', color: '#2C1F14' }}>고객 목록 ({isSearched ? filteredCustomers.length : 0}명)</h5>
+                            </div>
                         </div>
                         <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
                             {!isSearched ? (
@@ -224,6 +233,26 @@ const Menu1_4 = () => {
                     box-shadow: 0 6px 20px rgba(44, 31, 20, 0.3);
                     transform: translateY(-2px);
                     color: #fff;
+                }
+                .back-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 12px 20px;
+                    background: linear-gradient(135deg, #4A3728, #8B5A2B);
+                    border: none;
+                    color: white;
+                    font-weight: 700;
+                    font-size: 14px;
+                    box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
+                    transition: all 0.3s ease;
+                    border-radius: 12px;
+                    cursor: pointer;
+                }
+                .back-btn:hover {
+                    background: linear: linear-gradient(135deg, #3c2d20, #7a4e24);
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
                 }
                       /* 반응형 레이아웃 */
                 @media (max-width: 1200px) {
