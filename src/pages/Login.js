@@ -188,7 +188,7 @@ const Login = () => {
                 </p>
                 <div style={{
                   width: '100%',
-                  maxWidth: '400px',
+                  maxWidth: '450px',
                   textAlign: 'left',
                   background: 'rgba(255, 255, 255, 0.7)',
                   borderRadius: '15px',
@@ -208,24 +208,24 @@ const Login = () => {
                     margin: 0
                   }}>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
-                      <i className="fas fa-chart-line me-2" style={{ color: '#B8860B' }}></i>
-                      대시보드: 실시간 현황 및 통계 확인
+                      <i className="fas fa-file-alt me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>장례 서류 작성:</strong> 장례 관련 서류를 자동으로 작성합니다.
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
-                      <i className="fas fa-users me-2" style={{ color: '#B8860B' }}></i>
-                      고객 관리: 고객 정보 및 계약 관리
+                      <i className="fas fa-chart-line me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>대시보드:</strong> 지역별 월별 사망자 수를 예측하여 실시간 통계 및 분석을 제공합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-comments-dollar me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>전환 서비스 추천:</strong> 고객에게 맞춤 전환 서비스 메시지를 자동으로 생성하고 기록을 조회합니다.
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-book-open me-2" style={{ color: '#B8860B' }}></i>
-                      추모관 관리: 추모관 정보 및 콘텐츠 관리
-                    </li>
-                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
-                      <i className="fas fa-file-alt me-2" style={{ color: '#B8860B' }}></i>
-                      문서 관리: 중요 문서 및 자료 보관
+                      <strong>디지털 추모관:</strong> AI를 이용한 디지털 추모관을 관리합니다.
                     </li>
                     <li style={{ color: '#4A3728', fontSize: '15px' }}>
-                      <i className="fas fa-headset me-2" style={{ color: '#B8860B' }}></i>
-                      고객 지원: 문의 및 요청 처리
+                      <i className="fas fa-users me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>고객 관리:</strong> 고객을 조회 및 관리합니다.
                     </li>
                   </ul>
                 </div>
@@ -269,7 +269,7 @@ const Login = () => {
                 </p>
                 <div style={{
                   width: '100%',
-                  maxWidth: '400px',
+                  maxWidth: '450px',
                   textAlign: 'left',
                   background: 'rgba(255, 255, 255, 0.7)',
                   borderRadius: '15px',
