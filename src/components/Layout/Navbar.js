@@ -15,6 +15,11 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  const maskName = (name) => {
+    if (!name) return '';
+    return name.length > 1 ? name.slice(0, -1) + 'O' : 'O';
+  };
+
   // --- 스타일 정의 ---
   // Jumbotron과 유사한 골드 그라데이션 스타일
   const navbarStyle = {
@@ -81,7 +86,7 @@ const Navbar = () => {
             <Nav.Link as={Link} to="/menu5" style={location.pathname.startsWith("/menu5") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>고객 관리</Nav.Link>
           </Nav>
           <Nav>
-            <span className="welcome-text">환영합니다, {user?.username || user?.name}님!</span>
+            <span className="welcome-text">환영합니다, {maskName(user?.username || user?.name)}님!</span>
             <button onClick={() => navigate('/user-config')} className="lobby-logout-button user-config-button">
                 <User size={12} style={{ marginRight: '6px' }} />내 정보
             </button>
