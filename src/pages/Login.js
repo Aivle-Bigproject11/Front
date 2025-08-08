@@ -766,7 +766,8 @@ const Login = () => {
                 background: 'rgba(184, 134, 11, 0.12)', 
                 borderRadius: '12px', 
                 marginBottom: '15px', 
-                border: '1px solid rgba(184, 134, 11, 0.25)' 
+                border: '1px solid rgba(184, 134, 11, 0.25)',
+                visibility: activeTab === 'employee' ? 'hidden' : 'visible' 
                 }}>
                 <h6 style={{ 
                     color: '#2C1F14', 
@@ -824,7 +825,6 @@ const Login = () => {
                     fontSize: '14px', 
                     fontWeight: '700', 
                     cursor: joinLoading ? 'not-allowed' : 'pointer', 
-                    transition: 'all 0.3s ease', 
                     minWidth: '80px', 
                     display: 'flex', 
                     alignItems: 'center', 
