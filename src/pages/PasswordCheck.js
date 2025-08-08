@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { verifyPassword } from '../services/userService';
 import icon from '../assets/logo/icon01.png';
 
 const PasswordCheck = () => {
@@ -10,7 +11,7 @@ const PasswordCheck = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [animateCard, setAnimateCard] = useState(false);
-  const { user, loginByType } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,33 +23,31 @@ const PasswordCheck = () => {
     setLoading(true);
     setError('');
 
-    if (!user) {
-      setError('로그인 정보가 없습니다.');
-      setLoading(false);
-      return;
+    try {
+      const isValid = await verifyPassword(user.loginId, password);
+      if (isValid) {
+        navigate('/user-config');
+      } else {
+        setError('비밀번호가 일치하지 않습니다.');
+      }
+    } catch (err) {
+      setError('오류가 발생했습니다.');
     }
-
-    const result = await loginByType(user.loginId, password, user.userType);
-
-    if (result.success) {
-      navigate('/user-config');
-    } else {
-      setError('비밀번호가 올바르지 않습니다.');
-    }
-
     setLoading(false);
   };
 
   return (
-    <div className="login-page-wrapper" style={{
-      minHeight: '100vh',
+    <div className="page-wrapper" style={{
+      '--navbar-height': '62px',
+      height: 'calc(100vh - var(--navbar-height))',
       background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+      padding: '20px',
+      boxSizing: 'border-box',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
     }}>
       <div style={{
         position: 'absolute',
@@ -56,30 +55,30 @@ const PasswordCheck = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'url("data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23B8860B" fill-opacity="0.12"%3E%3Cpath d="M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+        background: 'url("data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23B8860B" fill-opacity="0.1"%3E%3Cpath d="M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
         opacity: 0.7
       }}></div>
-      
-      <div className={`login-container ${animateCard ? 'animate-in' : ''}`} style={{
+
+      <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{
         position: 'relative',
         zIndex: 1,
         width: '100%',
         maxWidth: '940px',
-        minHeight: '640px',
+        height: '100%',
+        overflowY: 'auto',
         margin: '0 auto',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        flexDirection: 'column',
         boxSizing: 'border-box',
-        background: 'rgba(184, 134, 11, 0.18)',
-        boxShadow: '0 12px 40px rgba(44, 31, 20, 0.35)',
-        backdropFilter: 'blur(12px)',
-        padding: '24px',
-        borderRadius: '28px',
+        background: 'rgba(255, 251, 235, 0.85)',
+        boxShadow: '0 12px 40px rgba(44, 31, 20, 0.25)',
+        backdropFilter: 'blur(10px)',
         border: '1px solid rgba(184, 134, 11, 0.25)',
-        transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
+        borderRadius: '20px',
         opacity: animateCard ? 1 : 0,
-        transition: 'all 0.6s ease-out'
+        transition: 'opacity 0.6s ease-out',
+        padding: '20px',
+        gap: '20px',
       }}>
         <div className="login-card" style={{
           background: 'rgba(255, 251, 235, 0.98)',
@@ -87,11 +86,12 @@ const PasswordCheck = () => {
           boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)',
           backdropFilter: 'blur(15px)',
           overflow: 'hidden',
-          border: '2px solid rgba(184, 134, 11, 0.35)'
+          border: '2px solid rgba(184, 134, 11, 0.35)',
+          height: '100%'
         }}>
           <div className="login-content" style={{
             display: 'flex',
-            minHeight: '600px'
+            height: '100%'
           }}>
             <div className="login-left" style={{
               flex: '1',
@@ -170,7 +170,7 @@ const PasswordCheck = () => {
                   fontSize: '14px',
                   margin: 0,
                   fontWeight: '500'
-                }}>안전한 정보 수정을 위해 비밀번호를 다시 입력해주세요.</p>
+                }}>내 정보에 접근하려면 비밀번호를 다시 입력해주세요.</p>
               </div>
 
               {error && (
@@ -187,7 +187,7 @@ const PasswordCheck = () => {
               )}
 
               <form onSubmit={handleSubmit} style={{ flex: 1 }}>
-                <div className="login-form-group" style={{ marginBottom: '20px' }}>
+                <div className="login-form-group" style={{ marginBottom: '25px' }}>
                   <label className="login-form-label" style={{
                     display: 'block',
                     marginBottom: '8px',
@@ -201,6 +201,7 @@ const PasswordCheck = () => {
                     className="login-form-control"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="비밀번호"
                     required
                     style={{
                       width: '100%',
@@ -212,7 +213,7 @@ const PasswordCheck = () => {
                       outline: 'none',
                       backgroundColor: 'rgba(255, 255, 255, 0.95)'
                     }}
-                    onFocus={(e) => {
+                     onFocus={(e) => {
                       e.target.style.borderColor = '#B8860B';
                       e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
                     }}
@@ -240,7 +241,7 @@ const PasswordCheck = () => {
                     fontWeight: '700',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.3s ease',
-                    marginTop: '20px',
+                    marginBottom: '25px',
                     boxShadow: loading ? 'none' : '0 4px 15px rgba(184, 134, 11, 0.35)'
                   }}
                   onMouseEnter={(e) => {

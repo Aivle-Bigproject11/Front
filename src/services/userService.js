@@ -304,6 +304,25 @@ export const getUserById = (userId) => {
   });
 };
 
+/**
+ * @description 사용자의 비밀번호를 확인합니다.
+ * @param {string} loginId - 사용자 로그인 아이디
+ * @param {string} password - 확인할 비밀번호
+ * @returns {Promise<boolean>} 비밀번호 일치 여부
+ */
+export const verifyPassword = (loginId, password) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const user = mockUserDB.find(u => u.loginId === loginId) || mockEmployeeDB.find(u => u.loginId === loginId);
+      if (user && user.loginPassword === password) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    }, 500);
+  });
+};
+
 
 // import axios from 'axios';
 
