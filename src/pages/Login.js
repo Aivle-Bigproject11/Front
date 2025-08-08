@@ -188,7 +188,7 @@ const Login = () => {
                 </p>
                 <div style={{
                   width: '100%',
-                  maxWidth: '450px',
+                  maxWidth: '420px',
                   textAlign: 'left',
                   background: 'rgba(255, 255, 255, 0.7)',
                   borderRadius: '15px',
@@ -221,7 +221,7 @@ const Login = () => {
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-book-open me-2" style={{ color: '#B8860B' }}></i>
-                      <strong>디지털 추모관:</strong> AI를 이용한 디지털 추모관을 관리합니다.
+                      <strong>디지털 추모관:</strong> 디지털 추모관을 관리합니다.
                     </li>
                     <li style={{ color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-users me-2" style={{ color: '#B8860B' }}></i>
@@ -269,7 +269,7 @@ const Login = () => {
                 </p>
                 <div style={{
                   width: '100%',
-                  maxWidth: '450px',
+                  maxWidth: '420px',
                   textAlign: 'left',
                   background: 'rgba(255, 255, 255, 0.7)',
                   borderRadius: '15px',
@@ -289,24 +289,24 @@ const Login = () => {
                     margin: 0
                   }}>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
-                      <i className="fas fa-home me-2" style={{ color: '#B8860B' }}></i>
-                      로비: 추모관 목록 및 검색
-                    </li>
-                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-book-open me-2" style={{ color: '#B8860B' }}></i>
-                      추모관 입장: 고유번호로 추모관 방문
+                      <strong>디지털 추모관:</strong> 디지털 추모관을 관리합니다.
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
-                      <i className="fas fa-user-circle me-2" style={{ color: '#B8860B' }}></i>
-                      내 정보: 개인 정보 및 설정 관리
+                      <i className="fas fa-door-open me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>추모관 입장:</strong> 고유번호로 추모관에 입장합니다.
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
-                      <i className="fas fa-question-circle me-2" style={{ color: '#B8860B' }}></i>
-                      자주 묻는 질문: 서비스 이용 안내
+                      <i className="fas fa-pen-alt me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>추모사 생성:</strong> 추모사 초안 및 키워드를 입력하면 추모사를 자동으로 생성합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-video me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>추모영상 생성:</strong> 원하는 이미지와 키워드를 입력하면 추모영상을 자동으로 생성합니다.
                     </li>
                     <li style={{ color: '#4A3728', fontSize: '15px' }}>
-                      <i className="fas fa-envelope me-2" style={{ color: '#B8860B' }}></i>
-                      문의하기: 고객 지원 요청
+                      <i className="fas fa-file-invoice me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>장례 서류 조회:</strong> 장례 관련 서류를 조회합니다.
                     </li>
                   </ul>
                 </div>
