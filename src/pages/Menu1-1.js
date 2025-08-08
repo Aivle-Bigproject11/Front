@@ -62,17 +62,9 @@ const Menu1_1 = () => {
 
   if (loading) {
     return (
-      <div className="page-wrapper" style={{
-        '--navbar-height': '62px',
-        height: 'calc(100vh - var(--navbar-height))',
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px'
-      }}>
-        <div className="text-center" style={{ color: '#374151' }}>
-          <div className="spinner-border" role="status" style={{ width: '3rem', height: '3rem' }}>
+      <div className="page-wrapper" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
+        <div className="text-center" style={{ color: '#4A3728' }}>
+          <div className="spinner-border" role="status" style={{ width: '3rem', height: '3rem', color: '#B8860B' }}>
             <span className="visually-hidden">Loading...</span>
           </div>
           <p className="mt-3" style={{ fontSize: '1.2rem' }}>장례서류작성 시스템을 불러오는 중...</p>
@@ -83,31 +75,27 @@ const Menu1_1 = () => {
 
   if (error) {
     return (
-      <div className="page-wrapper" style={{
-        '--navbar-height': '62px',
-        height: 'calc(100vh - var(--navbar-height))',
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px'
-      }}>
-        <div className="text-center" style={{ color: '#dc3545' }}>
-          <h3>오류가 발생했습니다</h3>
-          <p>{error}</p>
-          <Button variant="primary" onClick={loadCustomers}>
-            다시 시도
-          </Button>
-        </div>
+      <div className="page-wrapper" style={{display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
+        <h3 style={{color: '#d9534f'}}>오류가 발생했습니다</h3>
+        <p style={{color: '#4A3728'}}>{error}</p>
+        <Button className="btn-golden" onClick={loadCustomers}>다시 시도</Button>
       </div>
     );
   }
+  
+  // Define background colors based on status 
+  const statusBackgrounds = {
+    pending: 'linear-gradient(135deg, #E5B83A, #E5B83A)',
+    inProgress: 'linear-gradient(135deg, #133d6cff, #133d6cff', 
+    completed: 'linear-gradient(135deg, #146c43 0%, #146c43 100%)', 
+  };
+  const defaultBackground = 'linear-gradient(135deg, #B8860B, #B8860B)'; 
 
   return (
     <div className="page-wrapper" style={{
       '--navbar-height': '62px',
       height: 'calc(100vh - var(--navbar-height))', 
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
       padding: '20px',
       boxSizing: 'border-box',
       display: 'flex',
@@ -123,22 +111,23 @@ const Menu1_1 = () => {
         margin: '0 auto',
         display: 'flex',
         boxSizing: 'border-box',
-        background: 'rgba(255, 255, 255, 0.7)',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255, 255, 255, 0.18)',
-        borderRadius: '20px',
+        background: 'rgba(255, 251, 235, 0.95)',
+        boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)',
+        backdropFilter: 'blur(15px)',
+        border: '2px solid rgba(184, 134, 11, 0.35)',
+        borderRadius: '28px',
         padding: '20px',
         gap: '20px',
         overflow: 'hidden',
       }}>
         {/* 왼쪽 사이드바 */}
         <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
-          <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#343a40', paddingLeft: '10px' }}>
+          <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px' }}>
             장례서류작성
           </h4>
           <div className="dashboard-left" style={{
-            background: 'rgba(255, 255, 255, 0.8)',
+            background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
+            border: '1px solid rgba(184, 134, 11, 0.2)',
             borderRadius: '15px',
             padding: '20px',
             height: 'min-content',
@@ -148,30 +137,30 @@ const Menu1_1 = () => {
             <div style={{
               width: '120px',
               height: '120px',
-              background: 'rgba(111, 66, 193, 0.2)',
+              background: 'rgba(184, 134, 11, 0.15)',
               borderRadius: '50%',
               margin: '0 auto 30px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+              boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)'
             }}>
-              <FileText size={48} style={{ color: '#6f42c1' }} />
+              <FileText size={48} style={{ color: '#B8860B' }} />
             </div>
             <h2 style={{
               fontWeight: '700',
               marginBottom: '15px',
               fontSize: '1.8rem',
               textAlign: 'center',
-              color: '#343a40'
+              color: '#2C1F14'
             }}>고객 목록</h2>
             <p style={{
               fontSize: '16px',
               lineHeight: '1.6',
               margin: 0,
-              opacity: 0.7,
+              opacity: 0.9,
               textAlign: 'center',
-              color: '#6c757d'
+              color: '#4A3728'
             }}>
               장례 서비스가 필요한<br/>
               고객들을 관리하고<br/>
@@ -180,7 +169,7 @@ const Menu1_1 = () => {
 
             {/* 필터 버튼들 */}
             <div style={{ marginTop: '30px' }}>
-              <h6 style={{ color: '#6c757d', marginBottom: '15px', fontSize: '14px', fontWeight: '600' }}>
+              <h6 style={{ color: '#4A3728', marginBottom: '15px', fontSize: '14px', fontWeight: '600' }}>
                 상태별 필터
               </h6>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -194,7 +183,8 @@ const Menu1_1 = () => {
                     key={filter.key}
                     onClick={() => filterCustomers(filter.key)}
                     style={{
-                      background: activeFilter === filter.key ? '#6f42c1' : 'transparent',
+                      background: activeFilter === filter.key
+                        ? (statusBackgrounds[filter.key] || defaultBackground) : 'transparent', 
                       color: activeFilter === filter.key ? 'white' : '#6c757d',
                       border: '1px solid rgba(111, 66, 193, 0.2)',
                       borderRadius: '8px',
@@ -209,9 +199,13 @@ const Menu1_1 = () => {
                     }}
                   >
                     <span>{filter.label}</span>
-                    <Badge bg={activeFilter === filter.key ? 'light' : 'secondary'} 
-                           text={activeFilter === filter.key ? 'dark' : 'white'}>
-                      {filter.count}
+                    <Badge 
+                    bg=""
+                    style={{
+                        backgroundColor: activeFilter === filter.key ? 'rgba(255,255,255,0.8)' : 'rgba(184, 134, 11, 0.5)', 
+                        color: activeFilter === filter.key ? '#B8860B' : 'white'
+                     }}>
+                        {filter.count}
                     </Badge>
                   </button>
                 ))}
@@ -230,19 +224,39 @@ const Menu1_1 = () => {
           {/* 서브 헤더 */}
           <div style={{
             padding: '0 0 20px 0',
-            borderBottom: '1px solid rgba(229, 231, 235, 0.5)',
+            borderBottom: '1px solid rgba(184, 134, 11, 0.2)',
             marginBottom: '20px'
           }}>
-            <h3 style={{
-              color: '#374151',
-              fontWeight: '600',
-              marginBottom: '8px',
-              fontSize: '1.5rem'
-            }}>
-              {activeFilter === 'all' ? '전체' : customerUtils.getStatusText(activeFilter)} 고객 목록
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{
+                color: '#2C1F14',
+                fontWeight: '600',
+                margin: 0, // marginBottom 제거
+                fontSize: '1.5rem'
+              }}>
+                {activeFilter === 'all' ? '전체' : customerUtils.getStatusText(activeFilter)} 고객 목록
+              </h3>
+              <Button
+                onClick={() => navigate('/menu1-4')}
+                className="save-btn"
+                style={{
+                    padding: '10px 24px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    color: '#2C1F14',
+                    background: 'linear-gradient(135deg, #D4AF37, #F5C23E)',
+                    boxShadow: '0 4px 15px rgba(184, 134, 11, 0.35)'
+                }}
+              >
+                고인 등록
+              </Button>
+            </div>
             <p style={{
-              color: '#6c757d',
+              color: '#4A3728',
               fontSize: '14px',
               margin: 0
             }}>총 {filteredCustomers.length}명의 고객</p>
@@ -256,7 +270,7 @@ const Menu1_1 = () => {
               alignItems: 'center',
               justifyContent: 'center',
               height: '400px',
-              color: '#6c757d'
+              color: '#4A3728'
             }}>
               <Users size={64} style={{ opacity: 0.3, marginBottom: '16px' }} />
               <h4>표시할 고객이 없습니다</h4>
@@ -269,38 +283,20 @@ const Menu1_1 = () => {
               gap: '16px'
             }}>
               {filteredCustomers.map((customer) => {
-                const urgency = customerUtils.getUrgencyLevel(customer.funeralDate);
                 return (
-                  <div key={customer.id} style={{
-                    background: 'white',
+                  <div key={customer.id} className="customer-card" style={{
+                    background: 'rgba(253, 251, 243, 0.92)',
                     borderRadius: '16px',
                     overflow: 'hidden',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
-                    border: '1px solid rgba(229, 231, 235, 0.8)',
+                    boxShadow: '0 4px 20px rgba(44, 31, 20, 0.1)',
+                    border: '1px solid rgba(184, 134, 11, 0.2)',
                     display: 'flex',
                     minHeight: '140px',
                     position: 'relative',
                   }}
                   >
-                    {urgency === 'urgent' && (
-                      <div style={{
-                        position: 'absolute', top: '12px', right: '12px',
-                        background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
-                        color: 'white', padding: '4px 8px', borderRadius: '12px',
-                        fontSize: '11px', fontWeight: '600', zIndex: 10,
-                        boxShadow: '0 2px 8px rgba(220, 53, 69, 0.3)'
-                      }}>
-                        <Clock size={12} style={{ marginRight: '2px' }} />
-                        긴급
-                      </div>
-                    )}
-
                     <div style={{
-                      background: urgency === 'urgent'
-                        ? 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)'
-                        : urgency === 'warning'
-                          ? 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)'
-                          : 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)',
+                      background: statusBackgrounds[customer.status] || defaultBackground,
                       padding: '20px', color: 'white', display: 'flex', flexDirection: 'column',
                       justifyContent: 'center', minWidth: '200px', position: 'relative'
                     }}>
@@ -314,8 +310,14 @@ const Menu1_1 = () => {
                             고인
                           </Badge>
                         </h4>
-                        <Badge className={customerUtils.getStatusColor(customer.status)} 
-                               style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
+                        <Badge 
+                          bg="transparent"
+                          className="text-white" 
+                          style={{ 
+                            fontSize: '0.8rem', 
+                            padding: '4px 8px',
+                            border: '1px solid white',
+                          }}>
                           {customerUtils.getStatusText(customer.status)}
                         </Badge>
                       </div>
@@ -341,23 +343,23 @@ const Menu1_1 = () => {
                           display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                           gap: '8px', marginBottom: '12px'
                         }}>
-                          <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(111, 66, 193, 0.05)', borderRadius: '8px', border: '1px solid rgba(111, 66, 193, 0.1)' }}>
-                            <Phone size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
-                            <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(184, 134, 11, 0.08)', borderRadius: '8px', border: '1px solid rgba(184, 134, 11, 0.15)' }}>
+                            <Phone size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
+                            <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2C1F14' }}>
                               {customer.phone}
                             </span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(111, 66, 193, 0.05)', borderRadius: '8px', border: '1px solid rgba(111, 66, 193, 0.1)' }}>
-                            <MapPin size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
-                            <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(184, 134, 11, 0.08)', borderRadius: '8px', border: '1px solid rgba(184, 134, 11, 0.15)' }}>
+                            <MapPin size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
+                            <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2C1F14' }}>
                               {customer.location}
                             </span>
                           </div>
                         </div>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                            <FileText size={14} style={{ color: '#6f42c1', marginRight: '6px' }} />
-                            <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#374151' }}>
+                            <FileText size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
+                            <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#2C1F14' }}>
                               서류 작성 상태
                             </span>
                           </div>
@@ -380,14 +382,14 @@ const Menu1_1 = () => {
                     <div style={{
                       display: 'flex', flexDirection: 'column', justifyContent: 'center',
                       alignItems: 'center', padding: '20px 16px',
-                      background: 'rgba(248, 250, 252, 0.8)',
-                      borderLeft: '1px solid rgba(229, 231, 235, 0.5)',
+                      background: 'rgba(253, 251, 243, 0.92)',
+                      borderLeft: '1px solid rgba(184, 134, 11, 0.2)',
                       minWidth: '140px', gap: '8px'
                     }}>
                     <Button
-                        variant="primary"
+                        className="btn-golden"
                         size="sm"
-                        style={{ width: '100%', borderRadius: '8px', fontWeight: '600', padding: '8px', fontSize: '0.85rem' }}
+                        style={{ width: '100%', borderRadius: '8px', padding: '8px', fontSize: '0.85rem' }}
                         onClick={(e) => handleRegisterClick(e, customer)}
                     >
                     <FileText size={14} style={{ marginRight: '4px' }} />
@@ -395,9 +397,9 @@ const Menu1_1 = () => {
                     </Button>
 
                     <Button 
-                        variant="outline-primary"
+                        className="btn-outline-golden"
                         size="sm"
-                        style={{ width: '100%', borderRadius: '8px', fontWeight: '600', padding: '8px', fontSize: '0.85rem' }}
+                        style={{ width: '100%', borderRadius: '8px', padding: '8px', fontSize: '0.85rem' }}
                         onClick={(e) => handleDocumentsClick(e, customer)}
                     >
                     <Eye size={14} style={{ marginRight: '4px' }} />
@@ -412,49 +414,107 @@ const Menu1_1 = () => {
         </div>
       </div>
 
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .dashboard-container { opacity: 0; }
-        .dashboard-container.animate-in {
-          opacity: 1;
-          animation: fadeIn 0.6s ease-out;
-        }
-        .dashboard-right::-webkit-scrollbar { width: 6px; }
-        .dashboard-right::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
-        .dashboard-right::-webkit-scrollbar-thumb { background-color: rgba(108, 117, 125, 0.5); border-radius: 10px; }
-        @media (max-width: 1200px) {
-          .page-wrapper { height: auto; min-height: calc(100vh - var(--navbar-height)); }
-          .dashboard-container { flex-direction: column; height: auto; }
-          .dashboard-left { position: static; width: 100%; flex: 0 0 auto; }
-          .dashboard-right { height: auto; max-height: none; }
-        }
+        <style>{`
+            @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+            }
+            .dashboard-container { opacity: 0; }
+            .dashboard-container.animate-in {
+            opacity: 1;
+            animation: fadeIn 0.6s ease-out forwards;
+            }
+            .dashboard-right::-webkit-scrollbar { width: 6px; }
+            .dashboard-right::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+            .dashboard-right::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
 
-        .btn-purple {
-            background-color: #6f42c1;
-            border-color: #6f42c1;
-            color: white;
+
+            .btn-golden {
+                background: linear-gradient(135deg, #D4AF37, #F5C23E);
+                border: none;
+                color: #2C1F14;
+                font-weight: 700;
+                transition: all 0.3s ease;
             }
-            .btn-purple:hover {
-                            background-color: transparent;
-            background-color: #5a32a3;
-            border-color: #5a32a3;
-            color: white;
+            .btn-golden:hover {
+                background: linear-gradient(135deg, #CAA230, #E8B530);
+                color: #2C1F14;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 15px rgba(184, 134, 11, 0.25);
+            }
+            .btn-outline-golden {
+                background-color: transparent !important;
+                border: 1px solid #B8860B !important;
+                color: #B8860B !important;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                box-shadow: none !important;
+            }
+            .btn-outline-golden:hover {
+                background-color: #B8860B !important;
+                border-color: #B8860B !important;
+                color: white !important;
+            }
+            .btn-outline-golden:active,
+            .btn-outline-golden:focus,
+            .btn-check:focus+.btn-outline-golden, .btn-outline-golden:focus {
+                background-color: transparent !important;
+                border-color: #B8860B !important;
+                color: #B8860B !important;
+                box-shadow: 0 0 0 0.25rem rgba(184, 134, 11, 0.2) !important; 
             }
 
-            .btn-outline-purple {
-            background-color: transparent;
-            border-color: #6f42c1;
-            color: #6f42c1;
+            .btn-outline-golden.active {
+                background-color: #B8860B !important;
+                border-color: #B8860B !important;
+                color: white !important;
             }
-            .btn-outline-purple:hover {
-            background-color: #6f42c1;
-            border-color: #6f42c1;
-            color: white;
-            }
-        }
+                 /* 반응형 레이아웃 */
+                @media (max-width: 1200px) {
+                    .page-wrapper {
+                        height: auto !important;
+                        min-height: calc(100vh - var(--navbar-height));
+                        align-items: flex-start !important;
+                    }
+                    .dashboard-container {
+                        flex-direction: column;
+                        height: auto !important;
+                        overflow: visible;
+                    }
+                    .dashboard-left {
+                        flex: 1 1 auto; /* 세로로 쌓일 때 너비 제약을 해제하고 전체 너비를 차지하도록 함 */
+                        margin-bottom: 20px;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .customer-card {
+                        flex-direction: column;
+                    }
+                    .customer-card > div {
+                        min-width: 100% !important;
+                        border-left: none !important;
+                        border-bottom: 1px solid rgba(184, 134, 11, 0.2);
+                    }
+                    .customer-card > div:last-child {
+                        border-bottom: none;
+                    }
+                    .dashboard-container {
+                        padding: 10px;
+                        gap: 15px;
+                    }
+                    .customer-id-name-row {
+                        flex-direction: column;
+                    }
+                    .customer-id-name-row > .col-6 {
+                        width: 100%;
+                        padding-left: 12px;
+                        padding-right: 12px;
+                    }
+                     .customer-id-name-row > .col-6:first-of-type {
+                        margin-bottom: 1rem;
+                    }
+                }
         `}</style>
     </div>
   );

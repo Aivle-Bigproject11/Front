@@ -102,7 +102,7 @@ const Login = () => {
       justifyContent: 'center',
       padding: '20px',
       position: 'relative',
-      overflow: 'hidden'
+      boxSizing: 'border-box'
     }}>
       {/* 배경 패턴 */}
       <div style={{
@@ -119,7 +119,7 @@ const Login = () => {
         position: 'relative',
         zIndex: 1,
         width: '100%',
-        maxWidth: '940px',
+        maxWidth: '1600px',
         minHeight: '640px',
         margin: '0 auto',
         display: 'flex',
@@ -129,7 +129,7 @@ const Login = () => {
         background: 'rgba(184, 134, 11, 0.18)',
         boxShadow: '0 12px 40px rgba(44, 31, 20, 0.35)',
         backdropFilter: 'blur(12px)',
-        padding: '24px',
+        padding: '20px',
         borderRadius: '28px',
         border: '1px solid rgba(184, 134, 11, 0.25)',
         transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
@@ -142,14 +142,179 @@ const Login = () => {
           boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)',
           backdropFilter: 'blur(15px)',
           overflow: 'hidden',
-          border: '2px solid rgba(184, 134, 11, 0.35)'
+          border: '2px solid rgba(184, 134, 11, 0.35)',
+          width: '100%',
+          maxWidth: '1600px'
         }}>
           <div className="login-content" style={{
             display: 'flex',
             minHeight: '600px'
           }}>
+            {/* 왼쪽 빈 공간 - Golden Gate 소개 및 기능 안내 */}
+            {activeTab === 'employee' && (
+              <div className="login-card-left" style={{
+                flex: '1',
+                background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', // 밝은 배경
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '30px',
+                textAlign: 'center',
+                borderRight: '1px solid rgba(184, 134, 11, 0.2)',
+                boxShadow: 'inset -5px 0 15px rgba(0,0,0,0.05)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+
+
+                <h3 style={{
+                  color: '#2C1F14',
+                  fontWeight: '700',
+                  marginBottom: '20px',
+                  fontSize: '1.8rem',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                }}>Golden Gate 관리 시스템</h3>
+                <p style={{
+                  color: '#4A3728',
+                  fontSize: '16px',
+                  lineHeight: '1.8',
+                  marginBottom: '30px',
+                  maxWidth: '400px'
+                }}>
+                  Golden Gate는 소중한 분들을 위한<br/> 
+                  프리미엄 상조 서비스입니다.<br/>
+                  <br/><span style={{ fontSize: '15px'}}>직원 관리 시스템을 통해 효율적인 업무 처리를 지원합니다.</span>
+                </p>
+                <div style={{
+                  width: '100%',
+                  maxWidth: '420px',
+                  textAlign: 'left',
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '15px',
+                  padding: '25px',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+                  border: '1px solid rgba(184, 134, 11, 0.15)'
+                }}>
+                  <h4 style={{
+                    color: '#2C1F14',
+                    fontWeight: '700',
+                    marginBottom: '15px',
+                    fontSize: '1.3rem'
+                  }}>주요 기능</h4>
+                  <ul style={{
+                    listStyle: 'none',
+                    padding: 0,
+                    margin: 0
+                  }}>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-file-alt me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>장례 서류 작성:</strong> 장례 관련 서류를 자동으로 작성합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-chart-line me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>대시보드:</strong> 지역별 월별 사망자 수를 예측하여 실시간 통계 및 분석을 제공합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-comments-dollar me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>전환 서비스 추천:</strong> 고객에게 맞춤 전환 서비스 메시지를 자동으로 생성하고 기록을 조회합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-book-open me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>디지털 추모관:</strong> 디지털 추모관을 관리합니다.
+                    </li>
+                    <li style={{ color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-users me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>고객 관리:</strong> 고객을 조회 및 관리합니다.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'user' && (
+              <div className="login-card-left" style={{
+                flex: '1',
+                background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', // 밝은 배경
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '30px',
+                textAlign: 'center',
+                borderRight: '1px solid rgba(184, 134, 11, 0.2)',
+                boxShadow: 'inset -5px 0 15px rgba(0,0,0,0.05)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+
+
+                <h3 style={{
+                  color: '#2C1F14',
+                  fontWeight: '700',
+                  marginBottom: '20px',
+                  fontSize: '1.8rem',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                }}>Golden Gate 사용자 서비스</h3>
+                <p style={{
+                  color: '#4A3728',
+                  fontSize: '16px',
+                  lineHeight: '1.8',
+                  marginBottom: '30px',
+                  maxWidth: '400px'
+                }}>
+                  Golden Gate는 소중한 분들을 위한<br/>
+                  프리미엄 상조 서비스입니다.<br/>
+                  <br/><span style={{ fontSize: '15px'}}>사용자 서비스를 통해 추모관을 편리하게 이용하실 수 있습니다.</span>
+                </p>
+                <div style={{
+                  width: '100%',
+                  maxWidth: '420px',
+                  textAlign: 'left',
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '15px',
+                  padding: '25px',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+                  border: '1px solid rgba(184, 134, 11, 0.15)'
+                }}>
+                  <h4 style={{
+                    color: '#2C1F14',
+                    fontWeight: '700',
+                    marginBottom: '15px',
+                    fontSize: '1.3rem'
+                  }}>주요 기능</h4>
+                  <ul style={{
+                    listStyle: 'none',
+                    padding: 0,
+                    margin: 0
+                  }}>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-book-open me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>디지털 추모관:</strong> 디지털 추모관을 관리합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-door-open me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>추모관 입장:</strong> 고유번호로 추모관에 입장합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-pen-alt me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>추모사 생성:</strong> 추모사 초안 및 키워드를 입력하면 추모사를 자동으로 생성합니다.
+                    </li>
+                    <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-video me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>추모영상 생성:</strong> 원하는 이미지와 키워드를 입력하면 추모영상을 자동으로 생성합니다.
+                    </li>
+                    <li style={{ color: '#4A3728', fontSize: '15px' }}>
+                      <i className="fas fa-file-invoice me-2" style={{ color: '#B8860B' }}></i>
+                      <strong>장례 서류 조회:</strong> 장례 관련 서류를 조회합니다.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {/* 왼쪽 이미지 영역 */}
-            <div className="login-left" style={{
+            <div className="login-card-middle" style={{
               flex: '1',
               background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
               display: 'flex',
@@ -158,7 +323,7 @@ const Login = () => {
               position: 'relative',
               overflow: 'hidden'
             }}>
-              {/* 모서리 라인 장식 */}
+                              {/* 모서리 라인 장식 */}
               {/* 왼쪽 상단 */}
               <div style={{
                 position: 'absolute',
@@ -235,7 +400,7 @@ const Login = () => {
               <div style={{
                 position: 'absolute',
                 left: '50%',
-                top: '15%',
+                top: '7%',
                 transform: 'translateX(-50%)',
                 width: '1px',
                 height: '20%',
@@ -244,7 +409,7 @@ const Login = () => {
               <div style={{
                 position: 'absolute',
                 left: '50%',
-                bottom: '15%',
+                bottom: '7%',
                 transform: 'translateX(-50%)',
                 width: '1px',
                 height: '20%',
@@ -253,14 +418,14 @@ const Login = () => {
               
               <div className="login-image-content" style={{
                 textAlign: 'center',
-                padding: '40px'
+                padding: '30px'
               }}>
                 <div style={{
-                  width: '150px',
-                  height: '150px',
+                  width: '130px',
+                  height: '130px',
                   background: 'linear-gradient(135deg, #2C1F14 0%, #4A3728 100%)',
                   borderRadius: '50%',
-                  margin: '0 auto 30px',
+                  margin: '0 auto 20px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -272,8 +437,8 @@ const Login = () => {
                     src={icon} 
                     alt="Golden Gate Logo"
                     style={{
-                      width: '80px',
-                      height: '80px',
+                      width: '70px',
+                      height: '70px',
                       objectFit: 'contain',
                       filter: 'brightness(1.2) contrast(1.1)'
                     }}
@@ -283,21 +448,21 @@ const Login = () => {
                       e.target.nextSibling.style.display = 'block';
                     }}
                   />
-                  <i className="fas fa-yin-yang" style={{
-                    fontSize: '4rem',
-                    color: '#B8860B',
-                    display: 'none'
-                  }}></i>
+                  <i className="fas fa-yin-yang" style={{ 
+                    fontSize: '4rem', 
+                    color: '#B8860B', 
+                    display: 'none' 
+                    }}></i>
                 </div>
                 <h3 style={{
                   color: '#2C1F14',
                   fontWeight: '700',
                   marginBottom: '15px',
-                  fontSize: '1.8rem'
+                  fontSize: '1.6rem'
                 }}>Golden Gate</h3>
                 <p style={{
                   color: '#4A3728',
-                  fontSize: '16px',
+                  fontSize: '15px',
                   lineHeight: '1.6',
                   margin: 0,
                   fontWeight: '500'
@@ -310,382 +475,383 @@ const Login = () => {
             </div>
 
             {/* 오른쪽 폼 영역 */}
-            <div className="login-right" style={{
+            <div className="login-card-right" style={{
               flex: '1',
-              padding: '50px 40px',
+              padding: '30px 40px 15px 40px',
               display: 'flex',
               flexDirection: 'column',
               background: activeTab === 'employee' 
                 ? 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)' 
                 : 'linear-gradient(135deg, rgba(74, 55, 40, 0.12) 0%, rgba(139, 90, 43, 0.08) 100%)',
-              borderRadius: '16px',
               boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
-              border: '1px solid rgba(184, 134, 11, 0.2)'
+              border: '1px solid rgba(184, 134, 11, 0.2)',
+              overflowY: 'auto'
             }}>
               {/* 탭 헤더 */}
               <div className="login-tabs" style={{
                 display: 'flex',
-                marginBottom: '40px',
+                marginBottom: '25px',
                 borderRadius: '12px',
                 background: 'rgba(184, 134, 11, 0.12)',
                 padding: '4px',
                 border: '1px solid rgba(184, 134, 11, 0.25)'
               }}>
                 <button 
-                  className={`login-tab ${activeTab === 'employee' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('employee')}
-                  style={{
-                    flex: 1,
-                    padding: '12px 20px',
-                    border: 'none',
-                    borderRadius: '8px',
+                className={`login-tab ${activeTab === 'employee' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('employee')} 
+                style={{ 
+                    flex: 1, 
+                    padding: '8px 20px', 
+                    border: 'none', 
+                    borderRadius: '8px', 
                     background: activeTab === 'employee' 
-                      ? 'linear-gradient(135deg, #B8860B, #CD853F)' 
-                      : 'transparent',
-                    color: activeTab === 'employee' ? '#2C1F14' : '#4A3728',
-                    fontWeight: '700',
-                    fontSize: '14px',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
+                    ? 'linear-gradient(135deg, #B8860B, #CD853F)' 
+                    : 'transparent', 
+                    color: activeTab === 'employee' ? '#2C1F14' : '#4A3728', 
+                    fontWeight: '700', 
+                    fontSize: '14px', 
+                    transition: 'all 0.3s ease', 
+                    cursor: 'pointer', 
                     boxShadow: activeTab === 'employee' 
-                      ? '0 2px 8px rgba(184, 134, 11, 0.35)' 
-                      : 'none'
-                  }}
-                >
+                    ? '0 2px 8px rgba(184, 134, 11, 0.35)' 
+                    : 'none' 
+                    }}
+                    >
                   직원 로그인
                 </button>
                 <button 
-                  className={`login-tab ${activeTab === 'user' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('user')}
-                  style={{
-                    flex: 1,
-                    padding: '12px 20px',
-                    border: 'none',
-                    borderRadius: '8px',
+                className={`login-tab ${activeTab === 'user' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('user')} 
+                style={{ 
+                    flex: 1, 
+                    padding: '8px 20px', 
+                    border: 'none', 
+                    borderRadius: '8px', 
                     background: activeTab === 'user' 
-                      ? 'linear-gradient(135deg, #4A3728, #8B5A2B)' 
-                      : 'transparent',
-                    color: activeTab === 'user' ? '#FFF' : '#4A3728',
-                    fontWeight: '700',
-                    fontSize: '14px',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
+                    ? 'linear-gradient(135deg, #4A3728, #8B5A2B)' 
+                    : 'transparent', 
+                    color: activeTab === 'user' ? '#FFF' : '#4A3728', 
+                    fontWeight: '700', 
+                    fontSize: '14px', 
+                    transition: 'all 0.3s ease', 
+                    cursor: 'pointer', 
                     boxShadow: activeTab === 'user' 
-                      ? '0 2px 8px rgba(74, 55, 40, 0.35)' 
-                      : 'none'
-                  }}
-                >
+                    ? '0 2px 8px rgba(74, 55, 40, 0.35)' 
+                    : 'none' 
+                    }}
+                    >
                   사용자 로그인
                 </button>
               </div>
 
               {/* 제목 */}
-              <div style={{ marginBottom: '30px' }}>
-                <h2 style={{
-                  color: '#2C1F14',
-                  fontWeight: '700',
-                  fontSize: '28px',
-                  marginBottom: '8px'
-                }}>로그인</h2>
-                <p style={{
-                  color: '#4A3728',
-                  fontSize: '14px',
-                  margin: 0,
-                  fontWeight: '500'
-                }}>계정 정보를 입력해주세요</p>
+              <div style={{ marginBottom: '20px' }}>
+                <h2 style={{ 
+                    color: '#2C1F14', 
+                    fontWeight: '700', 
+                    fontSize: '24px', 
+                    marginBottom: '8px' 
+                    }}>로그인</h2>
+                <p style={{ 
+                    color: '#4A3728', 
+                    fontSize: '14px', 
+                    margin: 0, 
+                    fontWeight: '500' 
+                    }}>계정 정보를 입력해주세요</p>
               </div>
 
               {/* 에러 메시지 */}
               {error && (
-                <Alert variant="danger" style={{
-                  borderRadius: '10px',
-                  border: 'none',
-                  backgroundColor: '#fff5f5',
-                  color: '#e53e3e',
-                  marginBottom: '20px',
-                  border: '1px solid #fed7d7'
-                }}>
+                <Alert variant="danger" style={{ 
+                    borderRadius: '10px', 
+                    border: 'none',
+                    backgroundColor: '#fff5f5', 
+                    color: '#e53e3e', 
+                    marginBottom: '15px', 
+                    border: '1px solid #fed7d7' 
+                    }}>
                   {error}
                 </Alert>
               )}
 
               {/* 테스트 계정 안내 */}
-              <div style={{
-                textAlign: 'center',
-                padding: '15px',
-                background: 'rgba(184, 134, 11, 0.12)',
-                borderRadius: '8px',
-                border: '1px solid rgba(184, 134, 11, 0.3)',
-                marginBottom: '25px'
-              }}>
-                <p style={{
-                  fontSize: '12px',
-                  color: '#6B4423',
-                  margin: 0,
-                  fontWeight: '600'
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '12px', 
+                background: 'rgba(184, 134, 11, 0.12)', 
+                borderRadius: '8px', 
+                border: '1px solid rgba(184, 134, 11, 0.3)', 
+                marginBottom: '15px' 
                 }}>
+                <p style={{ 
+                    fontSize: '12px', 
+                    color: '#6B4423', 
+                    margin: 0, 
+                    fontWeight: '600' 
+                    }}>
                   <i className="fas fa-yin-yang me-2" style={{ color: '#B8860B' }}></i>
                   테스트용 계정: {activeTab === 'employee' ? 'admin / password' : 'user / password'}
                 </p>
               </div>
 
               {/* 폼 */}
-              <form onSubmit={handleSubmit} style={{ flex: 1 }}>
-                <div className="login-form-group" style={{ marginBottom: '25px' }}>
-                  <label className="login-form-label" style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    color: '#2C1F14',
-                    fontWeight: '700',
-                    fontSize: '14px'
-                  }}>아이디</label>
-                  <input
-                    type="text"
-                    name="username"
-                    className="login-form-control"
-                    value={credentials.username}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '15px 20px',
-                      border: '2px solid rgba(184, 134, 11, 0.35)',
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      outline: 'none',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#B8860B';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  />
+              <form onSubmit={handleSubmit}>
+                <div className="login-form-group" style={{ marginBottom: '15px' }}>
+                  <label className="login-form-label" style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    color: '#2C1F14', 
+                    fontWeight: '700', 
+                    fontSize: '14px' 
+                    }}>아이디</label>
+                  <input 
+                  type="text" 
+                  name="username" 
+                  className="login-form-control" 
+                  value={credentials.username} 
+                  onChange={handleChange} 
+                  required 
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px 18px', 
+                    border: '2px solid rgba(184, 134, 11, 0.35)', 
+                    borderRadius: '12px', 
+                    fontSize: '16px', 
+                    transition: 'all 0.3s ease', 
+                    outline: 'none', 
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)' 
+                    }} 
+                    onFocus={(e) => { 
+                        e.target.style.borderColor = '#B8860B'; 
+                        e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)'; 
+                        }} 
+                        onBlur={(e) => { 
+                            e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)'; 
+                            e.target.style.boxShadow = 'none'; 
+                            }} 
+                            />
                 </div>
 
-                <div className="login-form-group" style={{ marginBottom: '20px' }}>
-                  <label className="login-form-label" style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    color: '#2C1F14',
-                    fontWeight: '700',
-                    fontSize: '14px'
-                  }}>비밀번호</label>
-                  <input
-                    type="password"
-                    name="password"
-                    className="login-form-control"
-                    value={credentials.password}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '15px 20px',
-                      border: '2px solid rgba(184, 134, 11, 0.35)',
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      outline: 'none',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#B8860B';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  />
+                <div className="login-form-group" style={{ marginBottom: '15px' }}>
+                  <label className="login-form-label" style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    color: '#2C1F14', 
+                    fontWeight: '700', 
+                    fontSize: '14px' 
+                    }}>비밀번호</label>
+                  <input 
+                  type="password" 
+                  name="password" 
+                  className="login-form-control" 
+                  value={credentials.password} 
+                  onChange={handleChange} 
+                  required 
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px 18px', 
+                    border: '2px solid rgba(184, 134, 11, 0.35)', 
+                    borderRadius: '12px', 
+                    fontSize: '16px', 
+                    transition: 'all 0.3s ease', 
+                    outline: 'none', 
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)' 
+                    }} 
+                    onFocus={(e) => { 
+                        e.target.style.borderColor = '#B8860B'; 
+                        e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)'; 
+                        }} 
+                        onBlur={(e) => { 
+                            e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)'; 
+                            e.target.style.boxShadow = 'none'; 
+                            }}
+                            />
                 </div>
 
-                <div className="login-checkbox" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginBottom: '25px'
-                }}>
-                  <input
-                    type="checkbox"
-                    id="rememberMe"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    style={{
-                      marginRight: '10px',
-                      width: '18px',
-                      height: '18px',
-                      accentColor: '#B8860B'
-                    }}
-                  />
-                  <label htmlFor="rememberMe" style={{
-                    color: '#4A3728',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    fontWeight: '500'
-                  }}>아이디 기억하기</label>
+                <div className="login-checkbox" style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    marginBottom: '15px' 
+                    }}>
+                  <input 
+                  type="checkbox" 
+                  id="rememberMe" 
+                  checked={rememberMe} 
+                  onChange={(e) => setRememberMe(e.target.checked)} 
+                  style={{ 
+                    marginRight: '10px', 
+                    width: '18px', 
+                    height: '18px', 
+                    accentColor: '#B8860B' 
+                    }} 
+                    />
+                  <label htmlFor="rememberMe" style={{ 
+                    color: '#4A3728', 
+                    fontSize: '14px', 
+                    cursor: 'pointer', 
+                    fontWeight: '500' 
+                    }}>아이디 기억하기</label>
                 </div>
 
-                <div style={{
-                  display: 'flex',
-                  gap: '20px',
-                  marginBottom: '30px'
-                }}>
-                  <a href="/FindId" className="login-link" style={{
-                    color: '#B8860B',
-                    textDecoration: 'none',
-                    fontSize: '14px',
-                    fontWeight: '600'
-                  }}>아이디 찾기</a>
-                  <a href="/FindPassword" className="login-link" style={{
-                    color: '#B8860B',
-                    textDecoration: 'none',
-                    fontSize: '14px',
-                    fontWeight: '600'
-                  }}>비밀번호 찾기</a>
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '20px', 
+                    marginBottom: '20px' 
+                    }}>
+                  <a href="/FindId" className="login-link" style={{ 
+                    color: '#B8860B', 
+                    textDecoration: 'none', 
+                    fontSize: '14px', 
+                    fontWeight: '600' 
+                    }}>아이디 찾기</a>
+                  <a href="/FindPassword" className="login-link" style={{ 
+                    color: '#B8860B', 
+                    textDecoration: 'none', 
+                    fontSize: '14px', 
+                    fontWeight: '600' 
+                    }}>비밀번호 찾기</a>
                 </div>
 
                 <button 
-                  type="submit" 
-                  className="login-btn"
-                  disabled={loading}
-                  style={{
-                    width: '100%',
-                    padding: '15px',
+                type="submit" 
+                className="login-btn" 
+                disabled={loading} 
+                style={{ 
+                    width: '100%', 
+                    padding: '12px', 
                     background: loading 
-                      ? '#e9ecef' 
-                      : 'linear-gradient(135deg, #D4AF37, #F5C23E)',
-                    color: loading ? '#6c757d' : '#2C1F14',
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.3s ease',
-                    marginBottom: '25px',
-                    boxShadow: loading ? 'none' : '0 4px 15px rgba(184, 134, 11, 0.35)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 8px 25px rgba(184, 134, 11, 0.45)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!loading) {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(184, 134, 11, 0.35)';
-                    }
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                      로그인 중...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-sign-in-alt me-2"></i>
-                      로그인
-                    </>
-                  )}
+                    ? '#e9ecef' 
+                    : 'linear-gradient(135deg, #D4AF37, #F5C23E)', 
+                    color: loading ? '#6c757d' : '#2C1F14', 
+                    border: 'none', borderRadius: '12px', 
+                    fontSize: '16px', 
+                    fontWeight: '700', 
+                    cursor: loading ? 'not-allowed' : 'pointer', 
+                    transition: 'all 0.3s ease', 
+                    marginBottom: '15px', 
+                    boxShadow: loading ? 'none' : '0 4px 15px rgba(184, 134, 11, 0.35)' 
+                    }} 
+                    onMouseEnter={(e) => { 
+                        if (!loading) { 
+                            e.target.style.transform = 'translateY(-2px)'; 
+                            e.target.style.boxShadow = '0 8px 25px rgba(184, 134, 11, 0.45)'; 
+                            } 
+                            }} 
+                            onMouseLeave={(e) => { 
+                                if (!loading) { 
+                                    e.target.style.transform = 'translateY(0)'; 
+                                    e.target.style.boxShadow = '0 4px 15px rgba(184, 134, 11, 0.35)'; 
+                                    } 
+                                    }}
+                                    >
+                  {loading ? ( 
+                    <> 
+                    <span className="spinner-border spinner-border-sm me-2"
+                    style={{ width: '1rem', height:'1rem'  }} 
+                    role="status"></span> 
+                    로그인 중... 
+                    </> 
+                ) : ( 
+                <> 
+                <i className="fas fa-sign-in-alt me-2"></i> 
+                로그인 
+                </> 
+            )}
                 </button>
               </form>
 
               {/* 고유번호 입장 */}
-              <div className="unique-number-section" style={{
-                padding: '20px',
-                background: 'rgba(184, 134, 11, 0.12)',
-                borderRadius: '12px',
-                marginBottom: '20px',
-                border: '1px solid rgba(184, 134, 11, 0.25)'
-              }}>
-                <h6 style={{
-                  color: '#2C1F14',
-                  marginBottom: '15px',
-                  fontSize: '14px',
-                  fontWeight: '700'
+              <div className="unique-number-section" style={{ 
+                padding: '15px', 
+                background: 'rgba(184, 134, 11, 0.12)', 
+                borderRadius: '12px', 
+                marginBottom: '15px', 
+                border: '1px solid rgba(184, 134, 11, 0.25)',
+                visibility: activeTab === 'employee' ? 'hidden' : 'visible' 
                 }}>
+                <h6 style={{ 
+                    color: '#2C1F14', 
+                    marginBottom: '10px', 
+                    fontSize: '14px', 
+                    fontWeight: '700' 
+                    }}>
                   <i className="fas fa-yin-yang me-2" style={{ color: '#B8860B' }}></i>
                   고유번호로 추모관 입장
                 </h6>
-                <div style={{
-                  display: 'flex',
-                  gap: '10px'
-                }}>
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '10px' 
+                    }}>
                   <input 
-                    type="text" 
-                    placeholder="고유번호 입력" 
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleJoinByCode();
-                      }
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '10px 15px',
-                      border: '2px solid rgba(184, 134, 11, 0.35)',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      outline: 'none',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#B8860B';
-                      e.target.style.boxShadow = '0 0 0 2px rgba(184, 134, 11, 0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                    disabled={joinLoading}
-                  />
+                  type="text" 
+                  placeholder="고유번호 입력" 
+                  value={joinCode} 
+                  onChange={(e) => setJoinCode(e.target.value)} 
+                  onKeyPress={(e) => { 
+                    if (e.key === 'Enter') { 
+                        handleJoinByCode(); 
+                        } 
+                        }} 
+                        style={{ 
+                            flex: 1, 
+                            padding: '10px 15px', 
+                            border: '2px solid rgba(184, 134, 11, 0.35)', 
+                            borderRadius: '8px', 
+                            fontSize: '14px', 
+                            outline: 'none', 
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)' 
+                            }} 
+                            onFocus={(e) => { 
+                                e.target.style.borderColor = '#B8860B'; 
+                                e.target.style.boxShadow = '0 0 0 2px rgba(184, 134, 11, 0.2)'; 
+                                }} 
+                                onBlur={(e) => { 
+                                    e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)'; 
+                                    e.target.style.boxShadow = 'none'; 
+                                    }} 
+                                    disabled={joinLoading} 
+                                    />
                   <button 
-                    onClick={handleJoinByCode}
-                    disabled={joinLoading}
-                    style={{
-                      padding: '10px 20px',
-                      background: joinLoading 
-                        ? '#6c757d' 
-                        : 'linear-gradient(135deg, #4A3728, #8B5A2B)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '700',
-                      cursor: joinLoading ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.3s ease',
-                      minWidth: '80px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                  onClick={handleJoinByCode} 
+                  disabled={joinLoading} 
+                  style={{ 
+                    padding: '10px 20px', 
+                    background: joinLoading 
+                    ? '#6c757d' 
+                    : 'linear-gradient(135deg, #4A3728, #8B5A2B)', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '8px', 
+                    fontSize: '14px', 
+                    fontWeight: '700', 
+                    cursor: joinLoading ? 'not-allowed' : 'pointer', 
+                    minWidth: '80px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center' 
                     }}
-                  >
-                    {joinLoading ? (
-                      <div style={{
-                        width: '16px',
-                        height: '16px',
-                        border: '2px solid transparent',
-                        borderTop: '2px solid white',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite'
-                      }}></div>
-                    ) : (
-                      '입장'
-                    )}
+                    >
+                    {joinLoading ? ( 
+                        <div style={{ 
+                            width: '16px', 
+                            height: '16px', 
+                            border: '2px solid transparent', 
+                            borderTop: '2px solid white', 
+                            borderRadius: '50%', 
+                            animation: 'spin 1s linear infinite' 
+                            }}></div> 
+                            ) : ( 
+                                '입장' 
+                                )}
                   </button>
                 </div>
                 {joinCode && (
-                  <div style={{
-                    marginTop: '10px',
-                    fontSize: '12px',
-                    color: '#6B4423',
-                    fontWeight: '500'
-                  }}>
+                  <div style={{ 
+                    marginTop: '10px', 
+                    fontSize: '12px', 
+                    color: '#6B4423', 
+                    fontWeight: '500' 
+                    }}>
                     <i className="fas fa-info-circle me-1" style={{ color: '#B8860B' }}></i>
                     입력된 고유번호: {joinCode}
                   </div>
@@ -693,44 +859,64 @@ const Login = () => {
               </div>
 
               {/* 회원가입 링크 */}
-              <div className="login-links" style={{
+              <div className="login-links" style={{ 
                 textAlign: 'center',
-                marginBottom: '20px'
-              }}>
+                marginBottom: '15px'
+                }}>
                 {activeTab === 'employee' && (
                   <button 
-                    onClick={() => navigate('/SignUp', { state: { isEmployee: true } })}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#B8860B',
-                      textDecoration: 'none',
-                      fontSize: '14px',
-                      fontWeight: '700',
-                      cursor: 'pointer'
+                  onClick={() => navigate('/SignUp', { state: { isEmployee: true } })}
+                  style={{ 
+                    background: 'none',
+                    border: 'none',
+                    color: '#B8860B', 
+                    textDecoration: 'none', 
+                    fontSize: '14px', 
+                    fontWeight: '700', 
+                    cursor: 'pointer' 
                     }}
-                  >
+                    >
                     <i className="fas fa-user-plus me-2"></i>직원 회원가입
                   </button>
                 )}
                 {activeTab === 'user' && (
                   <button 
-                    onClick={() => navigate('/SignUp', { state: { isEmployee: false } })}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#6B4423',
-                      textDecoration: 'none',
-                      fontSize: '14px',
-                      fontWeight: '700',
-                      cursor: 'pointer'
+                  onClick={() => navigate('/SignUp', { state: { isEmployee: false } })}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: '#6B4423', 
+                    textDecoration: 'none', 
+                    fontSize: '14px', 
+                    fontWeight: '700', 
+                    cursor: 'pointer' 
                     }}
-                  >
+                    >
                     <i className="fas fa-user-plus me-2"></i>사용자 회원가입
                   </button>
                 )}
               </div>
 
+              {/* 개인정보처리방침 및 이용약관 */}
+              <div className="privacy-links" style={{
+                textAlign: 'center',
+                paddingTop: '15px',
+                borderTop: '1px solid rgba(184, 134, 11, 0.2)'
+              }}>
+                <a href="/privacyPolicy" style={{
+                  color: '#6B4423',
+                  textDecoration: 'none',
+                  fontSize: '12px',
+                  fontWeight: '750'
+                }}>Golden Gate 개인정보 처리방침</a>
+                <span style={{ margin: '0 10px', color: '#6B4423', fontSize: '12px' }}>|</span>
+                <a href="/termsOfService" style={{
+                  color: '#6B4423',
+                  textDecoration: 'none',
+                  fontSize: '12px',
+                  fontWeight: '750'
+                }}>이용약관</a>
+              </div>
             </div>
           </div>
         </div>
@@ -764,14 +950,6 @@ const Login = () => {
         @media (max-width: 768px) {
           .login-content {
             flex-direction: column !important;
-          }
-          
-          .login-left {
-            min-height: 200px !important;
-          }
-          
-          .login-right {
-            padding: 30px 20px !important;
           }
         }
       `}</style>

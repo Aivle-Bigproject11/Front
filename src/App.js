@@ -12,11 +12,12 @@ import FindPassword from './pages/FindPassword';
 import Menu1_1 from './pages/Menu1-1';
 import Menu1_2 from './pages/Menu1-2';
 import Menu1_3 from './pages/Menu1-3';
+import Menu1_4 from './pages/Menu1-4';
 import Menu2 from './pages/Menu2';
 import Menu3 from './pages/Menu3';
 import Menu4 from './pages/Menu4';
 import Menu5 from './pages/Menu5';
-import Menu5_1 from './pages/Menu5_1'; 
+import Menu5_1 from './pages/Menu5_1';
 import Menu5_2 from './pages/Menu5_2';
 import MemorialDetail from './pages/MemorialDetail';
 import MemorialConfig from './pages/MemorialConfig';
@@ -26,6 +27,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Login 컴포넌트와 SignUp 컴포넌트를 임포트합니다.
 import SignUp from './pages/SignUp';
+import UserConfig from './pages/UserConfig';
+import PasswordCheck from './pages/PasswordCheck';
+import PrivacyPolicy from './pages/privacyPolicy';
+import TermsOfService from './pages/termsOfService';
 
 function App() {
     return (
@@ -38,9 +43,12 @@ function App() {
                         <Route path="/findPassword" element={<FindPassword />} />
                         {/* 회원가입 페이지 경로추가 */}
                         <Route path="/signup" element={<SignUp />} />
+                        <Route path="/privacyPolicy" element={<PrivacyPolicy />} />
+                        <Route path="/termsOfService" element={<TermsOfService />} />
                         {/* 유저용 페이지들 (네비게이션 바 없음) */}
                         <Route path="/lobby" element={<UserLayout><Lobby /></UserLayout>} />
                         <Route path="/user-memorial/:id" element={<UserLayout><MemorialDetail /></UserLayout>} />
+                        <Route path="/user-memorial/:id/settings" element={<UserLayout><MemorialConfig /></UserLayout>} />
                         {/* 고유번호로 접근하는 페이지 (로그인 없이, 네비게이션 바 없음) */}
                         <Route path="/memorial/:id/guest" element={<GuestLayout><MemorialDetail /></GuestLayout>} />
                         <Route path="/*" element={<MainLayout />} />
@@ -76,6 +84,7 @@ const MainLayout = () => {
                 <Route path="/menu1-1" element={<Menu1_1 />} />
                 <Route path="/menu1-2" element={<Menu1_2 />} />
                 <Route path="/menu1-3" element={<Menu1_3 />} />
+                <Route path="/menu1-4" element={<Menu1_4 />} />
                 <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
                 <Route path="/menu2" element={<Menu2 />} />
                 <Route path="/menu3" element={<Menu3 />} />
@@ -86,6 +95,8 @@ const MainLayout = () => {
 
                 <Route path="/memorial/:id" element={<MemorialDetail />} />
                 <Route path="/memorial/:id/settings" element={<MemorialConfig />} />
+                <Route path="/password-check" element={<PasswordCheck />} />
+                <Route path="/user-config" element={<UserConfig />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </>
