@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Badge, Button } from 'react-bootstrap';
-import { Users, FileText, Phone, MapPin, Clock, Check, X, Eye } from 'lucide-react';
+import { Users, FileText, Phone, MapPin, Check, X, Eye, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { customerService, customerUtils } from '../services/customerService';
 
@@ -9,6 +9,7 @@ const Menu1_1 = () => {
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [animateCard, setAnimateCard] = useState(false);
   const [error, setError] = useState(null);
   
@@ -18,6 +19,22 @@ const Menu1_1 = () => {
     loadCustomers();
   }, []);
 
+  useEffect(() => {
+    let result = customers;
+
+    if (activeFilter !== 'all') {
+      result = result.filter(customer => customer.status === activeFilter);
+    }
+
+    if (searchTerm) {
+      result = result.filter(customer => 
+        customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredCustomers(result);
+  }, [searchTerm, activeFilter, customers]);
+
   const loadCustomers = async () => {
     try {
       setLoading(true);
@@ -26,7 +43,6 @@ const Menu1_1 = () => {
       
       const data = await customerService.getAllCustomers();
       setCustomers(data);
-      setFilteredCustomers(data);
     } catch (err) {
       setError('고객 데이터를 불러오는데 실패했습니다.');
       console.error('Error loading customers:', err);
@@ -35,13 +51,8 @@ const Menu1_1 = () => {
     }
   };
 
-  const filterCustomers = (filterType) => {
+  const handleFilterChange = (filterType) => {
     setActiveFilter(filterType);
-    if (filterType === 'all') {
-      setFilteredCustomers(customers);
-    } else {
-      setFilteredCustomers(customers.filter(customer => customer.status === filterType));
-    }
   };
 
   const handleCustomerSelect = (customer) => {
@@ -83,13 +94,12 @@ const Menu1_1 = () => {
     );
   }
   
-  // Define background colors based on status 
   const statusBackgrounds = {
     pending: 'linear-gradient(135deg, #E5B83A, #E5B83A)',
     inProgress: 'linear-gradient(135deg, #133d6cff, #133d6cff', 
     completed: 'linear-gradient(135deg, #146c43 0%, #146c43 100%)', 
   };
-  const defaultBackground = 'linear-gradient(135deg, #B8860B, #B8860B)'; 
+  const defaultBackground = 'linear-gradient(135deg, #B8860B, #B8860B)'; 
 
   return (
     <div className="page-wrapper" style={{
@@ -120,7 +130,6 @@ const Menu1_1 = () => {
         gap: '20px',
         overflow: 'hidden',
       }}>
-        {/* 왼쪽 사이드바 */}
         <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
           <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px' }}>
             장례서류작성
@@ -167,7 +176,6 @@ const Menu1_1 = () => {
               확인하세요
             </p>
 
-            {/* 필터 버튼들 */}
             <div style={{ marginTop: '30px' }}>
               <h6 style={{ color: '#4A3728', marginBottom: '15px', fontSize: '14px', fontWeight: '600' }}>
                 상태별 필터
@@ -181,7 +189,7 @@ const Menu1_1 = () => {
                 ].map(filter => (
                   <button
                     key={filter.key}
-                    onClick={() => filterCustomers(filter.key)}
+                    onClick={() => handleFilterChange(filter.key)}
                     style={{
                       background: activeFilter === filter.key
                         ? (statusBackgrounds[filter.key] || defaultBackground) : 'transparent', 
@@ -211,17 +219,32 @@ const Menu1_1 = () => {
                 ))}
               </div>
             </div>
+
+            <div style={{ marginTop: '20px' }}>
+              <h6 style={{ color: '#4A3728', marginBottom: '15px', fontSize: '14px', fontWeight: '600' }}>
+                고객 검색
+              </h6>
+              <div className="search-bar-wrapper">
+                <Search className="search-icon" size={18} />
+                <input 
+                  type="text"
+                  placeholder="고객 이름으로 검색..."
+                  className="search-input"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* 오른쪽 메인 콘텐츠 */}
         <div className="dashboard-right" style={{
           flex: '1',
           overflowY: 'auto',
           height: '100%', 
           paddingRight: '10px'
         }}>
-          {/* 서브 헤더 */}
           <div style={{
             padding: '0 0 20px 0',
             borderBottom: '1px solid rgba(184, 134, 11, 0.2)',
@@ -231,7 +254,7 @@ const Menu1_1 = () => {
               <h3 style={{
                 color: '#2C1F14',
                 fontWeight: '600',
-                margin: 0, // marginBottom 제거
+                margin: 0,
                 fontSize: '1.5rem'
               }}>
                 {activeFilter === 'all' ? '전체' : customerUtils.getStatusText(activeFilter)} 고객 목록
@@ -262,7 +285,6 @@ const Menu1_1 = () => {
             }}>총 {filteredCustomers.length}명의 고객</p>
           </div>
 
-          {/* 고객 카드 리스트 */}
           {filteredCustomers.length === 0 ? (
             <div style={{
               display: 'flex',
@@ -273,8 +295,8 @@ const Menu1_1 = () => {
               color: '#4A3728'
             }}>
               <Users size={64} style={{ opacity: 0.3, marginBottom: '16px' }} />
-              <h4>표시할 고객이 없습니다</h4>
-              <p>다른 필터를 선택하거나 새로운 고객을 추가해보세요.</p>
+              <h4>검색 결과가 없습니다</h4>
+              <p>입력하신 고객 이름을 다시 확인해주세요.</p>
             </div>
           ) : (
             <div style={{
@@ -415,6 +437,30 @@ const Menu1_1 = () => {
       </div>
 
         <style>{`
+            .search-bar-wrapper {
+                position: relative;
+            }
+            .search-icon {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #B8860B;
+            }
+            .search-input {
+                width: 100%;
+                padding: 8px 12px 8px 38px;
+                border-radius: 8px;
+                border: 1px solid rgba(184, 134, 11, 0.2);
+                background-color: rgba(255, 255, 255, 0.8);
+                color: #4A3728;
+                transition: all 0.3s ease;
+            }
+            .search-input:focus {
+                outline: none;
+                border-color: #B8860B;
+                box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.2);
+            }
             @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
