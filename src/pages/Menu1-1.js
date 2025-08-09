@@ -1,8 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { Badge, Button } from 'react-bootstrap';
-import { Users, FileText, Phone, MapPin, Check, X, Eye, Search } from 'lucide-react';
+import { Users, FileText, Home, MapPin, Check, X, Eye, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { customerService, customerUtils } from '../services/customerService';
+import { apiService } from '../services/api';
+
+// Helper functions formerly in customerUtils
+const getStatusText = (status) => {
+  switch(status) {
+    case 'pending': return '대기중';
+    case 'inProgress': return '진행중';
+    case 'completed': return '완료';
+    default: return '알수없음';
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '날짜 정보 없음';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
 
 const Menu1_1 = () => {
   const [customers, setCustomers] = useState([]);
@@ -41,8 +61,72 @@ const Menu1_1 = () => {
       setError(null);
       setAnimateCard(true);
       
-      const data = await customerService.getAllCustomers();
-      setCustomers(data);
+      const [funeralInfosResponse, obituariesResponse, deathReportsResponse, schedulesResponse] = await Promise.all([
+        apiService.getFuneralInfos(),
+        apiService.getObituaries(),
+        apiService.getDeathReports(),
+        apiService.getSchedules()
+      ]);
+
+      if (!funeralInfosResponse.data?._embedded?.funeralInfos) {
+        console.error("API response is missing expected '_embedded.funeralInfos' data.", funeralInfosResponse.data);
+        setCustomers([]);
+        return;
+      }
+
+      const funeralInfos = funeralInfosResponse.data._embedded.funeralInfos;
+      const obituaries = obituariesResponse.data?._embedded?.obituaries || [];
+      const deathReports = deathReportsResponse.data?._embedded?.deathReports || [];
+      const schedules = schedulesResponse.data?._embedded?.schedules || [];
+
+      // Create maps for quick lookup of document statuses by funeralInfoId
+      const obituaryStatusMap = new Map();
+      obituaries.forEach(obituary => {
+        obituaryStatusMap.set(obituary.funeralInfoId, obituary.obituaryStatus);
+      });
+
+      const deathReportStatusMap = new Map();
+      deathReports.forEach(deathReport => {
+        deathReportStatusMap.set(deathReport.funeralInfoId, deathReport.deathReportStatus);
+      });
+
+      const scheduleStatusMap = new Map();
+      schedules.forEach(schedule => {
+        scheduleStatusMap.set(schedule.funeralInfoId, schedule.scheduleStatus);
+      });
+
+      const transformedData = funeralInfos.map(info => {
+        const isObituaryCompleted = obituaryStatusMap.get(info.funeralInfoId) === 'COMPLETED';
+        const isDeathCertificateCompleted = deathReportStatusMap.get(info.funeralInfoId) === 'COMPLETED';
+        const isScheduleCompleted = scheduleStatusMap.get(info.funeralInfoId) === 'COMPLETED';
+
+        const documents = {
+          obituary: isObituaryCompleted,
+          deathCertificate: isDeathCertificateCompleted,
+          schedule: isScheduleCompleted,
+        };
+
+        const allCompleted = Object.values(documents).every(status => status);
+        const someCompleted = Object.values(documents).some(status => status);
+        let status = 'pending';
+        if (allCompleted) status = 'completed';
+        else if (someCompleted) status = 'inProgress';
+
+        return {
+          id: info.customerId,
+          name: info.deceasedName,
+          phone: info.funeralHomeName || '장례식장 정보 없음', // Changed to funeral home name
+          type: '고인',
+          status: status,
+          age: info.deceasedAge,
+          documents: documents,
+          funeralDate: info.deceasedDate,
+          location: info.funeralHomeAddress || '주소 정보 없음', // Changed to funeral home address
+          originalData: info 
+        };
+      });
+      
+      setCustomers(transformedData);
     } catch (err) {
       setError('고객 데이터를 불러오는데 실패했습니다.');
       console.error('Error loading customers:', err);
@@ -56,7 +140,8 @@ const Menu1_1 = () => {
   };
 
   const handleCustomerSelect = (customer) => {
-    localStorage.setItem('selectedCustomer', JSON.stringify(customer));
+    // Store the original, untransformed data for subsequent pages
+    localStorage.setItem('selectedCustomer', JSON.stringify(customer.originalData));
   };
 
   const handleRegisterClick = (e, customer) => {
@@ -251,14 +336,30 @@ const Menu1_1 = () => {
             marginBottom: '20px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h3 style={{
-                color: '#2C1F14',
-                fontWeight: '600',
-                margin: 0,
-                fontSize: '1.5rem'
-              }}>
-                {activeFilter === 'all' ? '전체' : customerUtils.getStatusText(activeFilter)} 고객 목록
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <h3 style={{
+                  color: '#2C1F14',
+                  fontWeight: '600',
+                  margin: 0,
+                  fontSize: '1.5rem'
+                }}>
+                  {activeFilter === 'all' ? '전체' : getStatusText(activeFilter)} 고객 목록
+                </h3>
+                <Button
+                  onClick={loadCustomers}
+                  className="btn-outline-golden"
+                  size="sm"
+                  style={{
+                      padding: '8px 16px',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      borderRadius: '8px',
+                      marginLeft: '10px'
+                  }}
+                >
+                  새로고침
+                </Button>
+              </div>
               <Button
                 onClick={() => navigate('/menu1-4')}
                 className="save-btn"
@@ -340,7 +441,7 @@ const Menu1_1 = () => {
                             padding: '4px 8px',
                             border: '1px solid white',
                           }}>
-                          {customerUtils.getStatusText(customer.status)}
+                          {getStatusText(customer.status)}
                         </Badge>
                       </div>
                       <div style={{
@@ -351,7 +452,7 @@ const Menu1_1 = () => {
                           향년 {customer.age}세
                         </p>
                         <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.9 }}>
-                          {customerUtils.formatDate(customer.funeralDate)}
+                          {formatDate(customer.funeralDate)}
                         </p>
                       </div>
                     </div>
@@ -366,7 +467,7 @@ const Menu1_1 = () => {
                           gap: '8px', marginBottom: '12px'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(184, 134, 11, 0.08)', borderRadius: '8px', border: '1px solid rgba(184, 134, 11, 0.15)' }}>
-                            <Phone size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
+                            <Home size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
                             <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2C1F14' }}>
                               {customer.phone}
                             </span>
@@ -387,7 +488,7 @@ const Menu1_1 = () => {
                           </div>
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                             {Object.entries(customer.documents).map(([docType, isCompleted]) => {
-                              const docNames = { obituary: '부고장', schedule: '일정표', deathCertificate: '사망신고서' };
+                              const docNames = { obituary: '부고장', schedule: '장례일정표', deathCertificate: '사망신고서' };
                               return (
                                 <Badge key={docType} bg={isCompleted ? 'success' : 'danger'}
                                   style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '0.75rem' }}>

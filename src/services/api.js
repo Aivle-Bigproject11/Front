@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API 기본 설정
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -44,7 +44,16 @@ export const apiService = {
   deleteMemorial: (id) => api.delete(`/memorials/${id}`),
 
   // 장례서류 관련 API
-    getFuneralInfos: () => api.get('/funeralInfos'),
+  getFuneralInfos: () => api.get('/funeralInfos'),
+  getObituaries: () => api.get('/obituaries'),
+  getDeathReports: () => api.get('/deathReports'),
+  getSchedules: () => api.get('/schedules'),
+
+  // 고객 관련 API
+  getCustomers: () => api.get('/customers'),
+
+  // 장례 정보 생성
+  createFuneralInfo: (data) => api.post('/funeralInfos', data),
 
 
   // 대시보드 데이터

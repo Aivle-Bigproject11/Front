@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, ArrowLeft } from 'lucide-react';
-import { customerService } from '../services/customerService';
+import { apiService } from '../services/api';
 
 const Menu1_4 = () => {
     const navigate = useNavigate();
@@ -13,7 +13,6 @@ const Menu1_4 = () => {
     const [error, setError] = useState(null);
     const [animateCard, setAnimateCard] = useState(false);
     const [isSearched, setIsSearched] = useState(false);
-    const [showModal, setShowModal] = useState(false);
     const [filters, setFilters] = useState({
         customerId: '', name: '',
     });
@@ -23,10 +22,8 @@ const Menu1_4 = () => {
             setLoading(true);
             setError(null);
             try {
-                const data = await customerService.getAllCustomers();
-                // 이미 장례 절차가 진행중이거나 완료된 고객은 제외
-                const availableCustomers = data.filter(c => c.status === 'pending');
-                setAllCustomers(availableCustomers);
+                const response = await apiService.getCustomers();
+                setAllCustomers(response.data);
                 setFilteredCustomers([]);
             } catch (err) {
                 setError("데이터 로딩에 실패했습니다.");
@@ -50,7 +47,7 @@ const Menu1_4 = () => {
         let result = [...allCustomers];
 
         if (filters.customerId) {
-            result = result.filter(c => String(c.id).includes(filters.customerId));
+            result = result.filter(c => String(c.customerId).includes(filters.customerId));
         }
         if (filters.name) {
             result = result.filter(c => c.name.toLowerCase().includes(filters.name.toLowerCase()));
@@ -60,22 +57,12 @@ const Menu1_4 = () => {
         setIsSearched(true);
     };
 
-    const handleRegisterDeceased = async (customer) => {
-        try {
-            // 고객 상태를 '진행중'으로 변경
-            await customerService.updateCustomer(customer.id, { ...customer, status: 'inProgress' });
-            localStorage.setItem('selectedCustomer', JSON.stringify({ ...customer, status: 'inProgress' }));
-            setShowModal(true);
-        } catch (err) {
-            setError('고객 상태 변경에 실패했습니다.');
-            console.error('Error updating customer status:', err);
-        }
+    const handleRegisterDeceased = (customer) => {
+        localStorage.setItem('selectedCustomer', JSON.stringify(customer));
+        navigate('/menu1-5');
     };
 
-    const handleCloseModal = () => {
-        setShowModal(false);
-        navigate('/menu1-1');
-    };
+    
 
     if (loading && !animateCard) {
         return (
@@ -172,17 +159,7 @@ const Menu1_4 = () => {
                 </div>
             </div>
 
-            <Modal show={showModal} onHide={handleCloseModal} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>등록 완료</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>고인 등록이 완료되었습니다.</Modal.Body>
-                <Modal.Footer>
-                    <Button variant="primary" onClick={handleCloseModal}>
-                        확인
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            
 
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
