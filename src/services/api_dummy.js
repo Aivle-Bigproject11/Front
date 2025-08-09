@@ -41,7 +41,6 @@ export const dummyData = {
             self: { href: "http://localhost:8080/memorials/2" }
           }
         }
-        // ... other memorials
       ]
     },
     _links: {
