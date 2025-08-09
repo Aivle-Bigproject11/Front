@@ -1,26 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, Card, Form, Row, Col } from 'react-bootstrap';
-import { ArrowLeft, Save, User, Users, FileText, MapPin, Phone, Calendar, Building, Briefcase, Heart, Home, Star } from 'lucide-react';
+import { ArrowLeft, Save, User, FileText, MapPin, Building, Briefcase, Phone, Calendar, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { customerService, customerUtils } from '../services/customerService';
 
-const newFormGroups = {
-    상조회사정보: ['상조회사이름', '담당장례지도사이름', '담당장례지도사연락처'],
-    고인기본정보: ['상조회사고객ID', '고인성명한글', '고인성명한자', '고인주민등록번호', '고인나이', '고인생일', '고인성별', '고인돌아가신날짜', '고인종교', '고인등록기준지', '고인주소', '고인과세대주와의관계'],
-    사망신고서정보: ['사망신고서시스템등록일자', '사망장소', '사망장소구분', '사망장소기타사항', '사망신고서기타사항', '사망신고서상의제출인이름', '제출인주민등록번호'],
-    신고인정보: ['신고인이름', '신고인주민등록번호', '신고인자격', '신고인과고인의관계', '신고인주소', '신고인전화번호', '신고인이메일'],
-    장례정보: ['장례식장이름', '장례식장주소', '장례식장주소URL', '장례기간', '빈소정보', '발인일시', '장지정보', '상주목록', '상주연락처', '상주예금주', '상주은행명', '상주계좌번호', '사용자선택고인키워드'],
+const fieldSpecs = {
+    funeralCompanyName: { label: '이용 상조회사 이름', type: 'text', group: '상조회사정보', required: true },
+    directorName: { label: '담당 장례지도사 이름', type: 'text', disabled: true, group: '상조회사정보' },
+    directorPhone: { label: '담당 장례지도사 연락처', type: 'text', disabled: true, group: '상조회사정보' },
+    customerId: { label: '상조회사 고객 ID', type: 'text', disabled: true, group: '고인기본정보' },
+    deceasedName: { label: '고인 성명 (한글)', type: 'text', disabled: true, group: '고인기본정보', required: true },
+    deceasedNameHanja: { label: '고인 성명 (한자)', type: 'text', group: '고인기본정보' },
+    deceasedRrn: { label: '고인 주민등록번호', type: 'text', disabled: true, group: '고인기본정보', required: true },
+    deceasedAge: { label: '고인 나이', type: 'number', disabled: true, group: '고인기본정보', required: true },
+    deceasedBirthOfDate: { label: '고인 생일', type: 'date', disabled: true, group: '고인기본정보', required: true },
+    deceasedGender: { label: '고인 성별', type: 'text', disabled: true, group: '고인기본정보', required: true },
+    deceasedDate: { label: '고인 돌아가신 날짜', type: 'datetime-local', group: '고인기본정보', required: true },
+    deceasedReligion: { label: '고인 종교', type: 'select', group: '고인기본정보', options: ['기독교', '불교', '천주교', '개신교', '무교', '기타'] },
+    deceasedRegisteredAddress: { label: '고인 등록기준지', type: 'text', group: '고인기본정보' },
+    deceasedAddress: { label: '고인 주소', type: 'text', group: '고인기본정보', required: true },
+    deceasedRelationToHouseholdHead: { label: '고인과 세대주와의 관계', type: 'text', group: '고인기본정보', required: true },
+    reportRegistrationDate: { label: '사망신고서 시스템 등록일자', type: 'text', disabled: true, group: '사망신고서정보', required: true },
+    deathLocation: { label: '사망 장소', type: 'text', group: '사망신고서정보', required: true },
+    deathLocationType: { label: '사망 장소 (구분)', type: 'select', group: '사망신고서정보', options: ['주택', '의료기관', '사회복지시설(양로원, 고아원 등)', '공공시설(학교, 운동장 등)', '도로', '상업/서비스시설(상점, 호텔 등)', '산업장', '농장(논밭, 축사, 양식장 등)', '병원 이송 중 사망','기타'], required: true },
+    deathLocationEtc: { label: '사망 장소 기타사항', type: 'text', group: '사망신고서정보' },
+    deathReportEtc: { label: '사망신고서 기타사항', type: 'text', group: '사망신고서정보' },
+    submitterName: { label: '사망신고서 상의 제출인 이름', type: 'text', group: '사망신고서정보' },
+    submitterRrn: { label: '제출인 주민등록번호', type: 'text', group: '사망신고서정보' },
+    reporterName: { label: '신고인 이름', type: 'text', group: '신고인정보', required: true },
+    reporterRrn: { label: '신고인 주민등록번호', type: 'text', group: '신고인정보', required: true },
+    reporterQualification: { label: '신고인 자격 (1~4)', type: 'select', group: '신고인정보', options: ['동거친족', '비동거친족', '동거자', '기타(보호시설장/사망장소관리자 등)'], required: true },
+    reporterRelationToDeceased: { label: '신고인과 고인의 관계', type: 'text', group: '신고인정보', required: true },
+    reporterAddress: { label: '신고인 주소', type: 'text', group: '신고인정보', required: true },
+    reporterPhone: { label: '신고인 전화번호', type: 'text', group: '신고인정보', required: true },
+    reporterEmail: { label: '신고인 이메일', type: 'email', group: '신고인정보' },
+    funeralHomeName: { label: '장례식장 이름', type: 'text', group: '장례정보', required: true },
+    funeralHomeAddress: { label: '장례식장 주소', type: 'text', group: '장례정보', required: true },
+    funeralDuration: { label: '장례 기간', type: 'text', group: '장례정보', required: true },
+    mortuaryInfo: { label: '빈소 정보', type: 'text', group: '장례정보', required: true },
+    processionDateTime: { label: '발인 일시', type: 'datetime-local', group: '장례정보', required: true },
+    burialSiteInfo: { label: '장지 정보', type: 'text', group: '장례정보', required: true },
+    chiefMourners: { label: '상주 목록', type: 'text', group: '장례정보', required: true },
+    chiefMournersContact: { label: '상주 연락처', type: 'text', group: '장례정보', required: true },
+    chiefMournerAccountHolder: { label: '상주 예금주', type: 'text', group: '장례정보' },
+    chiefMournerBankName: { label: '상주 은행명', type: 'select', group: '장례정보', options: ['국민은행', '신한은행', '우리은행', '하나은행', '기업은행', '농협은행', '기타'] },
+    chiefMournerAccountNumber: { label: '상주 계좌번호', type: 'text', group: '장례정보' },
+    templateKeyword: { label: '사용자가 선택한 고인의 키워드', type: 'text', group: '장례정보', required: true },
 };
 
-const fieldLabels = {
-    상조회사이름: '상조회사 이름', 담당장례지도사이름: '담당 장례지도사 이름', 담당장례지도사연락처: '담당 장례지도사 연락처',
-    상조회사고객ID: '상조회사 고객 ID', 고인성명한글: '고인 성명 (한글)', 고인성명한자: '고인 성명 (한자)', 고인주민등록번호: '고인 주민등록번호', 고인나이: '고인 나이', 고인생일: '고인 생일', 고인성별: '고인 성별', 고인돌아가신날짜: '고인 돌아가신 날짜', 고인종교: '고인 종교', 고인등록기준지: '고인 등록기준지', 고인주소: '고인 주소', 고인과세대주와의관계: '고인과 세대주의 관계',
-    사망신고서시스템등록일자: '사망신고서 시스템 등록일자', 사망장소: '사망 장소', 사망장소구분: '사망 장소 (구분)', 사망장소기타사항: '사망 장소 기타사항', 사망신고서기타사항: '사망신고서 기타사항', 사망신고서상의제출인이름: '사망신고서 상의 제출인 이름', 제출인주민등록번호: '제출인 주민등록번호',
-    신고인이름: '신고인 이름', 신고인주민등록번호: '신고인 주민등록번호', 신고인자격: '신고인 자격 (1~4)', 신고인과고인의관계: '신고인과 고인의 관계', 신고인주소: '신고인 주소', 신고인전화번호: '신고인 전화번호', 신고인이메일: '신고인 이메일',
-    장례식장이름: '장례식장 이름', 장례식장주소: '장례식장 주소', 장례식장주소URL: '장례식장 주소 URL (QR코드)', 장례기간: '장례 기간', 빈소정보: '빈소 정보', 발인일시: '발인 일시', 장지정보: '장지 정보', 상주목록: '상주 목록', 상주연락처: '상주 연락처', 상주예금주: '상주 예금주', 상주은행명: '상주 은행명', 상주계좌번호: '상주 계좌번호', 사용자선택고인키워드: '사용자가 선택한 고인의 키워드',
+const formGroups = {
+    상조회사정보: Object.keys(fieldSpecs).filter(f => fieldSpecs[f].group === '상조회사정보'),
+    고인기본정보: Object.keys(fieldSpecs).filter(f => fieldSpecs[f].group === '고인기본정보'),
+    사망신고서정보: Object.keys(fieldSpecs).filter(f => fieldSpecs[f].group === '사망신고서정보'),
+    신고인정보: Object.keys(fieldSpecs).filter(f => fieldSpecs[f].group === '신고인정보'),
+    장례정보: Object.keys(fieldSpecs).filter(f => fieldSpecs[f].group === '장례정보'),
 };
 
-const initialFormData = Object.values(newFormGroups).flat().reduce((acc, field) => ({ ...acc, [field]: '' }), {});
+const initialFormData = Object.keys(fieldSpecs).reduce((acc, field) => ({ ...acc, [field]: '' }), {});
 
 const Menu1_2 = () => {
     const [formData, setFormData] = useState(initialFormData);
@@ -29,6 +65,8 @@ const Menu1_2 = () => {
     const [animateCard, setAnimateCard] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [validationStatus, setValidationStatus] = useState('검토 전');
+    const [reviewSuggestions, setReviewSuggestions] = useState({});
     
     const navigate = useNavigate();
 
@@ -38,28 +76,102 @@ const Menu1_2 = () => {
             const customer = JSON.parse(customerData);
             setSelectedCustomer(customer);
             
-            setFormData(prev => ({
-                ...prev,
-                상조회사고객ID: customer.id || '',
-                고인성명한글: customer.name || '',
-                고인나이: customer.age || '',
-                고인전화번호: customer.phone || '',
-                고인주소: customer.location || '',
-                고인돌아가신날짜: customer.funeralDate || '',
-            }));
+            const initialData = { ...initialFormData };
+            initialData.customerId = customer.id || '';
+            initialData.deceasedName = customer.name || '';
+            initialData.deceasedAge = customer.age || '';
+            initialData.deceasedAddress = customer.location || '';
+            initialData.deceasedDate = customer.funeralDate ? new Date(customer.funeralDate).toISOString().slice(0, 16) : '';
+            setFormData(initialData);
         } else {
             navigate('/menu1-1');
-            return;
         }
         setAnimateCard(true);
     }, [navigate]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        let formattedValue = value;
+
+        if (name === 'reporterPhone' || name === 'chiefMournersContact') {
+            const numbers = value.replace(/[^0-9]/g, '');
+            if (numbers.length <= 11) {
+                formattedValue = numbers.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+                setFormData(prev => ({ ...prev, [name]: formattedValue }));
+            }
+        } else if (name === 'reporterRrn' || name === 'submitterRrn') {
+            const numbers = value.replace(/[^0-9]/g, '');
+            if (numbers.length <= 13) {
+                formattedValue = numbers.replace(/(\d{6})(\d{0,7})/, '$1-$2').replace("--", "-");
+                setFormData(prev => ({ ...prev, [name]: formattedValue }));
+            }
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+        
+        setValidationStatus('검토 전');
+    };
+
+    const handleReview = async () => {
+        setValidationStatus('검토 중');
+        setReviewSuggestions({});
+        setErrorMessage('');
+        setSuccessMessage('');
+
+        // 1. 필수 필드 검사
+        const missingRequiredFields = Object.keys(fieldSpecs).filter(fieldName => {
+            const field = fieldSpecs[fieldName];
+            // 비활성화되지 않은 필수 필드만 검사
+            return field.required && !field.disabled && !formData[fieldName];
+        });
+
+        if (missingRequiredFields.length > 0) {
+            const newSuggestions = {};
+            missingRequiredFields.forEach(field => {
+                newSuggestions[field] = '필수 입력 항목입니다.';
+            });
+            setReviewSuggestions(newSuggestions);
+            setErrorMessage('필수 입력 항목을 모두 채워주세요.');
+            setValidationStatus('수정 필요');
+            return;
+        }
+
+        // 2. 백엔드 API 호출 시뮬레이션 (AI 검토)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const suggestions = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^\d{2,3}-\d{3,4}-\d{4}$/;
+        const rrnRegex = /^\d{6}-\d{7}$/;
+
+        if (formData.reporterEmail && !emailRegex.test(formData.reporterEmail)) {
+            suggestions.reporterEmail = '이메일 형식이 올바르지 않습니다. (예: user@example.com)';
+        }
+        if (formData.reporterPhone && !phoneRegex.test(formData.reporterPhone)) {
+            suggestions.reporterPhone = '전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)';
+        }
+        if (formData.reporterRrn && !rrnRegex.test(formData.reporterRrn)) {
+            suggestions.reporterRrn = '주민등록번호 형식이 올바르지 않습니다. (예: 900101-1234567)';
+        }
+        if (formData.submitterRrn && !rrnRegex.test(formData.submitterRrn)) {
+            suggestions.submitterRrn = '주민등록번호 형식이 올바르지 않습니다. (예: 900101-1234567)';
+        }
+
+        if (Object.keys(suggestions).length > 0) {
+            setValidationStatus('수정 필요'); // 상태는 변경하지만 저장은 활성화
+            setReviewSuggestions(suggestions);
+            setErrorMessage('수정이 필요한 항목이 있습니다. 각 항목에 마우스를 올려 확인해주세요.');
+        } else {
+            setSuccessMessage('모든 항목이 검토되었습니다.');
+        }
+        setValidationStatus('검토 완료'); // 검토 후에는 항상 저장 가능하도록 상태 변경
     };
 
     const handleSave = async () => {
+        if (validationStatus !== '검토 완료') {
+            setErrorMessage('저장하기 전에 검토를 완료해야 합니다.');
+            return;
+        }
         setSuccessMessage('');
         setErrorMessage('');
         try {
@@ -146,38 +258,73 @@ const Menu1_2 = () => {
                                 상세 정보 입력
                             </h3>
                         </div>
-                        <Button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="save-btn"
-                        >
-                            {saving ? '저장 중...' : <><Save size={16} style={{ marginRight: '8px' }} /> 저장</>}
-                        </Button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Button
+                                onClick={handleReview}
+                                disabled={validationStatus === '검토 중'}
+                                className="review-btn"
+                            >
+                                {validationStatus === '검토 중' ? '검토 중...' : '검토'}
+                            </Button>
+                            <Button
+                                onClick={handleSave}
+                                disabled={saving || validationStatus !== '검토 완료'}
+                                className="save-btn"
+                            >
+                                {saving ? '저장 중...' : <><Save size={16} style={{ marginRight: '8px' }} /> 저장</>}
+                            </Button>
+                        </div>
                     </div>
                     
                     {successMessage && <Alert variant="success" className="mb-4 flex-shrink-0">{successMessage}</Alert>}
                     {errorMessage && <Alert variant="danger" className="mb-4 flex-shrink-0">{errorMessage}</Alert>}
 
                     <div className="form-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
-                        {Object.entries(newFormGroups).map(([groupName, fields]) => (
+                        {Object.entries(formGroups).map(([groupName, fields]) => (
                             <Card key={groupName} className="mb-4" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
                                 <Card.Header style={{ background: 'rgba(184, 134, 11, 0.08)', borderBottom: '1px solid rgba(184, 134, 11, 0.15)'}}><h5 style={{ margin: 0, display: 'flex', alignItems: 'center', color: '#2C1F14', fontWeight: '600' }}>{getGroupIcon(groupName)}<span style={{ marginLeft: '8px' }}>{groupName}</span></h5></Card.Header>
                                 <Card.Body>
                                     <Row className="g-3">
-                                        {fields.map((fieldName) => (
-                                            <Col md={4} key={fieldName}>
-                                                <Form.Group>
-                                                    <Form.Label style={{ color: '#4A3728' }}>{fieldLabels[fieldName] || fieldName}</Form.Label>
-                                                    <Form.Control
-                                                        type="text" 
-                                                        name={fieldName} 
-                                                        value={formData[fieldName]}
-                                                        onChange={handleInputChange} 
-                                                        placeholder={`${fieldLabels[fieldName] || fieldName} 입력`}
-                                                    />
-                                                </Form.Group>
-                                            </Col>
-                                        ))}
+                                        {fields.map((fieldName) => {
+                                            const field = fieldSpecs[fieldName];
+                                            if (fieldName === 'deathLocationEtc' && formData.deathLocationType !== '기타') {
+                                                return null;
+                                            }
+                                            return (
+                                                <Col md={4} key={fieldName}>
+                                                    <Form.Group>
+                                                        <Form.Label style={{ color: '#4A3728' }}>{field.label}</Form.Label>
+                                                        <div style={{ position: 'relative' }} title={reviewSuggestions[fieldName] || ''}>
+                                                            {field.type === 'select' ? (
+                                                                <Form.Select
+                                                                    name={fieldName}
+                                                                    value={formData[fieldName]}
+                                                                    onChange={handleInputChange}
+                                                                    disabled={field.disabled}
+                                                                    style={reviewSuggestions[fieldName] ? { borderColor: 'red' } : {}}
+                                                                >
+                                                                    <option value="">선택하세요</option>
+                                                                    {field.options.map(option => (
+                                                                        <option key={option} value={option}>{option}</option>
+                                                                    ))}
+                                                                </Form.Select>
+                                                            ) : (
+                                                                <Form.Control
+                                                                    type={field.type || 'text'}
+                                                                    name={fieldName}
+                                                                    value={formData[fieldName]}
+                                                                    onChange={handleInputChange}
+                                                                    placeholder={`${field.label} 입력`}
+                                                                    readOnly={field.disabled}
+                                                                    className={field.disabled ? 'form-input-readonly' : ''}
+                                                                    style={reviewSuggestions[fieldName] ? { borderColor: 'red' } : {}}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </Form.Group>
+                                                </Col>
+                                            );
+                                        })}
                                     </Row>
                                 </Card.Body>
                             </Card>
@@ -193,7 +340,12 @@ const Menu1_2 = () => {
                 .form-scroll-area::-webkit-scrollbar { width: 6px; }
                 .form-scroll-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
                 .form-scroll-area::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
-                .form-control:focus { box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.2) !important; border-color: #B8860B !important; }
+                .form-control:focus, .form-select:focus { box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.2) !important; border-color: #B8860B !important; }
+                .form-input-readonly {
+                  background-color: rgba(184, 134, 11, 0.1) !important;
+                  color: #4A3728 !important;
+                  cursor: not-allowed !important;
+                }
 
                 .back-btn {
                     display: flex;
@@ -231,6 +383,30 @@ const Menu1_2 = () => {
                 .save-btn:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
+                }
+
+                .review-btn {
+                    padding: 10px 24px;
+                    font-size: 16px;
+                    font-weight: 700;
+                    border: 1px solid #B8860B;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    color: #B8860B;
+                    background-color: transparent;
+                }
+
+                .review-btn:hover {
+                    background-color: #B8860B;
+                    color: white;
+                }
+
+                .review-btn:disabled {
+                    background-color: #e9ecef;
+                    border-color: #ced4da;
+                    color: #6c757d;
+                    cursor: not-allowed;
                 }
 
                   /* 반응형 레이아웃 */
