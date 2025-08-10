@@ -137,7 +137,7 @@ const MemorialConfig = () => {
                     age: parseInt(formData.age),
                     customerId: parseInt(formData.customerId)
                 };
-                await apiService.updateMemorial(id, updatedMemorial);
+                      await apiService.updateMemorial(id, memorial);
 
                 // 2. 프로필 이미지 업데이트 (파일이 선택된 경우)
                 if (profileImageFile) {
@@ -166,7 +166,7 @@ const MemorialConfig = () => {
                     prompt: basePrompt
                 };
                 const response = await apiService.createTribute(id, eulogyRequest);
-                setGeneratedEulogy(response.data.tribute);
+                setGeneratedEulogy(response.tribute);
                 alert('AI 추모사가 생성되었습니다.');
             } catch (error) {
                 console.error('Error generating eulogy:', error);

@@ -24,11 +24,11 @@ const Menu4 = () => {
     const fetchMemorials = async () => {
       try {
         const response = await apiService.getMemorials();
-        const memorialsWithCode = response.data._embedded.memorials.map(m => ({
+        const memorialsWithCode = response._embedded.memorials.map(m => ({
           ...m,
           joinCode: `MEM${String(m.id).padStart(3, '0')}`
         }));
-        setMemorials(memorialsWithCode);
+        setMemorials(response._embedded.memorials);
       } catch (error) {
         console.error("Error fetching memorials:", error);
         alert("추모관 정보를 불러오는 데 실패했습니다.");

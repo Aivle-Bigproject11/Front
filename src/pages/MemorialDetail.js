@@ -66,7 +66,7 @@ const MemorialDetail = () => {
     e.preventDefault();
     try {
       const response = await apiService.createComment(id, guestbookEntry);
-      setGuestbookList([response.data, ...guestbookList]);
+      setGuestbookList([response, ...guestbookList]);
       setGuestbookEntry({ name: '', message: '', relationship: '' });
       setShowGuestbookModal(false);
       alert('소중한 위로의 말씀이 등록되었습니다.');
