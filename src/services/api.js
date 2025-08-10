@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { mockMemorialService } from './memorialService'; // Menu4의 Mock 서비스를 가져옵니다.
+import { mockLoginService } from './loginService';       // Lobby, Login 등 사용자 관련 Mock 서비스
 
 // API 기본 설정
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
@@ -38,8 +39,10 @@ api.interceptors.response.use(
 
 // --- 실제 API 서비스 정의 (Axios 응답에서 data를 추출하여 반환하도록 수정) ---
 const realApiService = {
+  // Memorial Service
   getMemorials: async () => (await api.get('/memorials')).data,
   getMemorial: async (id) => (await api.get(`/memorials/${id}`)).data,
+  updateMemorial: async (id, data) => (await api.patch(`/memorials/${id}`, data)).data,
   getMemorialDetails: async (id) => (await api.get(`/memorials/${id}/details`)).data,
   uploadMemorialProfileImage: async (id, formData) => (await api.patch(`/memorials/${id}/profile-image`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
   
@@ -61,6 +64,12 @@ const realApiService = {
   updateComment: async (commentId, data) => (await api.patch(`/comments/${commentId}`, data)).data,
   deleteComment: async (commentId) => (await api.delete(`/comments/${commentId}`)).data,
 
+  // Login/User-related Service
+  // 참고: API 명세에 없어 추측하여 작성되었습니다. 실제 엔드포인트로 수정이 필요할 수 있습니다.
+  getUserMemorialHalls: async (userId) => (await api.get(`/users/${userId}/memorials`)).data,
+  getMemorialByCode: async (code) => (await api.get(`/memorials?code=${code}`)).data,
+
+  // Other Services
   getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
   getDashboardData: async () => (await api.get('/dashboard')).data,
   getAnalyticsData: async () => (await api.get('/analytics')).data,
@@ -76,7 +85,8 @@ const useMock = process.env.REACT_APP_API_MOCKING === 'true';
 // Mock 모드일 경우, 실제 API 서비스의 함수들 위에 Mock 서비스 함수들을 덮어씁니다.
 const hybridService = { 
   ...realApiService, 
-  ...mockMemorialService 
+  ...mockMemorialService,
+  ...mockLoginService
 };
 
 export const apiService = useMock ? hybridService : realApiService;

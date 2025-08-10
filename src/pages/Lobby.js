@@ -5,7 +5,7 @@ import { Button, Card, Badge, Spinner, Alert, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Calendar, Users, Search, LogOut, User, ArrowRight, FileText, Check, X, Phone, MapPin, Printer, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { getUserMemorialHalls, getMemorialByCode } from '../services/memorialService';
+import { apiService } from '../services/api';
 import { customerService, customerUtils } from '../services/customerService';
 import { documentService } from '../services/documentService';
 
@@ -32,7 +32,7 @@ const Lobby = () => {
     try {
       setLoading(true);
       setError('');
-      const userMemorials = await getUserMemorialHalls(user?.id || user?.loginId);
+      const userMemorials = await apiService.getUserMemorialHalls(user?.id || user?.loginId);
       setMemorialHalls(userMemorials);
       setLoading(false);
     } catch (err) {
@@ -45,7 +45,7 @@ const Lobby = () => {
     try {
       setDocumentsLoading(true);
       const allCustomers = await customerService.getAllCustomers();
-      const userMemorials = await getUserMemorialHalls(user?.id || user?.loginId);
+      const userMemorials = await apiService.getUserMemorialHalls(user?.id || user?.loginId);
       const userRelatedCustomers = allCustomers.filter(customer => 
         userMemorials.some(memorial => memorial.name === customer.name)
       );
@@ -69,7 +69,7 @@ const Lobby = () => {
     }
     try {
       setError('');
-      const memorial = await getMemorialByCode(joinCode);
+      const memorial = await apiService.getMemorialByCode(joinCode);
       if (memorial) {
         navigate(`/user-memorial/${memorial.id}`);
       } else {

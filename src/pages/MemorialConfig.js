@@ -739,16 +739,18 @@ const MemorialConfig = () => {
                                                         fontWeight: '600',
                                                         boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
                                                     }}
-                                                    onClick={() => {
-                                                        const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
-                                                        if (memorialIndex !== -1) {
-                                                            dummyData.memorials._embedded.memorials[memorialIndex].videoUrl = generatedVideoUrl;
-                                                        }
-                                                        alert('영상이 등록되었습니다!');
-                                                        if (isUserAccess) {
-                                                            navigate(`/user-memorial/${id}`);
-                                                        } else {
-                                                            navigate(`/memorial/${id}`);
+                                                    onClick={async () => {
+                                                        try {
+                                                            await apiService.updateMemorial(id, { videoUrl: generatedVideoUrl });
+                                                            alert('영상이 등록되었습니다!');
+                                                            if (isUserAccess) {
+                                                                navigate(`/user-memorial/${id}`);
+                                                            } else {
+                                                                navigate(`/memorial/${id}`);
+                                                            }
+                                                        } catch (error) {
+                                                            console.error('Error updating memorial with video:', error);
+                                                            alert('영상 등록에 실패했습니다.');
                                                         }
                                                     }}
                                                 >
@@ -920,16 +922,18 @@ const MemorialConfig = () => {
                                                         fontWeight: '600',
                                                         boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
                                                     }}
-                                                    onClick={() => {
-                                                        const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
-                                                        if (memorialIndex !== -1) {
-                                                            dummyData.memorials._embedded.memorials[memorialIndex].eulogy = generatedEulogy;
-                                                        }
-                                                        alert('추모사가 등록되었습니다!');
-                                                        if (isUserAccess) {
-                                                            navigate(`/user-memorial/${id}`);
-                                                        } else {
-                                                            navigate(`/memorial/${id}`);
+                                                    onClick={async () => {
+                                                        try {
+                                                            await apiService.updateTribute(id, { tribute: generatedEulogy });
+                                                            alert('추모사가 등록되었습니다!');
+                                                            if (isUserAccess) {
+                                                                navigate(`/user-memorial/${id}`);
+                                                            } else {
+                                                                navigate(`/memorial/${id}`);
+                                                            }
+                                                        } catch (error) {
+                                                            console.error('Error updating tribute:', error);
+                                                            alert('추모사 등록에 실패했습니다.');
                                                         }
                                                     }}
                                                 >
