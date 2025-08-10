@@ -34,7 +34,7 @@ const fieldSpecs = {
     deceasedAddress: { label: '고인 주소', type: 'text', group: '고인기본정보', required: true },
     deceasedRegisteredAddress: { label: '고인 등록기준지', type: 'text', group: '고인기본정보' },
     deceasedRelationToHouseholdHead: { label: '고인과 세대주와의 관계', type: 'text', group: '고인기본정보', required: true },
-    reportRegistrationDate: { label: '사망신고서 시스템 등록일자', type: 'text', disabled: true, group: '사망신고서정보', required: true },
+    reportRegistrationDate: { label: '사망신고서 시스템 등록일자', type: 'text', disabled: true, group: '사망신고서정보', required: false },
     deathLocation: { label: '사망 장소', type: 'text', group: '사망신고서정보', required: true },
     deathLocationType: { label: '사망 장소 (구분)', type: 'select', group: '사망신고서정보', options: [
         { value: '1', label: '주택' },
@@ -172,6 +172,13 @@ const Menu1_2 = () => {
                 }
             });
             setFormData(initialData);
+
+            // Initialize validationStatus based on selectedCustomer's validationStatus
+            if (customer.validationStatus === 'VALIDATED') {
+                setValidationStatus('VALIDATED');
+            } else {
+                setValidationStatus('검토 전'); // Default or other status
+            }
         } else {
             navigate('/menu1-1');
         }
@@ -309,7 +316,7 @@ const Menu1_2 = () => {
                 setValidationStatus('수정 필요');
                 setReviewSuggestions(result.warnings);
             } else {
-                setValidationStatus('검토 완료');
+                setValidationStatus('VALIDATED');
             }
         } catch (error) {
             console.error('Error during review:', error);
@@ -491,14 +498,14 @@ const Menu1_2 = () => {
                             >
                                 {reviewing ? '검토 중...' : <><Search size={14} style={{ marginRight: '6px' }} /> 검토</>}
                             </Button>
-                            <Button onClick={handleSave} disabled={saving || (selectedCustomer?.validationStatus !== 'VALIDATED' && validationStatus !== '검토 완료')} className="save-btn">
+                            <Button onClick={handleSave} disabled={saving || (validationStatus !== 'VALIDATED' && validationStatus !== '수정 필요')} className="save-btn">
                                 {saving ? '저장 중...' : <><Save size={16} style={{ marginRight: '8px' }} /> 저장</>}
                             </Button>
                         </div>
                     </div>
                     
                     <div className="form-scroll-area" style={{ flex: 1, overflowY: 'scroll', paddingRight: '10px' }}>
-                        {successMessage && <Alert variant="success" className="mb-4" onClose={() => { setSuccessMessage(''); navigate('/menu1-1'); }} dismissible>{successMessage}</Alert>}
+                        {successMessage && <Alert variant="success" className="mb-4">{successMessage}</Alert>}
                         {errorMessage && <Alert variant="danger" className="mb-4" onClose={() => setErrorMessage('')} dismissible>{errorMessage}</Alert>}
 
                         {reviewSuggestions.length > 0 && (

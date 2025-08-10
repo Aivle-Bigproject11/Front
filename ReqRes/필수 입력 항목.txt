@@ -8,7 +8,6 @@ deceasedGender
 deceasedDate
 deceasedAddress
 deceasedRelationToHouseholdHead
-reportRegistrationDate
 deathLocation
 deathLocationType
 reporterName
