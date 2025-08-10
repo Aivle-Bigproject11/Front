@@ -496,7 +496,7 @@ const Lobby = () => {
         </Modal.Footer>
       </Modal>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
