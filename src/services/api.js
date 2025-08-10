@@ -3,7 +3,7 @@ import { mockMemorialService } from './memorialService'; // Menu4의 Mock 서비
 import { mockLoginService } from './loginService';       // Lobby, Login 등 사용자 관련 Mock 서비스
 
 // API 기본 설정
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8088';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
