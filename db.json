@@ -96,7 +96,7 @@
           "processionDateTime": "2025-08-03T07:00:00Z",
           "burialSiteInfo": "서울시립승화원",
           "chiefMourners": "배우자 이영희, 아들 김상주, 딸 김상미",
-          "chiefMournersContact": "010-5555-6666 (아들 김상주)",
+          "chiefMournersContact": "010-5555-6666",
           "chiefMournerAccountHolder": "김상주",
           "chiefMournerBankName": "신한은행",
           "chiefMournerAccountNumber": "110-123-456789",
@@ -151,7 +151,7 @@
         {
           "funeralInfoId": 3,
           "customerId": 3,
-          "validationStatus": "PENDING",
+          "validationStatus": null,
           "deceasedName": "박영희",
           "deceasedNameHanja": "朴英姬",
           "deceasedRrn": "701225-2000111",
@@ -243,7 +243,7 @@
         {
           "funeralInfoId": 5,
           "customerId": 5,
-          "validationStatus": "PENDING",
+          "validationStatus": null,
           "deceasedName": "신사임당",
           "deceasedNameHanja": "申師任堂",
           "deceasedRrn": "500505-2000111",
@@ -342,5 +342,25 @@
         }
       ]
     }
-  }
+  },
+  "validationWarnings": {
+    "warnings": [
+        {
+            "fieldName": "deceasedName",
+            "warningDescription": "이름에 부자연스러운 반복이 있습니다.",
+            "suggestion": "이름을 '김철수'로 수정하는 것이 좋습니다."
+        },
+        {
+            "fieldName": "deceasedBirthOfDate",
+            "warningDescription": "생년월일이 사망일보다 이후입니다.",
+            "suggestion": "생년월일과 사망일을 확인하고 올바르게 수정하세요."
+        },
+        {
+            "fieldName": "deceasedAge",
+            "warningDescription": "입력된 나이가 생년월일 기준으로 계산된 나이와 일치하지 않습니다.",
+            "suggestion": "생년월일을 기준으로 나이를 다시 계산하여 수정하세요."
+        }
+    ]
+  },
+  "funeralInfos/validate-fields": {}
 }

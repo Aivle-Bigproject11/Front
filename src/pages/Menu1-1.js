@@ -146,8 +146,8 @@ const Menu1_1 = () => {
 
   const handleRegisterClick = (e, customer) => {
     e.stopPropagation();
-    handleCustomerSelect(customer);
-    navigate('/menu1-2');
+    handleCustomerSelect(customer); // Keep this for now to not break menu1-3 if it relies on localStorage
+        navigate('/menu1-2', { state: { funeralInfo: customer.originalData } }); // Pass data via state // Pass data via state
   };
 
   const handleDocumentsClick = (e, customer) => {
