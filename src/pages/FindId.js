@@ -195,7 +195,7 @@ const FindId = () => {
                                     
                                     <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
                                         <button onClick={() => navigate('/findPassword')} className="login-link" style={{ background: 'none', border: 'none', color: '#B8860B', textDecoration: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                                            비밀번호 찾기
+                                            비밀번호 재설정
                                         </button>
                                         <button onClick={() => navigate('/login')} className="login-link" style={{ background: 'none', border: 'none', color: '#4A3728', textDecoration: 'none', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
                                             로그인 화면으로
