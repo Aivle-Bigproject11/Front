@@ -62,7 +62,20 @@ const Menu1_4 = () => {
         navigate('/menu1-5');
     };
 
-    
+    const getFamilyInfo = (customer) => {
+        const marriedText = customer.isMarried ? '기혼' : '미혼';
+        const childrenText = customer.hasChildren ? '자녀 있음' : '자녀 없음';
+        return `${marriedText}, ${childrenText}`;
+    };
+
+    const formatDateForDisplay = (dateString) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}.${month}.${day}`;
+    };
 
     if (loading && !animateCard) {
         return (
@@ -124,19 +137,21 @@ const Menu1_4 = () => {
                                 </div>
                             ) : filteredCustomers.length > 0 ? (
                                 filteredCustomers.map(customer => (
-                                    <Card key={customer.id} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
+                                    <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
                                         <Card.Body>
                                             <Row className="align-items-center">
                                                 <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3">
-                                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.id}</p>
+                                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.customerId}</p>
                                                     <h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5>
                                                 </Col>
                                                 <Col md={7}>
                                                     <Row>
-                                                        <Col sm={6} className="mb-2"><strong>나이:</strong> {customer.age}세</Col>
+                                                        <Col sm={6} className="mb-2"><strong>생년월일:</strong> {formatDateForDisplay(customer.birthOfDate)} (만 {customer.age}세)</Col>
                                                         <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
-                                                        <Col sm={12} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
-                                                        <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.location}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
+                                                        <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
+                                                        <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
                                                     </Row>
                                                 </Col>
                                                 <Col md={2} className="text-center text-md-end">

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { ko } from 'date-fns/locale';
+import { Form, Row, Col } from 'react-bootstrap';
+
+registerLocale('ko', ko);
 
 const BackArrowIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
@@ -17,6 +23,21 @@ const CustomPopup = ({ message, onConfirm }) => (
     </div>
 );
 
+const calculateAge = (birthDate, deathDate) => {
+  if (!birthDate || !deathDate) return '';
+
+  const birth = new Date(birthDate);
+  const death = new Date(deathDate);
+
+  let age = death.getFullYear() - birth.getFullYear();
+  const monthDifference = death.getMonth() - birth.getMonth();
+
+  if (monthDifference < 0 || (monthDifference === 0 && death.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+};
+
 const Menu1_5 = () => {
   const navigate = useNavigate();
   const [animateCard, setAnimateCard] = useState(false);
@@ -25,8 +46,9 @@ const Menu1_5 = () => {
     name: '',
     rrn: '',
     ageAtDeath: '',
-    birthYear: '', birthMonth: '', birthDay: '',
-    deathYear: '', deathMonth: '', deathDay: '',
+    deceasedBirthOfDate: null,
+    deathDate: null,
+    deathDate_time: '',
     gender: '남성',
     placeOfDeath: '',
     funeralCompany: '',
@@ -43,40 +65,44 @@ const Menu1_5 = () => {
       const customer = JSON.parse(savedCustomer);
       
       const birthDate = customer.birthOfDate ? new Date(customer.birthOfDate) : null;
-      
-      setFormData(prev => ({
-        ...prev,
-        customerId: customer.customerId || null,
-        name: customer.name || '',
-        rrn: customer.rrn || '',
-        gender: customer.gender || '남성',
-        birthYear: birthDate ? birthDate.getFullYear().toString() : '',
-        birthMonth: birthDate ? (birthDate.getMonth() + 1).toString() : '',
-        birthDay: birthDate ? birthDate.getDate().toString() : '',
-      }));
+      const deathDate = customer.deceasedDate ? new Date(customer.deceasedDate) : null;
+      let deathTime = '';
+      if (deathDate) {
+        const hours = String(deathDate.getHours()).padStart(2, '0');
+        const minutes = String(deathDate.getMinutes()).padStart(2, '0');
+        deathTime = `${hours}:${minutes}`;
+      }
+
+      setFormData(prev => {
+        const newFormData = {
+          ...prev,
+          customerId: customer.customerId || null,
+          name: customer.name || '',
+          rrn: customer.rrn || '',
+          gender: customer.gender || '남성',
+          deceasedBirthOfDate: birthDate,
+          deathDate: deathDate,
+          deathDate_time: deathTime,
+        };
+        newFormData.ageAtDeath = calculateAge(newFormData.deceasedBirthOfDate, newFormData.deathDate);
+        return newFormData;
+      });
     }
   }, []);
 
-  // Age calculation effect
-  useEffect(() => {
-    const { birthYear, birthMonth, birthDay, deathYear, deathMonth, deathDay } = formData;
-    if (birthYear && birthMonth && birthDay && deathYear && deathMonth && deathDay) {
-      const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
-      const deathDate = new Date(deathYear, deathMonth - 1, deathDay);
-      
-      if (birthDate instanceof Date && !isNaN(birthDate) && deathDate instanceof Date && !isNaN(deathDate)) {
-        let age = deathDate.getFullYear() - birthDate.getFullYear();
-        const monthDiff = deathDate.getMonth() - birthDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && deathDate.getDate() < birthDate.getDate())) {
-          age--;
-        }
-        setFormData(prev => ({ ...prev, ageAtDeath: age >= 0 ? age : '' }));
-      }
-    }
-  }, [formData.birthYear, formData.birthMonth, formData.birthDay, formData.deathYear, formData.deathMonth, formData.deathDay]);
+  
 
   const closePopup = () => {
     setPopup({ isOpen: false, message: '', onConfirm: () => {} });
+  };
+
+  const formatDateForDisplay = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
   };
 
   const handleRrnChange = (e) => {
@@ -107,14 +133,52 @@ const Menu1_5 = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({ ...prevState, [name]: value }));
+    if (name === 'deathDate_time') {
+      const numbers = value.replace(/[^0-9]/g, '');
+      let formattedTime = numbers;
+      if (numbers.length > 2) {
+        formattedTime = `${numbers.slice(0, 2)}:${numbers.slice(2, 4)}`;
+      }
+      setFormData(prev => {
+        const dateObj = prev.deathDate ? new Date(prev.deathDate) : new Date();
+        if (formattedTime.length === 5 && formattedTime.includes(':')) {
+          const [hours, minutes] = formattedTime.split(':');
+          dateObj.setHours(parseInt(hours, 10));
+          dateObj.setMinutes(parseInt(minutes, 10));
+          dateObj.setSeconds(0);
+          dateObj.setMilliseconds(0);
+        } else {
+          dateObj.setHours(0);
+          dateObj.setMinutes(0);
+          dateObj.setSeconds(0);
+          dateObj.setMilliseconds(0);
+        }
+        return {
+          ...prev,
+          [name]: formattedTime,
+          deathDate: dateObj,
+          ageAtDeath: calculateAge(prev.deceasedBirthOfDate, dateObj) // Calculate age here
+        };
+      });
+    } else {
+      setFormData(prevState => ({ ...prevState, [name]: value }));
+    }
+  };
+
+  const handleDateChange = (date) => {
+    setFormData(prev => {
+      const newDeathDate = date;
+      const newAge = calculateAge(prev.deceasedBirthOfDate, newDeathDate);
+      return { ...prev, deathDate: newDeathDate, ageAtDeath: newAge };
+    });
   };
   
   const validateForm = () => {
     const { 
       name, rrn, birthYear, birthMonth, birthDay, 
       deathYear, deathMonth, deathDay, 
-      gender, placeOfDeath, funeralCompany, directorName, directorPhone 
+      gender, placeOfDeath, funeralCompany, directorName, directorPhone, 
+      deathDate, deathDate_time 
     } = formData;
 
     // Check basic text/select fields
@@ -129,7 +193,7 @@ const Menu1_5 = () => {
     }
 
     // Check birth date
-    if (!birthYear || !birthMonth || !birthDay) {
+    if (!formData.deceasedBirthOfDate) {
       setPopup({
         isOpen: true,
         message: '생년월일을 정확히 입력해주세요.',
@@ -138,11 +202,33 @@ const Menu1_5 = () => {
       return false;
     }
 
-    // Check death date
-    if (!deathYear || !deathMonth || !deathDay) {
+        // Check death date
+    if (!deathDate || !deathDate_time) {
       setPopup({
         isOpen: true,
         message: '별세일을 정확히 입력해주세요.',
+        onConfirm: () => closePopup()
+      });
+      return false;
+    }
+
+    // Validate deathDate_time format (HH:MM)
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (deathDate_time && !timeRegex.test(deathDate_time)) {
+      setPopup({
+        isOpen: true,
+        message: '별세 시간은 HH:MM 형식으로 정확히 입력해주세요 (예: 14:30).',
+        onConfirm: () => closePopup()
+      });
+      return false;
+    }
+
+    // Validate directorPhone format (000-0000-0000)
+    const phoneRegex = /^\d{3}-\d{4}-\d{4}$/;
+    if (directorPhone && !phoneRegex.test(directorPhone)) {
+      setPopup({
+        isOpen: true,
+        message: '담당 장례지도사 전화번호는 XXX-XXXX-XXXX 형식으로 정확히 입력해주세요.',
         onConfirm: () => closePopup()
       });
       return false;
@@ -166,13 +252,20 @@ const Menu1_5 = () => {
     } = formData;
 
     // 데이터 형식 변환
-    const deceasedBirthOfDate = (birthYear && birthMonth && birthDay) 
-      ? `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}T00:00:00Z` 
+    const deceasedBirthOfDate = formData.deceasedBirthOfDate
+      ? formData.deceasedBirthOfDate.toISOString()
       : null;
 
-    const deceasedDate = (deathYear && deathMonth && deathDay) 
-      ? `${deathYear}-${String(deathMonth).padStart(2, '0')}-${String(deathDay).padStart(2, '0')}T14:00:00Z` // 임의의 시간 설정
-      : null;
+    let deceasedDate = null;
+    if (formData.deathDate && formData.deathDate_time) {
+      const date = new Date(formData.deathDate);
+      const [hours, minutes] = formData.deathDate_time.split(':');
+      date.setHours(parseInt(hours, 10));
+      date.setMinutes(parseInt(minutes, 10));
+      date.setSeconds(0);
+      date.setMilliseconds(0);
+      deceasedDate = date.toISOString();
+    }
 
     const apiData = {
       customerId,
@@ -260,37 +353,63 @@ const Menu1_5 = () => {
             <div className="form-column">
               <div className="form-group">
                 <label className="form-label">생년월일</label>
-                <div className="birthdate-selects">
-                  <select name="birthYear" value={formData.birthYear} className="form-select" disabled>
-                    <option value="">년</option>
-                    {years.map(year => <option key={year} value={year}>{year}</option>)}
-                  </select>
-                  <select name="birthMonth" value={formData.birthMonth} className="form-select" disabled>
-                    <option value="">월</option>
-                    {months.map(month => <option key={month} value={month}>{month}</option>)}
-                  </select>
-                  <select name="birthDay" value={formData.birthDay} className="form-select" disabled>
-                    <option value="">일</option>
-                    {days.map(day => <option key={day} value={day}>{day}</option>)}
-                  </select>
-                </div>
+                <input
+                  type="text"
+                  name="deceasedBirthOfDate"
+                  value={formatDateForDisplay(formData.deceasedBirthOfDate)}
+                  className="form-input"
+                  readOnly
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">별세일</label>
-                 <div className="birthdate-selects">
-                  <select name="deathYear" value={formData.deathYear} onChange={handleChange} className="form-select">
-                    <option value="">년</option>
-                    {years.map(year => <option key={year} value={year}>{year}</option>)}
-                  </select>
-                  <select name="deathMonth" value={formData.deathMonth} onChange={handleChange} className="form-select">
-                    <option value="">월</option>
-                    {months.map(month => <option key={month} value={month}>{month}</option>)}
-                  </select>
-                  <select name="deathDay" value={formData.deathDay} onChange={handleChange} className="form-select">
-                    <option value="">일</option>
-                    {days.map(day => <option key={day} value={day}>{day}</option>)}
-                  </select>
-                </div>
+                <Row>
+                  <Col md={6}>
+                    <DatePicker
+                      selected={formData.deathDate}
+                      onChange={(date) => handleDateChange(date)}
+                      locale={ko}
+                      dateFormat="yyyy/MM/dd"
+                      placeholderText="날짜 선택"
+                      customInput={<Form.Control className="form-input" />}
+                      renderCustomHeader={({
+                        date,
+                        changeYear,
+                        changeMonth,
+                        decreaseMonth,
+                        increaseMonth,
+                        prevMonthButtonDisabled,
+                        nextMonthButtonDisabled,
+                      }) => {
+                        const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - 50 + i);
+                        const months = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+                        return (
+                          <div style={{ margin: 10, display: "flex", justifyContent: "center", alignItems: "center" }}>
+                            <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} style={{border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.2em'}}>{"<"}</button>
+                            <Form.Select value={date.getFullYear()} onChange={({ target: { value } }) => changeYear(value)} style={{margin: '0 5px', width: '100px'}}>
+                              {years.map((option) => (<option key={option} value={option}>{option}년</option>))}
+                            </Form.Select>
+                            <Form.Select value={months[date.getMonth()]} onChange={({ target: { value } }) => changeMonth(months.indexOf(value))} style={{margin: '0 5px', width: '80px'}}>
+                              {months.map((option) => (<option key={option} value={option}>{option}</option>))}
+                            </Form.Select>
+                            <button onClick={increaseMonth} disabled={nextMonthButtonDisabled} style={{border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.2em'}}>{">"}</button>
+                          </div>
+                        );
+                      }}
+                    />
+                  </Col>
+                  <Col md={6}>
+                    <Form.Control
+                      type="text"
+                      name="deathDate_time"
+                      value={formData.deathDate_time}
+                      onChange={handleChange}
+                      placeholder="시간 (HH:MM)"
+                      maxLength="5"
+                      className="form-input"
+                    />
+                  </Col>
+                </Row>
               </div>
               <div className="form-group">
                 <label className="form-label">별세 장소</label>
