@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, Badge, Modal, Row, Col } from 'react-bootstrap';
-import { ArrowLeft, FileText, Calendar, Printer, Download, Check, Loader, User, Phone, MapPin, Files } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, FileText, Calendar, Printer, Download, Check, Loader, User, Building, Home, Files } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { customerService, customerUtils } from '../services/customerService';
 import { documentService, documentUtils } from '../services/documentService';
 
@@ -19,6 +19,7 @@ const Menu1_3 = () => {
     const [bulkAction, setBulkAction] = useState('');
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         initializePage();
@@ -26,19 +27,15 @@ const Menu1_3 = () => {
 
     const initializePage = async () => {
         try {
-            const customerData = localStorage.getItem('selectedCustomer');
-            if (!customerData) {
+            const { memorial } = location.state || {};
+            if (!memorial) {
                 navigate('/menu1-1');
                 return;
             }
-            const customer = JSON.parse(customerData);
-            setSelectedCustomer(customer);
+            setSelectedCustomer(memorial);
+            setFormData(memorial); // Assuming memorial object contains formData directly or can be used as such
 
-            const customerDetails = await customerService.getCustomerById(customer.id);
-            const initialFormData = customerDetails.formData || {};
-            setFormData(initialFormData);
-
-            await loadPreview('obituary', initialFormData);
+            await loadPreview('obituary', memorial);
         } catch (error) {
             console.error('Error initializing page:', error);
             setErrorMessage('페이지를 불러오는 중 오류가 발생했습니다.');
@@ -86,7 +83,7 @@ const Menu1_3 = () => {
 
     const handleDownload = async (docType) => {
         try {
-            const blob = await documentService.downloadDocument(1);
+            const blob = await documentService.downloadDocument(1); // Assuming ID 1 for mock
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -103,7 +100,7 @@ const Menu1_3 = () => {
 
     const handlePrint = async (docType) => {
         try {
-            await documentService.printDocument(1);
+            await documentService.printDocument(1); // Assuming ID 1 for mock
             setSuccessMessage(`${documentUtils.getDocumentName(docType)} 인쇄 대화상자가 열렸습니다.`);
         } catch (error) {
             setErrorMessage('인쇄 중 오류가 발생했습니다.');
@@ -125,7 +122,7 @@ const Menu1_3 = () => {
                 ));
                 setSuccessMessage('모든 서류가 성공적으로 생성되었습니다.');
             } else if (bulkAction === 'printAll') {
-                await documentService.printDocument(1);
+                await documentService.printDocument(1); // Mock call
                 setSuccessMessage('완성된 서류를 모두 인쇄합니다.');
             }
         } catch (error) {
@@ -136,6 +133,7 @@ const Menu1_3 = () => {
     };
 
     const isDocumentGenerated = (docType) => selectedCustomer?.documents?.[docType] || false;
+    
     if (loading) return (
         <div className="page-wrapper" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
             <div className="text-center" style={{ color: '#4A3728' }}>
@@ -146,6 +144,7 @@ const Menu1_3 = () => {
             </div>
         </div>
     );
+    
     if (!selectedCustomer) return (
         <div className="page-wrapper" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
             <h2 style={{color: '#4A3728'}}>고객 정보가 없습니다. 목록으로 돌아가주세요.</h2>
@@ -181,14 +180,18 @@ const Menu1_3 = () => {
                         border: '1px solid rgba(184, 134, 11, 0.2)'
                     }}>
                         <div style={{ width: '120px', height: '120px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 30px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)' }}><Files size={48} style={{ color: '#B8860B' }} /></div>
-                        <h2 style={{ fontWeight: '700', fontSize: '1.8rem', textAlign: 'center', color: '#2C1F14', marginBottom: '15px' }}>{selectedCustomer.name}님 서류</h2>
-                        <p style={{ fontSize: '16px', lineHeight: '1.6', opacity: 0.9, textAlign: 'center', color: '#4A3728', margin: 0, marginBottom: '20px' }}>생성된 서류를 확인하고<br />인쇄하거나 다운로드하세요.</p>
-                        <div style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)', paddingTop: '20px', marginBottom: '20px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}><User size={16} style={{ color: '#B8860B', marginRight: '10px' }} /><span style={{ fontWeight: 500, color: '#4A3728' }}>{selectedCustomer.name} (향년 {selectedCustomer.age}세)</span></div>
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}><Phone size={16} style={{ color: '#B8860B', marginRight: '10px' }} /><span style={{ fontWeight: 500, color: '#4A3728' }}>{selectedCustomer.phone}</span></div>
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}><Calendar size={16} style={{ color: '#B8860B', marginRight: '10px' }} /><span style={{ fontWeight: 500, color: '#4A3728' }}>별세: {customerUtils.formatDate(selectedCustomer.funeralDate)}</span></div>
-                            <div style={{ display: 'flex', alignItems: 'center' }}><MapPin size={16} style={{ color: '#B8860B', marginRight: '10px' }} /><span style={{ fontWeight: 500, color: '#4A3728' }}>{selectedCustomer.location}</span></div>
+                        <h2 style={{ fontWeight: '700', fontSize: '1.8rem', textAlign: 'center', color: '#2C1F14', marginBottom: '15px' }}>{selectedCustomer.deceasedName}님 서류</h2>
+                        <p style={{ fontSize: '14px', lineHeight: '1.6', opacity: 0.9, textAlign: 'center', color: '#4A3728', margin: 0, marginBottom: '10px' }}>생성된 서류를 확인하고<br />인쇄하거나 다운로드하세요.</p>
+                        
+                        {/* === MODIFIED INFO BLOCK START === */}
+                        <div style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)', paddingTop: '10px', marginBottom: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}><User size={16} style={{ color: '#B8860B', marginRight: '10px' }} /><span style={{fontWeight: 500, color: '#4A3728'}}>성함 : {selectedCustomer.deceasedName} (향년 {selectedCustomer.deceasedAge}세)</span></div>
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}><Building size={16} style={{ color: '#B8860B', marginRight: '10px' }} /><span style={{fontWeight: 500, color: '#4A3728'}}>장례식장 : {formData.funeralHomeName}</span></div>
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}><Calendar size={16} style={{ color: '#B8860B', marginRight: '10px' }} /><span style={{fontWeight: 500, color: '#4A3728'}}>별세일 : {customerUtils.formatDate(formData.deceasedDate)}</span></div>
+                            <div style={{ display: 'flex', alignItems: 'center' }}><Home size={16} style={{ color: '#B8860B', marginRight: '10px' }} /><span style={{fontWeight: 500, color: '#4A3728'}}>주소 : {formData.funeralHomeAddress}</span></div>
                         </div>
+                        {/* === MODIFIED INFO BLOCK END === */}
+
                         <div style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)', paddingTop: '20px' }}>
                             <h6 style={{ color: '#4A3728', marginBottom: '15px', fontSize: '14px', fontWeight: '600' }}>문서 목록</h6>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -282,7 +285,7 @@ const Menu1_3 = () => {
                     cursor: pointer;
                 }
                 .back-btn:hover {
-                    background: linear: linear-gradient(135deg, #3c2d20, #7a4e24);
+                    background: linear-gradient(135deg, #3c2d20, #7a4e24);
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
                 }
@@ -333,7 +336,7 @@ const Menu1_3 = () => {
                     color: white !important;
                 }
 
-                  /* 반응형 레이아웃 */
+                /* 반응형 레이아웃 */
                 @media (max-width: 1200px) {
                     .page-wrapper {
                         height: auto !important;
@@ -355,17 +358,6 @@ const Menu1_3 = () => {
                     .dashboard-container {
                         padding: 10px;
                         gap: 15px;
-                    }
-                    .customer-id-name-row {
-                        flex-direction: column;
-                    }
-                    .customer-id-name-row > .col-6 {
-                        width: 100%;
-                        padding-left: 12px;
-                        padding-right: 12px;
-                    }
-                     .customer-id-name-row > .col-6:first-of-type {
-                        margin-bottom: 1rem;
                     }
                 }
             `}</style>
