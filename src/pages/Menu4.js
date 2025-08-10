@@ -23,14 +23,18 @@ const Menu4 = () => {
     setAnimateCard(true);
     const fetchMemorials = async () => {
       try {
+        console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8088');
         const response = await apiService.getMemorials();
+        console.log('✅ 백엔드 API 응답 성공:', response);
         const memorialsWithCode = response._embedded.memorials.map(m => ({
           ...m,
           joinCode: `MEM${String(m.id).padStart(3, '0')}`
         }));
         setMemorials(response._embedded.memorials);
+        console.log('📋 추모관 데이터 설정 완료:', response._embedded.memorials);
       } catch (error) {
-        console.error("Error fetching memorials:", error);
+        console.error("❌ 백엔드 API 호출 실패:", error);
+        console.error("에러 상세:", error.response?.data, error.response?.status);
         alert("추모관 정보를 불러오는 데 실패했습니다.");
       } finally {
         setLoading(false);
