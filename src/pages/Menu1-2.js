@@ -100,21 +100,13 @@ const initialFormData = Object.keys(fieldSpecs).reduce((acc, field) => {
     return acc;
 }, {});
 
-const WarningIcon = ({ suggestion }) => (
-    <OverlayTrigger
-        placement="right"
-        delay={{ show: 250, hide: 400 }}
-        overlay={
-            <Tooltip id={`tooltip-${suggestion.fieldName}`}>
-                <strong>{suggestion.warningDescription}</strong><br />
-                <em>제안: {suggestion.suggestion}</em>
-            </Tooltip>
-        }
+const WarningIcon = ({ suggestion, onInfoClick }) => (
+    <span
+        style={{ marginLeft: '8px', color: '#ffc107', fontWeight: 'bold', cursor: 'pointer' }}
+        onClick={() => onInfoClick(suggestion)}
     >
-        <span style={{ marginLeft: '8px', color: '#ffc107', fontWeight: 'bold', cursor: 'pointer' }}>
-             <AlertCircle size={16} />
-        </span>
-    </OverlayTrigger>
+        <AlertCircle size={16} />
+    </span>
 );
 
 const formatDateTime = (isoString) => {
@@ -138,6 +130,8 @@ const Menu1_2 = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [validationStatus, setValidationStatus] = useState('검토 전');
     const [reviewSuggestions, setReviewSuggestions] = useState([]); // Changed back to array
+    const [showModal, setShowModal] = useState(false);
+    const [modalContent, setModalContent] = useState('');
     
     const navigate = useNavigate();
     const { state } = useLocation();
@@ -406,6 +400,16 @@ const Menu1_2 = () => {
 
     const handleCancel = () => navigate('/menu1-1');
 
+    const handleInfoClick = (suggestion) => {
+        setModalContent(
+            <>
+                <strong>{suggestion.warningDescription}</strong><br />
+                <em>제안: {suggestion.suggestion}</em>
+            </>
+        );
+        setShowModal(true);
+    };
+
     const getGroupIcon = (groupName) => ({
         상조회사정보: <Building size={20} color="#B8860B"/>,
         고인기본정보: <User size={20} color="#B8860B"/>,
@@ -530,7 +534,7 @@ const Menu1_2 = () => {
                                                     <Form.Group>
                                                         <Form.Label style={{ color: '#4A3728' }}>
                                                             {field.label} {field.required && <span style={{ color: 'red' }}>*</span>}
-                                                            {suggestion && <WarningIcon suggestion={suggestion} />}
+                                                            {suggestion && <WarningIcon suggestion={suggestion} onInfoClick={handleInfoClick} />}
                                                         </Form.Label>
                                                         <div style={{ position: 'relative' }}>
                                                             {field.type === 'select' ? (
@@ -596,6 +600,46 @@ const Menu1_2 = () => {
                     </div>
                 </div>
             </div>
+
+            {showModal && (
+                <div className="modal" style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div className="modal-content" style={{
+                        backgroundColor: '#fff',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        width: '90%',
+                        maxWidth: '500px',
+                        position: 'relative'
+                    }}>
+                        <button
+                            onClick={() => setShowModal(false)}
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                background: 'none',
+                                border: 'none',
+                                fontSize: '1.5rem',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            &times;
+                        </button>
+                        {modalContent}
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 /* ... (기존 스타일은 여기에 유지됩니다) ... */

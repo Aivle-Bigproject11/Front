@@ -57,6 +57,7 @@ export const apiService = {
 
   // 장례 서류 검토 요청
   validateFuneralInfo: (data) => api.post('/funeralInfos/validate-fields', data),
+//   validateFuneralInfo: (data) => api.get('/validationWarnings'),
 
   // 장례 정보 수정
   updateFuneralInfo: (id, data) => api.put(`/funeralInfos/${id}/updatefuneralinfo`, data),
