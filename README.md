@@ -21,13 +21,36 @@
 - npm 또는 yarn 패키지 매니저
 
 ### 프론트엔드 실행 (React)
+
+#### 1. Real 모드 (기본)
 ```bash
 # 프로젝트 루트에서
 npm install  # 최초 실행시만
-npm start    # 개발 서버 시작
+npm start    # 개발 서버 시작 (실제 API 서버 필요)
+```
+
+#### 2. Mock 모드 (독립 개발용)
+```bash
+# 프로젝트 루트에서
+npm install     # 최초 실행시만
+npm run start:mock  # Mock 서비스로 개발 서버 시작
 ```
 
 React 앱이 `http://localhost:3000`에서 시작됩니다.
+
+### Mock 모드 vs Real 모드
+
+| 모드 | 실행 명령 | 설명 | 용도 |
+|------|-----------|------|------|
+| Real | `npm start` | 실제 백엔드 서버와 통신 | 백엔드 연동 테스트 |
+| Mock | `npm run start:mock` | Menu4만 Mock 데이터 사용 (하이브리드) | 프론트엔드 독립 개발 |
+
+**Mock 모드 특징**:
+- Menu4(추모관) 기능: Mock 데이터 사용
+- 다른 메뉴들: 실제 API 호출 (백엔드 서버 필요)
+- MemorialConfig.js 호환성 확보
+
+상세한 Mock 서비스 가이드는 [`docs/MockServiceGuide.md`](./docs/MockServiceGuide.md)를 참조하세요.
 
 ### 프로덕션 빌드
 ```bash
@@ -65,7 +88,16 @@ npm run test   # 테스트 실행
 │   │   ├── Menu4.js               # 디지털 추모관 (/menu4)
 │   │   └── MemorialDetail.js      # 개별 추모관 상세 페이지
 │   ├── services/                  # API 서비스 레이어
-│   │   └── api.js                 # API 통신 + 더미 데이터
+│   │   ├── api.js                 # API 서비스 진입점 (Real/Mock 모드 선택)
+│   │   ├── memorialService.js     # Menu4 Mock 서비스
+│   │   ├── loginService.js        # Lobby Mock 서비스
+│   │   ├── customerService.js     # 고객 서비스
+│   │   ├── documentService.js     # 문서 서비스
+│   │   ├── userService.js         # 사용자 서비스
+│   │   └── memorialService.js     # 추모관 서비스
+│   ├── data/                      # Mock 데이터
+│   │   ├── mockData.js            # 중앙화된 Mock 데이터
+│   │   └── formData.js            # 폼 데이터
 │   ├── App.js                     # 메인 애플리케이션 컴포넌트
 │   ├── App.css                    # 커스텀 스타일
 │   ├── App.test.js                # App 컴포넌트 테스트
@@ -78,8 +110,18 @@ npm run test   # 테스트 실행
 ├── package-lock.json              # 의존성 잠금 파일
 ├── .gitignore                     # Git 무시 파일
 ├── .env                          # 환경 변수 설정 (생성 필요)
-└── README.md                     # 프로젝트 문서
+├── README.md                     # 프로젝트 문서
+└── docs/                         # 프로젝트 문서
+    ├── Menu4API.md               # Menu4 API 명세서
+    ├── MenuLobbyAPI.md           # Lobby API 명세서
+    └── MockServiceGuide.md       # Mock 서비스 가이드
 ```
+
+## 📚 문서
+
+- **[Menu4 API 명세서](./docs/Menu4API.md)**: 추모관 관련 API 명세 및 Mock 서비스 가이드
+- **[Lobby API 명세서](./docs/MenuLobbyAPI.md)**: 로비 페이지 API 명세
+- **[Mock 서비스 가이드](./docs/MockServiceGuide.md)**: Mock 서비스 사용법 및 문제 해결 가이드
 ## 🎨 주요 기능
 
 ### 1. 로그인/인증

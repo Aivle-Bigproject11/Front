@@ -1,6 +1,6 @@
 # 추모관 API 명세서
 
-## API 연동 테스트 가이드 (v2)
+## API 연동 테스트 가이드 (v2.1)
 
 실제 백엔드 서버와 통신하는 **Real 모드**와, 선택적으로 Mock 데이터를 사용하는 **하이브리드 Mock 모드**를 지원합니다. `api.js`가 어떤 서비스를 사용할지 결정하는 중심점 역할을 합니다.
 
@@ -19,9 +19,48 @@
     3. `Menu4` 관련 함수들(`getMemorials` 등)은 `src/services/memorialService.js`에 정의된 Mock 함수로 덮어쓰고, 나머지 함수들은 실제 API를 호출하도록 구성된 `apiService`를 내보냅니다.
     4. 컴포넌트들은 이 `apiService`를 사용하여 `Menu4` 기능은 Mock으로, 다른 기능은 Real로 사용하게 됩니다.
 
+### 3. Mock 서비스 응답 형태 (v2.1 업데이트)
+
+Mock 서비스는 실제 API와 동일한 응답 구조를 제공합니다:
+
+- **단건 조회 API**: `{ data: { ... } }` 형태로 응답 (MemorialConfig.js 호환성 확보)
+- **목록 조회 API**: `{ _embedded: { memorials: [...] }, page: { ... } }` 형태로 응답
+- **상세 조회 API**: `{ data: { memorialInfo: { ... }, photos: [...], videos: [...], comments: [...] } }` 형태로 응답
+
+Mock 데이터는 다음 속성들을 포함합니다:
+- `name`: 고인의 이름
+- `age`: 고인의 나이
+- `birthOfDate`: 생년월일 (MemorialConfig.js 호환)
+- `birthDate`: 생년월일 (다른 컴포넌트 호환)
+- `deceasedDate`: 사망일
+- `gender`: 성별
+- `imageUrl`: 프로필 이미지 URL (MemorialConfig.js 호환)
+- `profileImageUrl`: 프로필 이미지 URL (다른 컴포넌트 호환)
+- `customerId`: 고객 ID
+
 ---
 
 ## 종합
+
+### 최근 업데이트 (v2.1)
+
+**문제 해결**: MemorialConfig.js에서 발생하던 `Cannot read properties of undefined (reading 'name')` 오류를 해결했습니다.
+
+**원인**: Mock 서비스의 `getMemorialById` 함수가 실제 API와 다른 응답 구조를 반환하고 있었습니다.
+- **기존**: `return memorial` (직접 객체 반환)
+- **수정**: `return { data: memorial }` (API 응답 구조와 일치)
+
+**수정 사항**:
+1. `src/services/memorialService.js`의 `getMemorialById`와 `updateMemorial` 함수 응답 구조 수정
+2. `src/data/mockData.js`에 MemorialConfig.js에서 사용하는 속성 추가:
+   - `birthOfDate`: 생년월일 (MemorialConfig.js 호환)
+   - `imageUrl`: 프로필 이미지 URL (MemorialConfig.js 호환)
+
+**테스트 방법**:
+```bash
+npm run start:mock
+```
+이후 추모관 설정 페이지(/memorial/{id}/config)에 접근하여 오류 없이 로드되는지 확인
 
 ## 1. 추모관
 
