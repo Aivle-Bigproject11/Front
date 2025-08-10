@@ -14,13 +14,13 @@ export const recommendationService = {
   // 4. 필터링된 그룹에게 생성된 메시지 전송
   sendGroupMessage: (data) => api.post('/recommendMessages/generate-group-message', data),
 
-  // 5. 전송된 모든 추천 메시지 확인
-  getAllSentMessages: () => api.get('/recommendMessages'),
+  // 5. 전송된 모든 추천 메시지 확인 ->전체 발송내역확인 화면 없어 아마 사용 x:6번만으로 가능
+  //getAllSentMessages: () => api.get('/recommendMessages'),
 
-  // 6. 특정 고객에게 보낸 추천 메시지 확인 (발송 기록)
-  getCustomerHistory: (customerId) => api.get(`/recommendMessages/customer/${customerId}`),
+  // 6. 특정 고객에게 보낸 추천 메시지 확인 (발송 기록)->현재 가장 마지막 메시지 1개만 보여줌 :7번만 사용 효율
+  //getCustomerHistory: (customerId) => api.get(`/recommendMessages/customer/${customerId}`),
 
-  // 7. 특정 고객에게 보낸 가장 최신의 추천 메시지 확인
+  // 7. 특정 고객에게 보낸 가장 최신의 추천 메시지 확인(발송기록)
   getLatestCustomerHistory: (customerId) => api.get(`/recommendMessages/customer/${customerId}/latest`),
 
   // 8. 필터링된 고객들 목록 보기 
