@@ -223,25 +223,6 @@ const Menu1_3 = () => {
         }
     };
 
-    const handleDownload = async (docType) => {
-        try {
-            const blob = await documentService.downloadDocument(1); // Assuming ID 1 for mock
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${documentUtils.getDocumentName(docType)}_${selectedCustomer.name}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            setSuccessMessage(`${documentUtils.getDocumentName(docType)}이(가) 다운로드되었습니다.`);
-        } catch (error) {
-            setErrorMessage('다운로드 중 오류가 발생했습니다.');
-        }
-    };
-
-    
-
     const handleBulkAction = (action) => {
         setBulkAction(action);
         setShowConfirmModal(true);
@@ -381,8 +362,8 @@ const Menu1_3 = () => {
                             </h3>
                         </div>
                         <div className="d-flex gap-2">
-                            <Button className="btn-golden" size="sm" onClick={() => handleGenerateDocument(selectedDoc)} disabled={generating}>{generating ? <Loader size={14} className='spinner me-2' /> : <Check size={14} className='me-2' />}{isDocumentGenerated(selectedDoc) ? '재생성' : '생성'}</Button>
-                            <Button className="btn-outline-golden" size="sm" onClick={() => handleDownload(selectedDoc)}><Download size={14} className='me-2' />다운로드</Button>
+                            <Button className="save-btn" size="sm" onClick={() => handleGenerateDocument(selectedDoc)} disabled={generating}>{generating ? <Loader size={14} className='spinner me-2' /> : <FileText size={14} className='me-2' />}{isDocumentGenerated(selectedDoc) ? '재생성' : '생성'}</Button>
+                            
                             
                         </div>
                     </div>
@@ -422,6 +403,32 @@ const Menu1_3 = () => {
                 .dashboard-container.animate-in { animation: fadeIn 0.6s ease-out forwards; }
                 .spinner { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                
+                .save-btn {
+                    padding: 10px 24px; font-size: 16px; font-weight: 700;
+                    border: none; border-radius: 12px; cursor: pointer;
+                    transition: all 0.3s ease; color: #2C1F14;
+                    background: linear-gradient(135deg, #D4AF37, #F5C23E);
+                    box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35);
+                }
+                .save-btn:hover {
+                    transform: translateY(-2px); box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
+                }
+                .save-btn:disabled {
+                    background: #e9ecef; box-shadow: none;
+                    color: #6c757d; cursor: not-allowed; border-color: #ced4da;
+                }
+                .save-btn:active,
+                .save-btn:focus,
+                .btn-check:active+.save-btn,
+                .btn-check:checked+.save-btn,
+                .save-btn.active { /* Added .save-btn.active for direct active class */
+                    background: linear-gradient(135deg, #CAA230, #E8B530) !important;
+                    border-color: #CAA230 !important; /* Ensure border also changes */
+                    color: #2C1F14 !important;
+                    box-shadow: 0 0 0 0.25rem rgba(184, 134, 11, 0.2) !important;
+                }
+
                 .content-scroll-area::-webkit-scrollbar,
                 .sidebar-scroll-area::-webkit-scrollbar { width: 6px; }
                 .content-scroll-area::-webkit-scrollbar-track,
