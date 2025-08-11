@@ -32,6 +32,16 @@ const MemorialDetail = () => {
   const [animateCard, setAnimateCard] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  
+  // 사진 업로드 관련 상태
+  const [showPhotoUploadModal, setShowPhotoUploadModal] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoForm, setPhotoForm] = useState({
+    photo: null,
+    title: '',
+    description: ''
+  });
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   // 접근 모드 확인: 고유번호 접근(guest), 유저 로그인(user), 관리자 로그인(admin)
   const isGuestAccess = !user; // 로그인하지 않고 고유번호로 접근
@@ -72,8 +82,10 @@ const MemorialDetail = () => {
         // API 명세에 따른 응답 구조 처리
         setMemorial(response); // 응답 자체가 memorial 정보
         
-        // 사진과 댓글은 별도 API 호출이 필요할 수 있음
-        // setPhotos(photos || []);
+        // 사진 목록 로드
+        await loadPhotos(id);
+        
+        // 댓글 목록 로드 (구현되어 있다면)
         // setGuestbookList(comments || []);
         
         // 비디오 URL은 명세에 없으므로 임시 처리
@@ -92,6 +104,109 @@ const MemorialDetail = () => {
 
     fetchMemorialDetails();
   }, [id, navigate]); // id와 navigate를 의존성으로 추가
+
+  // 사진 목록 로드 함수
+  const loadPhotos = async (memorialId) => {
+    try {
+      console.log('🔗 사진 목록 로드 시작 - Memorial ID:', memorialId);
+      const photosResponse = await apiService.getPhotosForMemorial(memorialId);
+      console.log('✅ 사진 목록 로드 성공:', photosResponse);
+      
+      // API 명세에 따라 _embedded.photos 구조로 응답이 올 수 있음
+      const photosList = photosResponse._embedded?.photos || photosResponse || [];
+      setPhotos(photosList);
+    } catch (error) {
+      console.error('❌ 사진 목록 로드 실패:', error);
+      // 사진 로드 실패는 치명적이지 않으므로 에러 메시지만 로그
+    }
+  };
+
+  // 사진 업로드 함수
+  const handlePhotoUpload = async (e) => {
+    e.preventDefault();
+    
+    if (!photoForm.photo || !photoForm.title.trim()) {
+      alert('사진과 제목을 모두 입력해주세요.');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', photoForm.photo);
+      formData.append('title', photoForm.title.trim());
+      formData.append('description', photoForm.description.trim());
+
+      console.log('🔗 사진 업로드 시작 - Memorial ID:', id);
+      const response = await apiService.uploadPhoto(id, formData);
+      console.log('✅ 사진 업로드 성공:', response);
+
+      // 사진 목록 다시 로드
+      await loadPhotos(id);
+      
+      // 폼 초기화
+      setPhotoForm({ photo: null, title: '', description: '' });
+      setPhotoPreview(null);
+      setShowPhotoUploadModal(false);
+      
+      alert('사진이 성공적으로 업로드되었습니다.');
+    } catch (error) {
+      console.error('❌ 사진 업로드 실패:', error);
+      alert('사진 업로드에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  // 파일 선택 핸들러
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // 파일 타입 검증
+      if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드할 수 있습니다.');
+        return;
+      }
+      
+      // 파일 크기 검증 (5MB 제한)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('파일 크기는 5MB 이하여야 합니다.');
+        return;
+      }
+
+      setPhotoForm({ ...photoForm, photo: file });
+      
+      // 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = (e) => setPhotoPreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 업로드 모달 닫기
+  const handleCloseUploadModal = () => {
+    setShowPhotoUploadModal(false);
+    setPhotoForm({ photo: null, title: '', description: '' });
+    setPhotoPreview(null);
+  };
+
+  // 사진 삭제 함수
+  const handleDeletePhoto = async (photoId) => {
+    try {
+      console.log('🔗 사진 삭제 시작 - Photo ID:', photoId);
+      await apiService.deletePhoto(photoId);
+      console.log('✅ 사진 삭제 성공');
+      
+      // 사진 목록 다시 로드
+      await loadPhotos(id);
+      setShowPhotoModal(false);
+      
+      alert('사진이 삭제되었습니다.');
+    } catch (error) {
+      console.error('❌ 사진 삭제 실패:', error);
+      alert('사진 삭제에 실패했습니다.');
+    }
+  };
 
   const handleGuestbookSubmit = async (e) => {
     e.preventDefault();
@@ -505,28 +620,102 @@ const MemorialDetail = () => {
                         overflowY: 'auto'
                       }}
                     >
-                      {memorial.photos && memorial.photos.length > 0 ? (
+                      {/* 사진 업로드 버튼 (유가족/관리자만) */}
+                      {canAccessSettings && (
+                        <div className="mb-4 text-end">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => setShowPhotoUploadModal(true)}
+                            style={{
+                              borderColor: '#B8860B',
+                              color: '#B8860B',
+                              background: 'rgba(184, 134, 11, 0.1)'
+                            }}
+                            className="hover-golden"
+                          >
+                            <i className="fas fa-plus me-2"></i>
+                            사진 추가
+                          </Button>
+                        </div>
+                      )}
+
+                      {photos && photos.length > 0 ? (
                         <Row xs={1} sm={2} md={2} lg={2} className="g-4">
-                          {memorial.photos.map(photo => (
-                            <Col key={photo.id}>
+                          {photos.map((photo, index) => (
+                            <Col key={photo.photoId || index}>
                               <Card 
                                 className="h-100 photo-card" 
                                 onClick={() => handlePhotoClick(photo)}
-                                style={{ cursor: 'pointer', overflow: 'hidden' }}
+                                style={{ 
+                                  cursor: 'pointer', 
+                                  overflow: 'hidden',
+                                  transition: 'transform 0.3s ease'
+                                }}
                               >
                                 <Card.Img 
                                   variant="top" 
-                                  src={photo.url} 
-                                  style={{ height: '200px', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                                  src={photo.photoUrl} 
+                                  alt={photo.title}
+                                  style={{ 
+                                    height: '200px', 
+                                    objectFit: 'cover', 
+                                    transition: 'transform 0.3s ease' 
+                                  }}
                                 />
+                                <Card.Body className="p-3">
+                                  <Card.Title 
+                                    className="h6 mb-1" 
+                                    style={{ 
+                                      fontSize: '0.9rem',
+                                      color: '#2C1F14',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                  >
+                                    {photo.title}
+                                  </Card.Title>
+                                  {photo.description && (
+                                    <Card.Text 
+                                      className="small text-muted mb-2"
+                                      style={{
+                                        fontSize: '0.8rem',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden'
+                                      }}
+                                    >
+                                      {photo.description}
+                                    </Card.Text>
+                                  )}
+                                  <small className="text-muted">
+                                    {new Date(photo.uploadedAt).toLocaleDateString('ko-KR')}
+                                  </small>
+                                </Card.Body>
                               </Card>
                             </Col>
                           ))}
                         </Row>
                       ) : (
                         <div className="text-center text-muted p-5">
-                          <i className="fas fa-images fa-3x mb-3"></i>
-                          <p>등록된 사진이 없습니다.</p>
+                          <i className="fas fa-images fa-3x mb-3" style={{ opacity: 0.5 }}></i>
+                          <p className="mb-3">등록된 사진이 없습니다.</p>
+                          {canAccessSettings && (
+                            <Button
+                              variant="outline-primary"
+                              onClick={() => setShowPhotoUploadModal(true)}
+                              style={{
+                                borderColor: '#B8860B',
+                                color: '#B8860B',
+                                background: 'rgba(184, 134, 11, 0.1)'
+                              }}
+                            >
+                              <i className="fas fa-plus me-2"></i>
+                              첫 번째 사진 추가하기
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1112,19 +1301,229 @@ const MemorialDetail = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* 사진 업로드 모달 */}
+      <Modal 
+        show={showPhotoUploadModal} 
+        onHide={handleCloseUploadModal}
+        size="lg"
+        centered
+        backdrop="static"
+      >
+        <Modal.Header 
+          closeButton
+          style={{ 
+            background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+            color: 'white',
+            border: 'none'
+          }}
+        >
+          <Modal.Title style={{ display: 'flex', alignItems: 'center' }}>
+            <i className="fas fa-camera me-2"></i>
+            사진 업로드
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ 
+          padding: '2rem',
+          background: 'rgba(255, 251, 235, 0.95)'
+        }}>
+          <Form onSubmit={handlePhotoUpload}>
+            {/* 파일 선택 */}
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#2C1F14', fontWeight: '600' }}>
+                <i className="fas fa-image me-2"></i>
+                사진 선택
+              </Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                required
+                style={{
+                  border: '2px dashed #B8860B',
+                  borderRadius: '8px',
+                  padding: '1rem'
+                }}
+              />
+              <Form.Text className="text-muted">
+                JPG, PNG, GIF 파일만 업로드 가능 (최대 5MB)
+              </Form.Text>
+            </Form.Group>
+
+            {/* 미리보기 */}
+            {photoPreview && (
+              <div className="mb-4 text-center">
+                <img 
+                  src={photoPreview} 
+                  alt="미리보기" 
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '200px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                  }}
+                />
+              </div>
+            )}
+
+            {/* 제목 입력 */}
+            <Form.Group className="mb-3">
+              <Form.Label style={{ color: '#2C1F14', fontWeight: '600' }}>
+                <i className="fas fa-heading me-2"></i>
+                사진 제목 *
+              </Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="사진의 제목을 입력하세요"
+                value={photoForm.title}
+                onChange={(e) => setPhotoForm({ ...photoForm, title: e.target.value })}
+                required
+                maxLength={100}
+                style={{
+                  borderColor: '#B8860B',
+                  boxShadow: 'none'
+                }}
+              />
+            </Form.Group>
+
+            {/* 설명 입력 */}
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#2C1F14', fontWeight: '600' }}>
+                <i className="fas fa-comment me-2"></i>
+                사진 설명
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="사진에 대한 설명을 입력하세요 (선택사항)"
+                value={photoForm.description}
+                onChange={(e) => setPhotoForm({ ...photoForm, description: e.target.value })}
+                maxLength={500}
+                style={{
+                  borderColor: '#B8860B',
+                  boxShadow: 'none',
+                  resize: 'vertical'
+                }}
+              />
+            </Form.Group>
+
+            {/* 버튼들 */}
+            <div className="d-flex justify-content-end gap-2">
+              <Button
+                variant="outline-secondary"
+                onClick={handleCloseUploadModal}
+                disabled={uploadingPhoto}
+              >
+                취소
+              </Button>
+              <Button
+                type="submit"
+                disabled={uploadingPhoto || !photoForm.photo || !photoForm.title.trim()}
+                style={{
+                  background: uploadingPhoto ? '#ccc' : 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+                  border: 'none',
+                  color: 'white'
+                }}
+              >
+                {uploadingPhoto ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                    업로드 중...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-upload me-2"></i>
+                    업로드
+                  </>
+                )}
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
       {/* 사진 상세보기 모달 */}
-      <Modal show={showPhotoModal} onHide={() => setShowPhotoModal(false)} size="lg" centered>
-        {selectedPhoto && (
-          <>
-            <Modal.Header closeButton>
-              <Modal.Title>{selectedPhoto.title}</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <img src={selectedPhoto.url} alt={selectedPhoto.title} className="img-fluid mb-3" />
-              <p>{selectedPhoto.description}</p>
-            </Modal.Body>
-          </>
-        )}
+      <Modal 
+        show={showPhotoModal} 
+        onHide={() => setShowPhotoModal(false)} 
+        size="xl" 
+        centered
+      >
+        <Modal.Header 
+          closeButton
+          style={{ 
+            background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+            color: 'white',
+            border: 'none'
+          }}
+        >
+          <Modal.Title style={{ display: 'flex', alignItems: 'center' }}>
+            <i className="fas fa-image me-2"></i>
+            {selectedPhoto?.title}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ 
+          padding: '2rem',
+          background: 'rgba(255, 251, 235, 0.95)'
+        }}>
+          {selectedPhoto && (
+            <>
+              <div className="text-center mb-4">
+                <img 
+                  src={selectedPhoto.photoUrl} 
+                  alt={selectedPhoto.title}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '60vh',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                  }}
+                />
+              </div>
+              
+              <div className="photo-details">
+                <h5 style={{ color: '#2C1F14', fontWeight: '600' }}>
+                  {selectedPhoto.title}
+                </h5>
+                
+                {selectedPhoto.description && (
+                  <p className="text-muted mb-3" style={{ lineHeight: '1.6' }}>
+                    {selectedPhoto.description}
+                  </p>
+                )}
+                
+                <div className="d-flex justify-content-between align-items-center">
+                  <small className="text-muted">
+                    <i className="fas fa-calendar-alt me-1"></i>
+                    업로드: {selectedPhoto.uploadedAt && new Date(selectedPhoto.uploadedAt).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </small>
+                  
+                  {canAccessSettings && (
+                    <div className="d-flex gap-2">
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => {
+                          if (window.confirm('이 사진을 삭제하시겠습니까?')) {
+                            handleDeletePhoto(selectedPhoto.photoId);
+                          }
+                        }}
+                      >
+                        <i className="fas fa-trash me-1"></i>
+                        삭제
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </Modal.Body>
       </Modal>
 
       <style jsx global>{`
