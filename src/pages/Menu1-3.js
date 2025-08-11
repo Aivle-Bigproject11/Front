@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, Badge, Modal, Row, Col } from 'react-bootstrap';
-import { ArrowLeft, FileText, Calendar, Printer, Download, Check, Loader, User, Building, Home, Files } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, Download, Check, Loader, User, Building, Home, Files } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { customerService, customerUtils } from '../services/customerService';
 import { documentService, documentUtils } from '../services/documentService';
@@ -98,14 +98,7 @@ const Menu1_3 = () => {
         }
     };
 
-    const handlePrint = async (docType) => {
-        try {
-            await documentService.printDocument(1); // Assuming ID 1 for mock
-            setSuccessMessage(`${documentUtils.getDocumentName(docType)} 인쇄 대화상자가 열렸습니다.`);
-        } catch (error) {
-            setErrorMessage('인쇄 중 오류가 발생했습니다.');
-        }
-    };
+    
 
     const handleBulkAction = (action) => {
         setBulkAction(action);
@@ -121,9 +114,7 @@ const Menu1_3 = () => {
                     handleGenerateDocument(docType)
                 ));
                 setSuccessMessage('모든 서류가 성공적으로 생성되었습니다.');
-            } else if (bulkAction === 'printAll') {
-                await documentService.printDocument(1); // Mock call
-                setSuccessMessage('완성된 서류를 모두 인쇄합니다.');
+            
             }
         } catch (error) {
             setErrorMessage('일괄 작업 중 오류가 발생했습니다.');
@@ -205,7 +196,7 @@ const Menu1_3 = () => {
                             <hr className="my-3"/>
                             <Row className="g-2">
                                 <Col><Button className="w-100 btn-golden" size="sm" onClick={() => handleBulkAction('generateAll')} disabled={generating}>{generating ? <Loader size={14} className="spinner" /> : <FileText size={14} />}<span className="ms-2">일괄 제작</span></Button></Col>
-                                <Col><Button className="w-100 btn-outline-golden" size="sm" onClick={() => handleBulkAction('printAll')}><Printer size={14} /><span className="ms-2">일괄 인쇄</span></Button></Col>
+                                
                             </Row>
                         </div>
                     </div>
@@ -228,18 +219,13 @@ const Menu1_3 = () => {
                         <div className="d-flex gap-2">
                             <Button className="btn-golden" size="sm" onClick={() => handleGenerateDocument(selectedDoc)} disabled={generating}>{generating ? <Loader size={14} className='spinner me-2' /> : <Check size={14} className='me-2' />}{isDocumentGenerated(selectedDoc) ? '재생성' : '생성'}</Button>
                             <Button className="btn-outline-golden" size="sm" onClick={() => handleDownload(selectedDoc)}><Download size={14} className='me-2' />다운로드</Button>
-                            <Button className="btn-outline-golden" size="sm" onClick={() => handlePrint(selectedDoc)}><Printer size={14} className='me-2' />인쇄</Button>
+                            
                         </div>
                     </div>
                     {successMessage && <Alert variant="success" className="mb-3 flex-shrink-0" dismissible onClose={() => setSuccessMessage('')}>{successMessage}</Alert>}
                     {errorMessage && <Alert variant="danger" className="mb-3 flex-shrink-0" dismissible onClose={() => setErrorMessage('')}>{errorMessage}</Alert>}
                     <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', background: 'rgba(253, 251, 243, 0.92)', borderRadius: '12px', border: '1px solid rgba(184, 134, 11, 0.2)', padding: '24px' }}>
-                        {previewContent ? (
-                            <div style={{ background: 'white', fontFamily: 'serif', padding: '32px', minHeight: '100%', border: '1px solid #ddd' }}>
-                                <h2 style={{ textAlign: 'center', marginBottom: '32px', fontSize: '24px', fontWeight: 'bold' }}>{previewContent.title}</h2>
-                                <div style={{ whiteSpace: 'pre-line', lineHeight: '1.8', fontSize: '16px' }} dangerouslySetInnerHTML={{ __html: previewContent.content }} />
-                            </div>
-                        ) : (<div>미리보기를 불러오는 중...</div>)}
+                        <div></div>
                     </div>
                 </div>
             </div>
@@ -248,7 +234,7 @@ const Menu1_3 = () => {
                 <Modal.Header closeButton><Modal.Title>일괄 작업 확인</Modal.Title></Modal.Header>
                 <Modal.Body>
                     {bulkAction === 'generateAll' && '모든 서류를 일괄 생성하시겠습니까? 기존에 생성된 서류가 있다면 덮어쓰게 됩니다.'}
-                    {bulkAction === 'printAll' && '완성된 모든 서류를 인쇄하시겠습니까?'}
+                    
                 </Modal.Body>
                 <Modal.Footer>
                     <Button className="btn-outline-golden" onClick={() => setShowConfirmModal(false)}>취소</Button>

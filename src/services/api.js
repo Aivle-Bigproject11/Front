@@ -48,9 +48,15 @@ export const apiService = {
   getObituaries: () => api.get('/obituaries'),
   getDeathReports: () => api.get('/deathReports'),
   getSchedules: () => api.get('/schedules'),
+  // getObituaryByCustomerId: (customerId) => api.get(`/obituaries/search/findFirstByCustomerIdOrderByObituaryIdDesc?customerId=${customerId}`),
+    getObituaryByCustomerId: () => api.get('/obituaries-detail'),
+  // getDeathReportByCustomerId: (customerId) => api.get(`/deathReports/search/findFirstByCustomerIdOrderByDeathReportIdDesc?customerId=${customerId}`),
+    getDeathReportByCustomerId: () => api.get('/deathReports-detail'),
+  // getScheduleByCustomerId: (customerId) => api.get(`/schedules/search/findFirstByCustomerIdOrderByScheduleIdDesc?customerId=${customerId}`),
+    getScheduleByCustomerId: () => api.get('/schedules-detail'),
 
   // 고객 관련 API
-  getCustomers: () => api.get('/customers'),
+  getCustomers: () => api.get('/customerProfiles'),
 
   // 장례 정보 생성
   createFuneralInfo: (data) => api.post('/funeralInfos', data),
