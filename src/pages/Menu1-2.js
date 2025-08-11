@@ -10,7 +10,7 @@ import { ko } from 'date-fns/locale';
 
 registerLocale('ko', ko);
 
-// 폼 필드 정의 (순서 조정)
+// 폼 필드 정의 (기존과 동일)
 const fieldSpecs = {
     funeralCompanyName: { label: '이용 상조회사 이름', type: 'text', group: '상조회사정보', required: true },
     directorName: { label: '담당 장례지도사 이름', type: 'text', disabled: true, group: '상조회사정보', required: true },
@@ -78,7 +78,7 @@ const fieldSpecs = {
     templateKeyword: { label: '사용자가 선택한 고인의 키워드', type: 'text', group: '장례정보', required: true },
 };
 
-// 폼 그룹핑
+// 폼 그룹핑 
 const formGroups = {
     상조회사정보: Object.keys(fieldSpecs).filter(f => fieldSpecs[f].group === '상조회사정보'),
     고인기본정보: Object.keys(fieldSpecs).filter(f => fieldSpecs[f].group === '고인기본정보'),
@@ -87,7 +87,7 @@ const formGroups = {
     장례정보: Object.keys(fieldSpecs).filter(f => fieldSpecs[f].group === '장례정보'),
 };
 
-// 폼 데이터 초기값
+// 폼 데이터 초기값 
 const initialFormData = Object.keys(fieldSpecs).reduce((acc, field) => {
     if (fieldSpecs[field].type === 'date' || fieldSpecs[field].type === 'datetime') {
         acc[field] = null;
@@ -120,6 +120,12 @@ const formatDateTime = (isoString) => {
     return `${year}/${month}/${day}/${hours}:${minutes}`;
 };
 
+
+// 유효성 검사 함수 정의
+const validatePhoneNumber = (phoneNumber) => /^\d{3}-\d{4}-\d{4}$/.test(phoneNumber);
+const validateRrn = (rrn) => /^\d{6}-\d{7}$/.test(rrn);
+
+
 const Menu1_2 = () => {
     const [formData, setFormData] = useState(initialFormData);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -129,8 +135,8 @@ const Menu1_2 = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [validationStatus, setValidationStatus] = useState('검토 전');
-    const [validationErrors, setValidationErrors] = useState([]); // New state for validation errors
-    const [reviewSuggestions, setReviewSuggestions] = useState([]); // Changed back to array
+    const [validationErrors, setValidationErrors] = useState([]); 
+    const [reviewSuggestions, setReviewSuggestions] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [modalContent, setModalContent] = useState('');
     
@@ -152,9 +158,9 @@ const Menu1_2 = () => {
             setSelectedCustomer(customer);
             const initialData = { ...initialFormData };
             Object.keys(fieldSpecs).forEach(key => {
-                if (customer[key]) {
+                if (customer[key] != null) {
                     const fieldSpec = fieldSpecs[key];
-                    if (fieldSpec.type === 'date' || fieldSpec.type === 'datetime') {
+                    if ((fieldSpec.type === 'date' || fieldSpec.type === 'datetime') && customer[key]) {
                         const dateObj = new Date(customer[key]);
                         initialData[key] = dateObj;
                         if(fieldSpec.type === 'datetime') {
@@ -163,22 +169,16 @@ const Menu1_2 = () => {
                             initialData[`${key}_time`] = `${hours}:${minutes}`;
                         }
                     } else {
-                        if (key === 'reportRegistrationDate' && customer[key]) {
-                            // Convert to Date object and then to ISO string with Z
-                            initialData[key] = new Date(customer[key]).toISOString();
-                        } else {
-                            initialData[key] = customer[key];
-                        }
+                         initialData[key] = customer[key];
                     }
                 }
             });
             setFormData(initialData);
 
-            // Initialize validationStatus based on selectedCustomer's validationStatus
             if (customer.validationStatus === 'VALIDATED') {
                 setValidationStatus('VALIDATED');
             } else {
-                setValidationStatus('검토 전'); // Default or other status
+                setValidationStatus('검토 전');
             }
         } else {
             navigate('/menu1-1');
@@ -186,39 +186,26 @@ const Menu1_2 = () => {
         setAnimateCard(true);
     }, [navigate, state]);
 
+    // 실시간 유효성 검사를 위한 handleInputChange 수정
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         
+        setErrorMessage('');
+
+        const updateErrors = (fieldName, isValid) => {
+            setValidationErrors(prev => {
+                const otherErrors = prev.filter(err => err !== fieldName);
+                return isValid ? otherErrors : [...otherErrors, fieldName];
+            });
+        };
+
         if (name.endsWith('_time')) {
             const numbers = value.replace(/[^0-9]/g, '');
             let formattedTime = numbers;
             if (numbers.length > 2) {
                 formattedTime = `${numbers.slice(0, 2)}:${numbers.slice(2, 4)}`;
             }
-            setFormData(prev => {
-                const fieldName = name.replace('_time', ''); // e.g., 'deceasedDate'
-                const dateObj = prev[fieldName] ? new Date(prev[fieldName]) : new Date(); // Get current Date object or new one
-                
-                if (formattedTime.length === 5 && formattedTime.includes(':')) {
-                    const [hours, minutes] = formattedTime.split(':');
-                    dateObj.setUTCHours(parseInt(hours, 10));
-                    dateObj.setUTCMinutes(parseInt(minutes, 10));
-                    dateObj.setSeconds(0);
-                    dateObj.setMilliseconds(0);
-                } else {
-                    // If time is incomplete or invalid, reset to 00:00 or handle as needed
-                    dateObj.setHours(0);
-                    dateObj.setMinutes(0);
-                    dateObj.setSeconds(0);
-                    dateObj.setMilliseconds(0);
-                }
-
-                return {
-                    ...prev,
-                    [name]: formattedTime, // Update the time string
-                    [fieldName]: dateObj // Update the Date object with new time
-                };
-            });
+            setFormData(prev => ({ ...prev, [name]: formattedTime }));
         } else if (name === 'reporterPhone' || name === 'chiefMournersContact') {
             const numbersOnly = value.replace(/[^0-9]/g, '');
             let formattedPhone = numbersOnly;
@@ -227,55 +214,78 @@ const Menu1_2 = () => {
             } else if (numbersOnly.length > 7) {
                 formattedPhone = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 7)}-${numbersOnly.slice(7, 11)}`;
             }
-            setFormData(prev => ({ ...prev, [name]: formattedPhone.slice(0, 13) }));
+            const finalValue = formattedPhone.slice(0, 13);
+            setFormData(prev => ({ ...prev, [name]: finalValue }));
+            updateErrors(name, finalValue === '' || validatePhoneNumber(finalValue));
         } else if (name === 'reporterRrn' || name === 'submitterRrn') {
             const numbers = value.replace(/[^0-9]/g, '');
             const formattedValue = numbers.replace(/(\d{6})(\d{0,7})/, '$1-$2').replace("--", "-");
-            setFormData(prev => ({ ...prev, [name]: formattedValue.slice(0, 14) }));
+            const finalValue = formattedValue.slice(0, 14);
+            setFormData(prev => ({ ...prev, [name]: finalValue }));
+            updateErrors(name, finalValue === '' || validateRrn(finalValue));
         } else {
+            setValidationErrors(prev => prev.filter(err => err !== name));
             setFormData(prev => ({ ...prev, [name]: value }));
         }
-        
-        };
+    };
 
     const handleDateChange = (date, fieldName) => {
         setFormData(prev => ({ ...prev, [fieldName]: date }));
     };
 
-    const handleReview = async () => {
-        setReviewing(true);
-        setErrorMessage('');
-        setSuccessMessage('');
-        setReviewSuggestions([]);
-        setValidationErrors([]); // Clear previous errors
+    // 검토/저장 전 실행할 공통 유효성 검사 함수
+    const runValidationChecks = () => {
+        // 형식 오류 확인
+        const formatErrorFields = validationErrors.filter(fieldName => 
+            !fieldSpecs[fieldName]?.required && (fieldName.includes('Phone') || fieldName.includes('Rrn'))
+        );
+        if (formatErrorFields.length > 0) {
+            const errorFieldLabels = formatErrorFields.map(f => fieldSpecs[f]?.label || f);
+            setErrorMessage(`다음 필드의 형식이 올바르지 않습니다: ${errorFieldLabels.join(', ')}`);
+            return false;
+        }
 
-        // --- Start of new validation logic ---
+        // 필수 필드 누락 확인
         const requiredFields = Object.keys(fieldSpecs).filter(key => fieldSpecs[key].required);
         const missingFields = [];
 
         requiredFields.forEach(fieldName => {
             const field = fieldSpecs[fieldName];
-            let value = formData[fieldName];
+            const value = formData[fieldName];
 
-            // Special handling for date/datetime fields
-            if (field.type === 'datetime' || field.type === 'date') {
-                // Check if the date object itself is null or invalid
-                if (!value || (field.type === 'datetime' && !formData[`${fieldName}_time`])) {
-                    missingFields.push(fieldName); // Store fieldName, not label
-                }
+            if (field.type === 'datetime') {
+                if (!value || !formData[`${fieldName}_time`]) missingFields.push(fieldName);
             } else if (!value || (typeof value === 'string' && value.trim() === '')) {
-                missingFields.push(fieldName); // Store fieldName, not label
+                missingFields.push(fieldName);
+            } else if (fieldName.includes('Phone') && !validatePhoneNumber(value)) {
+                missingFields.push(fieldName); // 필수 전화번호 형식 오류
+            } else if (fieldName.includes('Rrn') && !validateRrn(value)) {
+                missingFields.push(fieldName); // 필수 주민번호 형식 오류
             }
         });
 
         if (missingFields.length > 0) {
-            setErrorMessage(`다음 필수 항목을 입력해주세요: ${missingFields.map(f => fieldSpecs[f].label).join(', ')}`); // Display labels in message
-            setValidationErrors(missingFields); // Set validation errors
-            setReviewing(false);
-            setValidationStatus('검토 실패'); // Or '입력 필요'
-            return; // Stop execution
+            setErrorMessage(`다음 필드의 형식이 올바르지 않습니다 : ${missingFields.map(f => fieldSpecs[f].label).join(', ')}`);
+            setValidationErrors(prev => [...new Set([...prev, ...missingFields])]);
+            return false;
         }
-        // --- End of new validation logic ---
+
+        setErrorMessage('');
+        return true;
+    }
+
+    // handleReview, handleSave 함수에서 공통 검사 함수 사용
+    const handleReview = async () => {
+        setReviewing(true);
+        setSuccessMessage('');
+        setReviewSuggestions([]);
+
+        if (!runValidationChecks()) {
+            setReviewing(false);
+            setValidationStatus('검토 실패');
+            return;
+        }
+        
         try {
             const requestBody = {
                 deceasedName: formData.deceasedName,
@@ -320,42 +330,21 @@ const Menu1_2 = () => {
                 setReviewSuggestions(result.warnings);
             } else {
                 setValidationStatus('VALIDATED');
-            }
+                }
         } catch (error) {
             console.error('Error during review:', error);
             setErrorMessage('검토 중 오류가 발생했습니다.');
-            setValidationStatus('검토 실패');
+            setValidationStatus('검토 실패');        
         } finally {
             setReviewing(false);
         }
     };
-
+    
     const handleSave = async () => {
         setSaving(true);
-        setErrorMessage('');
         setSuccessMessage('');
-        setValidationErrors([]); // Clear previous errors
-
-        // Re-validate before saving (similar to handleReview)
-        const requiredFields = Object.keys(fieldSpecs).filter(key => fieldSpecs[key].required);
-        const missingFields = [];
-
-        requiredFields.forEach(fieldName => {
-            const field = fieldSpecs[fieldName];
-            let value = formData[fieldName];
-
-            if (field.type === 'datetime' || field.type === 'date') {
-                if (!value || (field.type === 'datetime' && !formData[`${fieldName}_time`])) {
-                    missingFields.push(fieldName);
-                }
-            } else if (!value || (typeof value === 'string' && value.trim() === '')) {
-                missingFields.push(fieldName);
-            }
-        });
-
-        if (missingFields.length > 0) {
-            setErrorMessage(`다음 필수 항목을 입력해주세요: ${missingFields.map(f => fieldSpecs[f].label).join(', ')}`);
-            setValidationErrors(missingFields);
+        
+        if (!runValidationChecks()) {
             setSaving(false);
             return;
         }
@@ -590,7 +579,7 @@ const Menu1_2 = () => {
                                                                             dateFormat="yyyy/MM/dd" 
                                                                             placeholderText="날짜 선택" 
                                                                             disabled={field.disabled} 
-                                                                            customInput={<Form.Control className={field.disabled ? 'form-input-readonly' : ''} />} 
+                                                                            customInput={<Form.Control className={`${field.disabled ? 'form-input-readonly' : ''} ${validationErrors.includes(fieldName) ? 'is-invalid' : ''}`} />} 
                                                                             renderCustomHeader={({
                                                                                 date,
                                                                                 changeYear,
@@ -619,12 +608,12 @@ const Menu1_2 = () => {
                                                                     </Col>
                                                                     {isDateTime && (
                                                                         <Col md={6}>
-                                                                            <Form.Control type="text" name={`${fieldName}_time`} value={formData[`${fieldName}_time`]} onChange={handleInputChange} placeholder="시간 (HH:MM)" maxLength="5" />
+                                                                            <Form.Control type="text" name={`${fieldName}_time`} value={formData[`${fieldName}_time`]} onChange={handleInputChange} placeholder="시간 (HH:MM)" maxLength="5" className={`${validationErrors.includes(fieldName) ? 'is-invalid' : ''}`} />
                                                                         </Col>
                                                                     )}
                                                                 </Row>
                                                             ) : (
-                                                                <Form.Control type={field.type || 'text'} name={fieldName} value={fieldName === 'reportRegistrationDate' ? formatDateTime(formData[fieldName]) : formData[fieldName]} onChange={handleInputChange} placeholder={`${field.label} 입력`} readOnly={field.disabled} className={field.disabled ? 'form-input-readonly' : ''} maxLength={(fieldName === 'reporterPhone' || fieldName === 'chiefMournersContact') ? 13 : (fieldName === 'reporterRrn' || fieldName === 'submitterRrn') ? 14 : undefined} />
+                                                                <Form.Control type={field.type || 'text'} name={fieldName} value={fieldName === 'reportRegistrationDate' ? formatDateTime(formData[fieldName]) : formData[fieldName]} onChange={handleInputChange} placeholder={`${field.label} 입력`} readOnly={field.disabled} className={`${field.disabled ? 'form-input-readonly' : ''} ${validationErrors.includes(fieldName) ? 'is-invalid' : ''}`} maxLength={(fieldName === 'reporterPhone' || fieldName === 'chiefMournersContact') ? 13 : (fieldName === 'reporterRrn' || fieldName === 'submitterRrn') ? 14 : undefined} />
                                                             )}
                                                         </div>
                                                     </Form.Group>
