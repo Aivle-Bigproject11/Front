@@ -21,6 +21,7 @@ const Menu1_3 = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [funeralInfoId, setFuneralInfoId] = useState(null); // New state for funeralInfoId
     const [bulkAction, setBulkAction] = useState('');
 
     const navigate = useNavigate();
@@ -36,6 +37,16 @@ const Menu1_3 = () => {
             const customerData = localStorage.getItem('selectedCustomer');
             if (customerData) {
                 customer = JSON.parse(customerData);
+            }
+
+            // Retrieve funeralInfoId from localStorage
+            const storedFuneralInfoId = localStorage.getItem('selectedFuneralInfoId');
+            if (storedFuneralInfoId) {
+                setFuneralInfoId(storedFuneralInfoId);
+            } else {
+                // Handle case where funeralInfoId is not found in localStorage
+                console.error('funeralInfoId not found in localStorage for Menu1-3.');
+                // Optionally, navigate back or show an error
             }
 
             if (!customer) {
@@ -132,9 +143,7 @@ const Menu1_3 = () => {
             setSuccessMessage('');
             setErrorMessage('');
 
-            const funeralInfoId = selectedCustomer.funeralInfoId; // Get funeralInfoId
-
-            if (!funeralInfoId) {
+            if (!funeralInfoId) { // Use the state variable directly
                 setErrorMessage('장례 정보 ID를 찾을 수 없습니다.');
                 setGenerating(false);
                 return false; // Indicate failure
@@ -199,12 +208,12 @@ const Menu1_3 = () => {
                                 setTimeout(pollDocumentStatus, 1000); // Poll again after 1 second
                             } else {
                                 setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 실패: ${currentStatus}`);
-                                reject(false); // Indicate failure
+                                resolve(false); // Indicate failure
                             }
                         } catch (pollError) {
                             console.error('Polling error:', pollError);
                             setErrorMessage('문서 상태 확인 중 오류가 발생했습니다.');
-                            reject(false); // Indicate failure
+                            resolve(false); // Indicate failure
                         }
                     };
                     setTimeout(pollDocumentStatus, 1000); // Start polling after 1 second

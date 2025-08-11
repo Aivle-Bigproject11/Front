@@ -142,6 +142,13 @@ const Menu1_1 = () => {
   const handleCustomerSelect = (customer) => {
     // Store the original, untransformed data for subsequent pages
     localStorage.setItem('selectedCustomer', JSON.stringify(customer.originalData));
+    // Also store funeralInfoId separately for easier access in other components
+    if (customer.originalData._links && customer.originalData._links.self && customer.originalData._links.self.href) {
+      const funeralInfoId = customer.originalData._links.self.href.split('/').pop();
+      localStorage.setItem('selectedFuneralInfoId', funeralInfoId);
+    } else {
+      localStorage.removeItem('selectedFuneralInfoId'); // Clear if not found
+    }
   };
 
   const handleRegisterClick = (e, customer) => {
