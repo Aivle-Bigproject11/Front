@@ -23,11 +23,13 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:local": "cross-env REACT_APP_API_URL=http://localhost:8088 react-scripts start",
+    "start:docker": "cross-env REACT_APP_API_URL=http://localhost:8080 react-scripts start",
     "start:mock": "cross-env REACT_APP_API_MOCKING=true react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-        "server": "json-server --watch db.json --port 8080"
+    "server": "json-server --watch db.json --port 8080"
   },
   "eslintConfig": {
     "extends": [

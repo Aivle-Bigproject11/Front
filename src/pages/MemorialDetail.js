@@ -10,6 +10,15 @@ const MemorialDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  
+  console.log('🔍 MemorialDetail 컴포넌트 로드');
+  console.log('🔍 URL params:', useParams());
+  console.log('🔍 Current location:', location);
+  console.log('🔍 Extracted ID:', id);
+  
+  // 임시: URL에서 ID를 추출할 수 없으면 기본값 사용
+  const memorialId = id || '1'; // 테스트용 기본값
+  console.log('🔍 Final Memorial ID:', memorialId);
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showGuestbookModal, setShowGuestbookModal] = useState(false);
@@ -43,7 +52,10 @@ const MemorialDetail = () => {
     setAnimateCard(true);
     const fetchMemorialDetails = async () => {
       try {
-        const response = await apiService.getMemorialDetails(id);
+        console.log('🔗 MemorialDetail API 호출 시작 - ID:', memorialId);
+        console.log('🔗 API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
+        const response = await apiService.getMemorialDetails(memorialId);
+        console.log('✅ MemorialDetail API 응답 성공:', response);
         const { memorialInfo, photos, videos, comments } = response.data;
         setMemorial(memorialInfo);
         setPhotos(photos || []);
@@ -52,7 +64,9 @@ const MemorialDetail = () => {
           setVideoUrl(videos[0].videoUrl); // 첫 번째 영상을 대표 영상으로 사용
         }
       } catch (error) {
-        console.error("Error fetching memorial details:", error);
+        console.error("❌ MemorialDetail API 호출 실패:", error);
+        console.error("에러 상세:", error.response?.data, error.response?.status);
+        console.error("요청 URL:", error.config?.url);
         alert("추모관 정보를 불러오는 데 실패했습니다.");
       } finally {
         setLoading(false);
@@ -60,12 +74,12 @@ const MemorialDetail = () => {
     };
 
     fetchMemorialDetails();
-  }, [id]);
+  }, [memorialId]);
 
   const handleGuestbookSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await apiService.createComment(id, guestbookEntry);
+      const response = await apiService.createComment(memorialId, guestbookEntry);
       setGuestbookList([response, ...guestbookList]);
       setGuestbookEntry({ name: '', message: '', relationship: '' });
       setShowGuestbookModal(false);

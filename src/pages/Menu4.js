@@ -23,7 +23,7 @@ const Menu4 = () => {
     setAnimateCard(true);
     const fetchMemorials = async () => {
       try {
-        console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8088');
+        console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
         const response = await apiService.getMemorials();
         console.log('✅ 백엔드 API 응답 성공:', response);
         const memorialsWithCode = response._embedded.memorials.map(m => ({
@@ -32,6 +32,8 @@ const Menu4 = () => {
         }));
         setMemorials(response._embedded.memorials);
         console.log('📋 추모관 데이터 설정 완료:', response._embedded.memorials);
+        console.log('📋 첫 번째 추모관 구조:', response._embedded.memorials[0]);
+        console.log('📋 첫 번째 추모관 ID:', response._embedded.memorials[0]?.id);
       } catch (error) {
         console.error("❌ 백엔드 API 호출 실패:", error);
         console.error("에러 상세:", error.response?.data, error.response?.status);
@@ -144,6 +146,8 @@ const Menu4 = () => {
   };
 
   const handleCardClick = (memorialId) => {
+    console.log('🔗 Memorial Card 클릭 - ID:', memorialId);
+    console.log('🔗 Navigation URL:', `/memorial/${memorialId}`);
     navigate(`/memorial/${memorialId}`);
   };
 
