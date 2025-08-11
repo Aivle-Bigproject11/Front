@@ -152,8 +152,8 @@ const Menu1_1 = () => {
 
   const handleDocumentsClick = (e, customer) => {
     e.stopPropagation();
-    // No need to use localStorage for Menu1-3 anymore, as it now uses location.state
-    navigate('/menu1-3', { state: { memorial: customer.originalData } });
+    handleCustomerSelect(customer); // Save to localStorage
+    navigate('/menu1-3');
   };
 
   if (loading) {

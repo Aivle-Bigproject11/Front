@@ -4,6 +4,7 @@ import { ArrowLeft, FileText, Calendar, Download, Check, Loader, User, Building,
 import { useNavigate, useLocation } from 'react-router-dom';
 import { customerService, customerUtils } from '../services/customerService';
 import { documentService, documentUtils } from '../services/documentService';
+import { apiService } from '../services/api';
 
 const Menu1_3 = () => {
     const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -27,15 +28,49 @@ const Menu1_3 = () => {
 
     const initializePage = async () => {
         try {
-            const { memorial } = location.state || {};
-            if (!memorial) {
+            let customer = null;
+            const customerData = localStorage.getItem('selectedCustomer');
+            if (customerData) {
+                customer = JSON.parse(customerData);
+            }
+
+            if (!customer) {
                 navigate('/menu1-1');
                 return;
             }
-            setSelectedCustomer(memorial);
-            setFormData(memorial); // Assuming memorial object contains formData directly or can be used as such
+            setSelectedCustomer(customer);
+            setFormData(customer); // Assuming customer object contains formData directly or can be used as such
 
-            await loadPreview('obituary', memorial);
+            const customerId = customer.id; // Define customerId here
+            const [obituaryRes, deathReportRes, scheduleRes] = await Promise.allSettled([
+                apiService.getObituaryByCustomerId(customerId),
+                apiService.getDeathReportByCustomerId(customerId),
+                apiService.getScheduleByCustomerId(customerId)
+            ]);
+
+            if (obituaryRes.status === 'fulfilled') {
+                // Process obituary data
+                console.log('Obituary Data:', obituaryRes.value.data);
+                // You might want to store this data in state or integrate it into formData
+            } else {
+                console.error('Failed to fetch obituary:', obituaryRes.reason);
+            }
+
+            if (deathReportRes.status === 'fulfilled') {
+                // Process death report data
+                console.log('Death Report Data:', deathReportRes.value.data);
+            } else {
+                console.error('Failed to fetch death report:', deathReportRes.reason);
+            }
+
+            if (scheduleRes.status === 'fulfilled') {
+                // Process schedule data
+                console.log('Schedule Data:', scheduleRes.value.data);
+            } else {
+                console.error('Failed to fetch schedule:', scheduleRes.reason);
+            }
+
+            await loadPreview('obituary', customer);
         } catch (error) {
             console.error('Error initializing page:', error);
             setErrorMessage('페이지를 불러오는 중 오류가 발생했습니다.');
