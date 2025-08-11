@@ -129,6 +129,7 @@ const Menu1_2 = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [validationStatus, setValidationStatus] = useState('검토 전');
+    const [validationErrors, setValidationErrors] = useState([]); // New state for validation errors
     const [reviewSuggestions, setReviewSuggestions] = useState([]); // Changed back to array
     const [showModal, setShowModal] = useState(false);
     const [modalContent, setModalContent] = useState('');
@@ -246,6 +247,7 @@ const Menu1_2 = () => {
         setErrorMessage('');
         setSuccessMessage('');
         setReviewSuggestions([]);
+        setValidationErrors([]); // Clear previous errors
 
         // --- Start of new validation logic ---
         const requiredFields = Object.keys(fieldSpecs).filter(key => fieldSpecs[key].required);
@@ -259,15 +261,16 @@ const Menu1_2 = () => {
             if (field.type === 'datetime' || field.type === 'date') {
                 // Check if the date object itself is null or invalid
                 if (!value || (field.type === 'datetime' && !formData[`${fieldName}_time`])) {
-                    missingFields.push(field.label);
+                    missingFields.push(fieldName); // Store fieldName, not label
                 }
             } else if (!value || (typeof value === 'string' && value.trim() === '')) {
-                missingFields.push(field.label);
+                missingFields.push(fieldName); // Store fieldName, not label
             }
         });
 
         if (missingFields.length > 0) {
-            setErrorMessage(`다음 필수 항목을 입력해주세요: ${missingFields.join(', ')}`);
+            setErrorMessage(`다음 필수 항목을 입력해주세요: ${missingFields.map(f => fieldSpecs[f].label).join(', ')}`); // Display labels in message
+            setValidationErrors(missingFields); // Set validation errors
             setReviewing(false);
             setValidationStatus('검토 실패'); // Or '입력 필요'
             return; // Stop execution
@@ -329,6 +332,34 @@ const Menu1_2 = () => {
 
     const handleSave = async () => {
         setSaving(true);
+        setErrorMessage('');
+        setSuccessMessage('');
+        setValidationErrors([]); // Clear previous errors
+
+        // Re-validate before saving (similar to handleReview)
+        const requiredFields = Object.keys(fieldSpecs).filter(key => fieldSpecs[key].required);
+        const missingFields = [];
+
+        requiredFields.forEach(fieldName => {
+            const field = fieldSpecs[fieldName];
+            let value = formData[fieldName];
+
+            if (field.type === 'datetime' || field.type === 'date') {
+                if (!value || (field.type === 'datetime' && !formData[`${fieldName}_time`])) {
+                    missingFields.push(fieldName);
+                }
+            } else if (!value || (typeof value === 'string' && value.trim() === '')) {
+                missingFields.push(fieldName);
+            }
+        });
+
+        if (missingFields.length > 0) {
+            setErrorMessage(`다음 필수 항목을 입력해주세요: ${missingFields.map(f => fieldSpecs[f].label).join(', ')}`);
+            setValidationErrors(missingFields);
+            setSaving(false);
+            return;
+        }
+
         try {
             const dataToSave = {
                 customerId: selectedCustomer.customerId,
@@ -545,7 +576,7 @@ const Menu1_2 = () => {
                                                         </Form.Label>
                                                         <div style={{ position: 'relative' }}>
                                                             {field.type === 'select' ? (
-                                                                <Form.Select name={fieldName} value={formData[fieldName]} onChange={handleInputChange} disabled={field.disabled}>
+                                                                <Form.Select name={fieldName} value={formData[fieldName]} onChange={handleInputChange} disabled={field.disabled} className={`${validationErrors.includes(fieldName) ? 'is-invalid' : ''}`}>
                                                                     <option value="">선택하세요</option>
                                                                     {field.options.map(option => <option key={option.value || option} value={option.value || option}>{option.label || option}</option>)}
                                                                 </Form.Select>
