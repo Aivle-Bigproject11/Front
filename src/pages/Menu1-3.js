@@ -7,6 +7,10 @@ import { documentService, documentUtils } from '../services/documentService';
 import { apiService } from '../services/api';
 
 const Menu1_3 = () => {
+    const [obituaryFileUrl, setObituaryFileUrl] = useState(null);
+    const [deathReportFileUrl, setDeathReportFileUrl] = useState(null);
+    const [scheduleFileUrl, setScheduleFileUrl] = useState(null);
+
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [formData, setFormData] = useState({});
     const [selectedDoc, setSelectedDoc] = useState('obituary');
@@ -48,29 +52,42 @@ const Menu1_3 = () => {
                 apiService.getScheduleByCustomerId(customerId)
             ]);
 
-            if (obituaryRes.status === 'fulfilled') {
-                // Process obituary data
+            if (obituaryRes.status === 'fulfilled' && obituaryRes.value.data && obituaryRes.value.data.obituaryFileUrl) {
+                setObituaryFileUrl(obituaryRes.value.data.obituaryFileUrl);
                 console.log('Obituary Data:', obituaryRes.value.data);
-                // You might want to store this data in state or integrate it into formData
             } else {
-                console.error('Failed to fetch obituary:', obituaryRes.reason);
+                setObituaryFileUrl(null); // Ensure it's null if not found or failed
+                console.error('Failed to fetch obituary or obituaryFileUrl is null:', obituaryRes.reason || 'URL not found');
             }
 
-            if (deathReportRes.status === 'fulfilled') {
-                // Process death report data
+            if (deathReportRes.status === 'fulfilled' && deathReportRes.value.data && deathReportRes.value.data.deathReportFileUrl) {
+                setDeathReportFileUrl(deathReportRes.value.data.deathReportFileUrl);
                 console.log('Death Report Data:', deathReportRes.value.data);
             } else {
-                console.error('Failed to fetch death report:', deathReportRes.reason);
+                setDeathReportFileUrl(null); // Ensure it's null if not found or failed
+                console.error('Failed to fetch death report or deathReportFileUrl is null:', deathReportRes.reason || 'URL not found');
             }
 
-            if (scheduleRes.status === 'fulfilled') {
-                // Process schedule data
+            if (scheduleRes.status === 'fulfilled' && scheduleRes.value.data && scheduleRes.value.data.scheduleFileUrl) {
+                setScheduleFileUrl(scheduleRes.value.data.scheduleFileUrl);
                 console.log('Schedule Data:', scheduleRes.value.data);
             } else {
-                console.error('Failed to fetch schedule:', scheduleRes.reason);
+                setScheduleFileUrl(null); // Ensure it's null if not found or failed
+                console.error('Failed to fetch schedule or scheduleFileUrl is null:', scheduleRes.reason || 'URL not found');
             }
 
-            await loadPreview('obituary', customer);
+            let initialPreviewUrl = null;
+            if (obituaryRes.status === 'fulfilled' && obituaryRes.value.data && obituaryRes.value.data.obituaryFileUrl) {
+                initialPreviewUrl = obituaryRes.value.data.obituaryFileUrl;
+            }
+
+            // Call loadPreview with the directly obtained URL or a message
+            if (initialPreviewUrl) {
+                const isPdf = initialPreviewUrl.toLowerCase().endsWith('.pdf');
+                setPreviewContent({ type: isPdf ? 'pdf' : 'image', url: initialPreviewUrl });
+            } else {
+                setPreviewContent({ type: 'message', content: '문서를 생성해주세요' });
+            }
         } catch (error) {
             console.error('Error initializing page:', error);
             setErrorMessage('페이지를 불러오는 중 오류가 발생했습니다.');
@@ -80,18 +97,33 @@ const Menu1_3 = () => {
         }
     };
 
-    const loadPreview = async (docType, data) => {
+    const loadPreview = async (docType) => {
         try {
-            const preview = await documentService.previewDocument(docType, data);
-            setPreviewContent(preview);
+            let fileUrl = null;
+            if (docType === 'obituary') {
+                fileUrl = obituaryFileUrl;
+            } else if (docType === 'deathCertificate') {
+                fileUrl = deathReportFileUrl;
+            } else if (docType === 'schedule') {
+                fileUrl = scheduleFileUrl;
+            }
+
+            if (fileUrl) {
+                // Determine file type (simple check based on extension)
+                const isPdf = fileUrl.toLowerCase().endsWith('.pdf');
+                setPreviewContent({ type: isPdf ? 'pdf' : 'image', url: fileUrl });
+            } else {
+                setPreviewContent({ type: 'message', content: '문서를 생성해주세요' });
+            }
         } catch (error) {
-            setPreviewContent({ title: '미리보기 오류', content: '미리보기를 불러올 수 없습니다.' });
+            console.error('Error loading preview:', error);
+            setPreviewContent({ type: 'message', content: '미리보기를 불러올 수 없습니다.' });
         }
     };
 
     const handleDocumentSelect = (docType) => {
         setSelectedDoc(docType);
-        loadPreview(docType, formData);
+        loadPreview(docType);
     };
 
     const handleGenerateDocument = async (docType) => {
@@ -158,7 +190,16 @@ const Menu1_3 = () => {
         }
     };
 
-    const isDocumentGenerated = (docType) => selectedCustomer?.documents?.[docType] || false;
+    const isDocumentGenerated = (docType) => {
+        if (docType === 'obituary') {
+            return obituaryFileUrl !== null;
+        } else if (docType === 'deathCertificate') {
+            return deathReportFileUrl !== null;
+        } else if (docType === 'schedule') {
+            return scheduleFileUrl !== null;
+        }
+        return false;
+    };
     
     if (loading) return (
         <div className="page-wrapper" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
@@ -224,7 +265,7 @@ const Menu1_3 = () => {
                                 {documentTypes.map(doc => (
                                     <button key={doc.type} onClick={() => handleDocumentSelect(doc.type)} style={{ background: selectedDoc === doc.type ? '#B8860B' : 'transparent', color: selectedDoc === doc.type ? 'white' : '#4A3728', border: `1px solid ${selectedDoc === doc.type ? '#B8860B' : 'rgba(184, 134, 11, 0.2)'}`, borderRadius: '8px', padding: '10px 12px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.3s ease', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ display: 'flex', alignItems: 'center' }}>{doc.icon} <span style={{ marginLeft: '8px' }}>{doc.name}</span></span>
-                                        <Badge bg={isDocumentGenerated(doc.type) ? 'success' : 'secondary'}>{isDocumentGenerated(doc.type) ? '완료' : '미생성'}</Badge>
+                                        <Badge bg={isDocumentGenerated(doc.type) ? 'success' : 'secondary'}>{isDocumentGenerated(doc.type) ? '생성됨' : '미생성'}</Badge>
                                     </button>
                                 ))}
                             </div>
@@ -260,7 +301,17 @@ const Menu1_3 = () => {
                     {successMessage && <Alert variant="success" className="mb-3 flex-shrink-0" dismissible onClose={() => setSuccessMessage('')}>{successMessage}</Alert>}
                     {errorMessage && <Alert variant="danger" className="mb-3 flex-shrink-0" dismissible onClose={() => setErrorMessage('')}>{errorMessage}</Alert>}
                     <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', background: 'rgba(253, 251, 243, 0.92)', borderRadius: '12px', border: '1px solid rgba(184, 134, 11, 0.2)', padding: '24px' }}>
-                        <div></div>
+                        {previewContent && previewContent.type === 'image' && (
+                            <img src={previewContent.url} alt="Document Preview" style={{ maxWidth: '100%', height: 'auto' }} />
+                        )}
+                        {previewContent && previewContent.type === 'pdf' && (
+                            <embed src={previewContent.url} type="application/pdf" width="100%" height="100%" />
+                        )}
+                        {previewContent && previewContent.type === 'message' && (
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', fontSize: '1.2rem', color: '#6c757d' }}>
+                                {previewContent.content}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
