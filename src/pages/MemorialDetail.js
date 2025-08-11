@@ -245,9 +245,9 @@ const MemorialDetail = () => {
         border: '2px solid rgba(184, 134, 11, 0.35)',
         overflow: 'hidden'
       }}>
-        {/* 프로필 섹션 */}
-        <div style={{ marginBottom: '24px' }}>
-          <div className="memorial-profile-section p-4" style={{
+               {/* 프로필 섹션 (수정됨) */}
+        <div style={{ marginBottom: '20px' }}>
+          <div className="memorial-profile-section p-3" style={{
             background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
             borderRadius: '16px',
             border: '1px solid rgba(184, 134, 11, 0.2)',
@@ -259,15 +259,15 @@ const MemorialDetail = () => {
               <Button
                 style={{
                   position: 'absolute',
-                  top: '24px',
-                  right: '24px',
+                  top: '16px',
+                  right: '16px',
                   background: 'linear-gradient(135deg, #b8860b, #965a25)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#fff',
                   fontWeight: '600',
-                  borderRadius: '12px',
-                  padding: '8px 24px',
-                  fontSize: '16px',
+                  borderRadius: '10px',
+                  padding: '6px 20px',
+                  fontSize: '14px',
                   boxShadow: '0 4px 15px rgba(44, 31, 20, 0.2)',
                   zIndex: 10
                 }}
@@ -280,24 +280,21 @@ const MemorialDetail = () => {
               type="button"
               className="back-btn"
               onClick={() => {
-                if (isGuestAccess) {
-                  window.history.back();
-                } else if (isUserAccess) {
-                  navigate('/lobby');
-                } else if (isAdminAccess) {
-                  navigate('/menu4');
-                }
+                if (isGuestAccess) { window.history.back(); }
+                else if (isUserAccess) { navigate('/lobby'); }
+                else if (isAdminAccess) { navigate('/menu4'); }
               }}
+              style={{ height: '40px', padding: '0 16px', fontSize: '14px' }} // 버튼 크기 조정
             >
-              <ArrowLeft size={16} style={{ marginRight: '6px' }} />
+              <ArrowLeft size={14} style={{ marginRight: '5px' }} />
               돌아가기
             </button>
             
             <Row className="align-items-center">
               <Col md={3} className="text-center">
                 <div className="memorial-profile-image" style={{
-                  width: '200px',
-                  height: '250px',
+                  width: '140px', // 크기 축소
+                  height: '175px', // 크기 축소
                   background: memorial.imageUrl 
                     ? `url(${memorial.imageUrl})` 
                     : 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
@@ -311,41 +308,38 @@ const MemorialDetail = () => {
                   justifyContent: 'center'
                 }}>
                   {!memorial.imageUrl && (
-                    <i className="fas fa-user fa-4x" style={{ color: '#b8860b' }}></i>
+                    <i className="fas fa-user fa-3x" style={{ color: '#b8860b' }}></i>
                   )}
                 </div>
-                <h5 className="mt-3 mb-0" style={{ color: '#2C1F14', fontWeight: '600' }}>프로필사진01</h5>
+                <h5 className="mt-2 mb-0" style={{ color: '#2C1F14', fontWeight: '600', fontSize: '0.9rem' }}>프로필사진01</h5>
               </Col>
               
               <Col md={9}>
                 <div className="memorial-info-text">
-                  <h1 className="display-4 mb-3" style={{ 
-                    fontWeight: '700', 
-                    color: '#2C1F14'
-                  }}>
+                  <h1 style={{ fontSize: '2.0rem', fontWeight: '700', color: '#2C1F14', marginBottom: '0.30rem' }}>
                     삼가 故人의 冥福을 빕니다
                   </h1>
-                  <div className="memorial-basic-info mb-4">
+                  <div className="memorial-basic-info mb-3">
                     <Row>
                       <Col md={6}>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>성함:</strong> {memorial.name}
                         </div>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>나이:</strong> {memorial.age}세
                         </div>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>성별:</strong> {memorial.gender === 'MALE' ? '남성' : '여성'}
                         </div>
                       </Col>
                       <Col md={6}>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>생년월일:</strong> {memorial.birthOfDate}
                         </div>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>별세일:</strong> {memorial.deceasedDate}
                         </div>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>고객ID:</strong> {memorial.customerId}
                         </div>
                       </Col>
@@ -353,11 +347,11 @@ const MemorialDetail = () => {
                   </div>
                   
                   <div className="memorial-description" style={{ color: '#495057' }}>
-                    <p className="lead">
+                    <p className="lead" style={{ fontSize: '1rem' }}>
                       사랑하는 가족과 친구들에게 많은 사랑을 받았던 고인의 생전 모습과 
                       추억들을 이곳에서 영원히 기억하며 보존하겠습니다.
                     </p>
-                    <p>
+                    <p style={{ fontSize: '0.9rem' }}>
                       따뜻한 마음과 밝은 미소로 주변 사람들에게 기쁨을 주었던 분입니다. 
                       가족들과 함께한 소중한 시간들, 친구들과의 즐거운 추억들이 
                       이곳에서 계속해서 이어져 나갈 것입니다.
