@@ -134,18 +134,23 @@ const MemorialConfig = () => {
         if (activeTab === 'basic') {
             // 기본 정보 수정
             try {
-                // 1. 텍스트 정보 업데이트
+                // Menu4 API 명세에 맞는 간단한 형태로 수정
                 const updatedMemorial = {
-                    ...formData,
+                    name: formData.name,
                     age: parseInt(formData.age),
+                    birthDate: formData.birthOfDate,
+                    deceasedDate: formData.deceasedDate,
+                    gender: formData.gender,
                     customerId: parseInt(formData.customerId)
                 };
-                      await apiService.updateMemorial(id, memorial);
+                
+                // Menu4 API 사용 (현재 구현된 방식 유지)
+                await apiService.updateMemorial(id, updatedMemorial);
 
                 // 2. 프로필 이미지 업데이트 (파일이 선택된 경우)
                 if (profileImageFile) {
                     const imageData = new FormData();
-                    imageData.append('profileImage', profileImageFile);
+                    imageData.append('photo', profileImageFile); // API 명세에 따라 'photo' 필드 사용
                     await apiService.uploadMemorialProfileImage(id, imageData);
                 }
 
@@ -511,8 +516,8 @@ const MemorialConfig = () => {
                                                     }}
                                                 >
                                                     <option value="">성별 선택</option>
-                                                    <option value="MALE">남성</option>
-                                                    <option value="FEMALE">여성</option>
+                                                    <option value="남성">남성</option>
+                                                    <option value="여성">여성</option>
                                                 </Form.Select>
                                             </Form.Group>
 
