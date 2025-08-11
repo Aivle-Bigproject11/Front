@@ -70,16 +70,19 @@ const MemorialConfig = () => {
                 setIsFamilyMember(true);
 
                 const response = await apiService.getMemorial(id);
-                const memorialData = response.data;
+                console.log('✅ MemorialConfig API 응답:', response);
+                
+                // API 명세에 따라 응답이 직접 memorial 객체
+                const memorialData = response;
 
                 setMemorial(memorialData);
                 setFormData({
                     name: memorialData.name,
                     age: memorialData.age,
-                    birthOfDate: memorialData.birthOfDate,
+                    birthOfDate: memorialData.birthDate, // API 명세에 따라 birthDate로 수정
                     deceasedDate: memorialData.deceasedDate,
                     gender: memorialData.gender,
-                    imageUrl: memorialData.imageUrl || '',
+                    imageUrl: memorialData.profileImageUrl || '', // API 명세에 따라 profileImageUrl로 수정
                     customerId: memorialData.customerId
                 });
 
@@ -165,8 +168,13 @@ const MemorialConfig = () => {
                     keywords: eulogyKeywords.filter(k => k),
                     prompt: basePrompt
                 };
+                console.log('🔗 CreateTribute 요청 데이터:', eulogyRequest);
+                console.log('🔗 Memorial ID:', id);
+                console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/memorials/${id}/tribute`);
+                
                 const response = await apiService.createTribute(id, eulogyRequest);
-                setGeneratedEulogy(response.tribute);
+                console.log('✅ CreateTribute API 응답:', response);
+                setGeneratedEulogy(response.tribute || response);
                 alert('AI 추모사가 생성되었습니다.');
             } catch (error) {
                 console.error('Error generating eulogy:', error);
