@@ -17,7 +17,7 @@ const MemorialDetail = () => {
   const [showGuestbookModal, setShowGuestbookModal] = useState(false);
   const [guestbookEntry, setGuestbookEntry] = useState({
     name: '',
-    message: '',
+    content: '',
     relationship: ''
   });
   const [guestbookList, setGuestbookList] = useState([]);
@@ -83,10 +83,23 @@ const MemorialDetail = () => {
         setMemorial(response); // 응답 자체가 memorial 정보
         
         // 사진 목록 로드
-        await loadPhotos(id);
+        try {
+          await loadPhotos(id);
+        } catch (photoError) {
+          console.warn("사진 목록 로드 실패 (CORS 문제):", photoError.response?.status);
+          // 사진 목록 로드 실패는 전체 페이지 로드를 방해하지 않음
+          setPhotos([]);
+        }
         
-        // 댓글 목록 로드 (구현되어 있다면)
-        // setGuestbookList(comments || []);
+        // 댓글 목록 로드 (현재 API 명세에 없음 - 백엔드 구현 후 활성화)
+        // try {
+        //   const commentsResponse = await apiService.getComments(id);
+        //   setGuestbookList(commentsResponse || []);
+        // } catch (commentError) {
+        //   console.warn("댓글 목록 로드 실패 (백엔드 미지원):", commentError.response?.status);
+        //   // 댓글 목록 로드 실패는 전체 페이지 로드를 방해하지 않음
+        //   setGuestbookList([]);
+        // }
         
         // 비디오 URL은 명세에 없으므로 임시 처리
         // if (videos && videos.length > 0) {
@@ -96,7 +109,14 @@ const MemorialDetail = () => {
         console.error("❌ MemorialDetail API 호출 실패:", error);
         console.error("에러 상세:", error.response?.data, error.response?.status);
         console.error("요청 URL:", error.config?.url);
-        alert("추모관 정보를 불러오는 데 실패했습니다.");
+        
+        // CORS 에러인지 확인
+        if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
+          console.warn("🔧 CORS 문제 감지: 백엔드 설정 확인 필요");
+          alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
+        } else {
+          alert("추모관 정보를 불러오는 데 실패했습니다.");
+        }
       } finally {
         setLoading(false);
       }
@@ -213,12 +233,50 @@ const MemorialDetail = () => {
     try {
       const response = await apiService.createComment(id, guestbookEntry);
       setGuestbookList([response, ...guestbookList]);
-      setGuestbookEntry({ name: '', message: '', relationship: '' });
+      setGuestbookEntry({ name: '', content: '', relationship: '' });
       setShowGuestbookModal(false);
       alert('소중한 위로의 말씀이 등록되었습니다.');
     } catch (error) {
       console.error("Error creating comment:", error);
-      alert("방명록 작성에 실패했습니다.");
+      
+      // CORS 에러인지 확인
+      if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
+        alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
+      } else {
+        alert("방명록 작성에 실패했습니다.");
+      }
+    }
+  };
+
+  // 댓글 수정 함수
+  const handleEditComment = (comment) => {
+    setGuestbookEntry({
+      name: comment.name,
+      content: comment.content,
+      relationship: comment.relationship
+    });
+    setSelectedRibbon(null); // 상세보기 모달 닫기
+    setShowGuestbookModal(true); // 편집 모달 열기
+    // TODO: 수정 모드 상태 추가 (새로 생성 vs 수정 구분)
+  };
+
+  // 댓글 삭제 함수
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await apiService.deleteComment(commentId);
+      
+      // 댓글 목록에서 삭제된 댓글 제거
+      setGuestbookList(guestbookList.filter(comment => comment.commentId !== commentId));
+      setSelectedRibbon(null); // 상세보기 모달 닫기
+      
+      alert('댓글이 삭제되었습니다.');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      alert('댓글 삭제에 실패했습니다.');
     }
   };
 
@@ -928,10 +986,10 @@ const MemorialDetail = () => {
                                 WebkitBoxOrient: 'vertical',
                                 wordWrap: 'break-word'
                               }}>
-                                {entry.message}
+                                {entry.content}
                               </div>
                               
-                              {entry.message.length > 80 && (
+                              {entry.content.length > 80 && (
                                 <div style={{
                                   marginTop: '10px',
                                   fontSize: '0.75rem',
@@ -1150,10 +1208,10 @@ const MemorialDetail = () => {
               <Form.Control
                 as="textarea"
                 rows={4}
-                value={guestbookEntry.message}
+                value={guestbookEntry.content}
                 onChange={(e) => setGuestbookEntry({
                   ...guestbookEntry,
-                  message: e.target.value
+                  content: e.target.value
                 })}
                 required
               />
@@ -1262,7 +1320,7 @@ const MemorialDetail = () => {
                     fontStyle: 'italic'
                   }}
                 >
-                  {selectedRibbon.message}
+                  {selectedRibbon.content}
                 </div>
               </div>
               
@@ -1271,6 +1329,27 @@ const MemorialDetail = () => {
                   <i className="fas fa-heart me-1"></i>
                   따뜻한 마음으로 전해진 위로의 말씀입니다
                 </small>
+                
+                {/* 댓글 작성자만 수정/삭제 가능 (임시로 모든 사용자가 가능하도록 설정) */}
+                <div className="mt-3">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    className="me-2"
+                    onClick={() => handleEditComment(selectedRibbon)}
+                  >
+                    <i className="fas fa-edit me-1"></i>
+                    수정
+                  </Button>
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => handleDeleteComment(selectedRibbon.commentId)}
+                  >
+                    <i className="fas fa-trash me-1"></i>
+                    삭제
+                  </Button>
+                </div>
               </div>
             </>
           )}
