@@ -136,6 +136,7 @@ const Menu1_2 = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [validationStatus, setValidationStatus] = useState('검토 전');
     const [validationErrors, setValidationErrors] = useState([]); 
+    const [funeralInfoId, setFuneralInfoId] = useState(null); // New state for funeralInfoId
     const [reviewSuggestions, setReviewSuggestions] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [modalContent, setModalContent] = useState('');
@@ -156,6 +157,13 @@ const Menu1_2 = () => {
 
         if (customer) {
             setSelectedCustomer(customer);
+            // Extract funeralInfoId from _links.self.href
+            if (customer._links && customer._links.self && customer._links.self.href) {
+                const id = customer._links.self.href.split('/').pop();
+                setFuneralInfoId(id);
+            } else {
+                setFuneralInfoId(null); // Ensure it's null if not found
+            }
             const initialData = { ...initialFormData };
             Object.keys(fieldSpecs).forEach(key => {
                 if (customer[key] != null) {
@@ -344,6 +352,12 @@ const Menu1_2 = () => {
         setSaving(true);
         setSuccessMessage('');
         
+        if (!funeralInfoId) {
+            setErrorMessage('장례 정보 ID를 찾을 수 없습니다. 다시 시도하거나 관리자에게 문의하세요.');
+            setSaving(false);
+            return;
+        }
+
         if (!runValidationChecks()) {
             setSaving(false);
             return;
@@ -357,12 +371,13 @@ const Menu1_2 = () => {
                 deceasedRrn: selectedCustomer.deceasedRrn,
                 deceasedAge: selectedCustomer.deceasedAge,
                 deceasedBirthOfDate: formData.deceasedBirthOfDate,
+                deceasedGender: selectedCustomer.deceasedGender, // Added
                 deceasedDate: formData.deceasedDate,
                 deceasedReligion: formData.deceasedReligion,
                 deceasedRegisteredAddress: formData.deceasedRegisteredAddress,
                 deceasedAddress: formData.deceasedAddress,
                 deceasedRelationToHouseholdHead: formData.deceasedRelationToHouseholdHead,
-                reportRegistrationDate: selectedCustomer.reportRegistrationDate,
+                reportRegistrationDate: formData.reportRegistrationDate, // Changed to formData
                 deathLocation: formData.deathLocation,
                 deathLocationType: formData.deathLocationType,
                 deathLocationEtc: formData.deathLocationEtc,
@@ -396,7 +411,9 @@ const Menu1_2 = () => {
 
             // Convert reportRegistrationDate to ISO Z format for PUT request
             if (dataToSave.reportRegistrationDate) {
-                dataToSave.reportRegistrationDate = new Date(dataToSave.reportRegistrationDate).toISOString();
+                const dateObj = new Date(dataToSave.reportRegistrationDate);
+                dateObj.setMilliseconds(0);
+                dataToSave.reportRegistrationDate = dateObj.toISOString().slice(0, 19) + 'Z';
             }
 
             ['deceasedDate', 'processionDateTime'].forEach(field => {
@@ -407,15 +424,17 @@ const Menu1_2 = () => {
                     date.setMinutes(parseInt(minutes, 10));
                     date.setSeconds(0);
                     date.setMilliseconds(0);
-                    dataToSave[field] = date.toISOString();
+                    dataToSave[field] = date.toISOString().slice(0, 19) + 'Z';
                 }
             });
             
             if (dataToSave.deceasedBirthOfDate) {
-                dataToSave.deceasedBirthOfDate = new Date(dataToSave.deceasedBirthOfDate).toISOString();
+                const dateObj = new Date(dataToSave.deceasedBirthOfDate);
+                dateObj.setMilliseconds(0);
+                dataToSave.deceasedBirthOfDate = dateObj.toISOString().slice(0, 19) + 'Z';
             }
 
-            await apiService.updateFuneralInfo(selectedCustomer.funeralInfoId, dataToSave);
+            await apiService.updateFuneralInfo(funeralInfoId, dataToSave);
             setSuccessMessage('장례 정보가 성공적으로 저장되었습니다.');
         } catch (error) {
             console.error('Error saving form data:', error);
