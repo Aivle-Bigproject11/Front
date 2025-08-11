@@ -165,12 +165,12 @@ const MemorialConfig = () => {
             setIsEulogyLoading(true);
             try {
                 const eulogyRequest = {
-                    keywords: eulogyKeywords.filter(k => k),
-                    prompt: basePrompt
+                    keywords: eulogyKeywords.filter(k => k).join(', '), // API 명세에 따라 String으로 변경
+                    tributeRequest: basePrompt // API 명세에 따라 prompt -> tributeRequest로 변경
                 };
                 console.log('🔗 CreateTribute 요청 데이터:', eulogyRequest);
                 console.log('🔗 Memorial ID:', id);
-                console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/memorials/${id}/tribute`);
+                console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8088'}/memorials/${id}/tribute`);
                 
                 const response = await apiService.createTribute(id, eulogyRequest);
                 console.log('✅ CreateTribute API 응답:', response);

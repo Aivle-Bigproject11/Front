@@ -1,6 +1,6 @@
 // src/services/customerService.js
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8088';
 
 // Mock 데이터
 export const mockCustomers = [

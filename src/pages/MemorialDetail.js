@@ -65,7 +65,7 @@ const MemorialDetail = () => {
         console.log('🔍 Final Memorial ID:', id);
         
         console.log('🔗 MemorialDetail API 호출 시작 - ID:', id);
-        console.log('🔗 API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
+        console.log('🔗 API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8088');
         const response = await apiService.getMemorialDetails(id);
         console.log('✅ MemorialDetail API 응답 성공:', response);
         

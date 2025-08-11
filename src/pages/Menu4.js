@@ -23,7 +23,7 @@ const Menu4 = () => {
     setAnimateCard(true);
     const fetchMemorials = async () => {
       try {
-        console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
+        console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8088');
         const response = await apiService.getMemorials();
         console.log('✅ 백엔드 API 응답 성공:', response);
         console.log('✅ response._embedded:', response._embedded);
