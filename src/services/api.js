@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API 기본 설정
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -44,7 +44,32 @@ export const apiService = {
   deleteMemorial: (id) => api.delete(`/memorials/${id}`),
 
   // 장례서류 관련 API
-    getFuneralInfos: () => api.get('/funeralInfos'),
+  getFuneralInfos: () => api.get('/funeralInfos'),
+  getObituaries: () => api.get('/obituaries'),
+  getDeathReports: () => api.get('/deathReports'),
+  getSchedules: () => api.get('/schedules'),
+  createObituary: (funeralInfoId) => api.put(`/funeralInfos/${funeralInfoId}/createobituary`),
+  createDeathReport: (funeralInfoId) => api.put(`/funeralInfos/${funeralInfoId}/createdeathreport`),
+  createSchedule: (funeralInfoId) => api.put(`/funeralInfos/${funeralInfoId}/createschedule`),
+  getObituaryByCustomerId: (customerId) => api.get(`/obituaries/search/findFirstByCustomerIdOrderByObituaryIdDesc?customerId=${customerId}`),
+  getDeathReportByCustomerId: (customerId) => api.get(`/deathReports/search/findFirstByCustomerIdOrderByDeathReportIdDesc?customerId=${customerId}`),
+  getScheduleByCustomerId: (customerId) => api.get(`/schedules/search/findFirstByCustomerIdOrderByScheduleIdDesc?customerId=${customerId}`),
+//   getObituaryByCustomerId: () => api.get('/obituaries-detail'),
+//   getDeathReportByCustomerId: () => api.get('/deathReports-detail'),
+//   getScheduleByCustomerId: () => api.get('/schedules-detail'),
+
+  // 고객 관련 API
+  getCustomers: () => api.get('/customerProfiles'),
+
+  // 장례 정보 생성
+  createFuneralInfo: (data) => api.post('/funeralInfos', data),
+
+  // 장례 서류 검토 요청
+  validateFuneralInfo: (data) => api.post('/funeralInfos/validate-fields', data),
+//   validateFuneralInfo: (data) => api.get('/validationWarnings'),
+
+  // 장례 정보 수정
+  updateFuneralInfo: (id, data) => api.put(`/funeralInfos/${id}/updatefuneralinfo`, data),
 
 
   // 대시보드 데이터
