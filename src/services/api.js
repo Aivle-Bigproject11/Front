@@ -48,11 +48,11 @@ export const apiService = {
   getObituaries: () => api.get('/obituaries'),
   getDeathReports: () => api.get('/deathReports'),
   getSchedules: () => api.get('/schedules'),
-  // getObituaryByCustomerId: (customerId) => api.get(`/obituaries/search/findFirstByCustomerIdOrderByObituaryIdDesc?customerId=${customerId}`),
+//   getObituaryByCustomerId: (customerId) => api.get(`/obituaries/search/findFirstByCustomerIdOrderByObituaryIdDesc?customerId=${customerId}`),
     getObituaryByCustomerId: () => api.get('/obituaries-detail'),
-  // getDeathReportByCustomerId: (customerId) => api.get(`/deathReports/search/findFirstByCustomerIdOrderByDeathReportIdDesc?customerId=${customerId}`),
+//   getDeathReportByCustomerId: (customerId) => api.get(`/deathReports/search/findFirstByCustomerIdOrderByDeathReportIdDesc?customerId=${customerId}`),
     getDeathReportByCustomerId: () => api.get('/deathReports-detail'),
-  // getScheduleByCustomerId: (customerId) => api.get(`/schedules/search/findFirstByCustomerIdOrderByScheduleIdDesc?customerId=${customerId}`),
+//   getScheduleByCustomerId: (customerId) => api.get(`/schedules/search/findFirstByCustomerIdOrderByScheduleIdDesc?customerId=${customerId}`),
     getScheduleByCustomerId: () => api.get('/schedules-detail'),
 
   // 고객 관련 API

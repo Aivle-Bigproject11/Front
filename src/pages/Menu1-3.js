@@ -41,7 +41,7 @@ const Menu1_3 = () => {
             setSelectedCustomer(customer);
             setFormData(customer); // Assuming customer object contains formData directly or can be used as such
 
-            const customerId = customer.id; // Define customerId here
+            const customerId = customer.customerId; // Define customerId here
             const [obituaryRes, deathReportRes, scheduleRes] = await Promise.allSettled([
                 apiService.getObituaryByCustomerId(customerId),
                 apiService.getDeathReportByCustomerId(customerId),
