@@ -124,6 +124,7 @@ const formatDateTime = (isoString) => {
 // 유효성 검사 함수 정의
 const validatePhoneNumber = (phoneNumber) => /^\d{3}-\d{4}-\d{4}$/.test(phoneNumber);
 const validateRrn = (rrn) => /^\d{6}-\d{7}$/.test(rrn);
+const validateTimeFormat = (timeString) => /^(?:2[0-3]|[01]?[0-9]):[0-5][0-9]$/.test(timeString);
 
 
 const Menu1_2 = () => {
@@ -213,7 +214,37 @@ const Menu1_2 = () => {
             if (numbers.length > 2) {
                 formattedTime = `${numbers.slice(0, 2)}:${numbers.slice(2, 4)}`;
             }
-            setFormData(prev => ({ ...prev, [name]: formattedTime }));
+            
+            setFormData(prev => {
+                const fieldName = name.replace('_time', ''); // e.g., 'deceasedDate'
+                const dateObj = prev[fieldName] ? new Date(prev[fieldName]) : new Date(); // Get current Date object or new one
+                
+                let isValidTimeFormat; // Declared here
+
+                if (formattedTime.length === 5 && formattedTime.includes(':')) {
+                    const [hours, minutes] = formattedTime.split(':');
+                    dateObj.setUTCHours(parseInt(hours, 10));
+                    dateObj.setUTCMinutes(parseInt(minutes, 10));
+                    dateObj.setUTCSeconds(0);
+                    dateObj.setUTCMilliseconds(0);
+                    isValidTimeFormat = validateTimeFormat(formattedTime);
+                } else {
+                    // If time is incomplete or invalid, reset to 00:00 or handle as needed
+                    dateObj.setUTCHours(0);
+                    dateObj.setUTCMinutes(0);
+                    dateObj.setUTCSeconds(0);
+                    dateObj.setUTCMilliseconds(0);
+                    isValidTimeFormat = false;
+                }
+
+                updateErrors(name, isValidTimeFormat); // Call updateErrors for the time field
+
+                return {
+                    ...prev,
+                    [name]: formattedTime, // Update the time string
+                    [fieldName]: dateObj // Update the Date object with new time
+                };
+            });
         } else if (name === 'reporterPhone' || name === 'chiefMournersContact') {
             const numbersOnly = value.replace(/[^0-9]/g, '');
             let formattedPhone = numbersOnly;
@@ -232,8 +263,21 @@ const Menu1_2 = () => {
             setFormData(prev => ({ ...prev, [name]: finalValue }));
             updateErrors(name, finalValue === '' || validateRrn(finalValue));
         } else {
-            setValidationErrors(prev => prev.filter(err => err !== name));
-            setFormData(prev => ({ ...prev, [name]: value }));
+            setFormData(prev => {
+                const newFormData = { ...prev, [name]: value };
+                // Re-validate this specific field for real-time feedback
+                const fieldSpec = fieldSpecs[name];
+                let isValid = true;
+                if (fieldSpec && fieldSpec.required) {
+                    if (typeof value === 'string' && value.trim() === '') {
+                        isValid = false;
+                    } else if (value === null || value === undefined) {
+                        isValid = false;
+                    }
+                }
+                updateErrors(name, isValid);
+                return newFormData;
+            });
         }
     };
 
@@ -262,7 +306,10 @@ const Menu1_2 = () => {
             const value = formData[fieldName];
 
             if (field.type === 'datetime') {
-                if (!value || !formData[`${fieldName}_time`]) missingFields.push(fieldName);
+                const timeValue = formData[`${fieldName}_time`];
+                if (!value || !timeValue || !validateTimeFormat(timeValue)) {
+                    missingFields.push(fieldName);
+                }
             } else if (!value || (typeof value === 'string' && value.trim() === '')) {
                 missingFields.push(fieldName);
             } else if (fieldName.includes('Phone') && !validatePhoneNumber(value)) {
