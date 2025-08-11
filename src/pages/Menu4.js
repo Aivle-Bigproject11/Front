@@ -26,14 +26,39 @@ const Menu4 = () => {
         console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
         const response = await apiService.getMemorials();
         console.log('✅ 백엔드 API 응답 성공:', response);
-        const memorialsWithCode = response._embedded.memorials.map(m => ({
-          ...m,
-          joinCode: `MEM${String(m.id).padStart(3, '0')}`
-        }));
-        setMemorials(response._embedded.memorials);
-        console.log('📋 추모관 데이터 설정 완료:', response._embedded.memorials);
-        console.log('📋 첫 번째 추모관 구조:', response._embedded.memorials[0]);
-        console.log('📋 첫 번째 추모관 ID:', response._embedded.memorials[0]?.id);
+        console.log('✅ response._embedded:', response._embedded);
+        console.log('✅ response._embedded.memorials:', response._embedded.memorials);
+        
+        if (response._embedded && response._embedded.memorials) {
+          const memorialsList = response._embedded.memorials.map(memorial => {
+            // API 명세에 따라 UUID 형태의 ID 추출
+            let memorialId = memorial.id;
+            
+            // _links.self.href에서 UUID 추출 (예: "http://localhost:8085/memorials/1c337344-ad3c-4785-a5f8-0054698c3ebe")
+            if (memorial._links && memorial._links.self && memorial._links.self.href) {
+              const hrefParts = memorial._links.self.href.split('/');
+              const uuidFromHref = hrefParts[hrefParts.length - 1];
+              if (uuidFromHref && uuidFromHref.includes('-')) {
+                memorialId = uuidFromHref;
+              }
+            }
+            
+            return {
+              ...memorial,
+              id: memorialId // UUID 형태의 ID로 설정
+            };
+          });
+          
+          console.log('📋 추모관 리스트 길이:', memorialsList.length);
+          console.log('📋 첫 번째 추모관 구조:', memorialsList[0]);
+          console.log('📋 첫 번째 추모관 ID:', memorialsList[0]?.id);
+          console.log('📋 첫 번째 추모관 키들:', Object.keys(memorialsList[0] || {}));
+          
+          setMemorials(memorialsList);
+        } else {
+          console.error('❌ 예상하지 못한 응답 구조:', response);
+          setMemorials([]);
+        }
       } catch (error) {
         console.error("❌ 백엔드 API 호출 실패:", error);
         console.error("에러 상세:", error.response?.data, error.response?.status);
@@ -145,8 +170,18 @@ const Menu4 = () => {
     }
   };
 
-  const handleCardClick = (memorialId) => {
-    console.log('🔗 Memorial Card 클릭 - ID:', memorialId);
+  const handleCardClick = (memorial) => {
+    console.log('🔗 Memorial Card 클릭 - 전체 객체:', memorial);
+    console.log('🔗 Memorial ID:', memorial?.id);
+    console.log('🔗 Memorial ID 타입:', typeof memorial?.id);
+    console.log('🔗 Memorial 객체 키들:', Object.keys(memorial || {}));
+    
+    const memorialId = memorial?.id;
+    if (!memorialId) {
+      console.error('❌ Memorial ID가 undefined입니다!');
+      return;
+    }
+    
     console.log('🔗 Navigation URL:', `/memorial/${memorialId}`);
     navigate(`/memorial/${memorialId}`);
   };
@@ -254,7 +289,7 @@ const Menu4 = () => {
                       boxShadow: '0 4px 15px rgba(44, 31, 20, 0.1)',
                       cursor: 'pointer'
                     }}
-                    onClick={() => handleCardClick(memorial.id)}
+                    onClick={() => handleCardClick(memorial)}
                   >
                     <div 
                       className="memorial-header"

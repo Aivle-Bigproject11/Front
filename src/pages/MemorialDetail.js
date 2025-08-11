@@ -11,14 +11,7 @@ const MemorialDetail = () => {
   const location = useLocation();
   const { user } = useAuth();
   
-  console.log('🔍 MemorialDetail 컴포넌트 로드');
-  console.log('🔍 URL params:', useParams());
-  console.log('🔍 Current location:', location);
-  console.log('🔍 Extracted ID:', id);
-  
-  // 임시: URL에서 ID를 추출할 수 없으면 기본값 사용
-  const memorialId = id || '1'; // 테스트용 기본값
-  console.log('🔍 Final Memorial ID:', memorialId);
+  // 모든 useState 훅을 먼저 호출
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showGuestbookModal, setShowGuestbookModal] = useState(false);
@@ -48,21 +41,45 @@ const MemorialDetail = () => {
   // 관리 페이지 접근 권한: 유저(유가족) 또는 관리자
   const canAccessSettings = !isGuestAccess; // 고유번호 접근이 아닌 경우
 
+  // useEffect 훅
   useEffect(() => {
     setAnimateCard(true);
     const fetchMemorialDetails = async () => {
       try {
-        console.log('🔗 MemorialDetail API 호출 시작 - ID:', memorialId);
-        console.log('🔗 API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
-        const response = await apiService.getMemorialDetails(memorialId);
-        console.log('✅ MemorialDetail API 응답 성공:', response);
-        const { memorialInfo, photos, videos, comments } = response.data;
-        setMemorial(memorialInfo);
-        setPhotos(photos || []);
-        setGuestbookList(comments || []);
-        if (videos && videos.length > 0) {
-          setVideoUrl(videos[0].videoUrl); // 첫 번째 영상을 대표 영상으로 사용
+        // ID 검증은 여기서 수행
+        if (!id) {
+          console.error('❌ Memorial ID가 URL에서 추출되지 않음!');
+          navigate('/menu4');
+          return;
         }
+
+        // UUID 형태인지 확인 (예: 1c337344-ad3c-4785-a5f8-0054698c3ebe)
+        const isValidUUID = id && id.includes('-') && id.length >= 36;
+        console.log('🔍 Is Valid UUID:', isValidUUID);
+        
+        if (!isValidUUID) {
+          console.error('❌ Memorial ID가 올바른 UUID 형태가 아님:', id);
+          // navigate('/menu4'); // 일단 주석처리해서 계속 진행
+        }
+
+        console.log('🔍 Final Memorial ID:', id);
+        
+        console.log('🔗 MemorialDetail API 호출 시작 - ID:', id);
+        console.log('🔗 API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
+        const response = await apiService.getMemorialDetails(id);
+        console.log('✅ MemorialDetail API 응답 성공:', response);
+        
+        // API 명세에 따른 응답 구조 처리
+        setMemorial(response); // 응답 자체가 memorial 정보
+        
+        // 사진과 댓글은 별도 API 호출이 필요할 수 있음
+        // setPhotos(photos || []);
+        // setGuestbookList(comments || []);
+        
+        // 비디오 URL은 명세에 없으므로 임시 처리
+        // if (videos && videos.length > 0) {
+        //   setVideoUrl(videos[0].videoUrl);
+        // }
       } catch (error) {
         console.error("❌ MemorialDetail API 호출 실패:", error);
         console.error("에러 상세:", error.response?.data, error.response?.status);
@@ -74,12 +91,12 @@ const MemorialDetail = () => {
     };
 
     fetchMemorialDetails();
-  }, [memorialId]);
+  }, [id, navigate]); // id와 navigate를 의존성으로 추가
 
   const handleGuestbookSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await apiService.createComment(memorialId, guestbookEntry);
+      const response = await apiService.createComment(id, guestbookEntry);
       setGuestbookList([response, ...guestbookList]);
       setGuestbookEntry({ name: '', message: '', relationship: '' });
       setShowGuestbookModal(false);
