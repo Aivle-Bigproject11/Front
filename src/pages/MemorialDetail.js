@@ -291,7 +291,11 @@ const MemorialDetail = () => {
 
   // 마우스 휠 이벤트 핸들러
   const handleRibbonWheel = (e) => {
-    e.preventDefault();
+    // 방명록이 비어있거나 스크롤할 필요가 없는 경우 무시
+    if (!guestbookList || guestbookList.length <= ribbonItemsPerView) {
+      return;
+    }
+
     const maxIndex = Math.max(0, guestbookList.length - ribbonItemsPerView);
     
     if (e.deltaY > 0) {
