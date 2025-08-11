@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getMemorialByCode } from '../services/memorialService';
+import { apiService } from '../services/api';
 import icon from '../assets/logo/icon01.png';
 
 const Login = () => {
@@ -78,7 +78,7 @@ const Login = () => {
       setError('');
       
       // 실제 서비스 사용 - 고유번호로 추모관 검색
-      const memorial = await getMemorialByCode(joinCode.trim());
+      const memorial = await apiService.getMemorialByCode(joinCode.trim());
       
       if (memorial) {
         // 고유번호로 접근한 경우 guest 라우트로 이동

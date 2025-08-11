@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge } from 'react-bootstrap';
 import { ArrowLeft } from 'lucide-react';
-import { dummyData } from '../services/api';
+import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const MemorialDetail = () => {
@@ -21,6 +21,7 @@ const MemorialDetail = () => {
   const [guestbookList, setGuestbookList] = useState([]);
   const [activeTab, setActiveTab] = useState('video'); // 'video' 또는 'photos'
   const [videoUrl, setVideoUrl] = useState('');
+  const [photos, setPhotos] = useState([]);
   const [ribbonScrollIndex, setRibbonScrollIndex] = useState(0);
   const ribbonItemsPerView = 4; // 화면에 보이는 리본 개수
   const ribbonItemWidth = 220; // 리본 너비 + 간격
@@ -40,76 +41,39 @@ const MemorialDetail = () => {
 
   useEffect(() => {
     setAnimateCard(true);
-    // TODO: 실제 API 호출로 교체
-    setTimeout(() => {
-      const foundMemorial = dummyData.memorials._embedded.memorials.find(
-        m => m.id === parseInt(id)
-      );
-      setMemorial(foundMemorial);
-      if (foundMemorial && foundMemorial.videoUrl) {
-        setVideoUrl(foundMemorial.videoUrl);
-      }
-      
-      // 더미 방명록 데이터
-      setGuestbookList([
-        {
-          id: 1,
-          name: '김철수',
-          message: '좋은 곳에서 편히 쉬세요. 항상 기억하겠습니다. 따뜻한 미소와 친절함을 잊지 못하겠습니다.',
-          relationship: '친구',
-          date: '2024-01-20'
-        },
-        {
-          id: 2,
-          name: '이영희',
-          message: '따뜻했던 미소를 잊지 못하겠습니다. 삼가 고인의 명복을 빕니다.',
-          relationship: '동료',
-          date: '2024-01-18'
-        },
-        {
-          id: 3,
-          name: '박민수',
-          message: '항상 밝고 긍정적이셨던 모습을 기억하겠습니다. 하늘에서 편히 쉬시길 바랍니다.',
-          relationship: '가족',
-          date: '2024-01-17'
-        },
-        {
-          id: 4,
-          name: '최지원',
-          message: '함께했던 소중한 추억들을 가슴에 간직하겠습니다. 감사했습니다.',
-          relationship: '지인',
-          date: '2024-01-16'
-        },
-        {
-          id: 5,
-          name: '강현우',
-          message: '언제나 다른 사람을 먼저 생각하시던 모습이 기억에 남습니다. 영원히 기억하겠습니다.',
-          relationship: '동료',
-          date: '2024-01-15'
-        },
-        {
-          id: 6,
-          name: '윤서연',
-          message: '고인의 인품과 마음씨를 본받아 살겠습니다. 삼가 고인의 명복을 빕니다.',
-          relationship: '친구',
-          date: '2024-01-14'
+    const fetchMemorialDetails = async () => {
+      try {
+        const response = await apiService.getMemorialDetails(id);
+        const { memorialInfo, photos, videos, comments } = response.data;
+        setMemorial(memorialInfo);
+        setPhotos(photos || []);
+        setGuestbookList(comments || []);
+        if (videos && videos.length > 0) {
+          setVideoUrl(videos[0].videoUrl); // 첫 번째 영상을 대표 영상으로 사용
         }
-      ]);
+      } catch (error) {
+        console.error("Error fetching memorial details:", error);
+        alert("추모관 정보를 불러오는 데 실패했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setLoading(false);
-    }, 1000);
+    fetchMemorialDetails();
   }, [id]);
 
-  const handleGuestbookSubmit = (e) => {
+  const handleGuestbookSubmit = async (e) => {
     e.preventDefault();
-    const newEntry = {
-      id: guestbookList.length + 1,
-      ...guestbookEntry,
-      date: new Date().toISOString().split('T')[0]
-    };
-    setGuestbookList([newEntry, ...guestbookList]);
-    setGuestbookEntry({ name: '', message: '', relationship: '' });
-    setShowGuestbookModal(false);
+    try {
+      const response = await apiService.createComment(id, guestbookEntry);
+      setGuestbookList([response, ...guestbookList]);
+      setGuestbookEntry({ name: '', message: '', relationship: '' });
+      setShowGuestbookModal(false);
+      alert('소중한 위로의 말씀이 등록되었습니다.');
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      alert("방명록 작성에 실패했습니다.");
+    }
   };
 
   const handlePhotoClick = (photo) => {
