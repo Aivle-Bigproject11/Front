@@ -43,10 +43,16 @@ const realApiService = {
   getMemorials: async () => (await api.get('/memorials')).data,
   getMemorial: async (id) => (await api.get(`/memorials/${id}`)).data,
   updateMemorial: async (id, data) => (await api.patch(`/memorials/${id}`, data)).data,
-  getMemorialDetails: async (id) => (await api.get(`/memorials/${id}`)).data, // API 명세에 맞게 수정
+  getMemorialDetails: async (id) => (await api.get(`/memorials/${id}/detail`)).data, // API 명세에 맞게 수정
   uploadMemorialProfileImage: async (id, formData) => (await api.patch(`/memorials/${id}/profile-image`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
   
-  createTribute: async (id, data) => (await api.post(`/memorials/${id}/tribute`, data)).data,
+  createTribute: async (id, data) => {
+    // AI 추모사 생성은 시간이 오래 걸릴 수 있으므로 타임아웃을 60초로 설정
+    const config = { 
+      timeout: 60000
+    };
+    return (await api.post(`/memorials/${id}/tribute`, data, config)).data;
+  },
   updateTribute: async (id, data) => (await api.patch(`/memorials/${id}/tribute`, data)).data,
   deleteTribute: async (id) => (await api.delete(`/memorials/${id}/tribute`)).data,
 
@@ -83,7 +89,14 @@ const realApiService = {
   updatePhoto: async (photoId, data) => (await api.patch(`/photos/${photoId}`, data)).data,
   deletePhoto: async (photoId) => (await api.delete(`/photos/${photoId}`)).data,
 
-  createVideo: async (formData) => (await api.post('/videos', formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
+  createVideo: async (memorialId, formData) => {
+    // 영상 생성은 시간이 오래 걸릴 수 있으므로 타임아웃을 30초로 설정
+    const config = { 
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 30000
+    };
+    return (await api.post(`/memorials/${memorialId}/videos`, formData, config)).data;
+  },
   getVideo: async (videoId) => (await api.get(`/videos/${videoId}`)).data,
   deleteVideo: async (videoId) => (await api.delete(`/videos/${videoId}`)).data,
 

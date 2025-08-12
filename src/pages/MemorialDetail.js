@@ -79,32 +79,28 @@ const MemorialDetail = () => {
         const response = await apiService.getMemorialDetails(id);
         console.log('✅ MemorialDetail API 응답 성공:', response);
         
-        // API 명세에 따른 응답 구조 처리
+        // 새로운 API 명세에 따른 응답 구조 처리
         setMemorial(response); // 응답 자체가 memorial 정보
         
-        // 사진 목록 로드
-        try {
-          await loadPhotos(id);
-        } catch (photoError) {
-          console.warn("사진 목록 로드 실패 (CORS 문제):", photoError.response?.status);
-          // 사진 목록 로드 실패는 전체 페이지 로드를 방해하지 않음
-          setPhotos([]);
+        // 사진 목록과 댓글 목록은 응답에 포함되어 있음
+        if (response.photos) {
+          console.log('✅ 사진 목록 로드 성공:', response.photos);
+          setPhotos(response.photos);
         }
         
-        // 댓글 목록 로드 (현재 API 명세에 없음 - 백엔드 구현 후 활성화)
-        // try {
-        //   const commentsResponse = await apiService.getComments(id);
-        //   setGuestbookList(commentsResponse || []);
-        // } catch (commentError) {
-        //   console.warn("댓글 목록 로드 실패 (백엔드 미지원):", commentError.response?.status);
-        //   // 댓글 목록 로드 실패는 전체 페이지 로드를 방해하지 않음
-        //   setGuestbookList([]);
-        // }
+        if (response.comments) {
+          console.log('✅ 댓글 목록 로드 성공:', response.comments);
+          setGuestbookList(response.comments);
+        }
         
-        // 비디오 URL은 명세에 없으므로 임시 처리
-        // if (videos && videos.length > 0) {
-        //   setVideoUrl(videos[0].videoUrl);
-        // }
+        // 영상 정보 처리
+        if (response.videos && response.videos.length > 0) {
+          console.log('✅ 영상 목록 로드 성공:', response.videos);
+          const latestVideo = response.videos[0]; // 최신 영상 사용
+          if (latestVideo.videoUrl && latestVideo.status === 'COMPLETED') {
+            setVideoUrl(latestVideo.videoUrl);
+          }
+        }
       } catch (error) {
         console.error("❌ MemorialDetail API 호출 실패:", error);
         console.error("에러 상세:", error.response?.data, error.response?.status);
@@ -123,23 +119,7 @@ const MemorialDetail = () => {
     };
 
     fetchMemorialDetails();
-  }, [id, navigate]); // id와 navigate를 의존성으로 추가
-
-  // 사진 목록 로드 함수
-  const loadPhotos = async (memorialId) => {
-    try {
-      console.log('🔗 사진 목록 로드 시작 - Memorial ID:', memorialId);
-      const photosResponse = await apiService.getPhotosForMemorial(memorialId);
-      console.log('✅ 사진 목록 로드 성공:', photosResponse);
-      
-      // API 명세에 따라 _embedded.photos 구조로 응답이 올 수 있음
-      const photosList = photosResponse._embedded?.photos || photosResponse || [];
-      setPhotos(photosList);
-    } catch (error) {
-      console.error('❌ 사진 목록 로드 실패:', error);
-      // 사진 로드 실패는 치명적이지 않으므로 에러 메시지만 로그
-    }
-  };
+  }, [id, navigate, location.search]); // location.search를 의존성으로 추가하여 URL 파라미터 변경 시 새로고침
 
   // 사진 업로드 함수
   const handlePhotoUpload = async (e) => {
@@ -161,8 +141,12 @@ const MemorialDetail = () => {
       const response = await apiService.uploadPhoto(id, formData);
       console.log('✅ 사진 업로드 성공:', response);
 
-      // 사진 목록 다시 로드
-      await loadPhotos(id);
+      // 전체 memorial 정보 다시 로드 (사진 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.photos) {
+        setPhotos(updatedMemorial.photos);
+      }
       
       // 폼 초기화
       setPhotoForm({ photo: null, title: '', description: '' });
@@ -217,8 +201,12 @@ const MemorialDetail = () => {
       await apiService.deletePhoto(photoId);
       console.log('✅ 사진 삭제 성공');
       
-      // 사진 목록 다시 로드
-      await loadPhotos(id);
+      // 전체 memorial 정보 다시 로드 (사진 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.photos) {
+        setPhotos(updatedMemorial.photos);
+      }
       setShowPhotoModal(false);
       
       alert('사진이 삭제되었습니다.');
@@ -232,7 +220,15 @@ const MemorialDetail = () => {
     e.preventDefault();
     try {
       const response = await apiService.createComment(id, guestbookEntry);
-      setGuestbookList([response, ...guestbookList]);
+      console.log('✅ 댓글 생성 성공:', response);
+      
+      // 전체 memorial 정보 다시 로드 (댓글 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.comments) {
+        setGuestbookList(updatedMemorial.comments);
+      }
+      
       setGuestbookEntry({ name: '', content: '', relationship: '' });
       setShowGuestbookModal(false);
       alert('소중한 위로의 말씀이 등록되었습니다.');
@@ -268,11 +264,16 @@ const MemorialDetail = () => {
 
     try {
       await apiService.deleteComment(commentId);
+      console.log('✅ 댓글 삭제 성공');
       
-      // 댓글 목록에서 삭제된 댓글 제거
-      setGuestbookList(guestbookList.filter(comment => comment.commentId !== commentId));
+      // 전체 memorial 정보 다시 로드 (댓글 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.comments) {
+        setGuestbookList(updatedMemorial.comments);
+      }
+      
       setSelectedRibbon(null); // 상세보기 모달 닫기
-      
       alert('댓글이 삭제되었습니다.');
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -472,8 +473,8 @@ const MemorialDetail = () => {
                 <div className="memorial-profile-image" style={{
                   width: '140px', // 크기 축소
                   height: '175px', // 크기 축소
-                  background: memorial.imageUrl 
-                    ? `url(${memorial.imageUrl})` 
+                  background: memorial.profileImageUrl 
+                    ? `url(${memorial.profileImageUrl})` 
                     : 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
@@ -484,7 +485,7 @@ const MemorialDetail = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  {!memorial.imageUrl && (
+                  {!memorial.profileImageUrl && (
                     <i className="fas fa-user fa-3x" style={{ color: '#b8860b' }}></i>
                   )}
                 </div>
@@ -500,24 +501,21 @@ const MemorialDetail = () => {
                     <Row>
                       <Col md={6}>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>성함:</strong> {memorial.name}
+                          <strong>성함:</strong> {memorial.deceasedName}
                         </div>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>나이:</strong> {memorial.age}세
+                          <strong>나이:</strong> {memorial.deceasedAge}세
                         </div>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>성별:</strong> {memorial.gender === 'MALE' ? '남성' : '여성'}
+                          <strong>성별:</strong> {memorial.gender}
                         </div>
                       </Col>
                       <Col md={6}>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>생년월일:</strong> {memorial.birthOfDate}
+                          <strong>생년월일:</strong> {memorial.birthDate}
                         </div>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>별세일:</strong> {memorial.deceasedDate}
-                        </div>
-                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>고객ID:</strong> {memorial.customerId}
                         </div>
                       </Col>
                     </Row>
@@ -639,37 +637,139 @@ const MemorialDetail = () => {
                         minHeight: '350px'
                       }}
                     >
-                      {videoUrl ? (
-                          <video src={videoUrl} controls style={{ width: '100%', borderRadius: '12px' }} />
-                      ) : (
-                          <div className="memorial-video-container" style={{
-                            width: '100%',
-                            aspectRatio: '16 / 9',
-                            background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white'
-                          }}>
-                            <div className="text-center">
-                              <i className="fas fa-play-circle fa-3x mb-2" style={{ opacity: 0.8 }}></i>
-                              <h5>추모영상</h5>
-                              <p className="small">AI로 생성된 추모영상</p>
-                              <Button 
-                                variant="light"
-                                style={{
-                                  background: 'rgba(255, 251, 235, 0.9)',
-                                  color: '#2C1F14',
-                                  border: 'none'
-                                }}
-                              >
-                                <i className="fas fa-play me-2"></i>
-                                재생하기
-                              </Button>
+                      {(() => {
+                        if (!memorial.videos || memorial.videos.length === 0) {
+                          // 영상이 없는 경우
+                          return (
+                            <div className="memorial-video-container" style={{
+                              width: '100%',
+                              aspectRatio: '16 / 9',
+                              background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white'
+                            }}>
+                              <div className="text-center">
+                                <i className="fas fa-video fa-3x mb-3" style={{ opacity: 0.8 }}></i>
+                                <h5>추모영상이 없습니다</h5>
+                                <p className="small">관리 페이지에서 AI 추모영상을 생성할 수 있습니다</p>
+                                {canAccessSettings && (
+                                  <Button 
+                                    variant="light"
+                                    style={{
+                                      background: 'rgba(255, 251, 235, 0.9)',
+                                      color: '#2C1F14',
+                                      border: 'none'
+                                    }}
+                                    onClick={goToSettings}
+                                  >
+                                    <i className="fas fa-cog me-2"></i>
+                                    영상 생성하기
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                      )}
+                          );
+                        }
+
+                        const latestVideo = memorial.videos[0];
+                        
+                        if (latestVideo.status === 'COMPLETED' && latestVideo.videoUrl) {
+                          // 영상 생성 완료된 경우
+                          return (
+                            <div>
+                              <video 
+                                src={latestVideo.videoUrl} 
+                                controls 
+                                style={{ width: '100%', borderRadius: '12px' }}
+                                poster={memorial.profileImageUrl}
+                              />
+                              <div className="mt-3 text-center">
+                                <small className="text-muted">
+                                  <i className="fas fa-calendar-alt me-1"></i>
+                                  생성일: {new Date(latestVideo.completedAt || latestVideo.createdAt).toLocaleDateString('ko-KR')}
+                                </small>
+                                {latestVideo.keywords && (
+                                  <div className="mt-1">
+                                    <small className="text-muted">
+                                      <i className="fas fa-tags me-1"></i>
+                                      키워드: {latestVideo.keywords}
+                                    </small>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        } else if (latestVideo.status === 'REQUESTED') {
+                          // 영상 생성 중인 경우
+                          return (
+                            <div className="memorial-video-container" style={{
+                              width: '100%',
+                              aspectRatio: '16 / 9',
+                              background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white'
+                            }}>
+                              <div className="text-center">
+                                <div className="spinner-border mb-3" role="status">
+                                  <span className="visually-hidden">Loading...</span>
+                                </div>
+                                <h5>추모영상 생성 중</h5>
+                                <p className="small">AI가 감동적인 추모영상을 제작하고 있습니다</p>
+                                <p className="small">
+                                  <i className="fas fa-clock me-1"></i>
+                                  요청일: {new Date(latestVideo.createdAt).toLocaleDateString('ko-KR')}
+                                </p>
+                                {latestVideo.keywords && (
+                                  <p className="small">
+                                    <i className="fas fa-tags me-1"></i>
+                                    키워드: {latestVideo.keywords}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        } else {
+                          // 기타 상태 (에러 등)
+                          return (
+                            <div className="memorial-video-container" style={{
+                              width: '100%',
+                              aspectRatio: '16 / 9',
+                              background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white'
+                            }}>
+                              <div className="text-center">
+                                <i className="fas fa-exclamation-triangle fa-3x mb-3" style={{ opacity: 0.8 }}></i>
+                                <h5>영상 생성 실패</h5>
+                                <p className="small">영상 생성 중 문제가 발생했습니다</p>
+                                {canAccessSettings && (
+                                  <Button 
+                                    variant="light"
+                                    style={{
+                                      background: 'rgba(255, 251, 235, 0.9)',
+                                      color: '#2C1F14',
+                                      border: 'none'
+                                    }}
+                                    onClick={goToSettings}
+                                  >
+                                    <i className="fas fa-redo me-2"></i>
+                                    다시 생성하기
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
 
                     {/* 사진첩 콘텐츠 */}
@@ -1073,14 +1173,14 @@ const MemorialDetail = () => {
               </Card.Header>
               <Card.Body className="p-4" style={{ maxHeight: '500px', overflowY: 'auto' }}>
                 <div className="memorial-eulogy">
-                  {memorial.eulogy ? (
+                  {memorial.tribute ? (
                       <div className="eulogy-content" style={{ 
                         lineHeight: '1.8', 
                         fontSize: '0.9rem',
                         color: '#495057',
                         whiteSpace: 'pre-line'
                       }}>
-                          {memorial.eulogy}
+                          {memorial.tribute}
                       </div>
                   ) : (
                       <div className="text-center text-muted">

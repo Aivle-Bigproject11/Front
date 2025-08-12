@@ -26,8 +26,21 @@ export const mockMemorialService = (() => {
     const videos = mockVideos.filter(v => v.memorialId === id);
     const comments = mockComments.filter(c => c.memorialId === id);
 
-    // MemorialDetail.js는 response.data를 기대하므로, 실제 API 응답과 유사한 구조로 반환합니다.
-    return { data: { memorialInfo: memorial, photos, videos, comments } };
+    // 새로운 API 명세에 따른 응답 형식으로 반환
+    return {
+      memorialId: memorial.id,
+      profileImageUrl: memorial.profileImageUrl,
+      deceasedName: memorial.deceasedName || memorial.name,
+      deceasedAge: memorial.deceasedAge || memorial.age,
+      gender: memorial.gender,
+      birthDate: memorial.birthDate,
+      deceasedDate: memorial.deceasedDate,
+      tribute: memorial.tribute,
+      createdAt: memorial.createdAt,
+      photos: photos,
+      videos: videos,
+      comments: comments
+    };
   };
 
   const createMemorial = async (data) => { 
@@ -81,9 +94,97 @@ export const mockMemorialService = (() => {
     return newC; 
   };
 
+  const createVideo = async (memorialId, formData) => {
+    await delay(1000); // 영상 생성은 시간이 오래 걸림
+    const newVideo = {
+      id: mockVideos.length + 1,
+      videoId: mockVideos.length + 1,
+      memorialId: parseInt(memorialId),
+      title: `추모 영상 ${mockVideos.length + 1}`,
+      description: '새로운 추모 영상',
+      status: 'REQUESTED',
+      videoUrl: null,
+      thumbnailUrl: null,
+      outroImageUrl: 'https://picsum.photos/seed/outro/400/300',
+      keywords: ['추억', '사랑'],
+      createdAt: new Date().toISOString(),
+      completedAt: null
+    };
+    mockVideos.push(newVideo);
+    return newVideo;
+  };
+
+  const getVideo = async (videoId) => {
+    await delay(200);
+    const video = mockVideos.find(v => v.videoId === parseInt(videoId));
+    return video || null;
+  };
+
+  const deleteVideo = async (videoId) => {
+    await delay(300);
+    const index = mockVideos.findIndex(v => v.videoId === parseInt(videoId));
+    if (index > -1) {
+      mockVideos.splice(index, 1);
+      return { success: true };
+    }
+    return { success: false };
+  };
+
+  const createTribute = async (memorialId, data) => {
+    await delay(1000); // AI 처리 시뮬레이션
+    const memorial = mockMemorials.find(m => m.id === memorialId);
+    if (memorial) {
+      memorial.tribute = `[AI 생성된 추모사]\n\n${memorial.name}님을 기리며...\n\n키워드: ${data.keywords}`;
+      memorial.tributeGeneratedAt = new Date().toISOString();
+      return { tribute: memorial.tribute };
+    }
+    throw new Error('Memorial not found');
+  };
+
+  const updateTribute = async (memorialId, data) => {
+    await delay(300);
+    const memorial = mockMemorials.find(m => m.id === memorialId);
+    if (memorial) {
+      memorial.tribute = data.tribute;
+      memorial.tributeGeneratedAt = new Date().toISOString();
+      return { tribute: memorial.tribute };
+    }
+    throw new Error('Memorial not found');
+  };
+
+  const deleteTribute = async (memorialId) => {
+    await delay(300);
+    const memorial = mockMemorials.find(m => m.id === memorialId);
+    if (memorial) {
+      memorial.tribute = null;
+      memorial.tributeGeneratedAt = null;
+      return { success: true };
+    }
+    return { success: false };
+  };
+
   // API 명세와 다른 팀의 realApiService 함수 이름 사이의 간극을 맞추기 위한 별칭(alias)
   const getMemorial = getMemorialById;
   const getPhotosForMemorial = getPhotos;
 
-  return { getMemorials, getMemorial, getMemorialById, getMemorialDetails, createMemorial, updateMemorial, deleteMemorial, getPhotos, getPhotosForMemorial, addPhoto, getComments, addComment };
+  return { 
+    getMemorials, 
+    getMemorial, 
+    getMemorialById, 
+    getMemorialDetails, 
+    createMemorial, 
+    updateMemorial, 
+    deleteMemorial, 
+    getPhotos, 
+    getPhotosForMemorial, 
+    addPhoto, 
+    getComments, 
+    addComment,
+    createVideo,
+    getVideo,
+    deleteVideo,
+    createTribute,
+    updateTribute,
+    deleteTribute
+  };
 })();

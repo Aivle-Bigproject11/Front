@@ -49,12 +49,35 @@ const Menu4 = () => {
             };
           });
           
-          console.log('📋 추모관 리스트 길이:', memorialsList.length);
-          console.log('📋 첫 번째 추모관 구조:', memorialsList[0]);
-          console.log('📋 첫 번째 추모관 ID:', memorialsList[0]?.id);
-          console.log('📋 첫 번째 추모관 키들:', Object.keys(memorialsList[0] || {}));
+          // 각 추모관에 대해 영상 및 추모사 상태를 API로 확인
+          const memorialsWithStatus = await Promise.all(
+            memorialsList.map(async (memorial) => {
+              try {
+                const detailResponse = await apiService.get(`/memorials/${memorial.id}/detail`);
+                const detailData = detailResponse.data;
+                
+                return {
+                  ...memorial,
+                  hasVideo: detailData.videos && detailData.videos.length > 0,
+                  tribute: detailData.tribute || null
+                };
+              } catch (error) {
+                console.error(`❌ ${memorial.id} 상태 조회 실패:`, error);
+                return {
+                  ...memorial,
+                  hasVideo: false,
+                  tribute: null
+                };
+              }
+            })
+          );
           
-          setMemorials(memorialsList);
+          console.log('📋 추모관 리스트 길이:', memorialsWithStatus.length);
+          console.log('📋 첫 번째 추모관 구조:', memorialsWithStatus[0]);
+          console.log('📋 첫 번째 추모관 ID:', memorialsWithStatus[0]?.id);
+          console.log('📋 첫 번째 추모관 키들:', Object.keys(memorialsWithStatus[0] || {}));
+          
+          setMemorials(memorialsWithStatus);
         } else {
           console.error('❌ 예상하지 못한 응답 구조:', response);
           setMemorials([]);
@@ -319,11 +342,11 @@ const Menu4 = () => {
                         {memorial.age}세
                       </p>
                       <div className="position-absolute top-0 end-0 m-2">
-                        <Badge bg={memorial.videoUrl ? 'success' : 'danger'} className="px-2 py-1 me-1">
-                          <i className={`fas ${memorial.videoUrl ? 'fa-check' : 'fa-times'} me-1`}></i> AI 영상
+                        <Badge bg={memorial.hasVideo ? 'success' : 'danger'} className="px-2 py-1 me-1">
+                          <i className={`fas ${memorial.hasVideo ? 'fa-check' : 'fa-times'} me-1`}></i> AI 영상
                         </Badge>
-                        <Badge bg={memorial.eulogy ? 'success' : 'danger'} className="px-2 py-1">
-                          <i className={`fas ${memorial.eulogy ? 'fa-check' : 'fa-times'} me-1`}></i> 추모사
+                        <Badge bg={memorial.tribute ? 'success' : 'danger'} className="px-2 py-1">
+                          <i className={`fas ${memorial.tribute ? 'fa-check' : 'fa-times'} me-1`}></i> 추모사
                         </Badge>
                       </div>
                     </div>
