@@ -51,7 +51,7 @@ const realApiService = {
   deleteTribute: async (id) => (await api.delete(`/memorials/${id}/tribute`)).data,
 
   // 장례서류 관련 API
-//   getFuneralInfos: () => api.get('/funeralInfos'),
+  getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
   getObituaries: async () => (await api.get('/obituaries')).data,
   getDeathReports: async () => (await api.get('/deathReports')).data,
   getSchedules: async () => (await api.get('/schedules')).data,
@@ -97,7 +97,6 @@ const realApiService = {
   getMemorialByCode: async (code) => (await api.get(`/memorials?code=${code}`)).data,
 
   // Other Services
-  getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
   getDashboardData: async () => (await api.get('/dashboard')).data,
   getAnalyticsData: async () => (await api.get('/analytics')).data,
   getUsers: async () => (await api.get('/users')).data,
