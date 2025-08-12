@@ -64,7 +64,8 @@ const Menu1_5 = () => {
     if (savedCustomer) {
       const customer = JSON.parse(savedCustomer);
       
-      const birthDate = customer.birthOfDate ? new Date(customer.birthOfDate) : null;
+      const rawBirthDate = customer.birthDate || customer.birthOfDate || customer.deceasedBirthOfDate;
+      const birthDate = rawBirthDate ? new Date(rawBirthDate) : null;
       const deathDate = customer.deceasedDate ? new Date(customer.deceasedDate) : null;
       let deathTime = '';
       if (deathDate) {
