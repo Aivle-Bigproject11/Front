@@ -299,14 +299,32 @@ const MemorialConfig = () => {
                 console.log('🔗 CreateTribute 요청 데이터:', eulogyRequest);
                 console.log('🔗 Memorial ID:', id);
                 console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8088'}/memorials/${id}/tribute`);
+                console.log('🔗 추모사 생성 시작... (최대 60초 소요)');
                 
                 const response = await apiService.createTribute(id, eulogyRequest);
                 console.log('✅ CreateTribute API 응답:', response);
                 setGeneratedEulogy(response.tribute || response);
                 alert('AI 추모사가 생성되었습니다.');
             } catch (error) {
-                console.error('Error generating eulogy:', error);
-                alert('추모사 생성에 실패했습니다.');
+                console.error('❌ 추모사 생성 실패:', error);
+                
+                // 에러 타입별 상세 메시지
+                if (error.code === 'ECONNABORTED') {
+                    alert('추모사 생성 시간이 초과되었습니다. AI 서버가 바쁠 수 있으니 잠시 후 다시 시도해주세요.');
+                } else if (error.response) {
+                    console.error('응답 상태:', error.response.status);
+                    console.error('응답 데이터:', error.response.data);
+                    
+                    if (error.response.status === 500) {
+                        alert('서버 오류로 인해 추모사 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+                    } else {
+                        alert(`추모사 생성에 실패했습니다. (오류 코드: ${error.response.status})`);
+                    }
+                } else if (error.request) {
+                    alert('서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.');
+                } else {
+                    alert('추모사 생성 중 예상치 못한 오류가 발생했습니다.');
+                }
             } finally {
                 setIsEulogyLoading(false);
             }
@@ -1027,7 +1045,12 @@ const MemorialConfig = () => {
                                                 <div className="spinner-border" role="status" style={{ color: '#B8860B' }}>
                                                     <span className="visually-hidden">Loading...</span>
                                                 </div>
-                                                <p className="mt-2" style={{ color: '#2C1F14' }}>추모사를 생성 중입니다. 잠시만 기다려주세요...</p>
+                                                <p className="mt-2" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                                                    AI 추모사를 생성 중입니다...
+                                                </p>
+                                                <p className="mt-1" style={{ color: '#6C757D', fontSize: '0.9rem' }}>
+                                                    처리에 최대 1분 정도 소요될 수 있습니다.
+                                                </p>
                                             </div>
                                         )}
 
@@ -1049,14 +1072,16 @@ const MemorialConfig = () => {
                                                     }}
                                                 />
                                                 <Button
+                                                    disabled={isEulogyLoading}
                                                     className="mt-2"
                                                     style={{
-                                                        background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                        background: isEulogyLoading ? '#6C757D' : 'linear-gradient(135deg, #B8860B, #CD853F)',
                                                         border: 'none',
                                                         borderRadius: '12px',
                                                         padding: '12px 24px',
                                                         fontWeight: '600',
-                                                        boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
+                                                        boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                                                        opacity: isEulogyLoading ? 0.7 : 1
                                                     }}
                                                     onClick={async () => {
                                                         try {
@@ -1105,23 +1130,38 @@ const MemorialConfig = () => {
                                     </Button>
                                     <Button
                                         type="submit"
+                                        disabled={isVideoLoading || isEulogyLoading}
                                         style={{
                                             borderRadius: '12px',
                                             padding: '12px 24px',
-                                            background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
+                                            background: (isVideoLoading || isEulogyLoading) ? 
+                                                '#6C757D' : 
+                                                'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
                                             border: 'none',
                                             fontWeight: '600',
-                                            boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
+                                            boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                                            opacity: (isVideoLoading || isEulogyLoading) ? 0.7 : 1
                                         }}
                                     >
-                                        <i className={`fas ${ 
-                                            activeTab === 'basic' ? 'fa-save' :
-                                            activeTab === 'video' ? 'fa-play' :
-                                            'fa-magic'
-                                        } me-2`}></i>
-                                        {activeTab === 'basic' ? '정보 수정' :
-                                         activeTab === 'video' ? '영상 생성' :
-                                         '추모사 생성'}
+                                        {(isVideoLoading || isEulogyLoading) ? (
+                                            <>
+                                                <div className="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                                처리 중...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className={`fas ${ 
+                                                    activeTab === 'basic' ? 'fa-save' :
+                                                    activeTab === 'video' ? 'fa-play' :
+                                                    'fa-magic'
+                                                } me-2`}></i>
+                                                {activeTab === 'basic' ? '정보 수정' :
+                                                 activeTab === 'video' ? '영상 생성' :
+                                                 '추모사 생성'}
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
                             </Form>
