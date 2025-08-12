@@ -96,9 +96,12 @@ const Menu1_1 = () => {
       });
 
       const transformedData = funeralInfos.map(info => {
-        const isObituaryCompleted = obituaryStatusMap.get(info.funeralInfoId) === 'COMPLETED';
-        const isDeathCertificateCompleted = deathReportStatusMap.get(info.funeralInfoId) === 'COMPLETED';
-        const isScheduleCompleted = scheduleStatusMap.get(info.funeralInfoId) === 'COMPLETED';
+        const selfHref = info._links?.self?.href;
+        const funeralInfoId = selfHref ? parseInt(selfHref.split('/').pop(), 10) : null;
+
+        const isObituaryCompleted = obituaryStatusMap.get(funeralInfoId) === 'COMPLETED';
+        const isDeathCertificateCompleted = deathReportStatusMap.get(funeralInfoId) === 'COMPLETED';
+        const isScheduleCompleted = scheduleStatusMap.get(funeralInfoId) === 'COMPLETED';
 
         const documents = {
           obituary: isObituaryCompleted,
