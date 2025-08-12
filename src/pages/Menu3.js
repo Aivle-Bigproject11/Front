@@ -56,8 +56,8 @@ const Menu3 = () => {
                 response = await recommendationService.getAllCustomers();
             } else {
                 const apiParams = {
-                    ageGroup: String(filters.age) || undefined,
-                    gender: filters.gender.length > 0 ? String(filters.gender[0]) : undefined,
+                    ageGroup: filters.age || undefined,
+                    gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
                     disease: filters.disease.length > 0 ? filters.disease[0] : undefined,
                     isMarried: filters.isMarried.length > 0 ? (filters.isMarried[0] === '기혼') : undefined,
                     hasChildren: filters.hasChildren.length > 0 ? (filters.hasChildren[0] === '유') : undefined,
@@ -119,7 +119,7 @@ const Menu3 = () => {
 
             const requestData = {
                 ageGroup: filters.age || undefined,
-                gender: filters.gender[0] || undefined,
+                gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
                 disease: filters.disease[0] || undefined,
                 family: familyValue,
             };
@@ -162,7 +162,7 @@ const Menu3 = () => {
         try {
             const filterCriteria = {
                 ageGroup: filters.age || undefined,
-                gender: filters.gender[0] || undefined,
+                gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
                 disease: filters.disease[0] || undefined,
                 family: generatedMessageData.family || undefined,
             };
@@ -213,7 +213,19 @@ const Menu3 = () => {
                                 <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" checked={filters.disease.includes('유')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" checked={filters.disease.includes('무')} onChange={handleCheckboxChange} /></div>
                                 <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" checked={filters.isMarried.includes('기혼')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" checked={filters.isMarried.includes('미혼')} onChange={handleCheckboxChange} /></div>
                                 <div className="d-flex align-items-center mb-3"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" checked={filters.hasChildren.includes('유')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" checked={filters.hasChildren.includes('무')} onChange={handleCheckboxChange} /></div>
-                                <Row className="g-3"><Col xs={12}><Form.Label style={{color: '#4A3728'}}>나이대</Form.Label><Form.Select name="age" value={filters.age} onChange={handleInputChange}><option value="">전체</option><option value="20-29">20대</option><option value="30-39">30대</option><option value="40-49">40대</option><option value="50-59">50대</option><option value="60-150">60대 이상</option></Form.Select></Col></Row>
+                                <Row className="g-3">
+                                    <Col xs={12}>
+                                        <Form.Label style={{color: '#4A3728'}}>나이대</Form.Label>
+                                        <Form.Select name="age" value={filters.age} onChange={handleInputChange}>
+                                            <option value="">전체</option>
+                                            <option value="20대">20대</option>
+                                            <option value="30대">30대</option>
+                                            <option value="40대">40대</option>
+                                            <option value="50대">50대</option>
+                                            <option value="60대 이상">60대 이상</option>
+                                        </Form.Select>
+                                    </Col>
+                                </Row>
                                 <Button className="btn-search" onClick={handleSearch}><Search size={18} className="me-2" />고객 조회</Button>
                             </Form>
                         </div>
