@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -128,39 +128,6 @@ const MemorialConfig = () => {
         });
     };
 
-    // 이미지 크기 조정 함수
-    const resizeImage = (file, maxWidth = 800, maxHeight = 600, quality = 0.8) => {
-        return new Promise((resolve) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-            
-            img.onload = () => {
-                // 비율 유지하면서 크기 조정
-                let { width, height } = img;
-                if (width > height) {
-                    if (width > maxWidth) {
-                        height = (height * maxWidth) / width;
-                        width = maxWidth;
-                    }
-                } else {
-                    if (height > maxHeight) {
-                        width = (width * maxHeight) / height;
-                        height = maxHeight;
-                    }
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                
-                ctx.drawImage(img, 0, 0, width, height);
-                canvas.toBlob(resolve, 'image/jpeg', quality);
-            };
-            
-            img.src = URL.createObjectURL(file);
-        });
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -196,13 +163,13 @@ const MemorialConfig = () => {
             }
         } else if (activeTab === 'video') {
             // 영상 생성 처리
-            if (!slideshowPhotos || slideshowPhotos.length === 0) {
-                alert("슬라이드쇼용 사진을 최소 1장 이상 선택해주세요.");
+            if (!slideshowPhotos || slideshowPhotos.length < 9) {
+                alert("슬라이드쇼용 사진을 최소 9장 이상 선택해주세요.");
                 return;
             }
             
-            if (slideshowPhotos.length > 10) {
-                alert("슬라이드쇼 사진은 최대 10개까지 선택 가능합니다.");
+            if (slideshowPhotos.length > 15) {
+                alert("슬라이드쇼 사진은 최대 15개까지 선택 가능합니다.");
                 return;
             }
             
@@ -227,16 +194,13 @@ const MemorialConfig = () => {
                 formData.append('keywords', keywordsText);
                 formData.append('imagesCount', slideshowPhotos.length);
                 
-                // outroImage 압축
-                const compressedOutroImage = await resizeImage(animatedPhoto, 800, 600, 0.7);
-                formData.append('outroImage', compressedOutroImage, 'outro.jpg');
+                // outroImage 원본 그대로 사용
+                formData.append('outroImage', animatedPhoto);
                 
-                // 슬라이드쇼 이미지들 압축 후 추가
-                for (let i = 0; i < slideshowPhotos.length; i++) {
-                    const photo = slideshowPhotos[i];
-                    const compressedPhoto = await resizeImage(photo, 800, 600, 0.7);
-                    formData.append('images', compressedPhoto, `image_${i}.jpg`);
-                }
+                // 슬라이드쇼 이미지들 원본 그대로 추가
+                slideshowPhotos.forEach((photo, index) => {
+                    formData.append('images', photo);
+                });
 
                 // FormData 내용 디버깅
                 console.log('🔗 FormData 내용:');
@@ -251,7 +215,7 @@ const MemorialConfig = () => {
                 console.log('🔗 CreateVideo 요청 시작 - Memorial ID:', id);
                 console.log('🔗 Keywords:', keywordsText);
                 console.log('🔗 Images Count:', slideshowPhotos.length);
-                console.log('🔗 이미지 압축 시작...');
+                console.log('🔗 영상 생성 시작...');
                 
                 const response = await apiService.createVideo(id, formData);
                 console.log('✅ CreateVideo 응답:', response);
@@ -793,20 +757,28 @@ const MemorialConfig = () => {
                                             marginBottom: '24px'
                                         }}>
                                             <i className="fas fa-info-circle me-2" style={{ color: '#B8860B' }}></i>
-                                            AI 기술을 활용하여 고인의 사진들로 감동적인 추모 영상을 제작합니다. 9장의 사진과 움직일 사진 1장을 선택하고, 키워드 5개를 입력해주세요.
+                                            AI 기술을 활용하여 고인의 사진들로 감동적인 추모 영상을 제작합니다. 9~15장의 사진과 움직일 사진 1장을 선택하고, 키워드 5개를 입력해주세요.
                                         </div>
 
                                         <Row>
                                             <Col md={6}>
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                        <i className="fas fa-images me-2" style={{ color: '#B8860B' }}></i>슬라이드쇼 사진 (9장)
-                                                    </Form.Label>
+                                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                                        <Form.Label className="fw-bold mb-0" style={{ color: '#2C1F14' }}>
+                                                            <i className="fas fa-images me-2" style={{ color: '#B8860B' }}></i>슬라이드쇼 사진 (9~15장)
+                                                        </Form.Label>
+                                                        <Badge 
+                                                            bg={slideshowPhotos.length >= 9 && slideshowPhotos.length <= 15 ? "success" : "warning"}
+                                                            style={{ fontSize: '0.8rem' }}
+                                                        >
+                                                            {slideshowPhotos.length}/15장 선택됨
+                                                        </Badge>
+                                                    </div>
                                                     <Form.Control
                                                         type="file"
                                                         multiple
                                                         accept="image/*"
-                                                        onChange={(e) => setSlideshowPhotos(Array.from(e.target.files).slice(0, 9))}
+                                                        onChange={(e) => setSlideshowPhotos(Array.from(e.target.files).slice(0, 15))}
                                                         style={{ 
                                                             borderRadius: '12px', 
                                                             padding: '12px 16px',
@@ -816,7 +788,9 @@ const MemorialConfig = () => {
                                                         }}
                                                     />
                                                     <Form.Text className="text-muted">
-                                                        영상에 포함될 9장의 사진을 선택하세요.
+                                                        영상에 포함될 9~15장의 사진을 선택하세요. 
+                                                        {slideshowPhotos.length < 9 && <span className="text-warning"> (최소 {9 - slideshowPhotos.length}장 더 필요)</span>}
+                                                        {slideshowPhotos.length > 15 && <span className="text-danger"> (최대 15장까지만 가능)</span>}
                                                     </Form.Text>
                                                 </Form.Group>
 
