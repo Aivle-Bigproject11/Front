@@ -98,7 +98,7 @@ const realApiService = {
   getMemorialByCode: async (code) => (await api.get(`/memorials?code=${code}`)).data,
 
   // Other Services
-  getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
+//  getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
   getDashboardData: async () => (await api.get('/dashboard')).data,
   getAnalyticsData: async () => (await api.get('/analytics')).data,
   getUsers: async () => (await api.get('/users')).data,
