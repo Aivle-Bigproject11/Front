@@ -238,6 +238,7 @@ const Menu1_2 = () => {
                 }
 
                 updateErrors(name, isValidTimeFormat); // Call updateErrors for the time field
+                updateErrors(fieldName, isValidTimeFormat); // Also update the main datetime field
 
                 return {
                     ...prev,
