@@ -23,7 +23,6 @@ const Menu3 = () => {
     const [generatedMessageData, setGeneratedMessageData] = useState(null);
     const [showTransmissionCompletePopup, setShowTransmissionCompletePopup] = useState(false);
     
-    // ### CHANGED ###: '수정 모드'를 제어하기 위한 상태 추가
     const [isEditing, setIsEditing] = useState(false);
 
     // === 데이터 로딩 및 필터링 로직 (useEffect) ===
@@ -146,7 +145,6 @@ const Menu3 = () => {
         }
     };
     
-    // ### CHANGED ###: 새로운 수정 버튼 핸들러
     const handleToggleEdit = () => {
         setIsEditing(!isEditing);
     };
@@ -174,8 +172,8 @@ const Menu3 = () => {
                 message: messagePreview,
                 serviceId1: generatedMessageData.serviceId1,
                 serviceId2: generatedMessageData.serviceId2,
-                imageUrl1: generatedMessageData.service1ImageUrl1,
-                imageUrl2: generatedMessageData.service2ImageUrl2,
+                imageUrl1: generatedMessageData.service1ImageUrl, 
+                imageUrl2: generatedMessageData.service2ImageUrl, 
                 detailedUrl1: generatedMessageData.detailedUrl1,
                 detailedUrl2: generatedMessageData.detailedUrl2,
                 filterCriteria: filterCriteria,
@@ -270,10 +268,8 @@ const Menu3 = () => {
                                     <Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%', display: 'flex', flexDirection: 'column' }}>
                                         <Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)', flexShrink: 0}}>메시지 미리보기</Card.Header>
                                         <Card.Body className="d-flex flex-column" style={{ flexGrow: 1, overflowY: 'auto' }}>
-                                            {/* ### CHANGED ###: isEditing 상태에 따라 readOnly 속성 제어 */}
                                             <Form.Control as="textarea" rows={8} value={messagePreview} onChange={(e) => setMessagePreview(e.target.value)} readOnly={!isEditing} className="mb-3 flex-grow-1" style={{whiteSpace: 'pre-wrap', backgroundColor: isEditing ? '#fff' : '#f8f9fa'}} />
                                             <div className="d-flex justify-content-end gap-2">
-                                                {/* ### CHANGED ###: 새로운 수정/완료 버튼 로직 */}
                                                 <Button variant="secondary" onClick={handleToggleEdit} disabled={!messagePreview}>
                                                     {isEditing ? <CheckCircle size={16} className="me-2"/> : <Edit size={16} className="me-2"/>}
                                                     {isEditing ? '수정 완료' : '메시지 수정'}
@@ -294,14 +290,22 @@ const Menu3 = () => {
                                                 messageHistory.length > 0 ? (
                                                     messageHistory.map(history => {
                                                         const recommendedServices = [];
-                                                        // ### CHANGED ###: history 객체에서 imageUrl1, imageUrl2를 찾도록 함
-                                                        if(history.service1 && history.imageUrl1) recommendedServices.push({ serviceName: history.service1, imageUrl: history.imageUrl1 });
-                                                        if(history.service2 && history.imageUrl2) recommendedServices.push({ serviceName: history.service2, imageUrl: history.imageUrl2 });
+                                                        if (history.imageUrl1) {
+                                                            recommendedServices.push({ 
+                                                                serviceName: `추천 서비스 1 (ID: ${history.serviceId1})`, 
+                                                                imageUrl: history.imageUrl1 
+                                                            });
+                                                        }
+                                                        if (history.imageUrl2) {
+                                                            recommendedServices.push({ 
+                                                                serviceName: `추천 서비스 2 (ID: ${history.serviceId2})`, 
+                                                                imageUrl: history.imageUrl2 
+                                                            });
+                                                        }
 
                                                         return (
                                                             <div key={history.id} className="mb-4">
                                                                 <h6><strong>발송일시:</strong> {new Date(history.createMessageDate).toLocaleString()}</h6>
-                                                                {/* ### CHANGED ###: 이미지가 있을 때만 이미지 영역을 렌더링 */}
                                                                 {recommendedServices.length > 0 && (
                                                                     <div className="d-flex gap-2 my-2">
                                                                         {recommendedServices.map(service => (
@@ -348,6 +352,7 @@ const Menu3 = () => {
                 .content-scroll-area::-webkit-scrollbar-thumb, .sidebar-scroll-area::-webkit-scrollbar-thumb, .card-body::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
                 .btn-golden { background: linear-gradient(135deg, #D4AF37, #F5C23E); border: none; color: #2C1F14; font-weight: 700; box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35); transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; }
                 .btn-golden:hover { background: linear-gradient(135deg, #CAA230, #E8B530); color: #2C1F14; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45); }
+                .btn-golden:disabled { background: #ccc; box-shadow: none; transform: none; }
                 
                 /* 조회 버튼 스타일 추가 */
                 .btn-search {
