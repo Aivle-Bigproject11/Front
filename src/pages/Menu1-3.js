@@ -108,17 +108,8 @@ const Menu1_3 = () => {
         }
     };
 
-    const loadPreview = async (docType) => {
+    const loadPreview = (fileUrl) => {
         try {
-            let fileUrl = null;
-            if (docType === 'obituary') {
-                fileUrl = obituaryFileUrl;
-            } else if (docType === 'deathCertificate') {
-                fileUrl = deathReportFileUrl;
-            } else if (docType === 'schedule') {
-                fileUrl = scheduleFileUrl;
-            }
-
             if (fileUrl) {
                 // Determine file type (simple check based on extension)
                 const isPdf = fileUrl.toLowerCase().endsWith('.pdf');
@@ -134,7 +125,15 @@ const Menu1_3 = () => {
 
     const handleDocumentSelect = (docType) => {
         setSelectedDoc(docType);
-        loadPreview(docType);
+        let fileUrl = null;
+        if (docType === 'obituary') {
+            fileUrl = obituaryFileUrl;
+        } else if (docType === 'deathCertificate') {
+            fileUrl = deathReportFileUrl;
+        } else if (docType === 'schedule') {
+            fileUrl = scheduleFileUrl;
+        }
+        loadPreview(fileUrl);
     };
 
     const handleGenerateDocument = async (docType) => {
@@ -185,7 +184,7 @@ const Menu1_3 = () => {
                 if (docType === 'obituary') setObituaryFileUrl(initialResponse.data[fileUrlKey]);
                 else if (docType === 'deathCertificate') setDeathReportFileUrl(initialResponse.data[fileUrlKey]);
                 else if (docType === 'schedule') setScheduleFileUrl(initialResponse.data[fileUrlKey]);
-                loadPreview(docType); // Update preview
+                loadPreview(initialResponse.data[fileUrlKey]); // Update preview
                 return true; // Indicate success
             } else if (initialStatus === 'PENDING') {
                 setSuccessMessage(`${documentUtils.getDocumentName(docType)} 생성 요청 완료. 문서 생성 중...`);
@@ -209,7 +208,7 @@ const Menu1_3 = () => {
                                 if (docType === 'obituary') setObituaryFileUrl(pollResponse.data[fileUrlKey]);
                                 else if (docType === 'deathCertificate') setDeathReportFileUrl(pollResponse.data[fileUrlKey]);
                                 else if (docType === 'schedule') setScheduleFileUrl(pollResponse.data[fileUrlKey]);
-                                loadPreview(docType);
+                                loadPreview(pollResponse.data[fileUrlKey]);
                                 resolve(true);
                             } else if (currentStatus === 'PENDING') {
                                 setTimeout(pollDocumentStatus, 1000);
