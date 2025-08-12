@@ -26,8 +26,21 @@ export const mockMemorialService = (() => {
     const videos = mockVideos.filter(v => v.memorialId === id);
     const comments = mockComments.filter(c => c.memorialId === id);
 
-    // MemorialDetail.js는 response.data를 기대하므로, 실제 API 응답과 유사한 구조로 반환합니다.
-    return { data: { memorialInfo: memorial, photos, videos, comments } };
+    // 새로운 API 명세에 따른 응답 형식으로 반환
+    return {
+      memorialId: memorial.id,
+      profileImageUrl: memorial.profileImageUrl,
+      deceasedName: memorial.deceasedName || memorial.name,
+      deceasedAge: memorial.deceasedAge || memorial.age,
+      gender: memorial.gender,
+      birthDate: memorial.birthDate,
+      deceasedDate: memorial.deceasedDate,
+      tribute: memorial.tribute,
+      createdAt: memorial.createdAt,
+      photos: photos,
+      videos: videos,
+      comments: comments
+    };
   };
 
   const createMemorial = async (data) => { 

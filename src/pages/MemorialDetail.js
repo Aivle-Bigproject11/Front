@@ -79,25 +79,19 @@ const MemorialDetail = () => {
         const response = await apiService.getMemorialDetails(id);
         console.log('✅ MemorialDetail API 응답 성공:', response);
         
-        // API 명세에 따른 응답 구조 처리
+        // 새로운 API 명세에 따른 응답 구조 처리
         setMemorial(response); // 응답 자체가 memorial 정보
         
-        // 사진 목록 로드
-        try {
-          await loadPhotos(id);
-        } catch (photoError) {
-          console.warn("사진 목록 로드 실패 (CORS 문제):", photoError.response?.status);
-          // 사진 목록 로드 실패는 전체 페이지 로드를 방해하지 않음
-          setPhotos([]);
+        // 사진 목록과 댓글 목록은 응답에 포함되어 있음
+        if (response.photos) {
+          console.log('✅ 사진 목록 로드 성공:', response.photos);
+          setPhotos(response.photos);
         }
         
-        // 댓글 목록 로드 (현재 API 명세에 없음 - 백엔드 구현 후 활성화)
-        // try {
-        //   const commentsResponse = await apiService.getComments(id);
-        //   setGuestbookList(commentsResponse || []);
-        // } catch (commentError) {
-        //   console.warn("댓글 목록 로드 실패 (백엔드 미지원):", commentError.response?.status);
-        //   // 댓글 목록 로드 실패는 전체 페이지 로드를 방해하지 않음
+        if (response.comments) {
+          console.log('✅ 댓글 목록 로드 성공:', response.comments);
+          setGuestbookList(response.comments);
+        }
         //   setGuestbookList([]);
         // }
         
@@ -125,22 +119,6 @@ const MemorialDetail = () => {
     fetchMemorialDetails();
   }, [id, navigate]); // id와 navigate를 의존성으로 추가
 
-  // 사진 목록 로드 함수
-  const loadPhotos = async (memorialId) => {
-    try {
-      console.log('🔗 사진 목록 로드 시작 - Memorial ID:', memorialId);
-      const photosResponse = await apiService.getPhotosForMemorial(memorialId);
-      console.log('✅ 사진 목록 로드 성공:', photosResponse);
-      
-      // API 명세에 따라 _embedded.photos 구조로 응답이 올 수 있음
-      const photosList = photosResponse._embedded?.photos || photosResponse || [];
-      setPhotos(photosList);
-    } catch (error) {
-      console.error('❌ 사진 목록 로드 실패:', error);
-      // 사진 로드 실패는 치명적이지 않으므로 에러 메시지만 로그
-    }
-  };
-
   // 사진 업로드 함수
   const handlePhotoUpload = async (e) => {
     e.preventDefault();
@@ -161,8 +139,12 @@ const MemorialDetail = () => {
       const response = await apiService.uploadPhoto(id, formData);
       console.log('✅ 사진 업로드 성공:', response);
 
-      // 사진 목록 다시 로드
-      await loadPhotos(id);
+      // 전체 memorial 정보 다시 로드 (사진 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.photos) {
+        setPhotos(updatedMemorial.photos);
+      }
       
       // 폼 초기화
       setPhotoForm({ photo: null, title: '', description: '' });
@@ -217,8 +199,12 @@ const MemorialDetail = () => {
       await apiService.deletePhoto(photoId);
       console.log('✅ 사진 삭제 성공');
       
-      // 사진 목록 다시 로드
-      await loadPhotos(id);
+      // 전체 memorial 정보 다시 로드 (사진 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.photos) {
+        setPhotos(updatedMemorial.photos);
+      }
       setShowPhotoModal(false);
       
       alert('사진이 삭제되었습니다.');
@@ -232,7 +218,15 @@ const MemorialDetail = () => {
     e.preventDefault();
     try {
       const response = await apiService.createComment(id, guestbookEntry);
-      setGuestbookList([response, ...guestbookList]);
+      console.log('✅ 댓글 생성 성공:', response);
+      
+      // 전체 memorial 정보 다시 로드 (댓글 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.comments) {
+        setGuestbookList(updatedMemorial.comments);
+      }
+      
       setGuestbookEntry({ name: '', content: '', relationship: '' });
       setShowGuestbookModal(false);
       alert('소중한 위로의 말씀이 등록되었습니다.');
@@ -268,11 +262,16 @@ const MemorialDetail = () => {
 
     try {
       await apiService.deleteComment(commentId);
+      console.log('✅ 댓글 삭제 성공');
       
-      // 댓글 목록에서 삭제된 댓글 제거
-      setGuestbookList(guestbookList.filter(comment => comment.commentId !== commentId));
+      // 전체 memorial 정보 다시 로드 (댓글 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.comments) {
+        setGuestbookList(updatedMemorial.comments);
+      }
+      
       setSelectedRibbon(null); // 상세보기 모달 닫기
-      
       alert('댓글이 삭제되었습니다.');
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -472,8 +471,8 @@ const MemorialDetail = () => {
                 <div className="memorial-profile-image" style={{
                   width: '140px', // 크기 축소
                   height: '175px', // 크기 축소
-                  background: memorial.imageUrl 
-                    ? `url(${memorial.imageUrl})` 
+                  background: memorial.profileImageUrl 
+                    ? `url(${memorial.profileImageUrl})` 
                     : 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
@@ -484,7 +483,7 @@ const MemorialDetail = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  {!memorial.imageUrl && (
+                  {!memorial.profileImageUrl && (
                     <i className="fas fa-user fa-3x" style={{ color: '#b8860b' }}></i>
                   )}
                 </div>
@@ -500,24 +499,21 @@ const MemorialDetail = () => {
                     <Row>
                       <Col md={6}>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>성함:</strong> {memorial.name}
+                          <strong>성함:</strong> {memorial.deceasedName}
                         </div>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>나이:</strong> {memorial.age}세
+                          <strong>나이:</strong> {memorial.deceasedAge}세
                         </div>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>성별:</strong> {memorial.gender === 'MALE' ? '남성' : '여성'}
+                          <strong>성별:</strong> {memorial.gender}
                         </div>
                       </Col>
                       <Col md={6}>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>생년월일:</strong> {memorial.birthOfDate}
+                          <strong>생년월일:</strong> {memorial.birthDate}
                         </div>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>별세일:</strong> {memorial.deceasedDate}
-                        </div>
-                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>고객ID:</strong> {memorial.customerId}
                         </div>
                       </Col>
                     </Row>

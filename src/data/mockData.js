@@ -13,12 +13,15 @@ export const mockMemorials = names.map((name, index) => {
   const id = generateUUID();
   return {
     id: id,
+    memorialId: id, // 새 API 명세에 맞춤
     customerId: 1000 + index,
     userId: `user${index+1}`,
     profileImageUrl: `https://picsum.photos/seed/${name}/200/200`,
     imageUrl: `https://picsum.photos/seed/${name}/200/200`, // MemorialConfig.js에서 사용하는 속성명
     name: name,
+    deceasedName: name, // 새 API 명세에 맞춤
     age: deceasedYear - birthYear,
+    deceasedAge: deceasedYear - birthYear, // 새 API 명세에 맞춤
     birthDate: `${birthYear}-01-01`,
     birthOfDate: `${birthYear}-01-01`, // MemorialConfig.js에서 사용하는 속성명
     deceasedDate: `${deceasedYear}-01-01`,
@@ -39,15 +42,72 @@ export const mockMemorials = names.map((name, index) => {
 });
 
 export const mockPhotos = [
-  { id: 1, memorialId: mockMemorials[0].id, title: '가족사진', description: '행복했던 시절', url: 'https://picsum.photos/seed/photo1/400/300', uploadedAt: new Date().toISOString() },
-  { id: 2, memorialId: mockMemorials[0].id, title: '여행', description: '제주도에서', url: 'https://picsum.photos/seed/photo2/400/300', uploadedAt: new Date().toISOString() },
-  { id: 3, memorialId: mockMemorials[1].id, title: '첫 돌', description: '첫 생일날', url: 'https://picsum.photos/seed/photo3/400/300', uploadedAt: new Date().toISOString() },
+  { 
+    id: 1, 
+    photoId: 1, 
+    memorialId: mockMemorials[0].id, 
+    title: '가족사진', 
+    description: '행복했던 시절', 
+    url: 'https://picsum.photos/seed/photo1/400/300', 
+    photoUrl: 'https://picsum.photos/seed/photo1/400/300',
+    uploadedAt: new Date().toISOString() 
+  },
+  { 
+    id: 2, 
+    photoId: 2, 
+    memorialId: mockMemorials[0].id, 
+    title: '여행', 
+    description: '제주도에서', 
+    url: 'https://picsum.photos/seed/photo2/400/300', 
+    photoUrl: 'https://picsum.photos/seed/photo2/400/300',
+    uploadedAt: new Date().toISOString() 
+  },
+  { 
+    id: 3, 
+    photoId: 3, 
+    memorialId: mockMemorials[1].id, 
+    title: '첫 돌', 
+    description: '첫 생일날', 
+    url: 'https://picsum.photos/seed/photo3/400/300', 
+    photoUrl: 'https://picsum.photos/seed/photo3/400/300',
+    uploadedAt: new Date().toISOString() 
+  },
 ];
 
 export const mockComments = [
-  { id: 1, memorialId: mockMemorials[0].id, name: '김친구', relationship: '친구', message: '보고싶다 친구야', date: '2024-08-01' },
-  { id: 2, memorialId: mockMemorials[0].id, name: '박동료', relationship: '동료', message: '좋은 곳에서 편히 쉬세요.', date: '2024-08-02' },
-  { id: 3, memorialId: mockMemorials[1].id, name: '이가족', relationship: '가족', message: '사랑합니다.', date: '2024-08-03' },
+  { 
+    id: 1, 
+    commentId: 1, 
+    memorialId: mockMemorials[0].id, 
+    name: '김친구', 
+    relationship: '친구', 
+    content: '보고싶다 친구야', 
+    message: '보고싶다 친구야', // 기존 호환성
+    date: '2024-08-01',
+    createdAt: '2024-08-01T10:00:00.000Z'
+  },
+  { 
+    id: 2, 
+    commentId: 2, 
+    memorialId: mockMemorials[0].id, 
+    name: '박동료', 
+    relationship: '동료', 
+    content: '좋은 곳에서 편히 쉬세요.', 
+    message: '좋은 곳에서 편히 쉬세요.', // 기존 호환성
+    date: '2024-08-02',
+    createdAt: '2024-08-02T10:00:00.000Z'
+  },
+  { 
+    id: 3, 
+    commentId: 3, 
+    memorialId: mockMemorials[1].id, 
+    name: '이가족', 
+    relationship: '가족', 
+    content: '사랑합니다.', 
+    message: '사랑합니다.', // 기존 호환성
+    date: '2024-08-03',
+    createdAt: '2024-08-03T10:00:00.000Z'
+  },
 ];
 
 export const mockVideos = [

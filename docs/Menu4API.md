@@ -220,152 +220,98 @@ HTTP Method: GET
 
 | 필드명 | 타입 | 설명 |
 | --- | --- | --- |
-| _embedded.memorials
- | Array | 추모관 객체들 리스트 |
-| ↳ ._links.memorial.href | String | 해당 추모관 리소스의 링크 |
-| ↳ ._links.self.href | String | 해당 추모관 리소스의 자기참조 링크 |
-| ↳ .age | Number | 고인의 나이 |
-| ↳ .birthDate | String(YYYY-MM-DD) | 고인의 생년월일 |
-| ↳ .createdAt | String(timestamp) | 추모관 생성일시 |
-| ↳ .customerId | Number | 고객ID |
-| ↳ .deceasedDate | String | 고인의 사망일 |
-| ↳ .familyList | Array | 가족정보 리스트(처음엔 빈배열) |
-| ↳ .gender | String | 고인의 성별(남성 or 여성) |
-| ↳ .imageUrl | String or null | 추모관 프로필 이미지 url |
-| ↳ .name | String | 고인의 이름 |
-| ↳ .tribute | String or null | 추모사 내용 |
-| ↳ .videos |  |  |
+| memorialId | String(UUID) | 추모관 ID |
+| profileImageUrl | String or null | 추모관 프로필 이미지 url |
+| deceasedName | String | 고인의 이름 |
+| deceasedAge | Number | 고인의 나이 |
+| gender | String | 고인의 성별(남성 or 여성) |
+| birthDate | String(YYYY-MM-DD) | 고인의 생년월일 |
+| deceasedDate | String(YYYY-MM-DD) | 고인의 사망일 |
+| tribute | String | 추모사 내용 |
+| createdAt | String(timestamp) | 추모관 생성일시 |
+| photos | Array | 추모사진 리스트 |
+| ↳ .photoId | Number | 추모사진 ID |
+| ↳ .memorialId | String(UUID) | 추모관 ID |
+| ↳ .title | String | 추모사진 제목 |
+| ↳ .description | String | 추모사진 설명 |
+| ↳ .photoUrl | String | 추모사진 URL |
+| ↳ .uploadedAt | String(timestamp) | 추모사진 업로드 일시 |
+| videos | Array | 추모영상 리스트 |
+| ↳ .videoId | Number | 추모영상 ID |
+| ↳ .memorialId | String(UUID) | 추모관 ID |
+| ↳ .videoTitle | String | 추모영상 제목 |
+| ↳ .videoUrl | String or null | 추모영상 URL |
+| ↳ .keywords | String | 추모영상 키워드 |
+| ↳ .status | String | 영상 상태(REQUESTED, COMPLETED) |
+| ↳ .createdAt | String(timestamp) | 영상 생성 일시 |
+| ↳ .completedAt | String(timestamp) | 영상 완료 일시 |
+| comments | Array | 추모댓글 리스트 |
+| ↳ .commentId | Number | 추모댓글 ID |
+| ↳ .memorialId | String(UUID) | 추모관 ID |
+| ↳ .name | String | 댓글 작성자 이름 |
+| ↳ .relationship | String | 작성자와 고인의 관계 |
+| ↳ .content | String | 댓글 내용 |
+| ↳ .createdAt | String(timestamp) | 댓글 생성 일시 |
 
 ```json
 {
-    "_embedded": {
-        "memorials": [
-            {
-                "customerId": 1004,
-                "profileImageUrl": null,
-                "name": "최지은",
-                "age": 90,
-                "birthDate": "1934-11-02",
-                "deceasedDate": "2024-07-10",
-                "gender": "여성",
-                "tribute": null,
-                "tributeGeneratedAt": null,
-                "createdAt": "2025-08-08T16:45:54.568149",
-                "updatedAt": null,
-                "familyList": [],
-                "_links": {
-                    "self": {
-                        "href": "http://localhost:8085/memorials/1c337344-ad3c-4785-a5f8-0054698c3ebe"
-                    },
-                    "memorial": {
-                        "href": "http://localhost:8085/memorials/1c337344-ad3c-4785-a5f8-0054698c3ebe"
-                    }
-                }
-            },
-            {
-                "customerId": 1005,
-                "profileImageUrl": null,
-                "name": "정수현",
-                "age": 60,
-                "birthDate": "1964-05-27",
-                "deceasedDate": "2024-06-15",
-                "gender": "남성",
-                "tribute": null,
-                "tributeGeneratedAt": null,
-                "createdAt": "2025-08-08T16:45:55.193759",
-                "updatedAt": null,
-                "familyList": [],
-                "_links": {
-                    "self": {
-                        "href": "http://localhost:8085/memorials/aa23ff9e-770f-4292-a3dd-bd4061e74b9c"
-                    },
-                    "memorial": {
-                        "href": "http://localhost:8085/memorials/aa23ff9e-770f-4292-a3dd-bd4061e74b9c"
-                    }
-                }
-            },
-            {
-                "customerId": 1001,
-                "profileImageUrl": null,
-                "name": "김철수",
-                "age": 75,
-                "birthDate": "1949-01-01",
-                "deceasedDate": "2024-07-25",
-                "gender": "남성",
-                "tribute": null,
-                "tributeGeneratedAt": null,
-                "createdAt": "2025-08-08T16:45:52.672106",
-                "updatedAt": null,
-                "familyList": [],
-                "_links": {
-                    "self": {
-                        "href": "http://localhost:8085/memorials/b26b8169-b829-4b73-b29c-02f9da6d8672"
-                    },
-                    "memorial": {
-                        "href": "http://localhost:8085/memorials/b26b8169-b829-4b73-b29c-02f9da6d8672"
-                    }
-                }
-            },
-            {
-                "customerId": 1002,
-                "profileImageUrl": null,
-                "name": "이영희",
-                "age": 82,
-                "birthDate": "1942-03-15",
-                "deceasedDate": "2024-06-30",
-                "gender": "여성",
-                "tribute": null,
-                "tributeGeneratedAt": null,
-                "createdAt": "2025-08-08T16:45:53.318204",
-                "updatedAt": null,
-                "familyList": [],
-                "_links": {
-                    "self": {
-                        "href": "http://localhost:8085/memorials/c3645cd0-8c09-4ce2-82ac-780085f3340d"
-                    },
-                    "memorial": {
-                        "href": "http://localhost:8085/memorials/c3645cd0-8c09-4ce2-82ac-780085f3340d"
-                    }
-                }
-            },
-            {
-                "customerId": 1003,
-                "profileImageUrl": null,
-                "name": "박철수",
-                "age": 68,
-                "birthDate": "1956-09-20",
-                "deceasedDate": "2024-08-01",
-                "gender": "남성",
-                "tribute": null,
-                "tributeGeneratedAt": null,
-                "createdAt": "2025-08-08T16:45:53.956373",
-                "updatedAt": null,
-                "familyList": [],
-                "_links": {
-                    "self": {
-                        "href": "http://localhost:8085/memorials/ef17d0b4-0f69-443a-b660-4891c522d64b"
-                    },
-                    "memorial": {
-                        "href": "http://localhost:8085/memorials/ef17d0b4-0f69-443a-b660-4891c522d64b"
-                    }
-                }
-            }
-        ]
-    },
-    "_links": {
-        "self": {
-            "href": "http://localhost:8085/memorials"
+    "memorialId": "0609f4bd-88d7-4dfd-a5cc-de1716bdc03e",
+    "profileImageUrl": null,
+    "deceasedName": "이영희",
+    "deceasedAge": 82,
+    "gender": "여성",
+    "birthDate": "1942-03-15",
+    "deceasedDate": "2024-06-30",
+    "tribute": "사랑하는 이영희님을 기리며,\n\n오늘 우리는 이영희님을 기억하기 위해 모였습니다. 이영희님은 1942년 3월 15일에 태어나신 뒤, 평생을 가족과 사랑으로 가득 채우며 살아오신 분이었습니다. 2024년 6월 30일, 우리는 그와의 이별을 맞이하게 되었지만, 그녀의 삶 속에서 나눈 사랑과 기억들은 우리 마음속에 영원히 남을 것입니다.\n\n영희님은 언제나 가족이 가장 우선이라는 신념을 가지신 분이셨습니다. 매주 금요일마다 마련하시던 가족 만찬을 기억하시는 분이 많을 겁니다. 그날마다 준비되었던 정성 가득한 음식들, 그리고 함께 모여 나누며 웃었던 소중한 순간들은 가족의 사랑을 더욱 깊게 해주었습니다. 자녀들에게는 늘 따뜻한 격려를 보내셨고, 손주들에겐 특별한 친구가 되어주셨습니다. 사랑이 가득한 이영희님의 모습은 늘 웃음과温暖으로 우리를 감싸주었습니다.\n\n그녀의 삶은 언제나 감사의 연속이었습니다. 작은 것에도 감사할 줄 아는 마음, 다른 사람들을 도우며 살던 아름다운 나날은 우리 모두에게 귀감이 되었습니다. 혹시 힘든 일이 있을 때는 언제든지 손을 뻗어 주셨고, 그 손을 잡은 우리는 큰 위로를 느꼈습니다. 영희님은 자연스럽게 주변 사람들에게 사랑을 나누던 존재였으며, 그 사랑은 결코 잊혀지지 않을 것입니다.\n\n이제 우리는 영희님을 떠나보내야 합니다. 그리움이 밀려오는 이 순간, 그녀가 우리 곁에 남긴 깊은 사랑은 계속해서 우리의 마음을 따뜻하게 할 것입니다. 이영희님, 평안히 쉬십시오. 당신은 언제까지나 우리 마음 속에, 그리고 우리의 기억 속에 살아계실 것입니다. 저희는 당신의 사랑을 기억하며, 그 사랑을 앞으로도 계속 나누어가겠습니다. 감사합니다.",
+    "createdAt": "2025-08-12T09:34:34.757949",
+    "photos": [
+        {
+            "photoId": 2,
+            "memorialId": "0609f4bd-88d7-4dfd-a5cc-de1716bdc03e",
+            "title": "으하하 첫번째 제목이다.",
+            "description": "으하하 첫번째 설명이다.",
+            "photoUrl": "https://aivles.blob.core.windows.net/memorial-content/0609f4bd-88d7-4dfd-a5cc-de1716bdc03e%2Fphoto-album%2F68344505-9664-44c4-8c14-2ea70ea97d92.jpeg",
+            "uploadedAt": "2025-08-12T09:39:36.486621"
         },
-        "profile": {
-            "href": "http://localhost:8085/profile/memorials"
+        {
+            "photoId": 1,
+            "memorialId": "0609f4bd-88d7-4dfd-a5cc-de1716bdc03e",
+            "title": "으하하 첫번째 제목이다.",
+            "description": "으하하 첫번째 설명이다.",
+            "photoUrl": "https://aivles.blob.core.windows.net/memorial-content/0609f4bd-88d7-4dfd-a5cc-de1716bdc03e%2Fphoto-album%2Fc1d1e082-155f-4cbf-9a89-0d75c2807322.jpeg",
+            "uploadedAt": "2025-08-12T09:39:34.778275"
         }
-    },
-    "page": {
-        "size": 20,
-        "totalElements": 5,
-        "totalPages": 1,
-        "number": 0
-    }
+    ],
+    "videos": [
+        {
+            "videoId": 1,
+            "memorialId": "0609f4bd-88d7-4dfd-a5cc-de1716bdc03e",
+            "videoTitle": "이영희님의 추모영상",
+            "videoUrl": null,
+            "keywords": "키워드",
+            "status": "REQUESTED",
+            "createdAt": "2025-08-12T09:39:42.789606",
+            "completedAt": "2025-08-12T09:39:42.784784"
+        }
+    ],
+    "comments": [
+        {
+            "commentId": 2,
+            "memorialId": "0609f4bd-88d7-4dfd-a5cc-de1716bdc03e",
+            "name": "두번째 작성자 이름",
+            "relationship": "두번째 작성자와 고인의 관계",
+            "content": "두번째 댓글 내용",
+            "createdAt": "2025-08-12T09:40:30.337623"
+        },
+        {
+            "commentId": 1,
+            "memorialId": "0609f4bd-88d7-4dfd-a5cc-de1716bdc03e",
+            "name": "첫번째 작성자 이름",
+            "relationship": "첫번째 작성자와 고인의 관계",
+            "content": "첫번째 댓글 내용",
+            "createdAt": "2025-08-12T09:39:12.471662"
+        }
+    ]
 }
 ```
 ---
