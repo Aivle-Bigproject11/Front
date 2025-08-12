@@ -128,6 +128,39 @@ const MemorialConfig = () => {
         });
     };
 
+    // 이미지 크기 조정 함수
+    const resizeImage = (file, maxWidth = 800, maxHeight = 600, quality = 0.8) => {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = () => {
+                // 비율 유지하면서 크기 조정
+                let { width, height } = img;
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = (width * maxHeight) / height;
+                        height = maxHeight;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob(resolve, 'image/jpeg', quality);
+            };
+            
+            img.src = URL.createObjectURL(file);
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -168,6 +201,11 @@ const MemorialConfig = () => {
                 return;
             }
             
+            if (slideshowPhotos.length > 10) {
+                alert("슬라이드쇼 사진은 최대 10개까지 선택 가능합니다.");
+                return;
+            }
+            
             if (!animatedPhoto) {
                 alert("움직이는 효과를 적용할 사진을 선택해주세요.");
                 return;
@@ -183,18 +221,37 @@ const MemorialConfig = () => {
             try {
                 const formData = new FormData();
                 formData.append('memorialId', id);
-                formData.append('keywords', validKeywords.join(', '));
-                formData.append('imagesCount', slideshowPhotos.length);
-                formData.append('outroImage', animatedPhoto);
                 
-                // 슬라이드쇼 이미지들 추가
-                slideshowPhotos.forEach((photo, index) => {
-                    formData.append('images', photo);
-                });
+                // keywords를 문장으로 변환
+                const keywordsText = validKeywords.join(', ');
+                formData.append('keywords', keywordsText);
+                formData.append('imagesCount', slideshowPhotos.length);
+                
+                // outroImage 압축
+                const compressedOutroImage = await resizeImage(animatedPhoto, 800, 600, 0.7);
+                formData.append('outroImage', compressedOutroImage, 'outro.jpg');
+                
+                // 슬라이드쇼 이미지들 압축 후 추가
+                for (let i = 0; i < slideshowPhotos.length; i++) {
+                    const photo = slideshowPhotos[i];
+                    const compressedPhoto = await resizeImage(photo, 800, 600, 0.7);
+                    formData.append('images', compressedPhoto, `image_${i}.jpg`);
+                }
+
+                // FormData 내용 디버깅
+                console.log('🔗 FormData 내용:');
+                for (let [key, value] of formData.entries()) {
+                    if (value instanceof File) {
+                        console.log(`  ${key}: [File] ${value.name} (${value.size} bytes)`);
+                    } else {
+                        console.log(`  ${key}: ${value}`);
+                    }
+                }
 
                 console.log('🔗 CreateVideo 요청 시작 - Memorial ID:', id);
-                console.log('🔗 Keywords:', validKeywords.join(', '));
+                console.log('🔗 Keywords:', keywordsText);
                 console.log('🔗 Images Count:', slideshowPhotos.length);
+                console.log('🔗 이미지 압축 시작...');
                 
                 const response = await apiService.createVideo(id, formData);
                 console.log('✅ CreateVideo 응답:', response);
@@ -208,7 +265,25 @@ const MemorialConfig = () => {
                 
             } catch (error) {
                 console.error('❌ CreateVideo 실패:', error);
-                alert("영상 생성 요청에 실패했습니다. 다시 시도해주세요.");
+                
+                // 에러 응답 상세 정보 출력
+                if (error.response) {
+                    console.error('응답 상태:', error.response.status);
+                    console.error('응답 데이터:', error.response.data);
+                    console.error('응답 헤더:', error.response.headers);
+                    
+                    if (error.response.data && error.response.data.message) {
+                        alert(`영상 생성 요청에 실패했습니다: ${error.response.data.message}`);
+                    } else {
+                        alert(`영상 생성 요청에 실패했습니다. (상태: ${error.response.status})`);
+                    }
+                } else if (error.request) {
+                    console.error('요청이 전송되지 않았습니다:', error.request);
+                    alert("서버에 연결할 수 없습니다. 네트워크를 확인해주세요.");
+                } else {
+                    console.error('요청 설정 오류:', error.message);
+                    alert("요청 처리 중 오류가 발생했습니다.");
+                }
             } finally {
                 setIsVideoLoading(false);
             }

@@ -83,7 +83,14 @@ const realApiService = {
   updatePhoto: async (photoId, data) => (await api.patch(`/photos/${photoId}`, data)).data,
   deletePhoto: async (photoId) => (await api.delete(`/photos/${photoId}`)).data,
 
-  createVideo: async (memorialId, formData) => (await api.post(`/memorials/${memorialId}/videos`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
+  createVideo: async (memorialId, formData) => {
+    // 영상 생성은 시간이 오래 걸릴 수 있으므로 타임아웃을 30초로 설정
+    const config = { 
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 30000
+    };
+    return (await api.post(`/memorials/${memorialId}/videos`, formData, config)).data;
+  },
   getVideo: async (videoId) => (await api.get(`/videos/${videoId}`)).data,
   deleteVideo: async (videoId) => (await api.delete(`/videos/${videoId}`)).data,
 
