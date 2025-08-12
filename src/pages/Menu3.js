@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Form, Button, Modal, Spinner } from 'react-bootstrap';
 import { Mail, Send, Search, Edit, CheckCircle } from 'lucide-react'; 
-import { recommendationService } from '../services/api_menu3';
+import { recommendationService } from '../services/api';
 
 
 const Menu3 = () => {
@@ -284,7 +284,9 @@ const Menu3 = () => {
                                 </Col>
                                 <Col lg={6} style={{ height: '100%' }}>
                                     <Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                        <Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)', flexShrink: 0}}>메시지 발송 기록</Card.Header>
+                                        <Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)', flexShrink: 0}}>
+                                            {selectedCustomerForHistory ? `${selectedCustomerForHistory.name}님의 메시지 발송 기록` : '메시지 발송 기록'}
+                                        </Card.Header>
                                         <Card.Body style={{flexGrow: 1, overflowY: 'auto'}}>
                                             {selectedCustomerForHistory ? (
                                                 messageHistory.length > 0 ? (
@@ -309,7 +311,7 @@ const Menu3 = () => {
                                                                 {recommendedServices.length > 0 && (
                                                                     <div className="d-flex gap-2 my-2">
                                                                         {recommendedServices.map(service => (
-                                                                            <img key={service.serviceName} src={service.imageUrl} alt={service.serviceName} style={{width: '50%', borderRadius: '8px', border: '1px solid #ddd'}} 
+                                                                            <img key={service.serviceName} src={service.imageUrl} alt={service.serviceName} style={{width: '40%', borderRadius: '8px', border: '1px solid #ddd'}} //이미지 크기 
                                                                                 onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/300x200/EEE/333?text=Image+Error'; }} />
                                                                         ))}
                                                                     </div>
