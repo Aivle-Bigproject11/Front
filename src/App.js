@@ -15,6 +15,7 @@ import Menu1_3 from './pages/Menu1-3';
 import Menu1_4 from './pages/Menu1-4';
 import Menu1_5 from './pages/Menu1-5';
 import Menu2 from './pages/Menu2';
+import Menu2_2 from './pages/Menu2-2';
 import Menu3 from './pages/Menu3';
 import Menu4 from './pages/Menu4';
 import Menu5 from './pages/Menu5';
@@ -89,6 +90,7 @@ const MainLayout = () => {
                 <Route path="/menu1-5" element={<Menu1_5 />} />
                 <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
                 <Route path="/menu2" element={<Menu2 />} />
+                <Route path="/menu2-2" element={<Menu2_2 />} />
                 <Route path="/menu3" element={<Menu3 />} />
                 <Route path="/menu4" element={<Menu4 />} />
                 <Route path="/menu5" element={<Menu5 />} />

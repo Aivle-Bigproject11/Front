@@ -28,15 +28,15 @@ const KoreaMap = ({ selectedRegion, onRegionSelect }) => {
   };
 
   return (
-    <div style={{ position: 'relative', width: '90%', margin: '20px auto 0' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <button
         onClick={() => onRegionSelect('전체')}
         onMouseEnter={() => setHoveredRegion('전체')}
         onMouseLeave={() => setHoveredRegion(null)}
         style={{
           position: 'absolute',
-          top: '-10px',
-          left: '-15px',
+          top: '10px',
+          left: '10px',
           zIndex: 10,
           padding: '6px 14px',
           border: `1px solid ${themeColors.borderColor}`,
@@ -54,47 +54,64 @@ const KoreaMap = ({ selectedRegion, onRegionSelect }) => {
         전체 보기
       </button>
 
-      <img 
-        src="/SouthKoreaGreyMap.png" 
-        alt="대한민국 지도" 
-        style={{ width: '100%', height: 'auto', display: 'block', filter: 'opacity(0.7)' }} 
-      />
+      <div style={{ 
+        position: 'relative', 
+        width: '100%', 
+        height: '100%',
+        maxWidth: '400px',
+        maxHeight: '300px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <img 
+          src="/SouthKoreaGreyMap.png" 
+          alt="대한민국 지도" 
+          style={{ 
+            width: '100%', 
+            height: '100%',
+            objectFit: 'contain',
+            display: 'block', 
+            filter: 'opacity(0.7)'
+          }} 
+        />
 
-      {Object.entries(regionPositions).map(([region, pos]) => {
-        const isActive = selectedRegion === region;
-        const isHovered = hoveredRegion === region;
-        return (
-          <button
-            key={region}
-            onClick={() => onRegionSelect(region)}
-            onMouseEnter={() => setHoveredRegion(region)}
-            onMouseLeave={() => setHoveredRegion(null)}
-            title={region}
-            style={{
-              position: 'absolute',
-              top: pos.top,
-              left: pos.left,
-              transform: `translate(-50%, -50%) translateY(${isActive || isHovered ? -3 : 0}px)`,
-              boxShadow: isActive || isHovered ? `0 8px 25px ${themeColors.shadowColor}` : '0 4px 8px rgba(44, 31, 20, 0.3)',
-              zIndex: isActive || isHovered ? 10 : 5,
-              width: 'auto',
-              height: 'auto',
-              padding: '6px 12px',
-              border: `2px solid ${isActive ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)'}`,
-              borderRadius: '16px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              transition: 'all 0.2s ease',
-              background: isActive ? themeColors.activeBackground : themeColors.primaryGradient,
-              color: isActive ? themeColors.activeColor : '#2C1F14',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {region}
-          </button>
-        );
-      })}
+        {Object.entries(regionPositions).map(([region, pos]) => {
+          const isActive = selectedRegion === region;
+          const isHovered = hoveredRegion === region;
+          return (
+            <button
+              key={region}
+              onClick={() => onRegionSelect(region)}
+              onMouseEnter={() => setHoveredRegion(region)}
+              onMouseLeave={() => setHoveredRegion(null)}
+              title={region}
+              style={{
+                position: 'absolute',
+                top: pos.top,
+                left: pos.left,
+                transform: `translate(-50%, -50%) translateY(${isActive || isHovered ? -3 : 0}px)`,
+                boxShadow: isActive || isHovered ? `0 8px 25px ${themeColors.shadowColor}` : '0 4px 8px rgba(44, 31, 20, 0.3)',
+                zIndex: isActive || isHovered ? 10 : 5,
+                width: 'auto',
+                height: 'auto',
+                padding: '6px 12px',
+                border: `2px solid ${isActive ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)'}`,
+                borderRadius: '16px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                background: isActive ? themeColors.activeBackground : themeColors.primaryGradient,
+                color: isActive ? themeColors.activeColor : '#2C1F14',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {region}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
