@@ -23,7 +23,7 @@ const Menu1_4 = () => {
             setError(null);
             try {
                 const response = await apiService.getCustomers();
-                setAllCustomers(response.data);
+                setAllCustomers(response.data._embedded.customerProfiles || []);
                 setFilteredCustomers([]);
             } catch (err) {
                 setError("데이터 로딩에 실패했습니다.");
