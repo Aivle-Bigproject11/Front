@@ -1087,10 +1087,13 @@ const MemorialConfig = () => {
                                                         try {
                                                             await apiService.updateTribute(id, { tribute: generatedEulogy });
                                                             alert('추모사가 등록되었습니다!');
+                                                            
+                                                            // 추모사 등록 후 MemorialDetail 페이지로 이동하면서 새로고침 유도
+                                                            const timestamp = Date.now();
                                                             if (isUserAccess) {
-                                                                navigate(`/user-memorial/${id}`);
+                                                                navigate(`/user-memorial/${id}?updated=${timestamp}`);
                                                             } else {
-                                                                navigate(`/memorial/${id}`);
+                                                                navigate(`/memorial/${id}?updated=${timestamp}`);
                                                             }
                                                         } catch (error) {
                                                             console.error('Error updating tribute:', error);

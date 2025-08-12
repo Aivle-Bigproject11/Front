@@ -119,7 +119,7 @@ const MemorialDetail = () => {
     };
 
     fetchMemorialDetails();
-  }, [id, navigate]); // id와 navigate를 의존성으로 추가
+  }, [id, navigate, location.search]); // location.search를 의존성으로 추가하여 URL 파라미터 변경 시 새로고침
 
   // 사진 업로드 함수
   const handlePhotoUpload = async (e) => {
@@ -1173,14 +1173,14 @@ const MemorialDetail = () => {
               </Card.Header>
               <Card.Body className="p-4" style={{ maxHeight: '500px', overflowY: 'auto' }}>
                 <div className="memorial-eulogy">
-                  {memorial.eulogy ? (
+                  {memorial.tribute ? (
                       <div className="eulogy-content" style={{ 
                         lineHeight: '1.8', 
                         fontSize: '0.9rem',
                         color: '#495057',
                         whiteSpace: 'pre-line'
                       }}>
-                          {memorial.eulogy}
+                          {memorial.tribute}
                       </div>
                   ) : (
                       <div className="text-center text-muted">

@@ -130,6 +130,39 @@ export const mockMemorialService = (() => {
     return { success: false };
   };
 
+  const createTribute = async (memorialId, data) => {
+    await delay(1000); // AI 처리 시뮬레이션
+    const memorial = mockMemorials.find(m => m.id === memorialId);
+    if (memorial) {
+      memorial.tribute = `[AI 생성된 추모사]\n\n${memorial.name}님을 기리며...\n\n키워드: ${data.keywords}`;
+      memorial.tributeGeneratedAt = new Date().toISOString();
+      return { tribute: memorial.tribute };
+    }
+    throw new Error('Memorial not found');
+  };
+
+  const updateTribute = async (memorialId, data) => {
+    await delay(300);
+    const memorial = mockMemorials.find(m => m.id === memorialId);
+    if (memorial) {
+      memorial.tribute = data.tribute;
+      memorial.tributeGeneratedAt = new Date().toISOString();
+      return { tribute: memorial.tribute };
+    }
+    throw new Error('Memorial not found');
+  };
+
+  const deleteTribute = async (memorialId) => {
+    await delay(300);
+    const memorial = mockMemorials.find(m => m.id === memorialId);
+    if (memorial) {
+      memorial.tribute = null;
+      memorial.tributeGeneratedAt = null;
+      return { success: true };
+    }
+    return { success: false };
+  };
+
   // API 명세와 다른 팀의 realApiService 함수 이름 사이의 간극을 맞추기 위한 별칭(alias)
   const getMemorial = getMemorialById;
   const getPhotosForMemorial = getPhotos;
@@ -149,6 +182,9 @@ export const mockMemorialService = (() => {
     addComment,
     createVideo,
     getVideo,
-    deleteVideo
+    deleteVideo,
+    createTribute,
+    updateTribute,
+    deleteTribute
   };
 })();
