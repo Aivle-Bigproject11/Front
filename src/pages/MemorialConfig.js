@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
-import { dummyData } from '../services/api';
+import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const MemorialConfig = () => {
@@ -56,66 +56,48 @@ const MemorialConfig = () => {
     const [accessChecking, setAccessChecking] = useState(true);
 
     useEffect(() => {
-        // 유가족 권한 확인 및 추모관 데이터 로드
-        const checkAccessAndLoadData = async () => {
+        // 권한 확인 및 데이터 로드
+        const loadData = async () => {
             try {
-                // TODO: 실제 API로 유가족 권한 확인
-                const hasAccess = await checkFamilyAccess(id);
+                // TODO: 실제 API로 유가족 권한 확인 로직 필요
+                const hasAccess = isAdminAccess || isUserAccess; 
 
                 if (!hasAccess) {
                     alert('유가족 또는 관리자만 접근 가능한 페이지입니다.');
-                    if (isUserAccess) {
-                        navigate(`/user-memorial/${id}`);
-                    } else {
-                        navigate(`/memorial/${id}`);
-                    }
+                    navigate(`/memorial/${id}`);
                     return;
                 }
-
                 setIsFamilyMember(true);
 
-                // 추모관 데이터 로드
-                const foundMemorial = dummyData.memorials._embedded.memorials.find(
-                    m => m.id === parseInt(id)
-                );
+                const response = await apiService.getMemorial(id);
+                console.log('✅ MemorialConfig API 응답:', response);
+                
+                // API 명세에 따라 응답이 직접 memorial 객체
+                const memorialData = response;
 
-                if (!foundMemorial) {
-                    alert('추모관을 찾을 수 없습니다.');
-                    if (isUserAccess) {
-                        navigate(`/user-memorial/${id}`);
-                    } else {
-                        navigate(`/memorial/${id}`);
-                    }
-                    return;
-                }
-
-                setMemorial(foundMemorial);
+                setMemorial(memorialData);
                 setFormData({
-                    name: foundMemorial.name,
-                    age: foundMemorial.age,
-                    birthOfDate: foundMemorial.birthOfDate,
-                    deceasedDate: foundMemorial.deceasedDate,
-                    gender: foundMemorial.gender,
-                    imageUrl: foundMemorial.imageUrl || '',
-                    customerId: foundMemorial.customerId
+                    name: memorialData.name,
+                    age: memorialData.age,
+                    birthOfDate: memorialData.birthDate, // API 명세에 따라 birthDate로 수정
+                    deceasedDate: memorialData.deceasedDate,
+                    gender: memorialData.gender,
+                    imageUrl: memorialData.profileImageUrl || '', // API 명세에 따라 profileImageUrl로 수정
+                    customerId: memorialData.customerId
                 });
 
             } catch (error) {
                 console.error('Error loading memorial config:', error);
                 alert('오류가 발생했습니다. 다시 시도해주세요.');
-                if (isUserAccess) {
-                    navigate(`/user-memorial/${id}`);
-                } else {
-                    navigate(`/memorial/${id}`);
-                }
+                navigate(`/memorial/${id}`);
             } finally {
                 setAccessChecking(false);
                 setLoading(false);
             }
         };
 
-        checkAccessAndLoadData();
-    }, [id, navigate]);
+        loadData();
+    }, [id, navigate, isAdminAccess, isUserAccess]);
 
     // 유가족 및 관리자 권한 확인 함수 (실제 API 구현 필요)
     const checkFamilyAccess = async (memorialId) => {
@@ -149,63 +131,62 @@ const MemorialConfig = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        try {
-            if (activeTab === 'basic') {
-                // 기본 정보 수정
+        if (activeTab === 'basic') {
+            // 기본 정보 수정
+            try {
+                // Menu4 API 명세에 맞는 간단한 형태로 수정
                 const updatedMemorial = {
-                    ...memorial,
-                    ...formData,
+                    name: formData.name,
                     age: parseInt(formData.age),
+                    birthDate: formData.birthOfDate,
+                    deceasedDate: formData.deceasedDate,
+                    gender: formData.gender,
                     customerId: parseInt(formData.customerId)
                 };
-
-                const data = new FormData();
-                data.append('profileImage', profileImageFile);
                 
-                // TODO: Implement actual API call
-                // await api.updateMemorial(id, data);
+                // Menu4 API 사용 (현재 구현된 방식 유지)
+                await apiService.updateMemorial(id, updatedMemorial);
 
-                setMemorial(updatedMemorial);
+                // 2. 프로필 이미지 업데이트 (파일이 선택된 경우)
+                if (profileImageFile) {
+                    const imageData = new FormData();
+                    imageData.append('photo', profileImageFile); // API 명세에 따라 'photo' 필드 사용
+                    await apiService.uploadMemorialProfileImage(id, imageData);
+                }
+
                 alert('추모관 정보가 성공적으로 수정되었습니다.');
-            } else if (activeTab === 'video') {
-                // 영상 생성 처리
-                setIsVideoLoading(true);
-                setGeneratedVideoUrl('');
+                navigate(`/memorial/${id}`);
 
-                // Simulate API call
-                setTimeout(() => {
-                    // 백엔드에서 받은 영상 URL이라고 가정
-                    const dummyVideoUrl = 'https://www.w3schools.com/html/mov_bbb.mp4';
-                    setGeneratedVideoUrl(dummyVideoUrl);
-                    setIsVideoLoading(false);
-                    alert('영상이 성공적으로 생성되었습니다.');
-                }, 3000);
-            } else if (activeTab === 'memorial') {
-                // 추모사 생성 처리
-                setIsEulogyLoading(true);
-                setGeneratedEulogy('');
-
-                const eulogyPrompt = {
-                    keywords: eulogyKeywords.filter(k => k).join(', '),
-                    prompt: basePrompt
-                };
-
-                // TODO: 실제 API 호출로 교체
-                // memorialService.generateEulogy(eulogyPrompt);
-
-                console.log("추모사 생성 요청 데이터:", eulogyPrompt);
-
-                // Simulate AI eulogy generation
-                setTimeout(() => {
-                    const dummyEulogy = `삼가 故 ${memorial.name}님의 명복을 빕니다.\n\n${eulogyKeywords.filter(k => k).join(', ')}(와)과 함께한 소중한 추억들을 영원히 간직하겠습니다. 하늘에서 편안히 쉬시길 바랍니다.`;
-                    setGeneratedEulogy(dummyEulogy);
-                    setIsEulogyLoading(false);
-                    alert('AI 추모사가 생성되었습니다.');
-                }, 2000);
+            } catch (error) {
+                console.error('Error updating memorial:', error);
+                alert('정보 수정에 실패했습니다.');
             }
-        } catch (error) {
-            console.error('Error processing request:', error);
-            alert('처리 중 오류가 발생했습니다.');
+        } else if (activeTab === 'video') {
+            // 영상 생성 처리 (개발중)
+            alert("영상 생성 기능은 현재 개발 중입니다.");
+
+        } else if (activeTab === 'memorial') {
+            // 추모사 생성 처리
+            setIsEulogyLoading(true);
+            try {
+                const eulogyRequest = {
+                    keywords: eulogyKeywords.filter(k => k).join(', '), // API 명세에 따라 String으로 변경
+                    tributeRequest: basePrompt // API 명세에 따라 prompt -> tributeRequest로 변경
+                };
+                console.log('🔗 CreateTribute 요청 데이터:', eulogyRequest);
+                console.log('🔗 Memorial ID:', id);
+                console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8088'}/memorials/${id}/tribute`);
+                
+                const response = await apiService.createTribute(id, eulogyRequest);
+                console.log('✅ CreateTribute API 응답:', response);
+                setGeneratedEulogy(response.tribute || response);
+                alert('AI 추모사가 생성되었습니다.');
+            } catch (error) {
+                console.error('Error generating eulogy:', error);
+                alert('추모사 생성에 실패했습니다.');
+            } finally {
+                setIsEulogyLoading(false);
+            }
         }
     };
 
@@ -535,8 +516,8 @@ const MemorialConfig = () => {
                                                     }}
                                                 >
                                                     <option value="">성별 선택</option>
-                                                    <option value="MALE">남성</option>
-                                                    <option value="FEMALE">여성</option>
+                                                    <option value="남성">남성</option>
+                                                    <option value="여성">여성</option>
                                                 </Form.Select>
                                             </Form.Group>
 
@@ -771,16 +752,18 @@ const MemorialConfig = () => {
                                                         fontWeight: '600',
                                                         boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
                                                     }}
-                                                    onClick={() => {
-                                                        const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
-                                                        if (memorialIndex !== -1) {
-                                                            dummyData.memorials._embedded.memorials[memorialIndex].videoUrl = generatedVideoUrl;
-                                                        }
-                                                        alert('영상이 등록되었습니다!');
-                                                        if (isUserAccess) {
-                                                            navigate(`/user-memorial/${id}`);
-                                                        } else {
-                                                            navigate(`/memorial/${id}`);
+                                                    onClick={async () => {
+                                                        try {
+                                                            await apiService.updateMemorial(id, { videoUrl: generatedVideoUrl });
+                                                            alert('영상이 등록되었습니다!');
+                                                            if (isUserAccess) {
+                                                                navigate(`/user-memorial/${id}`);
+                                                            } else {
+                                                                navigate(`/memorial/${id}`);
+                                                            }
+                                                        } catch (error) {
+                                                            console.error('Error updating memorial with video:', error);
+                                                            alert('영상 등록에 실패했습니다.');
                                                         }
                                                     }}
                                                 >
@@ -952,16 +935,18 @@ const MemorialConfig = () => {
                                                         fontWeight: '600',
                                                         boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
                                                     }}
-                                                    onClick={() => {
-                                                        const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
-                                                        if (memorialIndex !== -1) {
-                                                            dummyData.memorials._embedded.memorials[memorialIndex].eulogy = generatedEulogy;
-                                                        }
-                                                        alert('추모사가 등록되었습니다!');
-                                                        if (isUserAccess) {
-                                                            navigate(`/user-memorial/${id}`);
-                                                        } else {
-                                                            navigate(`/memorial/${id}`);
+                                                    onClick={async () => {
+                                                        try {
+                                                            await apiService.updateTribute(id, { tribute: generatedEulogy });
+                                                            alert('추모사가 등록되었습니다!');
+                                                            if (isUserAccess) {
+                                                                navigate(`/user-memorial/${id}`);
+                                                            } else {
+                                                                navigate(`/memorial/${id}`);
+                                                            }
+                                                        } catch (error) {
+                                                            console.error('Error updating tribute:', error);
+                                                            alert('추모사 등록에 실패했습니다.');
                                                         }
                                                     }}
                                                 >

@@ -44,6 +44,34 @@ export const AuthProvider = ({ children }) => {
    * @description 사용자 타입에 따른 로그인을 처리합니다. 
    */
   const loginByType = async (loginId, loginPassword, userType) => {
+    // Mock 모드 분기 처리
+    const useMock = process.env.REACT_APP_API_MOCKING === 'true';
+
+    if (useMock) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                let mockUser = null;
+                if (userType === 'employee' && loginId === 'admin' && loginPassword === 'password') {
+                    mockUser = { id: 99, loginId: 'admin', name: '테스트관리자', userType: 'employee' };
+                } else if (userType === 'user' && loginId === 'user' && loginPassword === 'password') {
+                    mockUser = { id: 0, loginId: 'user', name: '테스트', userType: 'user' };
+                }
+
+                if (mockUser) {
+                    const token = 'dummy-mock-auth-token';
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(mockUser));
+                    setIsAuthenticated(true);
+                    setUser(mockUser);
+                    resolve({ success: true });
+                } else {
+                    resolve({ success: false, message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+                }
+            }, 500);
+        });
+    }
+
+    // 기존 Real 모드 로직
     try {
       const loginFunction = userType === 'employee' ? getEmployeeByCredentials : getUserByCredentials;
       const foundUser = await loginFunction(loginId, loginPassword);

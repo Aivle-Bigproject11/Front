@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Button, Modal, Form, Badge, Dropdown, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { dummyData } from '../services/api';
+import { apiService } from '../services/api';
 
 // This component will now have the design of Menu2.js but the functionality of the original Menu4.js.
 const Menu4 = () => {
@@ -21,27 +21,71 @@ const Menu4 = () => {
 
   useEffect(() => {
     setAnimateCard(true);
-    // TODO: 실제 API 호출로 교체
-    setTimeout(() => {
-      const memorialsWithCode = dummyData.memorials._embedded.memorials.map(m => ({
-        ...m,
-        joinCode: `MEM${String(m.id).padStart(3, '0')}`
-      }));
-      setMemorials(memorialsWithCode);
-      setLoading(false);
-    }, 1000);
+    const fetchMemorials = async () => {
+      try {
+        console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8088');
+        const response = await apiService.getMemorials();
+        console.log('✅ 백엔드 API 응답 성공:', response);
+        console.log('✅ response._embedded:', response._embedded);
+        console.log('✅ response._embedded.memorials:', response._embedded.memorials);
+        
+        if (response._embedded && response._embedded.memorials) {
+          const memorialsList = response._embedded.memorials.map(memorial => {
+            // API 명세에 따라 UUID 형태의 ID 추출
+            let memorialId = memorial.id;
+            
+            // _links.self.href에서 UUID 추출 (예: "http://localhost:8085/memorials/1c337344-ad3c-4785-a5f8-0054698c3ebe")
+            if (memorial._links && memorial._links.self && memorial._links.self.href) {
+              const hrefParts = memorial._links.self.href.split('/');
+              const uuidFromHref = hrefParts[hrefParts.length - 1];
+              if (uuidFromHref && uuidFromHref.includes('-')) {
+                memorialId = uuidFromHref;
+              }
+            }
+            
+            return {
+              ...memorial,
+              id: memorialId // UUID 형태의 ID로 설정
+            };
+          });
+          
+          console.log('📋 추모관 리스트 길이:', memorialsList.length);
+          console.log('📋 첫 번째 추모관 구조:', memorialsList[0]);
+          console.log('📋 첫 번째 추모관 ID:', memorialsList[0]?.id);
+          console.log('📋 첫 번째 추모관 키들:', Object.keys(memorialsList[0] || {}));
+          
+          setMemorials(memorialsList);
+        } else {
+          console.error('❌ 예상하지 못한 응답 구조:', response);
+          setMemorials([]);
+        }
+      } catch (error) {
+        console.error("❌ 백엔드 API 호출 실패:", error);
+        console.error("에러 상세:", error.response?.data, error.response?.status);
+        alert("추모관 정보를 불러오는 데 실패했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemorials();
   }, []);
 
   // All handler functions from the original Menu4.js
   
 
-  const openFamilyModal = (memorial) => {
+  const openFamilyModal = async (memorial) => {
     setSelectedMemorial(memorial);
-    // TODO: 실제 API에서 해당 추모관의 유가족 목록 조회
-    setFamilyMembers([
-      { id: 1, memberId: 1001, name: '김철수', phone: '010-1234-5678', email: 'kim.chulsoo@example.com', relationship: '아들' },
-      { id: 2, memberId: 1002, name: '이영희', phone: '010-9876-5432', email: 'lee.younghee@example.com', relationship: '딸' }
-    ]);
+    try {
+      // NOTE: API 명세에 유가족 목록 조회는 없어서 임시로 familyList를 사용합니다.
+      // 추후 해당 API가 추가되면 수정해야 합니다.
+      if (memorial.familyList) {
+        setFamilyMembers(memorial.familyList);
+      }
+    } catch (error) {
+      console.error("Error fetching family members:", error);
+      alert("유가족 정보를 불러오는 데 실패했습니다.");
+    }
     setSearchKeyword('');
     setSearchResults([]);
     setSelectedMember(null);
@@ -55,15 +99,21 @@ const Menu4 = () => {
       return;
     }
     setIsSearching(true);
-    setTimeout(() => {
-      const results = dummyData.members.filter(member =>
-        member.name.toLowerCase().includes(keyword.toLowerCase()) ||
-        member.phone.includes(keyword) ||
-        member.email.toLowerCase().includes(keyword.toLowerCase())
+    try {
+      const response = await apiService.getUsers();
+      const allUsers = response.data._embedded.users; // 실제 데이터 구조에 따라 변경 필요
+      const results = allUsers.filter(user =>
+        user.name.toLowerCase().includes(keyword.toLowerCase()) ||
+        user.phone.includes(keyword) ||
+        user.email.toLowerCase().includes(keyword.toLowerCase())
       );
       setSearchResults(results);
+    } catch (error) {
+      console.error("Error searching members:", error);
+      alert("회원 검색에 실패했습니다.");
+    } finally {
       setIsSearching(false);
-    }, 500);
+    }
   };
 
   const handleSearchChange = (e) => {
@@ -78,7 +128,7 @@ const Menu4 = () => {
     setSearchResults([]);
   };
 
-  const addFamilyMember = () => {
+  const addFamilyMember = async () => {
     if (selectedMember && relationship) {
       const isAlreadyRegistered = familyMembers.some(fm => fm.memberId === selectedMember.id);
       if (isAlreadyRegistered) {
@@ -86,33 +136,68 @@ const Menu4 = () => {
         return;
       }
       const newFamilyMember = {
-        id: familyMembers.length + 1,
+        // API 명세에 따라 필요한 정보 추가
         memberId: selectedMember.id,
         name: selectedMember.name,
-        phone: selectedMember.phone,
-        email: selectedMember.email,
         relationship: relationship
       };
-      setFamilyMembers([...familyMembers, newFamilyMember]);
-      setSelectedMember(null);
-      setSearchKeyword('');
-      setRelationship('');
+
+      const updatedFamilyList = [...familyMembers, newFamilyMember];
+
+      try {
+        await apiService.updateMemorial(selectedMemorial.id, { familyList: updatedFamilyList });
+        setFamilyMembers(updatedFamilyList);
+        setSelectedMember(null);
+        setSearchKeyword('');
+        setRelationship('');
+        alert('유가족이 등록되었습니다.');
+      } catch (error) {
+        console.error("Error adding family member:", error);
+        alert("유가족 등록에 실패했습니다.");
+      }
     }
   };
 
-  const removeFamilyMember = (id) => {
-    setFamilyMembers(familyMembers.filter(member => member.id !== id));
+  const removeFamilyMember = async (memberIdToRemove) => {
+    const updatedFamilyList = familyMembers.filter(member => member.memberId !== memberIdToRemove);
+    try {
+      await apiService.updateMemorial(selectedMemorial.id, { familyList: updatedFamilyList });
+      setFamilyMembers(updatedFamilyList);
+      alert('유가족이 삭제되었습니다.');
+    } catch (error) {
+      console.error("Error removing family member:", error);
+      alert("유가족 삭제에 실패했습니다.");
+    }
   };
 
-  const handleCardClick = (memorialId) => {
+  const handleCardClick = (memorial) => {
+    console.log('🔗 Memorial Card 클릭 - 전체 객체:', memorial);
+    console.log('🔗 Memorial ID:', memorial?.id);
+    console.log('🔗 Memorial ID 타입:', typeof memorial?.id);
+    console.log('🔗 Memorial 객체 키들:', Object.keys(memorial || {}));
+    
+    const memorialId = memorial?.id;
+    if (!memorialId) {
+      console.error('❌ Memorial ID가 undefined입니다!');
+      return;
+    }
+    
+    console.log('🔗 Navigation URL:', `/memorial/${memorialId}`);
     navigate(`/memorial/${memorialId}`);
   };
 
   
 
-  const deleteMemorial = (id) => {
+  const deleteMemorial = async (id) => {
     if (window.confirm('정말로 이 추모관을 삭제하시겠습니까?')) {
-      setMemorials(memorials.filter(memorial => memorial.id !== id));
+      try {
+        await apiService.deleteMemorial(id);
+        setMemorials(memorials.filter(memorial => memorial.id !== id));
+        alert('추모관이 삭제되었습니다.');
+      } catch (error) {
+        console.error("Error deleting memorial:", error);
+        alert('추모관 삭제에 실패했습니다.');
+      }
     }
   };
 
@@ -204,7 +289,7 @@ const Menu4 = () => {
                       boxShadow: '0 4px 15px rgba(44, 31, 20, 0.1)',
                       cursor: 'pointer'
                     }}
-                    onClick={() => handleCardClick(memorial.id)}
+                    onClick={() => handleCardClick(memorial)}
                   >
                     <div 
                       className="memorial-header"
