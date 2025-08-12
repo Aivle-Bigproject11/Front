@@ -4,7 +4,7 @@ import { apiService } from '../services/api';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ko } from 'date-fns/locale';
-import { Form, Row, Col } from 'react-bootstrap';
+import { Form, Row, Col, Alert } from 'react-bootstrap';
 
 registerLocale('ko', ko);
 
@@ -57,6 +57,8 @@ const Menu1_5 = () => {
   });
   
   const [popup, setPopup] = useState({ isOpen: false, message: '', onConfirm: () => {} });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [validationErrors, setValidationErrors] = useState([]);
 
   useEffect(() => {
     setAnimateCard(true);
@@ -118,6 +120,24 @@ const Menu1_5 = () => {
     setFormData(prevState => ({ ...prevState, rrn: formattedRrn }));
   };
 
+  const updateValidationError = (field, isValid) => {
+    setValidationErrors(prev => {
+        const newErrors = new Set(prev);
+        if (isValid) {
+            newErrors.delete(field);
+        } else {
+            newErrors.add(field);
+        }
+
+        const updatedErrors = [...newErrors];
+        if (updatedErrors.length === 0) {
+            setErrorMessage('');
+        }
+
+        return updatedErrors;
+    });
+  };
+
   const handlePhoneChange = (e) => {
     const rawValue = e.target.value.replace(/-/g, '');
     const numbersOnly = rawValue.replace(/\D/g, '');
@@ -128,45 +148,54 @@ const Menu1_5 = () => {
     } else if (numbersOnly.length > 7) {
       formattedPhone = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 7)}-${numbersOnly.slice(7, 11)}`;
     }
+    
+    const finalValue = formattedPhone.slice(0, 13);
+    const phoneRegex = /^\d{3}-\d{4}-\d{4}$/;
+    updateValidationError('directorPhone', phoneRegex.test(finalValue));
 
-    setFormData(prevState => ({ ...prevState, directorPhone: formattedPhone }));
+    setFormData(prevState => ({ ...prevState, directorPhone: finalValue }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'deathDate_time') {
-      const numbers = value.replace(/[^0-9]/g, '');
-      let formattedTime = numbers;
-      if (numbers.length > 2) {
-        formattedTime = `${numbers.slice(0, 2)}:${numbers.slice(2, 4)}`;
-      }
-      setFormData(prev => {
-        const dateObj = prev.deathDate ? new Date(prev.deathDate) : new Date();
-        if (formattedTime.length === 5 && formattedTime.includes(':')) {
-          const [hours, minutes] = formattedTime.split(':');
-          dateObj.setHours(parseInt(hours, 10));
-          dateObj.setMinutes(parseInt(minutes, 10));
-          dateObj.setSeconds(0);
-          dateObj.setMilliseconds(0);
-        } else {
-          dateObj.setHours(0);
-          dateObj.setMinutes(0);
-          dateObj.setSeconds(0);
-          dateObj.setMilliseconds(0);
-        }
-        return {
-          ...prev,
-          [name]: formattedTime,
-          deathDate: dateObj,
-          ageAtDeath: calculateAge(prev.deceasedBirthOfDate, dateObj) // Calculate age here
-        };
-      });
-    } else {
-      setFormData(prevState => ({ ...prevState, [name]: value }));
+
+    // For simple text fields, validate right away
+    if (name !== 'deathDate_time') {
+        updateValidationError(name, value.trim() !== '');
+        setFormData(prevState => ({ ...prevState, [name]: value }));
+        return;
     }
+
+    // Logic for deathDate_time
+    const numbers = value.replace(/[^0-9]/g, '');
+    let formattedTime = numbers;
+    if (numbers.length > 2) {
+        formattedTime = `${numbers.slice(0, 2)}:${numbers.slice(2, 4)}`;
+    }
+    
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    updateValidationError('deathDate_time', timeRegex.test(formattedTime));
+
+    setFormData(prev => {
+      const dateObj = prev.deathDate ? new Date(prev.deathDate) : new Date();
+      if (timeRegex.test(formattedTime)) {
+        const [hours, minutes] = formattedTime.split(':');
+        dateObj.setHours(parseInt(hours, 10));
+        dateObj.setMinutes(parseInt(minutes, 10));
+        dateObj.setSeconds(0);
+        dateObj.setMilliseconds(0);
+      }
+      return {
+        ...prev,
+        [name]: formattedTime,
+        deathDate: dateObj,
+        ageAtDeath: calculateAge(prev.deceasedBirthOfDate, dateObj)
+      };
+    });
   };
 
   const handleDateChange = (date) => {
+    updateValidationError('deathDate', date !== null);
     setFormData(prev => {
       const newDeathDate = date;
       const newAge = calculateAge(prev.deceasedBirthOfDate, newDeathDate);
@@ -174,67 +203,51 @@ const Menu1_5 = () => {
     });
   };
   
+  const fieldLabels = {
+    name: '이름',
+    rrn: '주민번호',
+    deceasedBirthOfDate: '생년월일',
+    deathDate: '별세일',
+    deathDate_time: '별세 시간',
+    placeOfDeath: '별세 장소',
+    funeralCompany: '상조회사',
+    directorName: '담당 장례지도사 이름',
+    directorPhone: '담당 장례지도사 전화번호'
+  };
+
   const validateForm = () => {
-    const { 
-      name, rrn, birthYear, birthMonth, birthDay, 
-      deathYear, deathMonth, deathDay, 
-      gender, placeOfDeath, funeralCompany, directorName, directorPhone, 
-      deathDate, deathDate_time 
-    } = formData;
+    const errors = [];
+    const { name, rrn, deceasedBirthOfDate, deathDate, deathDate_time, placeOfDeath, funeralCompany, directorName, directorPhone } = formData;
 
-    // Check basic text/select fields
-    if (!name.trim() || !rrn.trim() || !gender || !placeOfDeath.trim() || 
-        !funeralCompany.trim() || !directorName.trim() || !directorPhone.trim()) {
-      setPopup({
-        isOpen: true,
-        message: '모든 정보를 입력해주세요.',
-        onConfirm: () => closePopup()
-      });
-      return false;
-    }
+    if (!name.trim()) errors.push('name');
+    if (!rrn.trim()) errors.push('rrn');
+    if (!deceasedBirthOfDate) errors.push('deceasedBirthOfDate');
+    if (!deathDate) errors.push('deathDate');
+    if (!deathDate_time.trim()) errors.push('deathDate_time');
+    if (!placeOfDeath.trim()) errors.push('placeOfDeath');
+    if (!funeralCompany.trim()) errors.push('funeralCompany');
+    if (!directorName.trim()) errors.push('directorName');
+    if (!directorPhone.trim()) errors.push('directorPhone');
 
-    // Check birth date
-    if (!formData.deceasedBirthOfDate) {
-      setPopup({
-        isOpen: true,
-        message: '생년월일을 정확히 입력해주세요.',
-        onConfirm: () => closePopup()
-      });
-      return false;
-    }
-
-        // Check death date
-    if (!deathDate || !deathDate_time) {
-      setPopup({
-        isOpen: true,
-        message: '별세일을 정확히 입력해주세요.',
-        onConfirm: () => closePopup()
-      });
-      return false;
-    }
-
-    // Validate deathDate_time format (HH:MM)
-    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/; 
     if (deathDate_time && !timeRegex.test(deathDate_time)) {
-      setPopup({
-        isOpen: true,
-        message: '별세 시간은 HH:MM 형식으로 정확히 입력해주세요 (예: 14:30).',
-        onConfirm: () => closePopup()
-      });
-      return false;
+        if (!errors.includes('deathDate_time')) errors.push('deathDate_time');
     }
 
-    // Validate directorPhone format (000-0000-0000)
-    const phoneRegex = /^\d{3}-\d{4}-\d{4}$/;
+    const phoneRegex = /^\d{3}-\d{4}-\d{4}$/; 
     if (directorPhone && !phoneRegex.test(directorPhone)) {
-      setPopup({
-        isOpen: true,
-        message: '담당 장례지도사 전화번호는 XXX-XXXX-XXXX 형식으로 정확히 입력해주세요.',
-        onConfirm: () => closePopup()
-      });
-      return false;
+        if (!errors.includes('directorPhone')) errors.push('directorPhone');
+    }
+    
+    setValidationErrors(errors);
+
+    if (errors.length > 0) {
+        const errorFieldLabels = errors.map(field => fieldLabels[field] || field).filter(Boolean);
+        setErrorMessage(`다음 필드의 형식이 올바르지 않거나, 비어있습니다.\n`);
+        return false;
     }
 
+    setErrorMessage('');
     return true;
   };
 
@@ -326,6 +339,14 @@ const Menu1_5 = () => {
             <h2 className="form-title">고인 정보 등록</h2>
         </div>
         <form onSubmit={handleRegisterDeceased}>
+                    {errorMessage && (
+            <Alert variant="danger" className="mx-4 mb-4" onClose={() => setErrorMessage('')} dismissible>
+              <div>{errorMessage}</div>
+              <strong>
+                {validationErrors.map(field => fieldLabels[field] || field).join(', ')}
+              </strong>
+            </Alert>
+          )}
           <div className="form-grid">
             {/* Column 1 */}
             <div className="form-column">
@@ -336,11 +357,11 @@ const Menu1_5 = () => {
               </div>
               <div className="form-group">
                 <label className="form-label">이름</label>
-                <input type="text" name="name" value={formData.name} className="form-input" readOnly />
+                <input type="text" name="name" value={formData.name} className={`form-input ${validationErrors.includes("name") ? "is-invalid" : ""}`} readOnly />
               </div>
               <div className="form-group">
                 <label className="form-label">주민번호</label>
-                <input type="text" name="rrn" value={formData.rrn} className="form-input" readOnly />
+                <input type="text" name="rrn" value={formData.rrn} className={`form-input ${validationErrors.includes("rrn") ? "is-invalid" : ""}`} readOnly />
               </div>
               <div className="form-group">
                 <label className="form-label">성별</label>
@@ -359,7 +380,7 @@ const Menu1_5 = () => {
                   type="text"
                   name="deceasedBirthOfDate"
                   value={formatDateForDisplay(formData.deceasedBirthOfDate)}
-                  className="form-input"
+                  className={`form-input ${validationErrors.includes("deceasedBirthOfDate") ? "is-invalid" : ""}`}
                   readOnly
                 />
               </div>
@@ -373,7 +394,7 @@ const Menu1_5 = () => {
                       locale={ko}
                       dateFormat="yyyy/MM/dd"
                       placeholderText="날짜 선택"
-                      customInput={<Form.Control className="form-input" />}
+                      customInput={<Form.Control className={`form-input ${validationErrors.includes("deathDate") ? "is-invalid" : ""}`} />}
                       renderCustomHeader={({
                         date,
                         changeYear,
@@ -408,14 +429,14 @@ const Menu1_5 = () => {
                       onChange={handleChange}
                       placeholder="시간 (HH:MM)"
                       maxLength="5"
-                      className="form-input"
+                      className={`form-input ${validationErrors.includes("deathDate_time") ? "is-invalid" : ""}`}
                     />
                   </Col>
                 </Row>
               </div>
               <div className="form-group">
                 <label className="form-label">별세 장소</label>
-                <input type="text" name="placeOfDeath" value={formData.placeOfDeath} onChange={handleChange} className="form-input" />
+                <input type="text" name="placeOfDeath" value={formData.placeOfDeath} onChange={handleChange} className={`form-input ${validationErrors.includes("placeOfDeath") ? "is-invalid" : ""}`} />
               </div>
               <div className="form-group">
                 <label className="form-label">향년</label>
@@ -427,15 +448,15 @@ const Menu1_5 = () => {
             <div className="form-column">
                <div className="form-group">
                 <label className="form-label">상조회사</label>
-                <input type="text" name="funeralCompany" value={formData.funeralCompany} onChange={handleChange} className="form-input" />
+                <input type="text" name="funeralCompany" value={formData.funeralCompany} onChange={handleChange} className={`form-input ${validationErrors.includes("funeralCompany") ? "is-invalid" : ""}`} />
               </div>
               <div className="form-group">
                 <label className="form-label">담당 장례지도사 이름</label>
-                <input type="text" name="directorName" value={formData.directorName} onChange={handleChange} className="form-input" />
+                <input type="text" name="directorName" value={formData.directorName} onChange={handleChange} className={`form-input ${validationErrors.includes("directorName") ? "is-invalid" : ""}`} />
               </div>
               <div className="form-group">
                 <label className="form-label">담당 장례지도사 전화번호</label>
-                <input type="tel" name="directorPhone" value={formData.directorPhone} onChange={handlePhoneChange} className="form-input" placeholder="010-1234-5678" maxLength="13" />
+                <input type="tel" name="directorPhone" value={formData.directorPhone} onChange={handlePhoneChange} className={`form-input ${validationErrors.includes("directorPhone") ? "is-invalid" : ""}`} placeholder="010-1234-5678" maxLength="13" />
               </div>
             </div>
           </div>
@@ -562,6 +583,11 @@ const Menu1_5 = () => {
           background-color: rgba(255, 255, 255, 0.95);
         }
         
+        .form-input.is-invalid, .form-select.is-invalid,
+        .form-input.is-invalid:focus, .form-select.is-invalid:focus {
+          border-color: #dc3545 !important;
+        }
+
         .form-input:focus, .form-select:focus {
           border-color: #D4AF37;
           box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.3);

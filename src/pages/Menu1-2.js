@@ -195,18 +195,29 @@ const Menu1_2 = () => {
         setAnimateCard(true);
     }, [navigate, state]);
 
+    const updateErrors = (fieldName, isValid) => {
+        setValidationErrors(prev => {
+            const newErrors = new Set(prev);
+            if (isValid) {
+                newErrors.delete(fieldName);
+            } else {
+                newErrors.add(fieldName);
+            }
+            
+            const updatedErrors = [...newErrors];
+            if (updatedErrors.length === 0) {
+                setErrorMessage('');
+            }
+            
+            return updatedErrors;
+        });
+    };
+
     // 실시간 유효성 검사를 위한 handleInputChange 수정
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         
-        setErrorMessage('');
-
-        const updateErrors = (fieldName, isValid) => {
-            setValidationErrors(prev => {
-                const otherErrors = prev.filter(err => err !== fieldName);
-                return isValid ? otherErrors : [...otherErrors, fieldName];
-            });
-        };
+        // setErrorMessage(''); // This line was removed in corrected_old_string, so it should not be in corrected_new_string
 
         if (name.endsWith('_time')) {
             const numbers = value.replace(/[^0-9]/g, '');
@@ -293,8 +304,7 @@ const Menu1_2 = () => {
             !fieldSpecs[fieldName]?.required && (fieldName.includes('Phone') || fieldName.includes('Rrn'))
         );
         if (formatErrorFields.length > 0) {
-            const errorFieldLabels = formatErrorFields.map(f => fieldSpecs[f]?.label || f);
-            setErrorMessage(`다음 필드의 형식이 올바르지 않습니다: ${errorFieldLabels.join(', ')}`);
+            setErrorMessage('다음 필드의 형식이 올바르지 않습니다:');
             return false;
         }
 
@@ -321,7 +331,7 @@ const Menu1_2 = () => {
         });
 
         if (missingFields.length > 0) {
-            setErrorMessage(`다음 필드의 형식이 올바르지 않습니다 : ${missingFields.map(f => fieldSpecs[f].label).join(', ')}`);
+            setErrorMessage('다음 필드의 형식이 올바르지 않습니다:');
             setValidationErrors(prev => [...new Set([...prev, ...missingFields])]);
             return false;
         }
@@ -593,7 +603,14 @@ const Menu1_2 = () => {
                     
                     <div className="form-scroll-area" style={{ flex: 1, overflowY: 'scroll', paddingRight: '10px' }}>
                         {successMessage && <Alert variant="success" className="mb-4">{successMessage}</Alert>}
-                        {errorMessage && <Alert variant="danger" className="mb-4" onClose={() => setErrorMessage('')} dismissible>{errorMessage}</Alert>}
+                        {errorMessage && 
+    <Alert variant="danger" className="mb-4" onClose={() => setErrorMessage('')} dismissible>
+        <div>{errorMessage}</div>
+        <strong>
+            {validationErrors.map(field => fieldSpecs[field]?.label || field).join(', ')}
+        </strong>
+    </Alert>
+}
 
                         {reviewSuggestions.length > 0 && (
                             <Alert variant="warning" className="mb-4">
