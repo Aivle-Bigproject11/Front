@@ -83,7 +83,7 @@ const realApiService = {
   updatePhoto: async (photoId, data) => (await api.patch(`/photos/${photoId}`, data)).data,
   deletePhoto: async (photoId) => (await api.delete(`/photos/${photoId}`)).data,
 
-  createVideo: async (formData) => (await api.post('/videos', formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
+  createVideo: async (memorialId, formData) => (await api.post(`/memorials/${memorialId}/videos`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
   getVideo: async (videoId) => (await api.get(`/videos/${videoId}`)).data,
   deleteVideo: async (videoId) => (await api.delete(`/videos/${videoId}`)).data,
 

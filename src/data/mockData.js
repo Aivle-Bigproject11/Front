@@ -74,6 +74,37 @@ export const mockPhotos = [
   },
 ];
 
+export const mockVideos = [
+  {
+    id: 1,
+    videoId: 1,
+    memorialId: 1,
+    title: '추모 영상 1',
+    description: '소중한 추억들',
+    status: 'COMPLETED',
+    videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/video1/400/300',
+    outroImageUrl: 'https://picsum.photos/seed/outro1/400/300',
+    keywords: ['가족', '추억', '행복'],
+    createdAt: new Date().toISOString(),
+    completedAt: new Date().toISOString()
+  },
+  {
+    id: 2,
+    videoId: 2,
+    memorialId: 2,
+    title: '추모 영상 2',
+    description: '함께한 시간들',
+    status: 'REQUESTED',
+    videoUrl: null,
+    thumbnailUrl: null,
+    outroImageUrl: 'https://picsum.photos/seed/outro2/400/300',
+    keywords: ['친구', '우정', '소중함'],
+    createdAt: new Date().toISOString(),
+    completedAt: null
+  }
+];
+
 export const mockComments = [
   { 
     id: 1, 
@@ -108,8 +139,4 @@ export const mockComments = [
     date: '2024-08-03',
     createdAt: '2024-08-03T10:00:00.000Z'
   },
-];
-
-export const mockVideos = [
-    { id: 1, memorialId: mockMemorials[0].id, videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4' },
 ];

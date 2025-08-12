@@ -965,10 +965,27 @@ HTTP Method: POST
 
 | 필드명 | 타입 | 설명 |
 | --- | --- | --- |
-|  ._links.video.href | String | 해당 추모관 비디오의 링크 |
-| memorialId | String | 해당 추모관 ID |
-| keywords | String | 추모영상에 쓰일 키워드 |
-| status | String | 비디오 생성 상태(REQUESTED / COMPLETED) |
+| videoId | Number | 생성된 영상 ID |
+| memorialId | String(UUID) | 추모관 ID |
+| videoTitle | String | 추모영상 제목 |
+| videoUrl | String or null | 추모영상 URL (생성 완료 시) |
+| keywords | String | 추모영상에 사용된 키워드 |
+| status | String | 비디오 생성 상태(REQUESTED, COMPLETED) |
+| createdAt | String(timestamp) | 영상 생성 요청 일시 |
+| completedAt | String(timestamp) or null | 영상 생성 완료 일시 |
+
+```json
+{
+    "videoId": 1,
+    "memorialId": "0609f4bd-88d7-4dfd-a5cc-de1716bdc03e",
+    "videoTitle": "이영희님의 추모영상",
+    "videoUrl": null,
+    "keywords": "가족, 사랑, 추억, 감사, 평안",
+    "status": "REQUESTED",
+    "createdAt": "2025-08-12T09:39:42.789606",
+    "completedAt": null
+}
+```
 ---
 # 추모영상 삭제
 

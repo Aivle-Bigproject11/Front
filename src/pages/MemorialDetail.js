@@ -92,13 +92,15 @@ const MemorialDetail = () => {
           console.log('✅ 댓글 목록 로드 성공:', response.comments);
           setGuestbookList(response.comments);
         }
-        //   setGuestbookList([]);
-        // }
         
-        // 비디오 URL은 명세에 없으므로 임시 처리
-        // if (videos && videos.length > 0) {
-        //   setVideoUrl(videos[0].videoUrl);
-        // }
+        // 영상 정보 처리
+        if (response.videos && response.videos.length > 0) {
+          console.log('✅ 영상 목록 로드 성공:', response.videos);
+          const latestVideo = response.videos[0]; // 최신 영상 사용
+          if (latestVideo.videoUrl && latestVideo.status === 'COMPLETED') {
+            setVideoUrl(latestVideo.videoUrl);
+          }
+        }
       } catch (error) {
         console.error("❌ MemorialDetail API 호출 실패:", error);
         console.error("에러 상세:", error.response?.data, error.response?.status);
@@ -635,37 +637,139 @@ const MemorialDetail = () => {
                         minHeight: '350px'
                       }}
                     >
-                      {videoUrl ? (
-                          <video src={videoUrl} controls style={{ width: '100%', borderRadius: '12px' }} />
-                      ) : (
-                          <div className="memorial-video-container" style={{
-                            width: '100%',
-                            aspectRatio: '16 / 9',
-                            background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white'
-                          }}>
-                            <div className="text-center">
-                              <i className="fas fa-play-circle fa-3x mb-2" style={{ opacity: 0.8 }}></i>
-                              <h5>추모영상</h5>
-                              <p className="small">AI로 생성된 추모영상</p>
-                              <Button 
-                                variant="light"
-                                style={{
-                                  background: 'rgba(255, 251, 235, 0.9)',
-                                  color: '#2C1F14',
-                                  border: 'none'
-                                }}
-                              >
-                                <i className="fas fa-play me-2"></i>
-                                재생하기
-                              </Button>
+                      {(() => {
+                        if (!memorial.videos || memorial.videos.length === 0) {
+                          // 영상이 없는 경우
+                          return (
+                            <div className="memorial-video-container" style={{
+                              width: '100%',
+                              aspectRatio: '16 / 9',
+                              background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white'
+                            }}>
+                              <div className="text-center">
+                                <i className="fas fa-video fa-3x mb-3" style={{ opacity: 0.8 }}></i>
+                                <h5>추모영상이 없습니다</h5>
+                                <p className="small">관리 페이지에서 AI 추모영상을 생성할 수 있습니다</p>
+                                {canAccessSettings && (
+                                  <Button 
+                                    variant="light"
+                                    style={{
+                                      background: 'rgba(255, 251, 235, 0.9)',
+                                      color: '#2C1F14',
+                                      border: 'none'
+                                    }}
+                                    onClick={goToSettings}
+                                  >
+                                    <i className="fas fa-cog me-2"></i>
+                                    영상 생성하기
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                      )}
+                          );
+                        }
+
+                        const latestVideo = memorial.videos[0];
+                        
+                        if (latestVideo.status === 'COMPLETED' && latestVideo.videoUrl) {
+                          // 영상 생성 완료된 경우
+                          return (
+                            <div>
+                              <video 
+                                src={latestVideo.videoUrl} 
+                                controls 
+                                style={{ width: '100%', borderRadius: '12px' }}
+                                poster={memorial.profileImageUrl}
+                              />
+                              <div className="mt-3 text-center">
+                                <small className="text-muted">
+                                  <i className="fas fa-calendar-alt me-1"></i>
+                                  생성일: {new Date(latestVideo.completedAt || latestVideo.createdAt).toLocaleDateString('ko-KR')}
+                                </small>
+                                {latestVideo.keywords && (
+                                  <div className="mt-1">
+                                    <small className="text-muted">
+                                      <i className="fas fa-tags me-1"></i>
+                                      키워드: {latestVideo.keywords}
+                                    </small>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        } else if (latestVideo.status === 'REQUESTED') {
+                          // 영상 생성 중인 경우
+                          return (
+                            <div className="memorial-video-container" style={{
+                              width: '100%',
+                              aspectRatio: '16 / 9',
+                              background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white'
+                            }}>
+                              <div className="text-center">
+                                <div className="spinner-border mb-3" role="status">
+                                  <span className="visually-hidden">Loading...</span>
+                                </div>
+                                <h5>추모영상 생성 중</h5>
+                                <p className="small">AI가 감동적인 추모영상을 제작하고 있습니다</p>
+                                <p className="small">
+                                  <i className="fas fa-clock me-1"></i>
+                                  요청일: {new Date(latestVideo.createdAt).toLocaleDateString('ko-KR')}
+                                </p>
+                                {latestVideo.keywords && (
+                                  <p className="small">
+                                    <i className="fas fa-tags me-1"></i>
+                                    키워드: {latestVideo.keywords}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        } else {
+                          // 기타 상태 (에러 등)
+                          return (
+                            <div className="memorial-video-container" style={{
+                              width: '100%',
+                              aspectRatio: '16 / 9',
+                              background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white'
+                            }}>
+                              <div className="text-center">
+                                <i className="fas fa-exclamation-triangle fa-3x mb-3" style={{ opacity: 0.8 }}></i>
+                                <h5>영상 생성 실패</h5>
+                                <p className="small">영상 생성 중 문제가 발생했습니다</p>
+                                {canAccessSettings && (
+                                  <Button 
+                                    variant="light"
+                                    style={{
+                                      background: 'rgba(255, 251, 235, 0.9)',
+                                      color: '#2C1F14',
+                                      border: 'none'
+                                    }}
+                                    onClick={goToSettings}
+                                  >
+                                    <i className="fas fa-redo me-2"></i>
+                                    다시 생성하기
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
 
                     {/* 사진첩 콘텐츠 */}

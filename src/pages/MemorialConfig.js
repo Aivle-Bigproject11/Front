@@ -162,8 +162,56 @@ const MemorialConfig = () => {
                 alert('정보 수정에 실패했습니다.');
             }
         } else if (activeTab === 'video') {
-            // 영상 생성 처리 (개발중)
-            alert("영상 생성 기능은 현재 개발 중입니다.");
+            // 영상 생성 처리
+            if (!slideshowPhotos || slideshowPhotos.length === 0) {
+                alert("슬라이드쇼용 사진을 최소 1장 이상 선택해주세요.");
+                return;
+            }
+            
+            if (!animatedPhoto) {
+                alert("움직이는 효과를 적용할 사진을 선택해주세요.");
+                return;
+            }
+            
+            const validKeywords = keywords.filter(k => k.trim());
+            if (validKeywords.length === 0) {
+                alert("키워드를 최소 1개 이상 입력해주세요.");
+                return;
+            }
+
+            setIsVideoLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('memorialId', id);
+                formData.append('keywords', validKeywords.join(', '));
+                formData.append('imagesCount', slideshowPhotos.length);
+                formData.append('outroImage', animatedPhoto);
+                
+                // 슬라이드쇼 이미지들 추가
+                slideshowPhotos.forEach((photo, index) => {
+                    formData.append('images', photo);
+                });
+
+                console.log('🔗 CreateVideo 요청 시작 - Memorial ID:', id);
+                console.log('🔗 Keywords:', validKeywords.join(', '));
+                console.log('🔗 Images Count:', slideshowPhotos.length);
+                
+                const response = await apiService.createVideo(id, formData);
+                console.log('✅ CreateVideo 응답:', response);
+                
+                alert("영상 생성이 요청되었습니다. 생성이 완료되면 추모관에서 확인하실 수 있습니다.");
+                
+                // 폼 초기화
+                setSlideshowPhotos([]);
+                setAnimatedPhoto(null);
+                setKeywords(['', '', '', '', '']);
+                
+            } catch (error) {
+                console.error('❌ CreateVideo 실패:', error);
+                alert("영상 생성 요청에 실패했습니다. 다시 시도해주세요.");
+            } finally {
+                setIsVideoLoading(false);
+            }
 
         } else if (activeTab === 'memorial') {
             // 추모사 생성 처리
