@@ -3,7 +3,7 @@ import { mockMemorialService } from './memorialService'; // Menu4의 Mock 서비
 import { mockLoginService } from './loginService';       // Lobby, Login 등 사용자 관련 Mock 서비스
 
 // API 기본 설정
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8088';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -51,10 +51,10 @@ const realApiService = {
   deleteTribute: async (id) => (await api.delete(`/memorials/${id}/tribute`)).data,
 
   // 장례서류 관련 API
-  getFuneralInfos: () => api.get('/funeralInfos'),
-  getObituaries: () => api.get('/obituaries'),
-  getDeathReports: () => api.get('/deathReports'),
-  getSchedules: () => api.get('/schedules'),
+  getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
+  getObituaries: async () => (await api.get('/obituaries')).data,
+  getDeathReports: async () => (await api.get('/deathReports')).data,
+  getSchedules: async () => (await api.get('/schedules')).data,
   createObituary: (funeralInfoId) => api.put(`/funeralInfos/${funeralInfoId}/createobituary`),
   createDeathReport: (funeralInfoId) => api.put(`/funeralInfos/${funeralInfoId}/createdeathreport`),
   createSchedule: (funeralInfoId) => api.put(`/funeralInfos/${funeralInfoId}/createschedule`),
@@ -98,7 +98,6 @@ const realApiService = {
   getMemorialByCode: async (code) => (await api.get(`/memorials?code=${code}`)).data,
 
   // Other Services
-//  getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
   getDashboardData: async () => (await api.get('/dashboard')).data,
   getAnalyticsData: async () => (await api.get('/analytics')).data,
   getUsers: async () => (await api.get('/users')).data,

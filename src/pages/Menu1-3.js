@@ -156,17 +156,17 @@ const Menu1_3 = () => {
 
             if (docType === 'obituary') {
                 createApiCall = () => apiService.createObituary(funeralInfoId);
-                getApiCall = () => apiService.getObituaryByCustomerId(selectedCustomer.id);
+                getApiCall = () => apiService.getObituaryByCustomerId(selectedCustomer.customerId);
                 statusKey = 'obituaryStatus';
                 fileUrlKey = 'obituaryFileUrl';
             } else if (docType === 'deathCertificate') {
                 createApiCall = () => apiService.createDeathReport(funeralInfoId);
-                getApiCall = () => apiService.getDeathReportByCustomerId(selectedCustomer.id);
+                getApiCall = () => apiService.getDeathReportByCustomerId(selectedCustomer.customerId);
                 statusKey = 'deathReportStatus';
                 fileUrlKey = 'deathReportFileUrl';
             } else if (docType === 'schedule') {
                 createApiCall = () => apiService.createSchedule(funeralInfoId);
-                getApiCall = () => apiService.getScheduleByCustomerId(selectedCustomer.id);
+                getApiCall = () => apiService.getScheduleByCustomerId(selectedCustomer.customerId);
                 statusKey = 'scheduleStatus';
                 fileUrlKey = 'scheduleFileUrl';
             } else {
@@ -190,33 +190,40 @@ const Menu1_3 = () => {
             } else if (initialStatus === 'PENDING') {
                 setSuccessMessage(`${documentUtils.getDocumentName(docType)} 생성 요청 완료. 문서 생성 중...`);
                 // Start polling
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
+                    let pollCount = 0;
                     const pollDocumentStatus = async () => {
                         try {
+                            pollCount++;
+                            if (pollCount > 15) {
+                                setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 시간이 초과되었습니다. 다시 시도해주세요.`);
+                                resolve(false);
+                                return;
+                            }
+
                             const pollResponse = await getApiCall();
                             const currentStatus = pollResponse.data[statusKey];
 
                             if (currentStatus === 'COMPLETED') {
                                 setSuccessMessage(`${documentUtils.getDocumentName(docType)} 생성 완료.`);
-                                // Update the file URL state
                                 if (docType === 'obituary') setObituaryFileUrl(pollResponse.data[fileUrlKey]);
                                 else if (docType === 'deathCertificate') setDeathReportFileUrl(pollResponse.data[fileUrlKey]);
                                 else if (docType === 'schedule') setScheduleFileUrl(pollResponse.data[fileUrlKey]);
-                                loadPreview(docType); // Update preview
-                                resolve(true); // Indicate success
+                                loadPreview(docType);
+                                resolve(true);
                             } else if (currentStatus === 'PENDING') {
-                                setTimeout(pollDocumentStatus, 1000); // Poll again after 1 second
+                                setTimeout(pollDocumentStatus, 1000);
                             } else {
                                 setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 실패: ${currentStatus}`);
-                                resolve(false); // Indicate failure
+                                resolve(false);
                             }
                         } catch (pollError) {
                             console.error('Polling error:', pollError);
                             setErrorMessage('문서 상태 확인 중 오류가 발생했습니다.');
-                            resolve(false); // Indicate failure
+                            resolve(false);
                         }
                     };
-                    setTimeout(pollDocumentStatus, 1000); // Start polling after 1 second
+                    setTimeout(pollDocumentStatus, 1000);
                 });
             } else {
                 setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 실패: ${initialStatus}`);
@@ -227,8 +234,15 @@ const Menu1_3 = () => {
             console.error('Error generating document:', error);
             setErrorMessage('서류 생성 중 오류 발생');
             return false; // Indicate failure
+        }
+        // The finally block is now handled by the wrapper function
+    };
+
+    const handleSingleGenerate = async (docType) => {
+        try {
+            await handleGenerateDocument(docType);
         } finally {
-            // setGenerating(false); // This should be handled by confirmBulkAction
+            setGenerating(false);
         }
     };
 
@@ -371,7 +385,7 @@ const Menu1_3 = () => {
                             </h3>
                         </div>
                         <div className="d-flex gap-2">
-                            <Button className="save-btn" size="sm" onClick={() => handleGenerateDocument(selectedDoc)} disabled={generating}>{generating ? <Loader size={14} className='spinner me-2' /> : <FileText size={14} className='me-2' />}{isDocumentGenerated(selectedDoc) ? '재생성' : '생성'}</Button>
+                            <Button className="save-btn" size="sm" onClick={() => handleSingleGenerate(selectedDoc)} disabled={generating}>{generating ? <Loader size={14} className='spinner me-2' /> : <FileText size={14} className='me-2' />}{isDocumentGenerated(selectedDoc) ? '재생성' : '생성'}</Button>
                             
                             
                         </div>
@@ -413,29 +427,37 @@ const Menu1_3 = () => {
                 .spinner { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 
-                .save-btn {
+                .save-btn, .btn-golden {
                     padding: 10px 24px; font-size: 16px; font-weight: 700;
                     border: none; border-radius: 12px; cursor: pointer;
                     transition: all 0.3s ease; color: #2C1F14;
                     background: linear-gradient(135deg, #D4AF37, #F5C23E);
                     box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35);
                 }
-                .save-btn:hover {
-                    transform: translateY(-2px); box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
+                .save-btn:hover, .btn-golden:hover {
+                    transform: translateY(-2px); 
+                    box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
+                    background: linear-gradient(135deg, #CAA230, #E8B530);
+                    color: #2C1F14;
                 }
-                .save-btn:disabled {
-                    background: #e9ecef; box-shadow: none;
-                    color: #6c757d; cursor: not-allowed; border-color: #ced4da;
+                .save-btn:active, .save-btn.active,
+                .btn-golden:active, .btn-golden.active {
+                    background: linear-gradient(135deg, #c8a430, #e0b030) !important;
+                    transform: translateY(0);
+                    box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35) !important;
                 }
-                .save-btn:active,
-                .save-btn:focus,
-                .btn-check:active+.save-btn,
-                .btn-check:checked+.save-btn,
-                .save-btn.active { /* Added .save-btn.active for direct active class */
-                    background: linear-gradient(135deg, #CAA230, #E8B530) !important;
-                    border-color: #CAA230 !important; /* Ensure border also changes */
-                    color: #2C1F14 !important;
-                    box-shadow: 0 0 0 0.25rem rgba(184, 134, 11, 0.2) !important;
+                .save-btn:focus, .save-btn.focus,
+                .btn-golden:focus, .btn-golden.focus {
+                    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.5) !important;
+                }
+                .save-btn:disabled, .save-btn:disabled:hover, .save-btn:disabled:focus, .save-btn:disabled:active,
+                .btn-golden:disabled, .btn-golden:disabled:hover, .btn-golden:disabled:focus, .btn-golden:disabled:active {
+                    background: #e9ecef !important;
+                    background-image: none !important;
+                    box-shadow: none !important;
+                    color: #6c757d !important;
+                    cursor: not-allowed;
+                    border-color: #ced4da !important;
                 }
 
                 .content-scroll-area::-webkit-scrollbar,
@@ -464,20 +486,6 @@ const Menu1_3 = () => {
                     background: linear-gradient(135deg, #3c2d20, #7a4e24);
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
-                }
-
-                .btn-golden {
-                    background: linear-gradient(135deg, #D4AF37, #F5C23E);
-                    border: none;
-                    color: #2C1F14;
-                    font-weight: 700;
-                    transition: all 0.3s ease;
-                }
-                .btn-golden:hover {
-                    background: linear-gradient(135deg, #CAA230, #E8B530);
-                    color: #2C1F14;
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 15px rgba(184, 134, 11, 0.25);
                 }
 
                 .btn-outline-golden,

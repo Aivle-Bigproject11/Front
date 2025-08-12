@@ -238,6 +238,7 @@ const Menu1_2 = () => {
                 }
 
                 updateErrors(name, isValidTimeFormat); // Call updateErrors for the time field
+                updateErrors(fieldName, isValidTimeFormat); // Also update the main datetime field
 
                 return {
                     ...prev,
@@ -780,9 +781,28 @@ const Menu1_2 = () => {
                 .save-btn:hover {
                     transform: translateY(-2px); box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
                 }
-                .save-btn:disabled, .btn-outline-golden:disabled {
-                    background: #e9ecef; box-shadow: none;
-                    color: #6c757d; cursor: not-allowed; border-color: #ced4da;
+                .save-btn:active, .save-btn.active {
+                    background: linear-gradient(135deg, #c8a430, #e0b030) !important;
+                    transform: translateY(0);
+                    box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35) !important;
+                }
+                .save-btn:focus, .save-btn.focus {
+                    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.5) !important;
+                }
+                .save-btn:disabled,
+                .save-btn:disabled:hover,
+                .save-btn:disabled:focus,
+                .save-btn:disabled:active,
+                .btn-outline-golden:disabled,
+                .btn-outline-golden:disabled:hover,
+                .btn-outline-golden:disabled:focus,
+                .btn-outline-golden:disabled:active {
+                    background: #e9ecef !important;
+                    background-image: none !important;
+                    box-shadow: none !important;
+                    color: #6c757d !important;
+                    cursor: not-allowed;
+                    border-color: #ced4da !important;
                 }
                 .btn-outline-golden {
                     background-color: transparent !important;

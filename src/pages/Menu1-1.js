@@ -68,16 +68,16 @@ const Menu1_1 = () => {
         apiService.getSchedules()
       ]);
 
-      if (!funeralInfosResponse.data?._embedded?.funeralInfos) {
-        console.error("API response is missing expected '_embedded.funeralInfos' data.", funeralInfosResponse.data);
+      if (!funeralInfosResponse?._embedded?.funeralInfos) {
+        console.error("API response is missing expected '_embedded.funeralInfos' data.", funeralInfosResponse);
         setCustomers([]);
         return;
       }
 
-      const funeralInfos = funeralInfosResponse.data._embedded.funeralInfos;
-      const obituaries = obituariesResponse.data?._embedded?.obituaries || [];
-      const deathReports = deathReportsResponse.data?._embedded?.deathReports || [];
-      const schedules = schedulesResponse.data?._embedded?.schedules || [];
+      const funeralInfos = funeralInfosResponse._embedded.funeralInfos;
+      const obituaries = obituariesResponse?._embedded?.obituaries || [];
+      const deathReports = deathReportsResponse?._embedded?.deathReports || [];
+      const schedules = schedulesResponse?._embedded?.schedules || [];
 
       // Create maps for quick lookup of document statuses by funeralInfoId
       const obituaryStatusMap = new Map();
@@ -96,9 +96,12 @@ const Menu1_1 = () => {
       });
 
       const transformedData = funeralInfos.map(info => {
-        const isObituaryCompleted = obituaryStatusMap.get(info.funeralInfoId) === 'COMPLETED';
-        const isDeathCertificateCompleted = deathReportStatusMap.get(info.funeralInfoId) === 'COMPLETED';
-        const isScheduleCompleted = scheduleStatusMap.get(info.funeralInfoId) === 'COMPLETED';
+        const selfHref = info._links?.self?.href;
+        const funeralInfoId = selfHref ? parseInt(selfHref.split('/').pop(), 10) : null;
+
+        const isObituaryCompleted = obituaryStatusMap.get(funeralInfoId) === 'COMPLETED';
+        const isDeathCertificateCompleted = deathReportStatusMap.get(funeralInfoId) === 'COMPLETED';
+        const isScheduleCompleted = scheduleStatusMap.get(funeralInfoId) === 'COMPLETED';
 
         const documents = {
           obituary: isObituaryCompleted,
@@ -127,6 +130,7 @@ const Menu1_1 = () => {
       });
       
       setCustomers(transformedData);
+      setFilteredCustomers(transformedData);
     } catch (err) {
       setError('고객 데이터를 불러오는데 실패했습니다.');
       console.error('Error loading customers:', err);
