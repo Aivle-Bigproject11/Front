@@ -352,8 +352,8 @@ const Menu1_5 = () => {
             <div className="form-column">
               <div className="form-group">
                 <label className="form-label">고유 번호</label>
-                {/* <input type="text" name="customerId" value={formData.customerId || ''} className="form-input" readOnly /> */}
-                <input type="text" name="customerId" value={formData.customerId || ''} onChange={handleChange} className="form-input" />
+                <input type="text" name="customerId" value={formData.customerId || ''} className="form-input" readOnly />
+                {/* <input type="text" name="customerId" value={formData.customerId || ''} onChange={handleChange} className="form-input" /> */}
               </div>
               <div className="form-group">
                 <label className="form-label">이름</label>
@@ -435,7 +435,7 @@ const Menu1_5 = () => {
                 </Row>
               </div>
               <div className="form-group">
-                <label className="form-label">별세 장소</label>
+                <label className="form-label">주소지</label>
                 <input type="text" name="placeOfDeath" value={formData.placeOfDeath} onChange={handleChange} className={`form-input ${validationErrors.includes("placeOfDeath") ? "is-invalid" : ""}`} />
               </div>
               <div className="form-group">

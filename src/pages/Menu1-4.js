@@ -23,7 +23,12 @@ const Menu1_4 = () => {
             setError(null);
             try {
                 const response = await apiService.getCustomers();
-                setAllCustomers(response.data._embedded.customerProfiles || []);
+                const customers = response.data._embedded.customerProfiles.map(customer => {
+                    const href = customer._links.self.href;
+                    const id = href.substring(href.lastIndexOf('/') + 1);
+                    return { ...customer, customerId: id };
+                });
+                setAllCustomers(customers || []);
                 setFilteredCustomers([]);
             } catch (err) {
                 setError("데이터 로딩에 실패했습니다.");
@@ -141,7 +146,7 @@ const Menu1_4 = () => {
                                         <Card.Body>
                                             <Row className="align-items-center">
                                                 <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3">
-                                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.customerId}</p>
+                                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Id : {customer.customerId}</p>
                                                     <h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5>
                                                 </Col>
                                                 <Col md={7}>
