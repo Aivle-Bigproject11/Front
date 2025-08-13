@@ -62,9 +62,19 @@ const Menu1_4 = () => {
         setIsSearched(true);
     };
 
-    const handleRegisterDeceased = (customer) => {
-        localStorage.setItem('selectedCustomer', JSON.stringify(customer));
-        navigate('/menu1-5');
+    const handleRegisterDeceased = async (customer) => {
+        try {
+            await apiService.checkExistingFuneralInfo(customer.customerId);
+            alert('이미 등록된 고인입니다.');
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                localStorage.setItem('selectedCustomer', JSON.stringify(customer));
+                navigate('/menu1-5');
+            } else {
+                console.error("An unexpected error occurred:", error);
+                alert('오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        }
     };
 
     const getFamilyInfo = (customer) => {
