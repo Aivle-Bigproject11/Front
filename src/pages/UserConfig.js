@@ -1,27 +1,67 @@
-
+// src/pages/UserConfig.js
 import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/api';
 import icon from '../assets/logo/icon01.png';
 
 const UserConfig = () => {
   const [userInfo, setUserInfo] = useState({
-    username: '테스트관리자',
-    email: 'test@example.com',
+    username: '',
+    email: '',   
     newPassword: '',
     confirmPassword: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true); 
   const [animateCard, setAnimateCard] = useState(false);
-  const { user } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth(); 
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 카드 애니메이션 효과
-    setAnimateCard(true);
-  }, []);
+    setAnimateCard(true); // 카드 애니메이션 효과
+
+    const fetchInitialUserData = async () => {
+      if (authLoading) return; // AuthContext 로딩 중이면 기다림
+
+      if (!isAuthenticated || !user || !user.id) {
+        setError("사용자 정보를 불러올 수 없습니다. 로그인 상태를 확인해주세요.");
+        setInitialLoading(false);
+        return;
+      }
+
+      try {
+        setInitialLoading(true);
+        setError('');
+        let response;
+        if (user.userType === 'employee') {
+          response = await apiService.getManagerById(user.id);
+        } else if (user.userType === 'user') {
+          response = await apiService.getUserById(user.id);
+        } else {
+          setError("알 수 없는 사용자 유형입니다.");
+          setInitialLoading(false);
+          return;
+        }
+        
+        // 불러온 데이터로 userInfo 초기화
+        setUserInfo(prev => ({
+          ...prev,
+          username: response.name, // API 응답의 'name'을 'username'에 매핑
+          email: response.email,
+        }));
+      } catch (err) {
+        console.error("초기 사용자 정보를 가져오는 데 실패했습니다:", err);
+        setError("초기 사용자 정보를 가져오는 데 실패했습니다.");
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchInitialUserData();
+  }, [user, isAuthenticated, authLoading]); // user, isAuthenticated, authLoading이 변경될 때마다 실행
 
   const handleChange = (e) => {
     setUserInfo({
@@ -39,16 +79,44 @@ const UserConfig = () => {
     setLoading(true);
     setError('');
 
-    // TODO: 사용자 정보 수정 API 호출
-    console.log('수정된 사용자 정보:', userInfo);
-    
-    // 예시: 2초 후 성공 처리
-    setTimeout(() => {
+    try {
+      let updateData = { email: userInfo.email };
+      if (userInfo.newPassword) { // 새 비밀번호가 입력된 경우에만 포함
+        updateData.loginPassword = userInfo.newPassword; // 백엔드에서 비밀번호 필드가 'loginPassword'라고 가정
+      }
+
+      let response;
+      if (user.userType === 'employee') {
+        response = await apiService.updateManager(user.id, updateData);
+      } else if (user.userType === 'user') {
+        response = await apiService.updateUser(user.id, updateData);
+      } else {
+        setError("알 수 없는 사용자 유형입니다.");
+        setLoading(false);
+        return;
+      }
+
+      if (response.status === 200) { // 성공적인 응답 코드 확인
+        alert('사용자 정보가 성공적으로 수정되었습니다.');
+        navigate('/'); // 수정 후 이동할 페이지
+      } else {
+        setError(response.data.message || '정보 수정에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('사용자 정보 수정 실패:', err);
+      setError(err.response?.data?.message || '정보 수정 중 오류가 발생했습니다.');
+    } finally {
       setLoading(false);
-      alert('사용자 정보가 성공적으로 수정되었습니다.');
-      navigate('/'); // 수정 후 이동할 페이지
-    }, 2000);
+    }
   };
+
+  if (initialLoading) {
+    return (
+      <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div>사용자 정보를 불러오는 중...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-wrapper" style={{
