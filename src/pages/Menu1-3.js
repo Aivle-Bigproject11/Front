@@ -196,7 +196,7 @@ const Menu1_3 = () => {
                     const pollDocumentStatus = async () => {
                         try {
                             pollCount++;
-                            if (pollCount > 15) {
+                            if (pollCount > 90) {
                                 setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 시간이 초과되었습니다. 다시 시도해주세요.`);
                                 resolve(false);
                                 return;
