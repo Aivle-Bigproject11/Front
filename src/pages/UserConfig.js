@@ -373,7 +373,7 @@ const UserConfig = () => {
                 >
                   {loading ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      <span className="spinner-border spinner-border-sm me-2" role="status"style={{ width: '0.8rem', height: '0.8rem' }}></span>
                       수정 중...
                     </>
                   ) : (

@@ -129,7 +129,31 @@ const realApiService = {
 
   // User login
   loginUser: (credentials) => api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
-};
+
+
+ // Password verification
+  verifyPassword: async (loginId, password, userType) => {
+    try {
+      const credentials = { loginId, loginPassword: password }; // Use loginPassword for the key
+      let response;
+      if (userType === 'employee') {
+        response = await api.post('/managers/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } });
+      } else if (userType === 'user') {
+        response = await api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } });
+      } else {
+        // Handle unexpected userType or throw an error
+        console.error("Unknown userType for password verification:", userType);
+        return false;
+      }
+      // If the login endpoint returns 200 OK, it means the password is correct
+      return true;
+    } catch (error) {
+      // If the login endpoint returns an error (e.g., 401), it means the password is incorrect
+      console.error("Password verification failed using login endpoint:", error);
+      return false;
+    }
+  },
+}
 
 // --- 최종 서비스 객체 내보내기 ---
 const useMock = process.env.REACT_APP_API_MOCKING === 'true';

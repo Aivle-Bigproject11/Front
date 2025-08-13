@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { verifyPassword } from '../services/userService';
+import { apiService } from '../services/api'; 
 import icon from '../assets/logo/icon01.png';
+
 
 const PasswordCheck = () => {
   const [password, setPassword] = useState('');
@@ -24,7 +25,7 @@ const PasswordCheck = () => {
     setError('');
 
     try {
-      const isValid = await verifyPassword(user.loginId, password);
+      const isValid = await apiService.verifyPassword(user.loginId, password, user.userType);
       if (isValid) {
         navigate('/user-config');
       } else {
@@ -259,7 +260,7 @@ const PasswordCheck = () => {
                 >
                   {loading ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" style={{ width: '0.8rem', height: '0.8rem' }}></span>
                       확인 중...
                     </>
                   ) : (

@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }) => {
         token = response.data.token; // The token is directly in response.data.token
         userData = {
           id: foundUser.id,
-          loginId: foundUser.loginId,
+          loginId: loginId, // Use the loginId passed into loginByType
           name: foundUser.name,
           userType: 'employee' // Set userType explicitly
         };
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
         token = response.data.token; // The token is directly in response.data.token
         userData = {
           id: foundUser.id,
-          loginId: foundUser.loginId,
+          loginId: loginId, // Use the loginId passed into loginByType
           name: foundUser.name,
           userType: 'user' // Set userType explicitly
         };
