@@ -522,7 +522,7 @@ const Login = () => {
             {/* 오른쪽 폼 영역 */}
             <div className="login-card-right" style={{
               flex: '1',
-              padding: '30px 40px 15px 40px',
+              padding: '15px 40px 15px',
               display: 'flex',
               flexDirection: 'column',
               background: activeTab === 'employee' 
@@ -798,13 +798,12 @@ const Login = () => {
                 padding: '15px', 
                 background: 'rgba(184, 134, 11, 0.12)', 
                 borderRadius: '12px', 
-                marginBottom: '15px', 
                 border: '1px solid rgba(184, 134, 11, 0.25)',
                 visibility: activeTab === 'employee' ? 'hidden' : 'visible' 
                 }}>
                 <h6 style={{ 
                     color: '#2C1F14', 
-                    marginBottom: '10px', 
+                    marginBottom: '5px', 
                     fontSize: '14px', 
                     fontWeight: '700' 
                     }}>
