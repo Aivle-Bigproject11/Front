@@ -9,26 +9,40 @@ const Menu5 = () => {
 
     // === 상태 관리 ===
     const [filteredCustomers, setFilteredCustomers] = useState([]);
-    const [loading, setLoading] = useState(false); // 초기 로딩은 없으므로 false
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [animateCard, setAnimateCard] = useState(false);
-    const [isSearched, setIsSearched] = useState(false); // 조회 버튼 클릭 여부 상태
+    const [isSearched, setIsSearched] = useState(false);
     const [filters, setFilters] = useState({
         customerId: '', name: '', age: '', gender: [], disease: [], isMarried: [], hasChildren: [],
     });
 
-    // 컴포넌트가 처음 렌더링될 때 애니메이션 효과만 적용
     useEffect(() => {
         setAnimateCard(true);
     }, []);
 
-    // === 데이터 처리 함수 ===
+    // === 데이터 처리 및 헬퍼 함수 ===
 
-    // HATEOAS 형식의 API 응답에서 ID를 추출하는 헬퍼 함수
+    // HATEOAS 형식의 API 응답에서 ID를 추출하는 함수
     const getIdFromUrl = (url) => {
         if (!url) return null;
         const parts = url.split('/');
         return parts[parts.length - 1];
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '정보 없음';
+        return dateString.split('T')[0];
+    };
+
+    const maskRrn = (rrn) => {
+        if (!rrn || typeof rrn !== 'string' || !rrn.includes('-')) return '정보 없음';
+        const parts = rrn.split('-');
+      if (parts.length !== 2 || parts[0].length !== 6 || parts[1].length < 1) {
+            return rrn; 
+        }
+        const firstDigitOfBack = parts[1].substring(0, 1);
+        return `${parts[0]}-${firstDigitOfBack}******`;
     };
 
     const handleSearch = async () => {
@@ -38,12 +52,10 @@ const Menu5 = () => {
         
         try {
             const response = await customerService.getAllCustomers();
-            
-            // Spring HATEOAS 형식의 응답에서 실제 데이터 배열을 추출하고 가공
             const allCustomers = (response.data._embedded?.customerProfiles || []).map(c => ({
                 ...c,
-                id: getIdFromUrl(c._links.self.href), // URL에서 고유 ID 추출
-                hasDisease: c.diseaseList && c.diseaseList.length > 0, // 질병 유무 판별
+                id: getIdFromUrl(c._links.self.href),
+                hasDisease: c.diseaseList && c.diseaseList.length > 0,
             }));
 
             let result = [...allCustomers];
@@ -58,8 +70,13 @@ const Menu5 = () => {
                 const [minAge, maxAge] = filters.age.split('-').map(Number);
                 result = result.filter(c => c.age >= minAge && c.age <= maxAge);
             }
+
             if (filters.gender.length > 0) {
-                result = result.filter(c => filters.gender.includes(c.gender));
+                result = result.filter(c => {
+                    if (!c.gender) return false;
+                    // '남' 또는 '여'로 시작하는지 확인하여 '남성', '여성'도 포함
+                    return filters.gender.some(filterGender => c.gender.startsWith(filterGender));
+                });
             }
             if (filters.disease.length > 0) {
                 const hasDisease = filters.disease.includes('유');
@@ -91,14 +108,13 @@ const Menu5 = () => {
         } catch (err) {
             setError("데이터 조회에 실패했습니다. 서버 상태를 확인해주세요.");
             console.error(err);
-            setFilteredCustomers([]); // 에러 발생 시 목록 비우기
+            setFilteredCustomers([]);
         } finally {
             setLoading(false);
-            setIsSearched(true); // 조회가 수행되었음을 표시
+            setIsSearched(true);
         }
     };
 
-    // === 핸들러 및 헬퍼 함수 ===
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFilters(prev => ({ ...prev, [name]: value }));
@@ -184,12 +200,15 @@ const Menu5 = () => {
                                            </Col>
                                            <Col md={7}>
                                                <Row>
-                                                   <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthDate} (만 {customer.age}세)</Col>
+                                                   <Col sm={6} className="mb-2"><strong>생년월일:</strong> {formatDate(customer.birthDate)} (만 {customer.age}세)</Col>
+                                                   <Col sm={6} className="mb-2"><strong>주민등록번호:</strong> {maskRrn(customer.rrn)}</Col>
                                                    <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
                                                    <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
+                                                   <Col sm={6} className="mb-2"><strong>이메일:</strong> {customer.email || '정보 없음'}</Col>
                                                    <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
                                                    <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
                                                    <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
+                                                   <Col sm={12}><strong>보유 질병:</strong> {customer.diseaseList && customer.diseaseList.length > 0 ? customer.diseaseList.join(', ') : '없음'}</Col>
                                                </Row>
                                            </Col>
                                            <Col md={2} className="text-center text-md-end">

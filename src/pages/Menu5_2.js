@@ -63,6 +63,22 @@ const Menu5_2 = () => {
     setFormData(prevState => ({ ...prevState, [name]: value }));
   };
 
+  // 전화번호 자동 하이픈(-) 추가 핸들러
+  const handlePhoneChange = (e) => {
+    const rawValue = e.target.value.replace(/\D/g, "");
+    let formattedValue = "";
+
+    if (rawValue.length < 4) {
+        formattedValue = rawValue;
+    } else if (rawValue.length < 8) {
+        formattedValue = `${rawValue.slice(0, 3)}-${rawValue.slice(3)}`;
+    } else {
+        formattedValue = `${rawValue.slice(0, 3)}-${rawValue.slice(3, 7)}-${rawValue.slice(7, 11)}`;
+    }
+    
+    setFormData(prevState => ({ ...prevState, phone: formattedValue }));
+  };
+
   const handleRrnChange = (e) => {
     const { value } = e.target;
     const cleaned = value.replace(/\D/g, ''); 
@@ -118,7 +134,7 @@ const Menu5_2 = () => {
         isMarried: formData.maritalStatus === '기혼', 
         hasChildren: formData.hasChildren === '유', 
         diseaseList: diseases, 
-        // email 추가 필요
+        email: formData.email, 
     };
 
     if (!customerData.name || !customerData.phone) {
@@ -181,7 +197,7 @@ const Menu5_2 = () => {
               </div>
               <div className="form-group">
                 <label className="form-label">전화번호</label>
-                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="form-input" placeholder="숫자 11자리만 입력" maxLength="11" />
+                <input type="tel" name="phone" value={formData.phone} onChange={handlePhoneChange} className="form-input" placeholder="숫자 11자리만 입력" maxLength="13" />
               </div>
               <div className="form-group">
                 <label className="form-label">주민등록번호</label>
