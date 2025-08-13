@@ -47,7 +47,7 @@ const UserConfig = () => {
         if (user.userType === 'employee') {
           response = await apiService.getManagerById(user.id);
         } else if (user.userType === 'user') {
-          response = await apiService.getUserById(user.id);
+          response = await apiService.getFamilyById(user.id);
         } else {
           setError("알 수 없는 사용자 유형입니다.");
           setInitialLoading(false);
@@ -180,7 +180,7 @@ const UserConfig = () => {
         if (user.userType === 'employee') {
             response = await apiService.updateManagerPatch(user.id, updateData); // updateManagerPatch 사용
         } else if (user.userType === 'user') {
-         response = await apiService.updateUserPatch(user.id, updateData); // updateUserPatch 사용
+         response = await apiService.updateFamilyPatch(user.id, updateData); // updateFamilyPatch 사용
         } else {
             setPopupMessage("알 수 없는 사용자 유형입니다.");
             setShowPopup(true);

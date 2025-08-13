@@ -67,8 +67,7 @@ function App() {
                             <Route path="/menu5_2" element={<NavbarWrapper><Menu5_2 /></NavbarWrapper>} />
                             <Route path="/memorial/:id" element={<NavbarWrapper><MemorialDetail /></NavbarWrapper>} />
                             <Route path="/memorial/:id/settings" element={<NavbarWrapper><MemorialConfig /></NavbarWrapper>} />
-                            <Route path="/password-check" element={<NavbarWrapper><PasswordCheck /></NavbarWrapper>} />
-                            <Route path="/user-config" element={<NavbarWrapper><UserConfig /></NavbarWrapper>} />
+
                         </Route>
 
                         {/* User Protected Routes */}
@@ -76,6 +75,11 @@ function App() {
                             <Route path="/lobby" element={<Lobby />} />
                             <Route path="/user-memorial/:id" element={<MemorialDetail />} />
                             <Route path="/user-memorial/:id/settings" element={<MemorialConfig />} />
+                        </Route>
+
+                        <Route element={<PrivateRoute allowedUserTypes={['employee', 'user']} />}>
+                            <Route path="/password-check" element={<NavbarWrapper><PasswordCheck /></NavbarWrapper>} />
+                            <Route path="/user-config" element={<NavbarWrapper><UserConfig /></NavbarWrapper>} />
                         </Route>
 
                         {/* Fallback for any unmatched routes */}

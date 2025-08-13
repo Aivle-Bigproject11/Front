@@ -120,21 +120,25 @@ const realApiService = {
   updateUserPatch: async (id, data) => (await api.patch(`/users/${id}`, data)).data,
   deleteUser: async (id) => (await api.delete(`/users/${id}`)).data,
 
-  // Manager related APIs
-  getManagerById: async (id) => (await api.get(`/managers/${id}`)).data, 
 
-  // Manager signup
-  updateManagerPatch: async (id, managerData) => (await api.patch(`/managers/${id}`, managerData)).data,
+  // 직원 관련 API
   createManager: (data) => api.post('/managers', data),
-
+  getManagerById: async (id) => (await api.get(`/managers/${id}`)).data, 
+  updateManagerPatch: async (id, managerData) => (await api.patch(`/managers/${id}`, managerData)).data,
   // Manager login
   loginManager: (credentials) => api.post('/managers/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
 
-  // Family signup
-  createFamily: (data) => api.post('/families', data),
 
+  // 사용자 관련 API
+  createFamily: (data) => api.post('/families', data),
+  getFamilyById: async (id) => (await api.get(`/families/${id}`)).data,
+  updateFamilyPatch: async (id, data) => (await api.patch(`/families/${id}`, data)).data,
   // User login
   loginUser: (credentials) => api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
+
+
+  // 
+
 
 
  // Password verification
