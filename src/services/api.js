@@ -111,13 +111,17 @@ const realApiService = {
   // Other Services
   getDashboardData: async () => (await api.get('/dashboard')).data,
   getAnalyticsData: async () => (await api.get('/analytics')).data,
-  getUsers: async () => (await api.get('/users')).data,
+    getUsers: async () => (await api.get('/users')).data,
+  getManagers: async () => (await api.get('/managers')).data, // Added for ID duplication check
   createUser: async (data) => (await api.post('/users', data)).data,
   updateUser: async (id, data) => (await api.put(`/users/${id}`, data)).data,
   deleteUser: async (id) => (await api.delete(`/users/${id}`)).data,
 
   // Manager signup
   createManager: (data) => api.post('/managers', data),
+
+  // Family signup
+  createFamily: (data) => api.post('/families', data),
 };
 
 // --- 최종 서비스 객체 내보내기 ---

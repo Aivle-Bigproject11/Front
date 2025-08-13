@@ -162,16 +162,32 @@ function SignUp() {
         setLoading(false);
       }
     } else {
-      // Handle user signup logic here if it's different
-      setPopupMessage('사용자 회원가입은 현재 지원되지 않습니다.');
-      setShowPopup(true);
-      setLoading(false);
+      const familyData = {
+        name: name,
+        loginId: userId,
+        loginPassword: password,
+        email: email,
+        phone: phone,
+      };
+
+      try {
+        await apiService.createFamily(familyData);
+        setPopupMessage('사용자 회원가입이 완료되었습니다!');
+        setShowPopup(true);
+        // navigate('/login'); // Optionally navigate after popup confirmation
+      } catch (error) {
+        console.error("Family creation failed:", error);
+        setPopupMessage('회원가입에 실패했습니다. 다시 시도해주세요.');
+        setShowPopup(true);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   const closePopup = () => {
     setShowPopup(false);
-    if (popupMessage === '직원 회원가입이 완료되었습니다!') {
+    if (popupMessage === '직원 회원가입이 완료되었습니다!' || popupMessage === '사용자 회원가입이 완료되었습니다!') {
       navigate('/login');
     }
   };
