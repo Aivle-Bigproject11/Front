@@ -111,8 +111,7 @@ const realApiService = {
   // Other Services
   getDashboardData: async () => (await api.get('/dashboard')).data,
   getAnalyticsData: async () => (await api.get('/analytics')).data,
-    getUsers: async () => (await api.get('/users')).data,
-  getManagers: async () => (await api.get('/managers')).data, // Added for ID duplication check
+  getUsers: async () => (await api.get('/users')).data,
   createUser: async (data) => (await api.post('/users', data)).data,
   updateUser: async (id, data) => (await api.put(`/users/${id}`, data)).data,
   deleteUser: async (id) => (await api.delete(`/users/${id}`)).data,
