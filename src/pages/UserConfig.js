@@ -12,9 +12,15 @@ const UserConfig = () => {
     username: '',
     email: '',
     phone: '',
-    newPassword: '',
-    confirmPassword: '',
   });
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isPasswordValid, setIsPasswordValid] = useState(true);
+  const [passwordsMatch, setPasswordsMatch] = useState(true);
+  const [isEmailValid, setIsEmailValid] = useState(true); // New state
+  const [isPhoneValid, setIsPhoneValid] = useState(true); // New state
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -67,6 +73,41 @@ const UserConfig = () => {
     fetchInitialUserData();
   }, [user, isAuthenticated, authLoading]); // user, isAuthenticated, authLoading이 변경될 때마다 실행
 
+  const validatePassword = (pw) => {
+    const hasLetters = /[a-zA-Z]/.test(pw);
+    const hasNumbers = /\d/.test(pw);
+    const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(pw);
+    const types = [hasLetters, hasNumbers, hasSymbols].filter(Boolean).length;
+    if (types >= 3 && pw.length >= 8) return true;
+    if (types >= 2 && pw.length >= 10) return true;
+    return false;
+  };
+
+  const validatePhoneNumber = (phoneNumber) => {
+    const re = /^\d{3}-\d{4}-\d{4}$/;
+    return re.test(phoneNumber);
+  };
+
+  // 이메일 형식 검사 함수
+  const validateEmail = (email) => {
+    const re = /^(([^<>()[\\]\\.,;:\s@\"]+(\\.[^<>()[\\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\\[0-9]{1,3}\\[0-9]{1,3}\\[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  };
+
+  useEffect(() => {
+    if (newPassword) {
+      setIsPasswordValid(validatePassword(newPassword));
+    } else {
+      setIsPasswordValid(true);
+    }
+
+    if (confirmPassword) {
+      setPasswordsMatch(newPassword === confirmPassword);
+    } else {
+      setPasswordsMatch(true);
+    }
+  }, [newPassword, confirmPassword]);
+
   const formatPhoneNumber = (value) => {
     if (!value) return "";
     value = value.replace(/[^0-9]/g, ""); // Remove all non-numeric characters
@@ -86,26 +127,42 @@ const UserConfig = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "phone") {
-      setUserInfo({
-        ...userInfo,
-        [name]: formatPhoneNumber(value),
-      });
-    } else {
-      setUserInfo({
-        ...userInfo,
-        [name]: value,
-      });
+      const formattedValue = formatPhoneNumber(value);
+      setUserInfo({ ...userInfo, phone: formattedValue });
+      setIsPhoneValid(validatePhoneNumber(formattedValue)); // Update phone validation state
+    } else if (name === 'email') {
+      setUserInfo({ ...userInfo, email: value });
+      setIsEmailValid(validateEmail(value)); // Update email validation state
+    } else if (name === 'newPassword') {
+      setNewPassword(value);
+    } else if (name === 'confirmPassword') {
+      setConfirmPassword(value);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (userInfo.newPassword !== userInfo.confirmPassword) {
-      setError('새 비밀번호가 일치하지 않습니다.');
+    
+    if (newPassword) {
+      if (!isPasswordValid) {
+        return;
+      }
+      if (!passwordsMatch) {
+        return;
+      }
+    }
+
+    if (!isEmailValid) {
+        return;
+    }
+
+    if (!isPhoneValid) {
       return;
     }
+    
     setLoading(true);
-    setError('');
+    setPopupMessage(''); // Clear previous popup message
+    setShowPopup(false); // Hide previous popup
 
     try {
         let updateData = {
@@ -115,8 +172,8 @@ const UserConfig = () => {
             phone: userInfo.phone,
         };
 
-        if (userInfo.newPassword) { // 새 비밀번호가 입력된 경우에만 포함
-            updateData.loginPassword = userInfo.newPassword;
+        if (newPassword) { // 새 비밀번호가 입력된 경우에만 포함
+            updateData.loginPassword = newPassword;
         }
 
         let response;
@@ -125,18 +182,28 @@ const UserConfig = () => {
         } else if (user.userType === 'user') {
          response = await apiService.updateUserPatch(user.id, updateData); // updateUserPatch 사용
         } else {
-            setError("알 수 없는 사용자 유형입니다.");
+            setPopupMessage("알 수 없는 사용자 유형입니다.");
+            setShowPopup(true);
             setLoading(false);
             return;
         }
 
-      alert('사용자 정보가 성공적으로 수정되었습니다.');
-      navigate('/'); // 수정 후 이동할 페이지
+      setPopupMessage('사용자 정보가 성공적으로 수정되었습니다.');
+      setShowPopup(true);
+      // navigate('/'); // Optionally navigate after popup confirmation, handled by closePopup if needed
     } catch (err) {
       console.error('사용자 정보 수정 실패:', err);
-      setError('정보 수정 중 오류가 발생했습니다.');
+      setPopupMessage('정보 수정 중 오류가 발생했습니다.');
+      setShowPopup(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+    if (popupMessage === '사용자 정보가 성공적으로 수정되었습니다.') {
+      navigate('/');
     }
   };
 
@@ -159,8 +226,17 @@ const UserConfig = () => {
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative',
-      overflow: 'hidden',
-    }}>
+      overflow: 'auto', // Changed to auto
+    }}> 
+      {/* 팝업 UI */}
+      {showPopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <p>{popupMessage}</p>
+            <button onClick={closePopup} className="popup-button">확인</button>
+          </div>
+        </div>
+      )}
       {/* 배경 패턴 */}
       <div style={{
         position: 'absolute',
@@ -178,7 +254,6 @@ const UserConfig = () => {
         width: '100%',
         maxWidth: '940px',
         height: 'auto', // height: '100%' -> 'auto'
-        maxHeight: 'calc(100vh - 100px)', // max-height 추가
         overflowY: 'auto',
         margin: '0 auto',
         display: 'flex',
@@ -267,11 +342,10 @@ const UserConfig = () => {
             {/* 오른쪽 폼 영역 */}
             <div className="login-right" style={{
               flex: '1',
-              padding: '40px 30px', // 패딩 조정
+              padding: '20px 30px', // 패딩 조정
               display: 'flex',
               flexDirection: 'column',
               background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              borderRadius: '16px',
               boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
               border: '1px solid rgba(184, 134, 11, 0.2)'
             }}>
@@ -289,20 +363,6 @@ const UserConfig = () => {
                   fontWeight: '500'
                 }}>사용자 정보를 수정할 수 있습니다.</p>
               </div>
-
-              {error && (
-                <Alert variant="danger" style={{
-                  borderRadius: '10px',
-                  border: 'none',
-                  backgroundColor: '#fff5f5',
-                  color: '#e53e3e',
-                  marginBottom: '20px',
-                  border: '1px solid #fed7d7',
-                  padding: '12px 15px',
-                }}>
-                  {error}
-                </Alert>
-              )}
 
               <form onSubmit={handleSubmit} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ flexGrow: 1 }}>
@@ -322,7 +382,7 @@ const UserConfig = () => {
                       readOnly
                       style={{
                         width: '100%',
-                        padding: '10px 15px', // 패딩 조정
+                        padding: '7px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
@@ -349,7 +409,7 @@ const UserConfig = () => {
                       required
                       style={{
                         width: '100%',
-                        padding: '10px 15px', // 패딩 조정
+                        padding: '7px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
@@ -366,6 +426,9 @@ const UserConfig = () => {
                         e.target.style.boxShadow = 'none';
                       }}
                     />
+                    <div style={{ height: '22px' }}>
+                        {!isEmailValid && userInfo.email && <p style={{ paddingLeft: 0, margin: '6px 0 0 0', color: '#dc3545', fontSize: '13px', fontWeight: '500' }}>올바른 이메일 형식이 아닙니다.</p>}
+                    </div>
                   </div>
 
                   <div className="login-form-group" style={{ marginBottom: '20px' }}>
@@ -385,7 +448,7 @@ const UserConfig = () => {
                       required
                       style={{
                         width: '100%',
-                        padding: '10px 15px', // 패딩 조정
+                        padding: '7px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
@@ -402,6 +465,9 @@ const UserConfig = () => {
                         e.target.style.boxShadow = 'none';
                       }}
                     />
+                    <div style={{ height: '22px' }}>
+                        {!isPhoneValid && userInfo.phone && <p style={{ paddingLeft: 0, margin: '6px 0 0 0', color: '#dc3545', fontSize: '13px', fontWeight: '500' }}>전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)</p>}
+                    </div>
                   </div>
 
                   <div className="login-form-group" style={{ marginBottom: '20px' }}>
@@ -416,12 +482,12 @@ const UserConfig = () => {
                       type="password"
                       name="newPassword"
                       className="login-form-control"
-                      value={userInfo.newPassword}
+                      value={newPassword}
                       onChange={handleChange}
                       placeholder="새 비밀번호"
                       style={{
                         width: '100%',
-                        padding: '10px 15px', // 패딩 조정
+                        padding: '7px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
@@ -438,6 +504,16 @@ const UserConfig = () => {
                         e.target.style.boxShadow = 'none';
                       }}
                     />
+                    <p style={{ 
+                        color: !isPasswordValid && newPassword ? '#dc3545' : '#4A3728',
+                        fontSize: '12px',
+                        marginTop: '6px',
+                        fontWeight: '500',
+                        lineHeight: '1.4',
+                        transition: 'color 0.3s ease'
+                    }}>
+                        *영문, 숫자, 특수문자 중 2종류 조합 시 10자리, 3종류 조합 시 8자리 이상으로 구성해주세요.
+                    </p>
                   </div>
 
                   <div className="login-form-group" style={{ marginBottom: '20px' }}>
@@ -452,12 +528,12 @@ const UserConfig = () => {
                       type="password"
                       name="confirmPassword"
                       className="login-form-control"
-                      value={userInfo.confirmPassword}
+                      value={confirmPassword}
                       onChange={handleChange}
                       placeholder="새 비밀번호 확인"
                       style={{
                         width: '100%',
-                        padding: '10px 15px', // 패딩 조정
+                        padding: '7px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
@@ -474,6 +550,9 @@ const UserConfig = () => {
                         e.target.style.boxShadow = 'none';
                       }}
                     />
+                    <div style={{ height: '22px' }}>
+                        {!passwordsMatch && confirmPassword && <p style={{ paddingLeft: 0, margin: '6px 0 0 0', color: '#dc3545', fontSize: '13px', fontWeight: '500' }}>비밀번호가 일치하지 않습니다.</p>}
+                    </div>
                   </div>
                 </div>
 
@@ -578,6 +657,48 @@ const UserConfig = () => {
           .login-right h2 {
             font-size: 22px !important;
           }
+        }
+        /* Popup styles */
+        .popup-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.6);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        .popup-content {
+          background-color: #fff;
+          padding: 30px 40px;
+          border-radius: 12px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+          text-align: center;
+          min-width: 300px;
+          border: 1px solid #B8860B;
+        }
+        .popup-content p {
+          color: #2C1F14;
+          font-weight: 500;
+        }
+        .popup-button {
+          padding: 10px 25px;
+          background: linear-gradient(135deg, #B8860B, #CD853F);
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          margin-top: 20px;
+          font-size: 16px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+        .popup-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(184, 134, 11, 0.4);
         }
       `}</style>
     </div>
