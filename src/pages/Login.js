@@ -42,13 +42,13 @@ const Login = () => {
     setAnimateCard(true);
   }, [isAuthenticated, user, navigate]);
 
-  // 탭 전환시 테스트 계정 정보 자동 입력
+  // 탭 전환시 테스트 계정 정보 자동 입력 (제거됨)
   useEffect(() => {
-    if (activeTab === 'employee') {
-      setCredentials({ username: 'admin', password: 'password' });
-    } else {
-      setCredentials({ username: 'user', password: 'password' });
-    }
+    // if (activeTab === 'employee') {
+    //   setCredentials({ username: 'admin', password: 'password' });
+    // } else {
+    //   setCredentials({ username: 'user', password: 'password' });
+    // }
   }, [activeTab]);
 
   const handleChange = (e) => {
@@ -620,8 +620,8 @@ const Login = () => {
                     margin: 0, 
                     fontWeight: '600' 
                     }}>
-                  <i className="fas fa-yin-yang me-2" style={{ color: '#B8860B' }}></i>
-                  테스트용 계정: {activeTab === 'employee' ? 'admin / password' : 'user / password'}
+                  <i className="fas fa-info-circle me-2" style={{ color: '#B8860B' }}></i>
+                  로그인하고자 하는 탭을 상단에서 확인하고 선택해 주세요.
                 </p>
               </div>
 
