@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { customerService } from '../services/customerService'; 
 
-// 아이콘 SVG 컴포넌트
+// 아이콘 SVG 컴포넌트 ... (이하 생략)
 const PlusIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-plus-lg" viewBox="0 0 16 16">
     <path fillRule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
@@ -35,7 +36,7 @@ const Menu5_2 = () => {
   const navigate = useNavigate();
   const [animateCard, setAnimateCard] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', birthYear: '', birthMonth: '', birthDay: '',
+    name: '', email: '', phone: '', rrn: '', birthYear: '', birthMonth: '', birthDay: '',
     occupation: '', address: '', gender: '남', maritalStatus: '미혼', hasChildren: '무',
   });
   
@@ -61,6 +62,18 @@ const Menu5_2 = () => {
     const { name, value } = e.target;
     setFormData(prevState => ({ ...prevState, [name]: value }));
   };
+
+  const handleRrnChange = (e) => {
+    const { value } = e.target;
+    const cleaned = value.replace(/\D/g, ''); 
+    let formatted = cleaned;
+
+    if (cleaned.length > 6) {
+      formatted = `${cleaned.slice(0, 6)}-${cleaned.slice(6, 13)}`;
+    }
+    
+    setFormData(prevState => ({ ...prevState, rrn: formatted }));
+  };
   
   const handleDiseaseChange = (e) => setCurrentDisease(e.target.value);
 
@@ -75,20 +88,63 @@ const Menu5_2 = () => {
     setDiseases(diseases.filter(disease => disease !== diseaseToRemove));
   };
   
-  // 추가 핸들러
-  const handleAddCustomer = (e) => {
+  
+  const handleAddCustomer = async (e) => {
     e.preventDefault();
-    const completeFormData = { ...formData, diseases };
-    console.log('추가된 고객 정보:', completeFormData);
     
-    setPopup({
-        isOpen: true,
-        message: '고객 정보가 추가되었습니다.',
-        onConfirm: () => {
-            closePopup();
-            navigate(-1);
+    // 생년월일로 나이 계산
+    const { birthYear, birthMonth, birthDay } = formData;
+    let age = null;
+    if (birthYear && birthMonth && birthDay) {
+        const today = new Date();
+        const birthDate = new Date(parseInt(birthYear), parseInt(birthMonth) - 1, parseInt(birthDay));
+        let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            calculatedAge--;
         }
-    });
+        age = calculatedAge;
+    }
+
+    const customerData = {
+        name: formData.name,
+        phone: formData.phone,
+        rrn: formData.rrn, 
+        birthDate: `${formData.birthYear}-${String(formData.birthMonth).padStart(2, '0')}-${String(formData.birthDay).padStart(2, '0')}`,
+        age: age,
+        job: formData.occupation, 
+        address: formData.address,
+        gender: formData.gender,
+        isMarried: formData.maritalStatus === '기혼', 
+        hasChildren: formData.hasChildren === '유', 
+        diseaseList: diseases, 
+        // email 추가 필요
+    };
+
+    if (!customerData.name || !customerData.phone) {
+        setPopup({ isOpen: true, message: '이름과 전화번호는 필수 항목입니다.', onConfirm: closePopup });
+        return;
+    }
+
+    try {
+      await customerService.createCustomer(customerData);
+
+      setPopup({
+          isOpen: true,
+          message: '고객 정보가 성공적으로 추가되었습니다.',
+          onConfirm: () => {
+              closePopup();
+              navigate(-1); 
+          }
+      });
+    } catch (error) {
+      console.error('Failed to create customer:', error);
+      setPopup({
+          isOpen: true,
+          message: '고객 정보 추가에 실패했습니다. 다시 시도해주세요.',
+          onConfirm: closePopup
+      });
+    }
   };
 
   const currentYear = new Date().getFullYear();
@@ -127,23 +183,35 @@ const Menu5_2 = () => {
                 <label className="form-label">전화번호</label>
                 <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="form-input" placeholder="숫자 11자리만 입력" maxLength="11" />
               </div>
+              <div className="form-group">
+                <label className="form-label">주민등록번호</label>
+                <input 
+                  type="text" 
+                  name="rrn" 
+                  value={formData.rrn} 
+                  onChange={handleRrnChange} 
+                  className="form-input" 
+                  placeholder="xxxxxx-xxxxxxx" 
+                  maxLength="14" 
+                />
+              </div>
             </div>
 
             <div className="form-column">
               <div className="form-group">
                 <label className="form-label">생년월일</label>
                 <div className="birthdate-selects">
-                  <select name="birthYear" value={formData.birthYear} onChange={handleChange} className="form-select">
+                  <select name="birthYear" value={formData.birthYear} onChange={handleChange} className="form-select" required>
                     <option value="">년</option>
                     {years.map(year => <option key={year} value={year}>{year}</option>)}
                   </select>
-                  <select name="birthMonth" value={formData.birthMonth} onChange={handleChange} className="form-select">
+                  <select name="birthMonth" value={formData.birthMonth} onChange={handleChange} className="form-select" required>
                     <option value="">월</option>
-                    {months.map(month => <option key={month} value={month}>{month}</option>)}
+                    {months.map(month => <option key={month} value={month}>{String(month).padStart(2, '0')}</option>)}
                   </select>
-                  <select name="birthDay" value={formData.birthDay} onChange={handleChange} className="form-select">
+                  <select name="birthDay" value={formData.birthDay} onChange={handleChange} className="form-select" required>
                     <option value="">일</option>
-                    {days.map(day => <option key={day} value={day}>{day}</option>)}
+                    {days.map(day => <option key={day} value={day}>{String(day).padStart(2, '0')}</option>)}
                   </select>
                 </div>
               </div>
@@ -211,7 +279,7 @@ const Menu5_2 = () => {
       </div>
 
       <style jsx global>{`
-        /* 전역 및 레이아웃 */
+        /* CSS 스타일 ... (이하 생략) */
         .page-wrapper {
           min-height: calc(100vh - 62px);;
           background: linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%);
