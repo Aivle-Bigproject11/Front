@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { apiService } from '../services/api';
 
 // 메인 SignUp 컴포넌트
 function SignUp() {
@@ -46,6 +47,11 @@ function SignUp() {
     return re.test(String(email).toLowerCase());
   };
 
+  const validatePhoneNumber = (phoneNumber) => {
+    const re = /^\d{3}-\d{4}-\d{4}$/;
+    return re.test(phoneNumber);
+  };
+
   useEffect(() => {
     if (password) {
       setIsPasswordValid(validatePassword(password));
@@ -80,19 +86,26 @@ function SignUp() {
       setShowPopup(true);
     } else {
       setIsIdAvailable(true);
-      setPopupMessage('사용 가능한 아이디입니다.');
-      setShowPopup(true);
     }
   };
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    if (value.length <= 11) {
-      setPhone(value);
+    let value = e.target.value.replace(/[^0-9]/g, ''); // Remove all non-digits
+    let formattedValue = '';
+
+    if (value.length > 0) {
+      formattedValue += value.substring(0, 3);
+      if (value.length > 3) {
+        formattedValue += '-' + value.substring(3, 7);
+        if (value.length > 7) {
+          formattedValue += '-' + value.substring(7, 11);
+        }
+      }
     }
+    setPhone(formattedValue);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isIdAvailable !== true) {
       setPopupMessage('아이디 중복 확인을 해주세요.');
@@ -100,6 +113,13 @@ function SignUp() {
       return;
     }
     if (!validateEmail(email)) {
+      setPopupMessage('올바른 이메일 형식이 아닙니다.');
+      setShowPopup(true);
+      return;
+    }
+    if (!validatePhoneNumber(phone)) {
+      setPopupMessage('전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)');
+      setShowPopup(true);
       return;
     }
     if (!validatePassword(password)) {
@@ -119,16 +139,41 @@ function SignUp() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setPopupMessage('회원가입이 완료되었습니다!');
+
+    if (isEmployee) {
+      const managerData = {
+        email: email,
+        loginId: userId,
+        loginPassword: password,
+        name: name,
+        phone: phone,
+      };
+
+      try {
+        await apiService.createManager(managerData);
+        setPopupMessage('직원 회원가입이 완료되었습니다!');
+        setShowPopup(true);
+        // navigate('/login'); // Optionally navigate after popup confirmation
+      } catch (error) {
+        console.error("Manager creation failed:", error);
+        setPopupMessage('회원가입에 실패했습니다. 다시 시도해주세요.');
+        setShowPopup(true);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Handle user signup logic here if it's different
+      setPopupMessage('사용자 회원가입은 현재 지원되지 않습니다.');
       setShowPopup(true);
-      navigate('/login'); 
-    }, 1500);
+      setLoading(false);
+    }
   };
 
   const closePopup = () => {
     setShowPopup(false);
+    if (popupMessage === '직원 회원가입이 완료되었습니다!') {
+      navigate('/login');
+    }
   };
 
   const theme = {
@@ -214,7 +259,7 @@ function SignUp() {
 
                 <div className="signup-input-group">
                   <label htmlFor="phone">전화번호</label>
-                  <input type="tel" id="phone" value={phone} onChange={handlePhoneChange} placeholder="'-' 없이 숫자 11자리 입력" maxLength="11" onFocus={handleInputFocus} onBlur={handleInputBlur} required />
+                  <input type="tel" id="phone" value={phone} onChange={handlePhoneChange} placeholder="'-' 없이 숫자 11자리 입력" onFocus={handleInputFocus} onBlur={handleInputBlur} required />
                 </div>
               </div>
 
