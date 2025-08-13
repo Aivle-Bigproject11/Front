@@ -46,6 +46,26 @@ const Menu3 = () => {
         return true;
     };
 
+    const formatKST = (dateString) => {
+        if (!dateString) return '';
+        
+        const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+        const date = new Date(utcDateString);
+
+        const formatter = new Intl.DateTimeFormat('ko-KR', {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: true
+        });
+
+        return formatter.format(date);
+    };
+
     const handleSearch = async () => {
         setLoading(true);
         setError(null);
@@ -319,7 +339,7 @@ const Menu3 = () => {
 
                                                         return (
                                                             <div key={history.id} className="mb-4">
-                                                                <h6><strong>발송일시:</strong> {new Date(history.createMessageDate).toLocaleString()}</h6>
+                                                                <h6><strong>발송일시:</strong> {formatKST(history.createMessageDate)}</h6>
                                                                 {recommendedServices.length > 0 && (
                                                                     <div className="d-flex gap-2 my-2">
                                                                         {recommendedServices.map(service => (
