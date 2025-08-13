@@ -67,11 +67,35 @@ const UserConfig = () => {
     fetchInitialUserData();
   }, [user, isAuthenticated, authLoading]); // user, isAuthenticated, authLoading이 변경될 때마다 실행
 
+  const formatPhoneNumber = (value) => {
+    if (!value) return "";
+    value = value.replace(/[^0-9]/g, ""); // Remove all non-numeric characters
+    let formattedValue = "";
+    if (value.length > 0) {
+      formattedValue += value.substring(0, 3);
+    }
+    if (value.length > 3) {
+      formattedValue += "-" + value.substring(3, 7);
+    }
+    if (value.length > 7) {
+      formattedValue += "-" + value.substring(7, 11);
+    }
+    return formattedValue;
+  };
+
   const handleChange = (e) => {
-    setUserInfo({
-      ...userInfo,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    if (name === "phone") {
+      setUserInfo({
+        ...userInfo,
+        [name]: formatPhoneNumber(value),
+      });
+    } else {
+      setUserInfo({
+        ...userInfo,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -273,7 +297,8 @@ const UserConfig = () => {
                   backgroundColor: '#fff5f5',
                   color: '#e53e3e',
                   marginBottom: '20px',
-                  border: '1px solid #fed7d7'
+                  border: '1px solid #fed7d7',
+                  padding: '12px 15px',
                 }}>
                   {error}
                 </Alert>
@@ -297,7 +322,7 @@ const UserConfig = () => {
                       readOnly
                       style={{
                         width: '100%',
-                        padding: '12px 15px', // 패딩 조정
+                        padding: '10px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
@@ -324,7 +349,7 @@ const UserConfig = () => {
                       required
                       style={{
                         width: '100%',
-                        padding: '12px 15px', // 패딩 조정
+                        padding: '10px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
@@ -356,15 +381,25 @@ const UserConfig = () => {
                       name="phone"
                       className="login-form-control"
                       value={userInfo.phone}
-                      readOnly // 전화번호는 읽기 전용으로 표시
+                      onChange={handleChange}
+                      required
                       style={{
                         width: '100%',
-                        padding: '12px 15px', // 패딩 조정
+                        padding: '10px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
-                        backgroundColor: '#f8f9fa',
-                        cursor: 'not-allowed'
+                        transition: 'all 0.3s ease',
+                        outline: 'none',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#B8860B';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
+                        e.target.style.boxShadow = 'none';
                       }}
                     />
                   </div>
@@ -386,7 +421,7 @@ const UserConfig = () => {
                       placeholder="새 비밀번호"
                       style={{
                         width: '100%',
-                        padding: '12px 15px', // 패딩 조정
+                        padding: '10px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
@@ -422,7 +457,7 @@ const UserConfig = () => {
                       placeholder="새 비밀번호 확인"
                       style={{
                         width: '100%',
-                        padding: '12px 15px', // 패딩 조정
+                        padding: '10px 15px', // 패딩 조정
                         border: '2px solid rgba(184, 134, 11, 0.35)',
                         borderRadius: '12px',
                         fontSize: '15px', // 폰트 사이즈 조정
