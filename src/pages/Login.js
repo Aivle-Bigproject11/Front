@@ -17,6 +17,7 @@ const CustomPopup = ({ message, onConfirm }) => (
 const Login = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const [loginError, setLoginError] = useState(''); // New state for login error
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('employee'); // 'employee' or 'user'
   const [rememberMe, setRememberMe] = useState(false);
@@ -55,6 +56,7 @@ const Login = () => {
       ...credentials,
       [e.target.name]: e.target.value
     });
+    setLoginError(''); // Clear login error on input change
   };
 
   const closePopup = () => {
@@ -63,8 +65,8 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("e.preventDefault() called in handleSubmit"); // Added for debugging
     setLoading(true);
-    setError('');
 
     const result = await loginByType(credentials.username, credentials.password, activeTab);
     
@@ -72,6 +74,7 @@ const Login = () => {
       // 로그인 성공 시, 해당 아이디의 시도 횟수 초기화
       // 실제 운영 시에는 백엔드에서 처리하는 것이 더 안전합니다.
       setLoginAttempts(prev => ({ ...prev, [credentials.username]: 0 }));
+      setLoginError(''); // Clear login error on successful login
 
       if (activeTab === 'employee') {
         navigate('/');
@@ -79,28 +82,30 @@ const Login = () => {
         navigate('/lobby');
       }
     } else {
-      // 백엔드에서 "비밀번호" 관련 에러 메시지를 보냈다고 가정
-      if (result.message && result.message.includes('비밀번호')) { 
-        // 실패 횟수는 보통 백엔드에서 관리하지만, 현재는 프론트엔드에서 테스트로 구현합니다.
-        const currentAttempts = (loginAttempts[credentials.username] || 0) + 1;
-        setLoginAttempts(prev => ({ ...prev, [credentials.username]: currentAttempts }));
+        // 백엔드에서 "비밀번호" 관련 에러 메시지를 보냈다고 가정
+        if (result.message && result.message.includes('비밀번호')) {
+            // 실패 횟수는 보통 백엔드에서 관리하지만, 현재는 프론트엔드에서 테스트로 구현합니다.
+            const currentAttempts = (loginAttempts[credentials.username] || 0) + 1;
+            setLoginAttempts(prev => ({ ...prev, [credentials.username]: currentAttempts }));
 
-        if (currentAttempts >= 5) {
-          setPopup({
-            isOpen: true,
-            message: '일정 횟수 이상 로그인에 실패하였습니다. 비밀번호 재설정 화면으로 이동합니다.',
-            onConfirm: () => {
-              closePopup();
-              navigate('/FindPassword');
+            if (currentAttempts >= 5) {
+                setPopup({
+                isOpen: true,
+                message: '일정 횟수 이상 로그인에 실패하였습니다. 비밀번호 재설정 화면으로 이동합니다.',
+                onConfirm: () => {
+                    closePopup();
+                    navigate('/FindPassword');
+                }
+                });
+                setLoginAttempts(prev => ({ ...prev, [credentials.username]: 0 })); // 팝업 후 카운트 초기화
+            } else {
+                // setError(`${result.message} (남은 횟수: ${5 - currentAttempts}회)`); // 제거됨
+                setLoginError('아이디 또는 비밀번호가 일치하지 않습니다.'); // 로그인 오류 설정
             }
-          });
-          setLoginAttempts(prev => ({ ...prev, [credentials.username]: 0 })); // 팝업 후 카운트 초기화
         } else {
-          setError(`${result.message} (남은 횟수: ${5 - currentAttempts}회)`);
+        // setError(result.message); // 제거됨
+        setLoginError('아이디 또는 비밀번호가 일치하지 않습니다.'); // 로그인 오류 설정
         }
-      } else {
-        setError(result.message);
-      }
     }
     
     setLoading(false);
@@ -600,20 +605,6 @@ const Login = () => {
                     }}>계정 정보를 입력해주세요</p>
               </div>
 
-              {/* 에러 메시지 */}
-              {error && (
-                <Alert variant="danger" style={{ 
-                    borderRadius: '10px', 
-                    border: 'none',
-                    backgroundColor: '#fff5f5', 
-                    color: '#e53e3e', 
-                    marginBottom: '15px', 
-                    border: '1px solid #fed7d7' 
-                    }}>
-                  {error}
-                </Alert>
-              )}
-
               {/* 테스트 계정 안내 */}
               <div style={{ 
                 textAlign: 'center', 
@@ -670,6 +661,7 @@ const Login = () => {
                             e.target.style.boxShadow = 'none'; 
                             }} 
                             />
+                            {loginError && <p style={{ color: '#dc3545', fontSize: '13px', marginTop: '5px' }}>{loginError}</p>}
                 </div>
 
                 <div className="login-form-group" style={{ marginBottom: '15px' }}>

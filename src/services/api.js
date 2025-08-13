@@ -28,7 +28,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Check if the request was for login and if it has a custom header to skip redirect
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && originalRequest.headers['X-Skip-Auth-Redirect'] !== 'true') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -119,8 +121,14 @@ const realApiService = {
   // Manager signup
   createManager: (data) => api.post('/managers', data),
 
+  // Manager login
+  loginManager: (credentials) => api.post('/managers/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
+
   // Family signup
   createFamily: (data) => api.post('/families', data),
+
+  // User login
+  loginUser: (credentials) => api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
 };
 
 // --- 최종 서비스 객체 내보내기 ---
