@@ -136,11 +136,6 @@ const realApiService = {
   // User login
   loginUser: (credentials) => api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
 
-
-  // 
-
-
-
  // Password verification
   verifyPassword: async (loginId, password, userType) => {
     try {
