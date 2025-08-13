@@ -8,16 +8,18 @@ import icon from '../assets/logo/icon01.png';
 
 const UserConfig = () => {
   const [userInfo, setUserInfo] = useState({
+    loginId: '',
     username: '',
-    email: '',   
+    email: '',
+    phone: '',
     newPassword: '',
     confirmPassword: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true); 
+  const [initialLoading, setInitialLoading] = useState(true);
   const [animateCard, setAnimateCard] = useState(false);
-  const { user, isAuthenticated, loading: authLoading } = useAuth(); 
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,8 +51,10 @@ const UserConfig = () => {
         // 불러온 데이터로 userInfo 초기화
         setUserInfo(prev => ({
           ...prev,
-          username: response.name, // API 응답의 'name'을 'username'에 매핑
+          loginId: response.loginId,
+          username: response.name,
           email: response.email,
+          phone: response.phone,
         }));
       } catch (err) {
         console.error("초기 사용자 정보를 가져오는 데 실패했습니다:", err);
@@ -80,31 +84,33 @@ const UserConfig = () => {
     setError('');
 
     try {
-      let updateData = { email: userInfo.email };
-      if (userInfo.newPassword) { // 새 비밀번호가 입력된 경우에만 포함
-        updateData.loginPassword = userInfo.newPassword; // 백엔드에서 비밀번호 필드가 'loginPassword'라고 가정
-      }
+        let updateData = {
+            loginId: userInfo.loginId,
+            name: userInfo.username, // username을 name으로 매핑
+            email: userInfo.email,
+            phone: userInfo.phone,
+        };
 
-      let response;
-      if (user.userType === 'employee') {
-        response = await apiService.updateManager(user.id, updateData);
-      } else if (user.userType === 'user') {
-        response = await apiService.updateUser(user.id, updateData);
-      } else {
-        setError("알 수 없는 사용자 유형입니다.");
-        setLoading(false);
-        return;
-      }
+        if (userInfo.newPassword) { // 새 비밀번호가 입력된 경우에만 포함
+            updateData.loginPassword = userInfo.newPassword;
+        }
 
-      if (response.status === 200) { // 성공적인 응답 코드 확인
-        alert('사용자 정보가 성공적으로 수정되었습니다.');
-        navigate('/'); // 수정 후 이동할 페이지
-      } else {
-        setError(response.data.message || '정보 수정에 실패했습니다.');
-      }
+        let response;
+        if (user.userType === 'employee') {
+            response = await apiService.updateManagerPatch(user.id, updateData); // updateManagerPatch 사용
+        } else if (user.userType === 'user') {
+         response = await apiService.updateUserPatch(user.id, updateData); // updateUserPatch 사용
+        } else {
+            setError("알 수 없는 사용자 유형입니다.");
+            setLoading(false);
+            return;
+        }
+
+      alert('사용자 정보가 성공적으로 수정되었습니다.');
+      navigate('/'); // 수정 후 이동할 페이지
     } catch (err) {
       console.error('사용자 정보 수정 실패:', err);
-      setError(err.response?.data?.message || '정보 수정 중 오류가 발생했습니다.');
+      setError('정보 수정 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -121,7 +127,7 @@ const UserConfig = () => {
   return (
     <div className="page-wrapper" style={{
       '--navbar-height': '62px',
-      height: 'calc(100vh - var(--navbar-height))',
+      minHeight: 'calc(100vh - var(--navbar-height))', // height -> minHeight
       background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
       padding: '20px',
       boxSizing: 'border-box',
@@ -147,7 +153,8 @@ const UserConfig = () => {
         zIndex: 1,
         width: '100%',
         maxWidth: '940px',
-        height: '100%',
+        height: 'auto', // height: '100%' -> 'auto'
+        maxHeight: 'calc(100vh - 100px)', // max-height 추가
         overflowY: 'auto',
         margin: '0 auto',
         display: 'flex',
@@ -184,18 +191,19 @@ const UserConfig = () => {
               alignItems: 'center',
               justifyContent: 'center',
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              padding: '40px 20px' // 패딩 조정
             }}>
               <div className="login-image-content" style={{
                 textAlign: 'center',
-                padding: '40px'
+                padding: '20px' // 패딩 조정
               }}>
-                <div style={{
-                  width: '150px',
-                  height: '150px',
+                <div className="logo-circle" style={{
+                  width: '120px', // 사이즈 조정
+                  height: '120px', // 사이즈 조정
                   background: 'linear-gradient(135deg, #2C1F14 0%, #4A3728 100%)',
                   borderRadius: '50%',
-                  margin: '0 auto 30px',
+                  margin: '0 auto 20px', // 마진 조정
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -203,26 +211,26 @@ const UserConfig = () => {
                   border: '3px solid rgba(255, 255, 255, 0.35)',
                   overflow: 'hidden'
                 }}>
-                  <img 
-                    src={icon} 
+                  <img
+                    src={icon}
                     alt="Golden Gate Logo"
                     style={{
-                      width: '80px',
-                      height: '80px',
+                      width: '70px', // 사이즈 조정
+                      height: '70px', // 사이즈 조정
                       objectFit: 'contain',
                       filter: 'brightness(1.2) contrast(1.1)'
                     }}
                   />
                 </div>
-                <h3 style={{
+                <h3 className="logo-title" style={{
                   color: '#2C1F14',
                   fontWeight: '700',
-                  marginBottom: '15px',
-                  fontSize: '1.8rem'
+                  marginBottom: '10px', // 마진 조정
+                  fontSize: '1.6rem' // 폰트 사이즈 조정
                 }}>Golden Gate</h3>
-                <p style={{
+                <p className="logo-subtitle" style={{
                   color: '#4A3728',
-                  fontSize: '16px',
+                  fontSize: '15px', // 폰트 사이즈 조정
                   lineHeight: '1.6',
                   margin: 0,
                   fontWeight: '500'
@@ -235,7 +243,7 @@ const UserConfig = () => {
             {/* 오른쪽 폼 영역 */}
             <div className="login-right" style={{
               flex: '1',
-              padding: '50px 40px',
+              padding: '40px 30px', // 패딩 조정
               display: 'flex',
               flexDirection: 'column',
               background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
@@ -243,11 +251,11 @@ const UserConfig = () => {
               boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
               border: '1px solid rgba(184, 134, 11, 0.2)'
             }}>
-              <div style={{ marginBottom: '30px' }}>
+              <div style={{ marginBottom: '25px' }}>
                 <h2 style={{
                   color: '#2C1F14',
                   fontWeight: '700',
-                  fontSize: '28px',
+                  fontSize: '24px', // 폰트 사이즈 조정
                   marginBottom: '8px'
                 }}>사용자 정보</h2>
                 <p style={{
@@ -271,150 +279,178 @@ const UserConfig = () => {
                 </Alert>
               )}
 
-              <form onSubmit={handleSubmit} style={{ flex: 1 }}>
-                <div className="login-form-group" style={{ marginBottom: '25px' }}>
-                  <label className="login-form-label" style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    color: '#2C1F14',
-                    fontWeight: '700',
-                    fontSize: '14px'
-                  }}>사용자명</label>
-                  <input
-                    type="text"
-                    name="username"
-                    className="login-form-control"
-                    value={userInfo.username}
-                    readOnly
-                    style={{
-                      width: '100%',
-                      padding: '15px 20px',
-                      border: '2px solid rgba(184, 134, 11, 0.35)',
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                      backgroundColor: '#f8f9fa',
-                      cursor: 'not-allowed'
-                    }}
-                  />
+              <form onSubmit={handleSubmit} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ flexGrow: 1 }}>
+                  <div className="login-form-group" style={{ marginBottom: '20px' }}>
+                    <label className="login-form-label" style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      color: '#2C1F14',
+                      fontWeight: '700',
+                      fontSize: '14px'
+                    }}>사용자명</label>
+                    <input
+                      type="text"
+                      name="username"
+                      className="login-form-control"
+                      value={userInfo.username}
+                      readOnly
+                      style={{
+                        width: '100%',
+                        padding: '12px 15px', // 패딩 조정
+                        border: '2px solid rgba(184, 134, 11, 0.35)',
+                        borderRadius: '12px',
+                        fontSize: '15px', // 폰트 사이즈 조정
+                        backgroundColor: '#f8f9fa',
+                        cursor: 'not-allowed'
+                      }}
+                    />
+                  </div>
+
+                  <div className="login-form-group" style={{ marginBottom: '20px' }}>
+                    <label className="login-form-label" style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      color: '#2C1F14',
+                      fontWeight: '700',
+                      fontSize: '14px'
+                    }}>이메일</label>
+                    <input
+                      type="email"
+                      name="email"
+                      className="login-form-control"
+                      value={userInfo.email}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 15px', // 패딩 조정
+                        border: '2px solid rgba(184, 134, 11, 0.35)',
+                        borderRadius: '12px',
+                        fontSize: '15px', // 폰트 사이즈 조정
+                        transition: 'all 0.3s ease',
+                        outline: 'none',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#B8860B';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                  </div>
+
+                  <div className="login-form-group" style={{ marginBottom: '20px' }}>
+                    <label className="login-form-label" style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      color: '#2C1F14',
+                      fontWeight: '700',
+                      fontSize: '14px'
+                    }}>전화번호</label>
+                    <input
+                      type="text"
+                      name="phone"
+                      className="login-form-control"
+                      value={userInfo.phone}
+                      readOnly // 전화번호는 읽기 전용으로 표시
+                      style={{
+                        width: '100%',
+                        padding: '12px 15px', // 패딩 조정
+                        border: '2px solid rgba(184, 134, 11, 0.35)',
+                        borderRadius: '12px',
+                        fontSize: '15px', // 폰트 사이즈 조정
+                        backgroundColor: '#f8f9fa',
+                        cursor: 'not-allowed'
+                      }}
+                    />
+                  </div>
+
+                  <div className="login-form-group" style={{ marginBottom: '20px' }}>
+                    <label className="login-form-label" style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      color: '#2C1F14',
+                      fontWeight: '700',
+                      fontSize: '14px'
+                    }}>새 비밀번호</label>
+                    <input
+                      type="password"
+                      name="newPassword"
+                      className="login-form-control"
+                      value={userInfo.newPassword}
+                      onChange={handleChange}
+                      placeholder="새 비밀번호"
+                      style={{
+                        width: '100%',
+                        padding: '12px 15px', // 패딩 조정
+                        border: '2px solid rgba(184, 134, 11, 0.35)',
+                        borderRadius: '12px',
+                        fontSize: '15px', // 폰트 사이즈 조정
+                        transition: 'all 0.3s ease',
+                        outline: 'none',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#B8860B';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                  </div>
+
+                  <div className="login-form-group" style={{ marginBottom: '20px' }}>
+                    <label className="login-form-label" style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      color: '#2C1F14',
+                      fontWeight: '700',
+                      fontSize: '14px'
+                    }}>새 비밀번호 확인</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      className="login-form-control"
+                      value={userInfo.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="새 비밀번호 확인"
+                      style={{
+                        width: '100%',
+                        padding: '12px 15px', // 패딩 조정
+                        border: '2px solid rgba(184, 134, 11, 0.35)',
+                        borderRadius: '12px',
+                        fontSize: '15px', // 폰트 사이즈 조정
+                        transition: 'all 0.3s ease',
+                        outline: 'none',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#B8860B';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                  </div>
                 </div>
 
-                <div className="login-form-group" style={{ marginBottom: '25px' }}>
-                  <label className="login-form-label" style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    color: '#2C1F14',
-                    fontWeight: '700',
-                    fontSize: '14px'
-                  }}>이메일</label>
-                  <input
-                    type="email"
-                    name="email"
-                    className="login-form-control"
-                    value={userInfo.email}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '15px 20px',
-                      border: '2px solid rgba(184, 134, 11, 0.35)',
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      outline: 'none',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                     onFocus={(e) => {
-                      e.target.style.borderColor = '#B8860B';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  />
-                </div>
-
-                <div className="login-form-group" style={{ marginBottom: '20px' }}>
-                  <label className="login-form-label" style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    color: '#2C1F14',
-                    fontWeight: '700',
-                    fontSize: '14px'
-                  }}>새 비밀번호</label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    className="login-form-control"
-                    value={userInfo.newPassword}
-                    onChange={handleChange}
-                    placeholder="새 비밀번호"
-                    style={{
-                      width: '100%',
-                      padding: '15px 20px',
-                      border: '2px solid rgba(184, 134, 11, 0.35)',
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      outline: 'none',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                     onFocus={(e) => {
-                      e.target.style.borderColor = '#B8860B';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  />
-                </div>
-
-                <div className="login-form-group" style={{ marginBottom: '25px' }}>
-                  <label className="login-form-label" style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    color: '#2C1F14',
-                    fontWeight: '700',
-                    fontSize: '14px'
-                  }}>새 비밀번호 확인</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    className="login-form-control"
-                    value={userInfo.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="새 비밀번호 확인"
-                    style={{
-                      width: '100%',
-                      padding: '15px 20px',
-                      border: '2px solid rgba(184, 134, 11, 0.35)',
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      outline: 'none',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                     onFocus={(e) => {
-                      e.target.style.borderColor = '#B8860B';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="login-btn"
                   disabled={loading}
                   style={{
                     width: '100%',
                     padding: '15px',
-                    background: loading 
-                      ? '#e9ecef' 
+                    background: loading
+                      ? '#e9ecef'
                       : 'linear-gradient(135deg, #D4AF37, #F5C23E)',
                     color: loading ? '#6c757d' : '#2C1F14',
                     border: 'none',
@@ -423,7 +459,7 @@ const UserConfig = () => {
                     fontWeight: '700',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.3s ease',
-                    marginBottom: '25px',
+                    marginTop: 'auto', // 버튼을 하단에 고정
                     boxShadow: loading ? 'none' : '0 4px 15px rgba(184, 134, 11, 0.35)'
                   }}
                   onMouseEnter={(e) => {
@@ -441,7 +477,7 @@ const UserConfig = () => {
                 >
                   {loading ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status"style={{ width: '0.8rem', height: '0.8rem' }}></span>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" style={{ width: '0.8rem', height: '0.8rem' }}></span>
                       수정 중...
                     </>
                   ) : (
@@ -468,6 +504,45 @@ const UserConfig = () => {
         
         .animate-in {
           animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* 반응형 스타일 추가 */
+        @media (max-width: 768px) {
+          .page-wrapper {
+            padding: 10px !important;
+            align-items: flex-start !important;
+          }
+          .dashboard-container {
+            padding: 10px !important;
+            max-height: none !important;
+          }
+          .login-content {
+            flex-direction: column;
+          }
+          .login-left {
+            padding: 30px 20px !important;
+          }
+          .logo-circle {
+            width: 100px !important;
+            height: 100px !important;
+            margin-bottom: 15px !important;
+          }
+          .logo-circle img {
+            width: 60px !important;
+            height: 60px !important;
+          }
+          .logo-title {
+            font-size: 1.4rem !important;
+          }
+          .logo-subtitle {
+            font-size: 14px !important;
+          }
+          .login-right {
+            padding: 30px 20px !important;
+          }
+          .login-right h2 {
+            font-size: 22px !important;
+          }
         }
       `}</style>
     </div>

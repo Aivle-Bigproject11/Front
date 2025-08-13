@@ -117,12 +117,14 @@ const realApiService = {
   createUser: async (data) => (await api.post('/users', data)).data,
   getUserById: async (id) => (await api.get(`/users/${id}`)).data, 
   updateUser: async (id, data) => (await api.put(`/users/${id}`, data)).data,
+  updateUserPatch: async (id, data) => (await api.patch(`/users/${id}`, data)).data,
   deleteUser: async (id) => (await api.delete(`/users/${id}`)).data,
 
   // Manager related APIs
   getManagerById: async (id) => (await api.get(`/managers/${id}`)).data, 
 
   // Manager signup
+  updateManagerPatch: async (id, managerData) => (await api.patch(`/managers/${id}`, managerData)).data,
   createManager: (data) => api.post('/managers', data),
 
   // Manager login
