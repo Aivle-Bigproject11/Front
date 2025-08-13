@@ -110,7 +110,7 @@ const Menu3 = () => {
         setMessageHistory([]);
         try {
             const response = await recommendationService.getLatestCustomerHistory(customer.id);
-            if (response.data && Object.keys(response.data).length > 0) {
+            if (response.data && response.data.createMessageDate) {
                 setMessageHistory([response.data]);
             } else {
                 setMessageHistory([]);
