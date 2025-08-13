@@ -68,9 +68,7 @@ const realApiService = {
   getObituaryByCustomerId: (customerId) => api.get(`/obituaries/search/findFirstByCustomerIdOrderByObituaryIdDesc?customerId=${customerId}`),
   getDeathReportByCustomerId: (customerId) => api.get(`/deathReports/search/findFirstByCustomerIdOrderByDeathReportIdDesc?customerId=${customerId}`),
   getScheduleByCustomerId: (customerId) => api.get(`/schedules/search/findFirstByCustomerIdOrderByScheduleIdDesc?customerId=${customerId}`),
-//   getObituaryByCustomerId: () => api.get('/obituaries-detail'),
-//   getDeathReportByCustomerId: () => api.get('/deathReports-detail'),
-//   getScheduleByCustomerId: () => api.get('/schedules-detail'),
+  checkExistingFuneralInfo: (customerId) => api.get(`/funeralInfos/search/findFirstByCustomerIdOrderByFuneralInfoIdDesc?customerId=${customerId}`),
 
   // 고객 관련 API
   getCustomers: () => api.get('/customerProfiles'),

@@ -23,7 +23,12 @@ const Menu1_4 = () => {
             setError(null);
             try {
                 const response = await apiService.getCustomers();
-                setAllCustomers(response.data);
+                const customers = response.data._embedded.customerProfiles.map(customer => {
+                    const href = customer._links.self.href;
+                    const id = href.substring(href.lastIndexOf('/') + 1);
+                    return { ...customer, customerId: id };
+                });
+                setAllCustomers(customers || []);
                 setFilteredCustomers([]);
             } catch (err) {
                 setError("데이터 로딩에 실패했습니다.");
@@ -57,9 +62,19 @@ const Menu1_4 = () => {
         setIsSearched(true);
     };
 
-    const handleRegisterDeceased = (customer) => {
-        localStorage.setItem('selectedCustomer', JSON.stringify(customer));
-        navigate('/menu1-5');
+    const handleRegisterDeceased = async (customer) => {
+        try {
+            await apiService.checkExistingFuneralInfo(customer.customerId);
+            alert('이미 등록된 고인입니다.');
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                localStorage.setItem('selectedCustomer', JSON.stringify(customer));
+                navigate('/menu1-5');
+            } else {
+                console.error("An unexpected error occurred:", error);
+                alert('오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        }
     };
 
     const getFamilyInfo = (customer) => {
@@ -141,7 +156,7 @@ const Menu1_4 = () => {
                                         <Card.Body>
                                             <Row className="align-items-center">
                                                 <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3">
-                                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.customerId}</p>
+                                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Id : {customer.customerId}</p>
                                                     <h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5>
                                                 </Col>
                                                 <Col md={7}>
