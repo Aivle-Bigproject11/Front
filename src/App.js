@@ -91,13 +91,71 @@ function App() {
     );
 }
 
-// Helper component to include Navbar for employee routes
-const NavbarWrapper = ({ children }) => (
-    <>
-        <Navbar />
-        {children}
-    </>
-);
+const MainLayout = () => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center min-vh-100">
+                <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return (
+        <>
+            <Navbar />
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/menu1-1" element={<Menu1_1 />} />
+                <Route path="/menu1-2" element={<Menu1_2 />} />
+                <Route path="/menu1-3" element={<Menu1_3 />} />
+                <Route path="/menu1-4" element={<Menu1_4 />} />
+                <Route path="/menu1-5" element={<Menu1_5 />} />
+                <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
+                <Route path="/menu2" element={<Menu2 />} />
+                <Route path="/menu3" element={<Menu3 />} />
+                <Route path="/menu4" element={<Menu4 />} />
+                <Route path="/menu5" element={<Menu5 />} />
+                <Route path="/menu5_1/:id" element={<Menu5_1 />} />
+                <Route path="/menu5_2" element={<Menu5_2 />} />
+
+                <Route path="/memorial/:id" element={<MemorialDetail />} />
+                <Route path="/memorial/:id/settings" element={<MemorialConfig />} />
+                <Route path="/password-check" element={<PasswordCheck />} />
+                <Route path="/user-config" element={<UserConfig />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </>
+    );
+};
+
+const UserLayout = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center min-vh-100">
+                <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    // 네비게이션 바 없이 직접 컴포넌트 렌더링
+    return children;
+};
 
 const GuestLayout = ({ children }) => {
     // 로그인 없이 고유번호로 접근한 경우 - 네비게이션 바 없음
