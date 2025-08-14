@@ -542,16 +542,17 @@ const MemorialDetail = () => {
         {/* 메인 콘텐츠 영역 */}
           <Row>
           {/* 좌측: 영상/사진첩 + 방명록 리본 */}
-          <Col lg={8}>
+          <Col lg={8} className="mb-4 mb-lg-0">
             <Row>
               {/* 상단: 추모영상과 사진첩 - 겹쳐진 탭 구조 */}
               <Col lg={12}>
-                <div className="memorial-tabs-container position-relative mb-4" style={{ 
+                <div className="memorial-tabs-container position-relative" style={{ 
                   borderRadius: '16px', 
                   overflow: 'hidden',
                   background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
                   boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
-                  border: '1px solid rgba(184, 134, 11, 0.2)'
+                  border: '1px solid rgba(184, 134, 11, 0.2)',
+                  marginBottom: '20px'
                 }}>
                   
                   {/* 탭 헤더들 */}
@@ -888,7 +889,7 @@ const MemorialDetail = () => {
             </Row>
 
             {/* 하단: 리본 방명록 */}
-            <Row className="mt-4">
+            <Row>
               <Col lg={12}>
                 <div className="ribbon-guestbook-container" style={{
                   background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
@@ -1153,11 +1154,12 @@ const MemorialDetail = () => {
           {/* 우측: 추모사 + 위로의 말 전하기 */}
           <Col lg={4}>
             {/* 추모사 */}
-            <Card className="mb-4" style={{ 
+            <Card style={{ 
               borderRadius: '16px', 
               border: '1px solid rgba(184, 134, 11, 0.2)', 
               background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)' 
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
+              marginBottom: '20px'
             }}>
               <Card.Header style={{ 
                 background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
@@ -1190,9 +1192,33 @@ const MemorialDetail = () => {
                 </div>
               </Card.Body>
             </Card>
-
+            {/* 공유 버튼 */}
+            <Card style={{ 
+              borderRadius: '16px', 
+              border: '1px solid rgba(184, 134, 11, 0.2)', 
+              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
+              marginBottom: '20px'
+            }}>
+              <Card.Body className="text-center p-3">
+                <Button 
+                  className="w-100"
+                  style={{
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    fontWeight: '600',
+                    padding: '12px'
+                  }}
+                >
+                  <i className="fas fa-share-alt me-2"></i>
+                  공유하기
+                </Button>
+              </Card.Body>
+            </Card>
             {/* 위로의 말 전하기 */}
-            <Card className="mb-4" style={{ 
+            <Card style={{ 
               borderRadius: '16px', 
               border: '1px solid rgba(184, 134, 11, 0.2)', 
               background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
@@ -1229,31 +1255,6 @@ const MemorialDetail = () => {
                   <i className="fas fa-ribbon fa-2x mb-2" style={{ color: '#b8860b' }}></i>
                   <p className="small mb-0">소중한 추억과 위로의 말을<br/>아름다운 리본으로 남겨주세요</p>
                 </div>
-              </Card.Body>
-            </Card>
-
-            {/* 공유 버튼 */}
-            <Card style={{ 
-              borderRadius: '16px', 
-              border: '1px solid rgba(184, 134, 11, 0.2)', 
-              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)' 
-            }}>
-              <Card.Body className="text-center p-3">
-                <Button 
-                  className="w-100"
-                  style={{
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    color: '#fff',
-                    fontWeight: '600',
-                    padding: '12px'
-                  }}
-                >
-                  <i className="fas fa-share-alt me-2"></i>
-                  공유하기
-                </Button>
               </Card.Body>
             </Card>
           </Col>
