@@ -410,7 +410,7 @@ const MemorialDetail = () => {
         zIndex: 1,
         width: '100%',
         maxWidth: '1600px',
-        height: '100%', 
+        height: '100%',
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
@@ -421,7 +421,8 @@ const MemorialDetail = () => {
         padding: '24px',
         borderRadius: '28px',
         border: '2px solid rgba(184, 134, 11, 0.35)',
-        overflow: 'hidden'
+        overflowY: 'auto',
+        overflowX: 'hidden'
       }}>
                {/* 프로필 섹션 (수정됨) */}
         <div style={{ marginBottom: '20px' }}>
@@ -539,7 +540,6 @@ const MemorialDetail = () => {
         </div>
 
         {/* 메인 콘텐츠 영역 */}
-        <div className="memorial-detail-scroll-area" style={{ flex: '1', overflowY: 'auto', overflowX: 'hidden', height: '100%' }}>
           <Row>
           {/* 좌측: 영상/사진첩 + 방명록 리본 */}
           <Col lg={8}>
@@ -1258,7 +1258,6 @@ const MemorialDetail = () => {
             </Card>
           </Col>
         </Row>
-        </div>
       </div>
 
       {/* 방명록 작성 모달 */}
@@ -1753,14 +1752,14 @@ const MemorialDetail = () => {
           box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
         }
 
-        .memorial-detail-scroll-area::-webkit-scrollbar {
+        .memorial-container::-webkit-scrollbar {
           width: 6px;
         }
-        .memorial-detail-scroll-area::-webkit-scrollbar-track {
+        .memorial-container::-webkit-scrollbar-track {
           background: rgba(0,0,0,0.05);
           border-radius: 10px;
         }
-        .memorial-detail-scroll-area::-webkit-scrollbar-thumb {
+        .memorial-container::-webkit-scrollbar-thumb {
           background-color: rgba(184, 134, 11, 0.5);
           border-radius: 10px;
         }
