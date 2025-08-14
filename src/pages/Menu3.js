@@ -59,6 +59,16 @@ const Menu3 = () => {
         return formatter.format(date);
     };
 
+    const formatPhone = (phone) => {
+        if (!phone) return '정보 없음';
+        const cleaned = ('' + phone).replace(/\D/g, '');
+        const match = cleaned.match(/^(01[016789]{1}|02|0[3-9]{1}[0-9]{1})(\d{3,4})(\d{4})$/);
+        if (match) {
+            return [match[1], match[2], match[3]].join('-');
+        }
+        return phone;
+    };
+
     const handleSearch = async () => {
         setLoading(true);
         setError(null);
@@ -281,12 +291,12 @@ const Menu3 = () => {
                                     <Card key={customer.id} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
                                         <Card.Body>
                                             <Row className="align-items-center">
-                                                <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>고객ID: {customer.id}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
+                                                                                                <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>고객고유번호: {customer.id}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
                                                 <Col>
                                                     <Row>
                                                         <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthDate?.split('T')[0]}</Col>
                                                         <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
-                                                        <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>연락처:</strong> {formatPhone(customer.phone)}</Col>
                                                         <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
                                                         <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
                                                         <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
