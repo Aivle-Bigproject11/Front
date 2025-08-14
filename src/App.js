@@ -13,6 +13,7 @@ import Menu1_1 from './pages/Menu1-1';
 import Menu1_2 from './pages/Menu1-2';
 import Menu1_3 from './pages/Menu1-3';
 import Menu1_4 from './pages/Menu1-4';
+import Menu1_5 from './pages/Menu1-5';
 import Menu2 from './pages/Menu2';
 import Menu3 from './pages/Menu3';
 import Menu4 from './pages/Menu4';
@@ -23,6 +24,7 @@ import MemorialDetail from './pages/MemorialDetail';
 import MemorialConfig from './pages/MemorialConfig';
 import Lobby from './pages/Lobby';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
 
 
 // Login 컴포넌트와 SignUp 컴포넌트를 임포트합니다.
@@ -38,20 +40,50 @@ function App() {
             <Router>
                 <div className="App">
                     <Routes>
+                        {/* Public Routes */}
                         <Route path="/login" element={<Login />} />
                         <Route path="/findId" element={<FindId />} />
                         <Route path="/findPassword" element={<FindPassword />} />
-                        {/* 회원가입 페이지 경로추가 */}
                         <Route path="/signup" element={<SignUp />} />
                         <Route path="/privacyPolicy" element={<PrivacyPolicy />} />
                         <Route path="/termsOfService" element={<TermsOfService />} />
-                        {/* 유저용 페이지들 (네비게이션 바 없음) */}
-                        <Route path="/lobby" element={<UserLayout><Lobby /></UserLayout>} />
-                        <Route path="/user-memorial/:id" element={<UserLayout><MemorialDetail /></UserLayout>} />
-                        <Route path="/user-memorial/:id/settings" element={<UserLayout><MemorialConfig /></UserLayout>} />
-                        {/* 고유번호로 접근하는 페이지 (로그인 없이, 네비게이션 바 없음) */}
+                        {/* Guest Layout (no auth required) */}
                         <Route path="/memorial/:id/guest" element={<GuestLayout><MemorialDetail /></GuestLayout>} />
-                        <Route path="/*" element={<MainLayout />} />
+
+                        {/* Employee Protected Routes */}
+                        <Route element={<PrivateRoute allowedUserTypes={['employee']} />}>
+                            <Route path="/" element={<NavbarWrapper><Home /></NavbarWrapper>} />
+                            <Route path="/menu1-1" element={<NavbarWrapper><Menu1_1 /></NavbarWrapper>} />
+                            <Route path="/menu1-2" element={<NavbarWrapper><Menu1_2 /></NavbarWrapper>} />
+                            <Route path="/menu1-3" element={<NavbarWrapper><Menu1_3 /></NavbarWrapper>} />
+                            <Route path="/menu1-4" element={<NavbarWrapper><Menu1_4 /></NavbarWrapper>} />
+                            <Route path="/menu1-5" element={<NavbarWrapper><Menu1_5 /></NavbarWrapper>} />
+                            <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
+                            <Route path="/menu2" element={<NavbarWrapper><Menu2 /></NavbarWrapper>} />
+                            <Route path="/menu3" element={<NavbarWrapper><Menu3 /></NavbarWrapper>} />
+                            <Route path="/menu4" element={<NavbarWrapper><Menu4 /></NavbarWrapper>} />
+                            <Route path="/menu5" element={<NavbarWrapper><Menu5 /></NavbarWrapper>} />
+                            <Route path="/menu5_1/:id" element={<NavbarWrapper><Menu5_1 /></NavbarWrapper>} />
+                            <Route path="/menu5_2" element={<NavbarWrapper><Menu5_2 /></NavbarWrapper>} />
+                            <Route path="/memorial/:id" element={<NavbarWrapper><MemorialDetail /></NavbarWrapper>} />
+                            <Route path="/memorial/:id/settings" element={<NavbarWrapper><MemorialConfig /></NavbarWrapper>} />
+
+                        </Route>
+
+                        {/* User Protected Routes */}
+                        <Route element={<PrivateRoute allowedUserTypes={['user']} />}>
+                            <Route path="/lobby" element={<Lobby />} />
+                            <Route path="/user-memorial/:id" element={<MemorialDetail />} />
+                            <Route path="/user-memorial/:id/settings" element={<MemorialConfig />} />
+                        </Route>
+
+                        <Route element={<PrivateRoute allowedUserTypes={['employee', 'user']} />}>
+                            <Route path="/password-check" element={<NavbarWrapper><PasswordCheck /></NavbarWrapper>} />
+                            <Route path="/user-config" element={<NavbarWrapper><UserConfig /></NavbarWrapper>} />
+                        </Route>
+
+                        {/* Fallback for any unmatched routes */}
+                        <Route path="*" element={<Navigate to="/login" replace />} />
                     </Routes>
                 </div>
             </Router>
@@ -85,12 +117,13 @@ const MainLayout = () => {
                 <Route path="/menu1-2" element={<Menu1_2 />} />
                 <Route path="/menu1-3" element={<Menu1_3 />} />
                 <Route path="/menu1-4" element={<Menu1_4 />} />
+                <Route path="/menu1-5" element={<Menu1_5 />} />
                 <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
                 <Route path="/menu2" element={<Menu2 />} />
                 <Route path="/menu3" element={<Menu3 />} />
                 <Route path="/menu4" element={<Menu4 />} />
                 <Route path="/menu5" element={<Menu5 />} />
-                <Route path="/menu5_1" element={<Menu5_1 />} />
+                <Route path="/menu5_1/:id" element={<Menu5_1 />} />
                 <Route path="/menu5_2" element={<Menu5_2 />} />
 
                 <Route path="/memorial/:id" element={<MemorialDetail />} />
@@ -127,6 +160,15 @@ const UserLayout = ({ children }) => {
 const GuestLayout = ({ children }) => {
     // 로그인 없이 고유번호로 접근한 경우 - 네비게이션 바 없음
     return children;
+};
+
+const NavbarWrapper = ({ children }) => {
+    return (
+        <>
+            <Navbar />
+            {children}
+        </>
+    );
 };
 
 export default App;

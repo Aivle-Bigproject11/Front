@@ -1,163 +1,190 @@
-// src/services/memorialService.js - 추모관 관련 서비스
+// src/services/memorialService.js - 추모관 관련 서비스 (Mock 전용)
+import { mockMemorials, mockPhotos, mockComments, mockVideos } from '../data/mockData';
 
-// Mock 추모관 데이터
-const mockMemorials = [
-  {
-    id: 1,
-    name: '양성현',
-    period: '2025.07.25 ~ 2025.08.05',
-    status: 'active',
-    description: '향년 75세',
-    participants: 24,
-    joinCode: 'MEM001',
-    familyMembers: [
-      { id: 1, memberId: 'user', name: '김철수', relation: '아들', phone: '010-0000-0000' },
-      { id: 2, memberId: 'user01', name: '이영희', relation: '딸', phone: '010-0000-0001' }
-    ]
-  },
-  {
-    id: 2,
-    name: '김시훈',
-    period: '2025.07.28 ~ 2025.08.08',
-    status: 'active',
-    description: '향년 96세',
-    participants: 18,
-    joinCode: 'MEM002',
-    familyMembers: [
-      { id: 3, memberId: 'user02', name: '박민수', relation: '친구', phone: '010-1111-2222' }
-    ]
-  },
-  {
-    id: 3,
-    name: '박수연',
-    period: '2025.07.20 ~ 2025.07.30',
-    status: 'completed',
-    description: '향년 88세',
-    participants: 35,
-    joinCode: 'MEM003',
-    familyMembers: [
-      { id: 4, memberId: 'user', name: '김철수', relation: '가족', phone: '010-0000-0000' },
-      { id: 5, memberId: 'user03', name: '최정호', relation: '조카', phone: '010-3333-4444' }
-    ]
-  }
-];
+// --- Mock 서비스 구현 ---
+export const mockMemorialService = (() => {
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-/**
- * 사용자가 유가족으로 등록된 추모관 목록을 가져옵니다
- * @param {string} userId - 사용자 ID
- * @returns {Promise<Array>} 사용자의 추모관 목록
- */
-export const getUserMemorialHalls = async (userId) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 사용자가 유가족으로 등록된 추모관들 필터링
-      const userMemorials = mockMemorials.filter(memorial => 
-        memorial.familyMembers.some(member => member.memberId === userId)
-      ).map(memorial => {
-        // 해당 사용자의 역할 정보 추가
-        const userRole = memorial.familyMembers.find(member => member.memberId === userId);
-        return {
-          ...memorial,
-          role: userRole ? userRole.relation : '참여자'
-        };
-      });
-      
-      resolve(userMemorials);
-    }, 500); // API 호출 시뮬레이션
-  });
-};
+  const getMemorials = async () => {
+    await delay(300);
+    return { _embedded: { memorials: mockMemorials }, page: { size: 20, totalElements: mockMemorials.length, totalPages: 1, number: 0 } };
+  };
+  
+  const getMemorialById = async (id) => {
+    await delay(300);
+    const memorial = mockMemorials.find(m => m.id === id) || null;
+    // MemorialConfig.js는 response.data를 기대하므로, API 응답 형태로 반환
+    return { data: memorial };
+  };
 
-/**
- * 고유번호로 추모관을 조회합니다
- * @param {string} joinCode - 추모관 고유번호
- * @returns {Promise<Object|null>} 추모관 정보 또는 null
- */
-export const getMemorialByCode = async (joinCode) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const memorial = mockMemorials.find(m => m.joinCode === joinCode);
-      resolve(memorial || null);
-    }, 300);
-  });
-};
+  const getMemorialDetails = async (id) => {
+    await delay(400);
+    const memorial = mockMemorials.find(m => m.id === id);
+    if (!memorial) return null;
+    
+    const photos = mockPhotos.filter(p => p.memorialId === id);
+    const videos = mockVideos.filter(v => v.memorialId === id);
+    const comments = mockComments.filter(c => c.memorialId === id);
 
-/**
- * 추모관 ID로 상세 정보를 가져옵니다
- * @param {number} memorialId - 추모관 ID
- * @returns {Promise<Object|null>} 추모관 상세 정보
- */
-export const getMemorialById = async (memorialId) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const memorial = mockMemorials.find(m => m.id === parseInt(memorialId));
-      resolve(memorial || null);
-    }, 300);
-  });
-};
+    // 새로운 API 명세에 따른 응답 형식으로 반환
+    return {
+      memorialId: memorial.id,
+      profileImageUrl: memorial.profileImageUrl,
+      deceasedName: memorial.deceasedName || memorial.name,
+      deceasedAge: memorial.deceasedAge || memorial.age,
+      gender: memorial.gender,
+      birthDate: memorial.birthDate,
+      deceasedDate: memorial.deceasedDate,
+      tribute: memorial.tribute,
+      createdAt: memorial.createdAt,
+      photos: photos,
+      videos: videos,
+      comments: comments
+    };
+  };
 
-/**
- * 사용자를 추모관의 유가족으로 등록합니다
- * @param {number} memorialId - 추모관 ID
- * @param {Object} familyMemberData - 유가족 정보
- * @returns {Promise<boolean>} 등록 성공 여부
- */
-export const addFamilyMember = async (memorialId, familyMemberData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const memorial = mockMemorials.find(m => m.id === memorialId);
-      if (memorial) {
-        const newMember = {
-          id: Date.now(),
-          ...familyMemberData
-        };
-        memorial.familyMembers.push(newMember);
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    }, 500);
-  });
-};
+  const createMemorial = async (data) => { 
+    await delay(500); 
+    const newM = { id: `mock-${mockMemorials.length + 1}`, customerId: 2000 + mockMemorials.length, ...data }; 
+    mockMemorials.push(newM); 
+    return newM; 
+  };
+  
+  const updateMemorial = async (id, data) => { 
+    await delay(500); 
+    const i = mockMemorials.findIndex(m => m.id === id); 
+    if (i > -1) { 
+      mockMemorials[i] = { ...mockMemorials[i], ...data }; 
+      return { data: mockMemorials[i] }; 
+    } 
+    return { data: null }; 
+  };
+  
+  const deleteMemorial = async (id) => { 
+    await delay(500); 
+    const i = mockMemorials.findIndex(m => m.id === id); 
+    if (i > -1) { 
+      mockMemorials.splice(i, 1); 
+      return { success: true }; 
+    } 
+    return { success: false };
+  }; 
+  
+  const getPhotos = async (id) => { 
+    await delay(200); 
+    return { _embedded: { photos: mockPhotos.filter(p => p.memorialId === id) } }; 
+  };
+  
+  const addPhoto = async (id, data) => { 
+    await delay(600); 
+    const newP = { id: mockPhotos.length + 1, memorialId: id, ...data }; 
+    mockPhotos.push(newP); 
+    return newP; 
+  };
+  
+  const getComments = async (id) => { 
+    await delay(150); 
+    return { _embedded: { comments: mockComments.filter(c => c.memorialId === id) } }; 
+  };
+  
+  const addComment = async (id, data) => { 
+    await delay(400); 
+    const newC = { id: mockComments.length + 1, memorialId: id, ...data }; 
+    mockComments.push(newC); 
+    return newC; 
+  };
 
-/**
- * 모든 추모관 목록을 가져옵니다 (관리자용)
- * @returns {Promise<Array>} 전체 추모관 목록
- */
-export const getAllMemorials = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(mockMemorials);
-    }, 300);
-  });
-};
+  const createVideo = async (memorialId, formData) => {
+    await delay(1000); // 영상 생성은 시간이 오래 걸림
+    const newVideo = {
+      id: mockVideos.length + 1,
+      videoId: mockVideos.length + 1,
+      memorialId: parseInt(memorialId),
+      title: `추모 영상 ${mockVideos.length + 1}`,
+      description: '새로운 추모 영상',
+      status: 'REQUESTED',
+      videoUrl: null,
+      thumbnailUrl: null,
+      outroImageUrl: 'https://picsum.photos/seed/outro/400/300',
+      keywords: ['추억', '사랑'],
+      createdAt: new Date().toISOString(),
+      completedAt: null
+    };
+    mockVideos.push(newVideo);
+    return newVideo;
+  };
 
-/**
- * 새로운 추모관을 생성합니다
- * @param {Object} memorialData - 추모관 정보
- * @returns {Promise<Object>} 생성된 추모관 정보
- */
-export const createMemorial = async (memorialData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newMemorial = {
-        id: mockMemorials.length + 1,
-        joinCode: `MEM${String(mockMemorials.length + 1).padStart(3, '0')}`,
-        participants: 0,
-        familyMembers: [],
-        status: 'active',
-        ...memorialData
-      };
-      mockMemorials.push(newMemorial);
-      resolve(newMemorial);
-    }, 500);
-  });
-};
+  const getVideo = async (videoId) => {
+    await delay(200);
+    const video = mockVideos.find(v => v.videoId === parseInt(videoId));
+    return video || null;
+  };
 
-export default {
-  getUserMemorialHalls,
-  getMemorialByCode,
-  getMemorialById,
-  addFamilyMember,
-  getAllMemorials,
-  createMemorial
-};
+  const deleteVideo = async (videoId) => {
+    await delay(300);
+    const index = mockVideos.findIndex(v => v.videoId === parseInt(videoId));
+    if (index > -1) {
+      mockVideos.splice(index, 1);
+      return { success: true };
+    }
+    return { success: false };
+  };
+
+  const createTribute = async (memorialId, data) => {
+    await delay(1000); // AI 처리 시뮬레이션
+    const memorial = mockMemorials.find(m => m.id === memorialId);
+    if (memorial) {
+      memorial.tribute = `[AI 생성된 추모사]\n\n${memorial.name}님을 기리며...\n\n키워드: ${data.keywords}`;
+      memorial.tributeGeneratedAt = new Date().toISOString();
+      return { tribute: memorial.tribute };
+    }
+    throw new Error('Memorial not found');
+  };
+
+  const updateTribute = async (memorialId, data) => {
+    await delay(300);
+    const memorial = mockMemorials.find(m => m.id === memorialId);
+    if (memorial) {
+      memorial.tribute = data.tribute;
+      memorial.tributeGeneratedAt = new Date().toISOString();
+      return { tribute: memorial.tribute };
+    }
+    throw new Error('Memorial not found');
+  };
+
+  const deleteTribute = async (memorialId) => {
+    await delay(300);
+    const memorial = mockMemorials.find(m => m.id === memorialId);
+    if (memorial) {
+      memorial.tribute = null;
+      memorial.tributeGeneratedAt = null;
+      return { success: true };
+    }
+    return { success: false };
+  };
+
+  // API 명세와 다른 팀의 realApiService 함수 이름 사이의 간극을 맞추기 위한 별칭(alias)
+  const getMemorial = getMemorialById;
+  const getPhotosForMemorial = getPhotos;
+
+  return { 
+    getMemorials, 
+    getMemorial, 
+    getMemorialById, 
+    getMemorialDetails, 
+    createMemorial, 
+    updateMemorial, 
+    deleteMemorial, 
+    getPhotos, 
+    getPhotosForMemorial, 
+    addPhoto, 
+    getComments, 
+    addComment,
+    createVideo,
+    getVideo,
+    deleteVideo,
+    createTribute,
+    updateTribute,
+    deleteTribute
+  };
+})();

@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { mockMemorialService } from './memorialService'; // Menu4의 Mock 서비스를 가져옵니다.
+import { mockLoginService } from './loginService';       // Lobby, Login 등 사용자 관련 Mock 서비스
 
 // API 기본 설정
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -26,7 +28,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Check if the request was for login and if it has a custom header to skip redirect
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && originalRequest.headers['X-Skip-Auth-Redirect'] !== 'true') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -35,296 +39,170 @@ api.interceptors.response.use(
   }
 );
 
-export const apiService = {
-  // 추모관 관련 API
-  getMemorials: () => api.get('/memorials'),
-  getMemorial: (id) => api.get(`/memorials/${id}`),
-  createMemorial: (data) => api.post('/memorials', data),
-  updateMemorial: (id, data) => api.put(`/memorials/${id}`, data),
-  deleteMemorial: (id) => api.delete(`/memorials/${id}`),
+// --- 실제 API 서비스 정의 (Axios 응답에서 data를 추출하여 반환하도록 수정) ---
+const realApiService = {
+  // Memorial Service
+  getMemorials: async () => (await api.get('/memorials')).data,
+  getMemorial: async (id) => (await api.get(`/memorials/${id}`)).data,
+  updateMemorial: async (id, data) => (await api.patch(`/memorials/${id}`, data)).data,
+  getMemorialDetails: async (id) => (await api.get(`/memorials/${id}/detail`)).data, // API 명세에 맞게 수정
+  uploadMemorialProfileImage: async (id, formData) => (await api.patch(`/memorials/${id}/profile-image`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
+  
+  createTribute: async (id, data) => {
+    // AI 추모사 생성은 시간이 오래 걸릴 수 있으므로 타임아웃을 60초로 설정
+    const config = { 
+      timeout: 60000
+    };
+    return (await api.post(`/memorials/${id}/tribute`, data, config)).data;
+  },
+  updateTribute: async (id, data) => (await api.patch(`/memorials/${id}/tribute`, data)).data,
+  deleteTribute: async (id) => (await api.delete(`/memorials/${id}/tribute`)).data,
 
   // 장례서류 관련 API
-    getFuneralInfos: () => api.get('/funeralInfos'),
+  getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
+  getObituaries: async () => (await api.get('/obituaries')).data,
+  getDeathReports: async () => (await api.get('/deathReports')).data,
+  getSchedules: async () => (await api.get('/schedules')).data,
+  createObituary: (funeralInfoId) => api.put(`/funeralInfos/${funeralInfoId}/createobituary`),
+  createDeathReport: (funeralInfoId) => api.put(`/funeralInfos/${funeralInfoId}/createdeathreport`),
+  createSchedule: (funeralInfoId) => api.put(`/funeralInfos/${funeralInfoId}/createschedule`),
+  updateFuneralInfo: async (funeralInfoId, data) => (await api.put(`/funeralInfos/${funeralInfoId}/updatefuneralinfo`, data)).data,
+  getObituaryByCustomerId: (customerId) => api.get(`/obituaries/search/findFirstByCustomerIdOrderByObituaryIdDesc?customerId=${customerId}`),
+  getDeathReportByCustomerId: (customerId) => api.get(`/deathReports/search/findFirstByCustomerIdOrderByDeathReportIdDesc?customerId=${customerId}`),
+  getScheduleByCustomerId: (customerId) => api.get(`/schedules/search/findFirstByCustomerIdOrderByScheduleIdDesc?customerId=${customerId}`),
+  checkExistingFuneralInfo: (customerId) => api.get(`/funeralInfos/search/findFirstByCustomerIdOrderByFuneralInfoIdDesc?customerId=${customerId}`),
+
+  // 고객 관련 API
+  getCustomers: () => api.get('/customerProfiles'),
+
+  // 장례 정보 생성
+  createFuneralInfo: (data) => api.post('/funeralInfos', data),
+
+  // 장례 서류 검토 요청
+  validateFuneralInfo: (data) => api.post('/funeralInfos/validate-fields', data),
+//   validateFuneralInfo: (data) => api.get('/validationWarnings'),
+
+  // 장례 정보 수정
+  updateFuneralInfo: (id, data) => api.put(`/funeralInfos/${id}/updatefuneralinfo`, data),
+  uploadPhoto: async (id, formData) => (await api.post(`/memorials/${id}/photos`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
+  getPhotosForMemorial: async (id) => (await api.get(`/memorials/${id}/photos`)).data,
+  updatePhoto: async (photoId, data) => (await api.patch(`/photos/${photoId}`, data)).data,
+  deletePhoto: async (photoId) => (await api.delete(`/photos/${photoId}`)).data,
+
+  createVideo: async (memorialId, formData) => {
+    // 영상 생성은 시간이 오래 걸릴 수 있으므로 타임아웃을 30초로 설정
+    const config = { 
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 30000
+    };
+    return (await api.post(`/memorials/${memorialId}/videos`, formData, config)).data;
+  },
+  getVideo: async (videoId) => (await api.get(`/videos/${videoId}`)).data,
+  deleteVideo: async (videoId) => (await api.delete(`/videos/${videoId}`)).data,
+
+  createComment: async (id, data) => (await api.post(`/memorials/${id}/comments`, data)).data,
+  getComments: async (id) => (await api.get(`/memorials/${id}/comments`)).data,
+  updateComment: async (commentId, data) => (await api.patch(`/comments/${commentId}`, data)).data,
+  deleteComment: async (commentId) => (await api.delete(`/comments/${commentId}`)).data,
+
+  // 유가족 관리 Service
+  getFamilies: async () => (await api.get('/families')).data,
+  getFamily: async (id) => (await api.get(`/families/${id}`)).data,
+  createFamily: async (data) => (await api.post('/families', data)).data,
+  approveFamily: async (familyId, data) => (await api.post(`/families/${familyId}/approve`, data)).data,
+  deleteFamily: async (id) => (await api.delete(`/families/${id}`)).data,
+
+  // Login/User-related Service
+  // 참고: API 명세에 없어 추측하여 작성되었습니다. 실제 엔드포인트로 수정이 필요할 수 있습니다.
+  getUserMemorialHalls: async (userId) => (await api.get(`/users/${userId}/memorials`)).data,
+  getMemorialByCode: async (code) => (await api.get(`/memorials?code=${code}`)).data,
+
+  // Other Services
+  getDashboardData: async () => (await api.get('/dashboard')).data,
+  getAnalyticsData: async () => (await api.get('/analytics')).data,
+  getUsers: async () => (await api.get('/users')).data,
+  createUser: async (data) => (await api.post('/users', data)).data,
+  getUserById: async (id) => (await api.get(`/users/${id}`)).data, 
+  updateUser: async (id, data) => (await api.put(`/users/${id}`, data)).data,
+  updateUserPatch: async (id, data) => (await api.patch(`/users/${id}`, data)).data,
+  deleteUser: async (id) => (await api.delete(`/users/${id}`)).data,
 
 
-  // 대시보드 데이터
-  getDashboardData: () => api.get('/dashboard'),
+  // 직원 관련 API
+  createManager: (data) => api.post('/managers', data),
+  getManagerById: async (id) => (await api.get(`/managers/${id}`)).data, 
+  updateManagerPatch: async (id, managerData) => (await api.patch(`/managers/${id}`, managerData)).data,
+  // Manager login
+  loginManager: (credentials) => api.post('/managers/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
 
-  // 분석 데이터
-  getAnalyticsData: () => api.get('/analytics'),
 
-  // 사용자 관리 (기존 기능 유지)
-  getUsers: () => api.get('/users'),
-  createUser: (data) => api.post('/users', data),
-  updateUser: (id, data) => api.put(`/users/${id}`, data),
-  deleteUser: (id) => api.delete(`/users/${id}`),
-};
+  // 사용자 관련 API
+  createFamily: (data) => api.post('/families', data),
+  getFamilyById: async (id) => (await api.get(`/families/${id}`)).data,
+  updateFamilyPatch: async (id, data) => (await api.patch(`/families/${id}`, data)).data,
+  // User login
+  loginUser: (credentials) => api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
 
-// 더미 데이터 (백엔드 연결 전 테스트용)
-export const dummyData = {
-  memorials: {
-    _embedded: {
-      memorials: [
-        {
-          id: 1,
-          name: "민서",
-          age: 25,
-          birthOfDate: "1998-03-15",
-          deceasedDate: "2023-12-01",
-          gender: "FEMALE",
-          imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=300&fit=crop&crop=face",
-          customerId: 1001,
-          videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-          eulogy: '민서님, 당신과 함께한 모든 순간이 소중했습니다. 하늘에서 편안히 쉬세요.',
-          photos: [
-            { id: 1, url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=300&fit=crop&crop=face", title: "프로필 사진", description: "고인의 아름다운 미소" },
-          ],
-          _links: {
-            memorial: { href: "http://localhost:8080/memorials/1" },
-            self: { href: "http://localhost:8080/memorials/1" }
-          }
-        },
-        {
-          id: 2,
-          name: "현종",
-          age: 32,
-          birthOfDate: "1991-08-22",
-          deceasedDate: "2024-01-15",
-          gender: "MALE",
-          imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&crop=face",
-          customerId: 1002,
-          photos: [],
-          _links: {
-            memorial: { href: "http://localhost:8080/memorials/2" },
-            self: { href: "http://localhost:8080/memorials/2" }
-          }
-        },
-        {
-          id: 3,
-          name: "도형",
-          age: 28,
-          birthOfDate: "1995-11-08",
-          deceasedDate: "2024-02-20",
-          gender: "MALE",
-          imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=300&fit=crop&crop=face",
-          customerId: 1003,
-          photos: [],
-          _links: {
-            memorial: { href: "http://localhost:8080/memorials/3" },
-            self: { href: "http://localhost:8080/memorials/3" }
-          }
-        },
-        {
-          id: 4,
-          name: "시훈",
-          age: 30,
-          birthOfDate: "1993-07-12",
-          deceasedDate: "2024-03-10",
-          gender: "MALE",
-          imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=300&fit=crop&crop=face",
-          customerId: 1004,
-          photos: [],
-          _links: {
-            memorial: { href: "http://localhost:8080/memorials/4" },
-            self: { href: "http://localhost:8080/memorials/4" }
-          }
-        },
-        {
-          id: 5,
-          name: "수연",
-          age: 27,
-          birthOfDate: "1996-04-18",
-          deceasedDate: "2024-01-25",
-          gender: "FEMALE",
-          imageUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b17c?w=400&h=300&fit=crop&crop=face",
-          customerId: 1005,
-          photos: [],
-          _links: {
-            memorial: { href: "http://localhost:8080/memorials/5" },
-            self: { href: "http://localhost:8080/memorials/5" }
-          }
-        },
-        {
-          id: 6,
-          name: "성현",
-          age: 31,
-          birthOfDate: "1992-09-03",
-          deceasedDate: "2024-02-14",
-          gender: "MALE",
-          imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=300&fit=crop&crop=face",
-          customerId: 1006,
-          photos: [],
-          _links: {
-            memorial: { href: "http://localhost:8080/memorials/6" },
-            self: { href: "http://localhost:8080/memorials/6" }
-          }
-        },
-        {
-          id: 7,
-          name: "근우",
-          age: 29,
-          birthOfDate: "1994-12-25",
-          deceasedDate: "2024-03-05",
-          gender: "MALE",
-          imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=300&fit=crop&crop=face",
-          customerId: 1007,
-          photos: [],
-          _links: {
-            memorial: { href: "http://localhost:8080/memorials/7" },
-            self: { href: "http://localhost:8080/memorials/7" }
-          }
-        },
-        {
-          id: 8,
-          name: "헌준",
-          age: 26,
-          birthOfDate: "1997-05-14",
-          deceasedDate: "2024-04-12",
-          gender: "MALE",
-          imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=300&fit=crop&crop=face",
-          customerId: 1008,
-          photos: [],
-          _links: {
-            memorial: { href: "http://localhost:8080/memorials/8" },
-            self: { href: "http://localhost:8080/memorials/8" }
-          }
-        }
-      ]
-    },
-    _links: {
-      profile: { href: "http://localhost:8080/profile/memorials" },
-      self: { href: "http://localhost:8080/memorials" }
-    },
-    page: {
-      number: 0,
-      size: 20,
-      totalElements: 8,
-      totalPages: 1
+ // Password verification
+  verifyPassword: async (loginId, password, userType) => {
+    try {
+      const credentials = { loginId, loginPassword: password }; // Use loginPassword for the key
+      let response;
+      if (userType === 'employee') {
+        response = await api.post('/managers/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } });
+      } else if (userType === 'user') {
+        response = await api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } });
+      } else {
+        // Handle unexpected userType or throw an error
+        console.error("Unknown userType for password verification:", userType);
+        return false;
+      }
+      // If the login endpoint returns 200 OK, it means the password is correct
+      return true;
+    } catch (error) {
+      // If the login endpoint returns an error (e.g., 401), it means the password is incorrect
+      console.error("Password verification failed using login endpoint:", error);
+      return false;
     }
   },
+}
 
-  dashboard: {
-    totalMemorials: 150,
-    activeMemorials: 120,
-    systemUptime: 89,
-    notifications: 12,
-    recentActivities: [
-      { time: "10:30", user: "홍길동", action: "추모관 생성", status: "성공" },
-      { time: "10:25", user: "김철수", action: "방명록 작성", status: "완료" },
-      { time: "10:20", user: "이영희", action: "추모영상 업로드", status: "진행중" },
-      { time: "10:15", user: "박민수", action: "추모사 작성", status: "완료" }
-    ]
-  },
+// --- 최종 서비스 객체 내보내기 ---
+const useMock = process.env.REACT_APP_API_MOCKING === 'true';
 
-  analytics: {
-    monthlyMemorials: [65, 78, 90, 81, 56, 75],
-    memorialsByGender: { male: 80, female: 70 },
-    dailyVisits: [120, 190, 300, 500, 200, 300, 150]
-  },
-
-  // 전체 회원 목록 (유가족 검색용)
-  members: [
-    {
-      id: 1001,
-      name: "김철수",
-      phone: "010-1234-5678",
-      email: "kim.chulsoo@example.com",
-      address: "서울시 강남구 역삼동",
-      birthDate: "1985-03-15",
-      gender: "MALE",
-      joinDate: "2023-01-10"
-    },
-    {
-      id: 1002,
-      name: "이영희",
-      phone: "010-9876-5432",
-      email: "lee.younghee@example.com",
-      address: "서울시 서초구 서초동",
-      birthDate: "1990-07-22",
-      gender: "FEMALE",
-      joinDate: "2023-02-15"
-    },
-    {
-      id: 1003,
-      name: "박민수",
-      phone: "010-5555-1234",
-      email: "park.minsu@example.com",
-      address: "서울시 송파구 잠실동",
-      birthDate: "1988-12-08",
-      gender: "MALE",
-      joinDate: "2023-03-20"
-    },
-    {
-      id: 1004,
-      name: "최수정",
-      phone: "010-7777-8888",
-      email: "choi.sujung@example.com",
-      address: "서울시 마포구 홍대입구",
-      birthDate: "1992-05-30",
-      gender: "FEMALE",
-      joinDate: "2023-04-05"
-    },
-    {
-      id: 1005,
-      name: "정현우",
-      phone: "010-3333-9999",
-      email: "jung.hyunwoo@example.com",
-      address: "경기도 성남시 분당구",
-      birthDate: "1987-09-14",
-      gender: "MALE",
-      joinDate: "2023-05-12"
-    },
-    {
-      id: 1006,
-      name: "윤미라",
-      phone: "010-1111-2222",
-      email: "yoon.mira@example.com",
-      address: "인천시 연수구 송도동",
-      birthDate: "1993-11-25",
-      gender: "FEMALE",
-      joinDate: "2023-06-18"
-    },
-    {
-      id: 1007,
-      name: "강동혁",
-      phone: "010-4444-5555",
-      email: "kang.donghyuk@example.com",
-      address: "부산시 해운대구 우동",
-      birthDate: "1989-04-17",
-      gender: "MALE",
-      joinDate: "2023-07-22"
-    },
-    {
-      id: 1008,
-      name: "송지은",
-      phone: "010-6666-7777",
-      email: "song.jieun@example.com",
-      address: "대구시 수성구 범어동",
-      birthDate: "1991-08-03",
-      gender: "FEMALE",
-      joinDate: "2023-08-15"
-    },
-    {
-      id: 1009,
-      name: "임태호",
-      phone: "010-8888-9999",
-      email: "lim.taeho@example.com",
-      address: "대전시 유성구 도룡동",
-      birthDate: "1986-02-28",
-      gender: "MALE",
-      joinDate: "2023-09-10"
-    },
-    {
-      id: 1010,
-      name: "한소영",
-      phone: "010-2222-3333",
-      email: "han.soyoung@example.com",
-      address: "광주시 북구 일곡동",
-      birthDate: "1994-06-12",
-      gender: "FEMALE",
-      joinDate: "2023-10-05"
-    }
-  ]
+// Mock 모드일 경우, 실제 API 서비스의 함수들 위에 Mock 서비스 함수들을 덮어씁니다.
+const hybridService = { 
+  ...realApiService, 
+  ...mockMemorialService,
+  ...mockLoginService
 };
+
+export const recommendationService = {
+  // 1. 전체 고객 목록 조회
+  getAllCustomers: () => api.get('/customer-infos'),
+
+  // 2. 메시지 미리보기 생성 
+  generatePreviewMessage: (data) => api.post('/recommendMessages/preview-message', data),
+
+  // 3. 특정 고객(개인)에게 생성된 메시지 전송 ->아마 사용 x:4번만으로 가능
+  //sendPreviewMessageToCustomer: (data) => api.post('/recommendMessages/save-preview', data),
+
+  // 4. 필터링된 그룹에게 생성된 메시지 전송
+  sendGroupMessage: (data) => api.post('/recommendMessages/generate-group-message', data),
+
+  // 5. 전송된 모든 추천 메시지 확인 ->전체 발송내역확인 화면 없어 아마 사용 x:6번만으로 가능
+  //getAllSentMessages: () => api.get('/recommendMessages'),
+
+  // 6. 특정 고객에게 보낸 추천 메시지 확인 (발송 기록)->현재 가장 마지막 메시지 1개만 보여줌 :7번만 사용 효율
+  //getCustomerHistory: (customerId) => api.get(`/recommendMessages/customer/${customerId}`),
+
+  // 7. 특정 고객에게 보낸 가장 최신의 추천 메시지 확인(발송기록)
+  getLatestCustomerHistory: (customerId) => api.get(`/recommendMessages/customer/${customerId}/latest`),
+
+  // 8. 필터링된 고객들 목록 보기 
+  getFilteredCustomers: (filters) => api.get('/customer-infos/filter', { params: filters }),
+};
+
+export const apiService = useMock ? hybridService : realApiService;
 
 export default api;

@@ -9,6 +9,7 @@ import {
     updateUserPasswordByLoginId,
     updateEmployeePasswordByLoginId } 
 from '../services/userService';
+import { apiService } from '../services/api'; // Added for direct API calls
 
 const AuthContext = createContext();
 
@@ -44,27 +45,64 @@ export const AuthProvider = ({ children }) => {
    * @description 사용자 타입에 따른 로그인을 처리합니다. 
    */
   const loginByType = async (loginId, loginPassword, userType) => {
+    // Mock 모드 분기 처리
+    const useMock = process.env.REACT_APP_API_MOCKING === 'true';
+
+    if (useMock) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                let mockUser = null;
+                if (userType === 'employee' && loginId === 'admin' && loginPassword === 'password') {
+                    mockUser = { id: 99, loginId: 'admin', name: '테스트관리자', userType: 'employee' };
+                } else if (userType === 'user' && loginId === 'user' && loginPassword === 'password') {
+                    mockUser = { id: 0, loginId: 'user', name: '테스트', userType: 'user' };
+                }
+
+                if (mockUser) {
+                    const token = 'dummy-mock-auth-token';
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(mockUser));
+                    setIsAuthenticated(true);
+                    setUser(mockUser);
+                    resolve({ success: true });
+                } else {
+                    resolve({ success: false, message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+                }
+            }, 500);
+        });
+    }
+
+    // 기존 Real 모드 로직
     try {
-      const loginFunction = userType === 'employee' ? getEmployeeByCredentials : getUserByCredentials;
-      const foundUser = await loginFunction(loginId, loginPassword);
-      
-      const userData = {                // 백엔드 연동시 데이터에 맞춰야됨
-        id: foundUser.id, 
-        loginId: foundUser.loginId, 
-        name: foundUser.name,
-        userType: foundUser.userType   // 서비스에서 자동으로 설정됨
-      };
-      const token = 'dummy-auth-token'; // 백엔드 연동시 수정 필요
+      let foundUser;
+      let token;
+      let userData;
 
-        // ex =================================================================
-        // const foundUser = await getUserByCredentials(loginId, loginPassword);
-
-        // // 백엔드가 { user: {...}, token: '...' } 형태로 응답한다고 가정
-        // const userData = foundUser.user;
-        // const token = foundUser.token; //  더미 데이터 대신 실제 응답에서 받은 토큰 사용
-
-        // localStorage.setItem('token', token);
-        // ==============================================================
+      if (userType === 'employee') {
+        const credentials = { loginId, loginPassword };
+        const response = await apiService.loginManager(credentials);
+        // Assuming response.data contains user info and token
+        foundUser = response.data; // The user object is directly in response.data
+        token = response.data.token; // The token is directly in response.data.token
+        userData = {
+          id: foundUser.id,
+          loginId: loginId, // Use the loginId passed into loginByType
+          name: foundUser.name,
+          userType: 'employee' // Set userType explicitly
+        };
+      } else { // userType === 'user'
+        const credentials = { loginId, loginPassword };
+        const response = await apiService.loginUser(credentials);
+        // Assuming response.data contains user info and token
+        foundUser = response.data; // The user object is directly in response.data
+        token = response.data.token; // The token is directly in response.data.token
+        userData = {
+          id: foundUser.id,
+          loginId: loginId, // Use the loginId passed into loginByType
+          name: foundUser.name,
+          userType: 'user' // Set userType explicitly
+        };
+      }
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));

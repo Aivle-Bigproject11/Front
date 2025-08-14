@@ -6,6 +6,7 @@ import menu02 from '../assets/images/menu02.png';
 import menu03 from '../assets/images/menu03.png';
 import menu04 from '../assets/images/menu04.png';
 import menu05 from '../assets/images/menu05.png';
+import logoIcon from '../assets/logo/icon01.png';
 
 const Home = () => {
   const [animateCard, setAnimateCard] = useState(false);
@@ -14,24 +15,24 @@ const Home = () => {
     setAnimateCard(true);
   }, []);
 
-  // 카드 스타일 정의
   const cardStyle = {
-    flex: '1 1 calc(20% - 16px)',
+    flex: '1 1 calc(20% - 20px)',
+    minWidth: '280px',
     height: '350px',
     background: 'rgba(255, 251, 235, 0.95)',
     border: '1px solid rgba(184, 134, 11, 0.35)',
     boxShadow: '0 8px 30px rgba(44, 31, 20, 0.15)',
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    display: 'flex',
+    flexDirection: 'column',
   };
 
-  // 서비스별 버튼 스타일 정의
   const buttonBaseStyle = {
     color: '#FFFFFF',
     border: 'none',
     fontWeight: '700',
     transition: 'all 0.3s ease',
     textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)',
-    marginBottom: '1rem',
   }
 
   const redButtonStyle = { ...buttonBaseStyle, background: 'linear-gradient(135deg, #C62828, #A91E1E)' };
@@ -52,9 +53,8 @@ const Home = () => {
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative',
-      overflow: 'hidden',
+      overflow: 'hidden', // 스크롤 숨김
     }}>
-      {/* 배경 패턴 */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -70,8 +70,7 @@ const Home = () => {
         zIndex: 1,
         width: '100%',
         maxWidth: '1600px',
-        height: '100%',
-        overflowY: 'auto',
+        height: '100%', // 전체 높이 사용
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
@@ -83,15 +82,15 @@ const Home = () => {
         borderRadius: '20px',
         opacity: animateCard ? 1 : 0,
         transition: 'opacity 0.6s ease-out',
-        padding: '20px',
+        padding: '30px',
         gap: '20px',
       }}>
-        {/* Jumbotron 헤더 스타일 변경 */}
-        <div className="jumbotron p-3 rounded mb-4" style={{
+        <div className="jumbotron p-4 rounded mb-4" style={{
           flexShrink: 0,
           background: 'linear-gradient(135deg, #3c2d20, #7a4e24)',
           color: '#FFFBEB',
-          textShadow: '1px 1px 2px rgba(44, 31, 20, 0.5)'
+          textShadow: '1px 1px 2px rgba(44, 31, 20, 0.5)',
+          marginTop: '20px'
         }}>
           <h1 className="display-5" style={{ fontWeight: '600' }}>환영합니다!</h1>
           <p className="lead" style={{ fontWeight: '400' }}>
@@ -99,24 +98,20 @@ const Home = () => {
           </p>
         </div>
 
-        {/* 메뉴 카드 - 골드 테마 적용 */}
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '20px',
           justifyContent: 'center',
           flexGrow: 1,
-          alignItems: 'stretch', 
+          alignItems: 'center', // 카드를 중앙에 정렬
         }}>
-          {/* Card 1: 장례 서류 작성 */}
           <Card style={cardStyle} className="menu-card">
-            <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px',  paddingTop: '50px' }}>
-                <img src={menu01} alt="장례 서류 작성" style={{ width: '100px', height: '100px' }} />
-              </div>
-              <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>장례 서류 작성</Card.Title>
-                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
+            <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
+              <img src={menu01} alt="장례 서류 작성" style={{ width: '90px', height: '90px' }} />
+              <div>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>장례 서류 작성</Card.Title>
+                <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
                   - 장례 관련 서류 자동 작성
                 </Card.Text>
               </div>
@@ -126,15 +121,12 @@ const Home = () => {
             </Card.Body>
           </Card>
 
-          {/* Card 2: 대시보드 */}
           <Card style={cardStyle} className="menu-card">
-            <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px', paddingTop: '50px' }}>
-                <img src={menu02} alt="대시보드" style={{ width: '100px', height: '100px' }} />
-              </div>
-              <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>대시보드</Card.Title>
-                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
+            <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
+              <img src={menu02} alt="대시보드" style={{ width: '90px', height: '90px' }} />
+              <div>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>대시보드</Card.Title>
+                <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
                   - 추모관 현황 대시보드<br />
                   - 실시간 통계 및 분석
                 </Card.Text>
@@ -145,15 +137,12 @@ const Home = () => {
             </Card.Body>
           </Card>
 
-          {/* Card 3: 전환 서비스 추천 */}
           <Card style={cardStyle} className="menu-card">
-            <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px', paddingTop: '50px'}}>
-                <img src={menu03} alt="전환 서비스 추천" style={{ width: '100px', height: '100px' }} />
-              </div>
-              <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>전환 서비스 추천</Card.Title>
-                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
+            <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
+              <img src={menu03} alt="전환 서비스 추천" style={{ width: '90px', height: '90px' }} />
+              <div>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>전환 서비스 추천</Card.Title>
+                <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
                   - 맞춤 전환 서비스 메시지 생성<br />
                   - 고객 메시지 발송 기록 조회
                 </Card.Text>
@@ -164,15 +153,12 @@ const Home = () => {
             </Card.Body>
           </Card>
 
-          {/* Card 4: 디지털 추모관 */}
           <Card style={cardStyle} className="menu-card">
-            <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px', paddingTop: '50px' }}>
-                <img src={menu04} alt="디지털 추모관" style={{ width: '100px', height: '100px' }} />
-              </div>
-              <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>디지털 추모관</Card.Title>
-                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
+            <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
+              <img src={menu04} alt="디지털 추모관" style={{ width: '90px', height: '90px' }} />
+              <div>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>디지털 추모관</Card.Title>
+                <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
                   - 추모관 관리<br />
                   - AI 추모영상/추모사 생성
                 </Card.Text>
@@ -183,15 +169,12 @@ const Home = () => {
             </Card.Body>
           </Card>
 
-          {/* Card 5: 고객 관리 */}
           <Card style={cardStyle} className="menu-card">
-            <Card.Body className="text-center d-flex flex-column justify-content-between align-items-center p-3">
-              <div className="d-flex align-items-center justify-content-center mb-3" style={{ height: '100px', paddingTop: '50px' }}>
-                <img src={menu05} alt="고객 관리" style={{ width: '100px', height: '100px' }} />
-              </div>
-              <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700' }}>고객 관리</Card.Title>
-                <Card.Text className="mb-3" style={{ color: '#4A3728' }}>
+            <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
+              <img src={menu05} alt="고객 관리" style={{ width: '90px', height: '90px' }} />
+              <div>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>고객 관리</Card.Title>
+                <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
                   - 고객 정보 조회<br />
                   - 고객 문의 관리
                 </Card.Text>
@@ -203,40 +186,27 @@ const Home = () => {
           </Card>
         </div>
 
-        {/* 팀 정보 카드 스타일 변경 */}
-        <div style={{ flexShrink: 0, marginTop: '20px' }}>
-          <Card style={{
-            background: 'rgba(255, 251, 235, 0.9)',
-            border: '1px solid rgba(184, 134, 11, 0.25)',
-          }}>
-            <Card.Header style={{
-              background: 'transparent',
-              borderBottom: '1px solid rgba(184, 134, 11, 0.2)',
-              color: '#2C1F14',
-              fontWeight: 'bold',
-            }}>
-              <h5>Golden Gate Frontend Team</h5>
-            </Card.Header>
-            <Card.Body style={{color: '#4A3728'}}>
-              <ul>
-                <li>김시훈</li>
-                <li>양성현</li>
-                <li>박수연</li>
-              </ul>
-            </Card.Body>
-          </Card>
+        <div style={{ flexShrink: 0, marginTop: 'auto', paddingTop: '20px' }}>
+          <hr style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)' }} />
+          <div className="text-center py-3 d-flex align-items-center justify-content-center" style={{ gap: '15px' }}>
+            <img src={logoIcon} alt="Golden Gate Logo" style={{ height: '24px' }} />
+            <p style={{ color: '#4A3728', margin: 0, fontWeight: '500', fontSize: '1rem' }}>
+              <strong>Golden Gate</strong>, 전통과 품격으로 마지막 순간까지 함께합니다
+            </p>
+          </div>
+          <hr style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)' }} />
+          <div className="text-center py-2">
+            <a href="/privacyPolicy" style={{ color: '#6B4423', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>개인정보처리방침</a>
+            <span style={{ margin: '0 10px', color: '#6B4423', fontSize: '12px' }}>|</span>
+            <a href="/termsOfService" style={{ color: '#6B4423', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>이용약관</a>
+          </div>
         </div>
       </div>
 
-      {/* Global Styles 수정 */}
       <style jsx global>{`
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
 
         .animate-in {
@@ -273,15 +243,23 @@ const Home = () => {
 
         @media (max-width: 1200px) {
           .page-wrapper {
+            height: auto !important;
+            min-height: calc(100vh - var(--navbar-height));
+            overflow: auto !important;
           }
           .dashboard-container {
-            flex-direction: column;
+            height: auto !important;
           }
-          /* 카드 반응형 스타일 유지 */
           .dashboard-container > div:nth-child(2) > .card {
-            flex: 1 1 100% !important;
+            flex: 1 1 45% !important;
             max-width: none !important;
           }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container > div:nth-child(2) > .card {
+                flex: 1 1 100% !important;
+            }
         }
       `}</style>
     </div>

@@ -1,0 +1,91 @@
+▼▼▼ Request 샘플 (POSTMAN)
+POST
+http://localhost:8080/funeralInfos
+---
+{
+    "customerId": 1,
+    "deceasedName": "김철수",
+    "deceasedRrn": "430510-1000111",
+    "deceasedAge": 82,
+    "deceasedBirthOfDate": "1943-05-10T00:00:00Z",
+    "deceasedGender": "남성",
+    "deceasedAddress": "서울특별시 종로구 세종대로 175",
+    "deceasedDate": "2025-08-01T14:00:00Z",
+    "funeralCompanyName": "GoldenGate",
+    "directorName": "이장례",
+    "directorPhone": "010-9876-5432"
+}
+
+
+
+
+▲▲▲ Response 샘플 (POSTMAN)
+---
+{
+    "customerId": 1,
+    "validationStatus": null,
+    "deceasedName": "김철수",
+    "deceasedNameHanja": null,
+    "deceasedRrn": "430510-1000111",
+    "deceasedAge": 82,
+    "deceasedBirthOfDate": "1943-05-10T00:00:00.000+00:00",
+    "deceasedGender": "남성",
+    "deceasedDate": "2025-08-01T14:00:00.000+00:00",
+    "deceasedReligion": null,
+    "deceasedRegisteredAddress": null,
+    "deceasedAddress": "서울특별시 종로구 세종대로 175",
+    "deceasedRelationToHouseholdHead": null,
+    "reportRegistrationDate": null,
+    "deathLocation": null,
+    "deathLocationType": null,
+    "deathLocationEtc": null,
+    "deathReportEtc": null,
+    "reporterName": null,
+    "reporterRrn": null,
+    "reporterQualification": null,
+    "reporterRelationToDeceased": null,
+    "reporterAddress": null,
+    "reporterPhone": null,
+    "reporterEmail": null,
+    "submitterName": null,
+    "submitterRrn": null,
+    "funeralCompanyName": "GoldenGate",
+    "directorName": "이장례",
+    "directorPhone": "010-9876-5432",
+    "funeralHomeName": null,
+    "funeralHomeAddress": null,
+    "funeralHomeAddressUrl": null,
+    "funeralDuration": null,
+    "mortuaryInfo": null,
+    "processionDateTime": null,
+    "burialSiteInfo": null,
+    "chiefMourners": null,
+    "chiefMournersContact": null,
+    "chiefMournerAccountHolder": null,
+    "chiefMournerBankName": null,
+    "chiefMournerAccountNumber": null,
+    "templateKeyword": null,
+    "_links": {
+        "self": {
+            "href": "http://funeralcontext:8080/funeralInfos/1"
+        },
+        "funeralInfo": {
+            "href": "http://funeralcontext:8080/funeralInfos/1"
+        },
+        "updatefuneralinfo": {
+            "href": "http://funeralcontext:8080/funeralInfos/1/updatefuneralinfo"
+        },
+        "createobituary": {
+            "href": "http://funeralcontext:8080/funeralInfos/1/createobituary"
+        },
+        "createschedule": {
+            "href": "http://funeralcontext:8080/funeralInfos/1/createschedule"
+        },
+        "createalldocuments": {
+            "href": "http://funeralcontext:8080/funeralInfos/1/createalldocuments"
+        },
+        "createdeathreport": {
+            "href": "http://funeralcontext:8080/funeralInfos/1/createdeathreport"
+        }
+    }
+}

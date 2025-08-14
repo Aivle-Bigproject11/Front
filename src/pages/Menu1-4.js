@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, ArrowLeft } from 'lucide-react';
-import { customerService } from '../services/customerService';
+import { apiService } from '../services/api';
 
 const Menu1_4 = () => {
     const navigate = useNavigate();
@@ -13,7 +13,6 @@ const Menu1_4 = () => {
     const [error, setError] = useState(null);
     const [animateCard, setAnimateCard] = useState(false);
     const [isSearched, setIsSearched] = useState(false);
-    const [showModal, setShowModal] = useState(false);
     const [filters, setFilters] = useState({
         customerId: '', name: '',
     });
@@ -23,10 +22,13 @@ const Menu1_4 = () => {
             setLoading(true);
             setError(null);
             try {
-                const data = await customerService.getAllCustomers();
-                // 이미 장례 절차가 진행중이거나 완료된 고객은 제외
-                const availableCustomers = data.filter(c => c.status === 'pending');
-                setAllCustomers(availableCustomers);
+                const response = await apiService.getCustomers();
+                const customers = response.data._embedded.customerProfiles.map(customer => {
+                    const href = customer._links.self.href;
+                    const id = href.substring(href.lastIndexOf('/') + 1);
+                    return { ...customer, customerId: id };
+                });
+                setAllCustomers(customers || []);
                 setFilteredCustomers([]);
             } catch (err) {
                 setError("데이터 로딩에 실패했습니다.");
@@ -50,7 +52,7 @@ const Menu1_4 = () => {
         let result = [...allCustomers];
 
         if (filters.customerId) {
-            result = result.filter(c => String(c.id).includes(filters.customerId));
+            result = result.filter(c => String(c.customerId).includes(filters.customerId));
         }
         if (filters.name) {
             result = result.filter(c => c.name.toLowerCase().includes(filters.name.toLowerCase()));
@@ -62,19 +64,32 @@ const Menu1_4 = () => {
 
     const handleRegisterDeceased = async (customer) => {
         try {
-            // 고객 상태를 '진행중'으로 변경
-            await customerService.updateCustomer(customer.id, { ...customer, status: 'inProgress' });
-            localStorage.setItem('selectedCustomer', JSON.stringify({ ...customer, status: 'inProgress' }));
-            setShowModal(true);
-        } catch (err) {
-            setError('고객 상태 변경에 실패했습니다.');
-            console.error('Error updating customer status:', err);
+            await apiService.checkExistingFuneralInfo(customer.customerId);
+            alert('이미 등록된 고인입니다.');
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                localStorage.setItem('selectedCustomer', JSON.stringify(customer));
+                navigate('/menu1-5');
+            } else {
+                console.error("An unexpected error occurred:", error);
+                alert('오류가 발생했습니다. 다시 시도해주세요.');
+            }
         }
     };
 
-    const handleCloseModal = () => {
-        setShowModal(false);
-        navigate('/menu1-1');
+    const getFamilyInfo = (customer) => {
+        const marriedText = customer.isMarried ? '기혼' : '미혼';
+        const childrenText = customer.hasChildren ? '자녀 있음' : '자녀 없음';
+        return `${marriedText}, ${childrenText}`;
+    };
+
+    const formatDateForDisplay = (dateString) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}.${month}.${day}`;
     };
 
     if (loading && !animateCard) {
@@ -137,19 +152,21 @@ const Menu1_4 = () => {
                                 </div>
                             ) : filteredCustomers.length > 0 ? (
                                 filteredCustomers.map(customer => (
-                                    <Card key={customer.id} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
+                                    <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
                                         <Card.Body>
                                             <Row className="align-items-center">
                                                 <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3">
-                                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.id}</p>
+                                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Id : {customer.customerId}</p>
                                                     <h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5>
                                                 </Col>
                                                 <Col md={7}>
                                                     <Row>
-                                                        <Col sm={6} className="mb-2"><strong>나이:</strong> {customer.age}세</Col>
+                                                        <Col sm={6} className="mb-2"><strong>생년월일:</strong> {formatDateForDisplay(customer.birthOfDate)} (만 {customer.age}세)</Col>
                                                         <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
-                                                        <Col sm={12} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
-                                                        <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.location}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
+                                                        <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
+                                                        <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
                                                     </Row>
                                                 </Col>
                                                 <Col md={2} className="text-center text-md-end">
@@ -172,17 +189,7 @@ const Menu1_4 = () => {
                 </div>
             </div>
 
-            <Modal show={showModal} onHide={handleCloseModal} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>등록 완료</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>고인 등록이 완료되었습니다.</Modal.Body>
-                <Modal.Footer>
-                    <Button variant="primary" onClick={handleCloseModal}>
-                        확인
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            
 
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

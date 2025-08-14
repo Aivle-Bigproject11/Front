@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { customerService } from '../services/customerService';
 
 // 아이콘 SVG 컴포넌트
 const PlusIcon = () => (
@@ -40,13 +41,13 @@ const CustomPopup = ({ message, type, onConfirm, onCancel }) => (
 
 const Menu5_1 = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // URL에서 고객 ID를 가져옴
   const [animateCard, setAnimateCard] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', birthYear: '', birthMonth: '', birthDay: '',
+    name: '', email: '', phone: '', rrn: '', birthYear: '', birthMonth: '', birthDay: '',
     occupation: '', address: '', gender: '남', maritalStatus: '미혼', hasChildren: '무',
   });
   
-  const [uniqueId] = useState('SB-2002');
   const [diseases, setDiseases] = useState([]);
   const [currentDisease, setCurrentDisease] = useState('');
   
@@ -54,26 +55,49 @@ const Menu5_1 = () => {
   const [popup, setPopup] = useState({
     isOpen: false,
     message: '',
-    type: 'alert', // 'alert' 또는 'confirm'
+    type: 'alert',
     onConfirm: () => {},
   });
 
+  // 고객 데이터를 불러오는 함수
+  const fetchCustomerData = useCallback(async () => {
+    try {
+        const response = await customerService.getCustomerById(id);
+        const customer = response.data;
+
+        // 생년월일 파싱
+        const [year, month, day] = customer.birthDate ? customer.birthDate.split('T')[0].split('-') : ['', '', ''];
+
+        setFormData({
+            name: customer.name || '',
+            email: customer.email || '',
+            phone: customer.phone || '',
+            rrn: customer.rrn || '',
+            birthYear: year,
+            birthMonth: month ? parseInt(month, 10).toString() : '',
+            birthDay: day ? parseInt(day, 10).toString() : '',
+            occupation: customer.job || '',
+            address: customer.address || '',
+            gender: customer.gender || '남',
+            maritalStatus: customer.isMarried ? '기혼' : '미혼',
+            hasChildren: customer.hasChildren ? '유' : '무',
+        });
+        setDiseases(customer.diseaseList || []);
+    } catch (error) {
+        console.error("Failed to fetch customer data:", error);
+        setPopup({
+            isOpen: true,
+            message: '고객 정보를 불러오는 데 실패했습니다.',
+            type: 'alert',
+            onConfirm: () => navigate(-1),
+        });
+    }
+  }, [id, navigate]);
+
   useEffect(() => {
     setAnimateCard(true);
-    const mockCustomerData = {
-        name: '김시훈', email: 'acid@gmail.com', phone: '01012341234',
-        birthYear: '1990', birthMonth: '1', birthDay: '1', occupation: '개발자',
-        address: '전농 KT플라자 4층', gender: '남', maritalStatus: '미혼',
-        hasChildren: '무', diseases: ['질병 01', '질병 02']
-    };
-    setFormData({
-        name: mockCustomerData.name, email: mockCustomerData.email, phone: mockCustomerData.phone,
-        birthYear: mockCustomerData.birthYear, birthMonth: mockCustomerData.birthMonth, birthDay: mockCustomerData.birthDay,
-        occupation: mockCustomerData.occupation, address: mockCustomerData.address,
-        gender: mockCustomerData.gender, maritalStatus: mockCustomerData.maritalStatus, hasChildren: mockCustomerData.hasChildren,
-    });
-    setDiseases(mockCustomerData.diseases);
-  }, []);
+    fetchCustomerData();
+  }, [fetchCustomerData]);
 
   const closePopup = () => {
     setPopup({ isOpen: false, message: '', type: 'alert', onConfirm: () => {} });
@@ -82,6 +106,23 @@ const Menu5_1 = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevState => ({ ...prevState, [name]: value }));
+  };
+
+  const handlePhoneChange = (e) => {
+    const rawValue = e.target.value.replace(/\D/g, "");
+    let formattedValue = "";
+    if (rawValue.length < 4) formattedValue = rawValue;
+    else if (rawValue.length < 8) formattedValue = `${rawValue.slice(0, 3)}-${rawValue.slice(3)}`;
+    else formattedValue = `${rawValue.slice(0, 3)}-${rawValue.slice(3, 7)}-${rawValue.slice(7, 11)}`;
+    setFormData(prevState => ({ ...prevState, phone: formattedValue }));
+  };
+
+  const handleRrnChange = (e) => {
+    const { value } = e.target;
+    const cleaned = value.replace(/\D/g, '');
+    let formatted = cleaned;
+    if (cleaned.length > 6) formatted = `${cleaned.slice(0, 6)}-${cleaned.slice(6, 13)}`;
+    setFormData(prevState => ({ ...prevState, rrn: formatted }));
   };
   
   const handleDiseaseChange = (e) => setCurrentDisease(e.target.value);
@@ -97,44 +138,77 @@ const Menu5_1 = () => {
     setDiseases(diseases.filter(disease => disease !== diseaseToRemove));
   };
   
-  // 수정 핸들러
-  const handleUpdate = (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
-    const completeFormData = { ...formData, uniqueId, diseases };
-    console.log('수정된 고객 정보:', completeFormData);
     
-    setPopup({
-        isOpen: true,
-        message: '고객 정보가 수정되었습니다.',
-        type: 'alert',
-        onConfirm: () => {
-            closePopup();
-            navigate(-1);
-        }
-    });
+    const { birthYear, birthMonth, birthDay } = formData;
+    let age = null;
+    if (birthYear && birthMonth && birthDay) {
+        const today = new Date();
+        const birthDate = new Date(parseInt(birthYear), parseInt(birthMonth) - 1, parseInt(birthDay));
+        let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) calculatedAge--;
+        age = calculatedAge;
+    }
+
+    const customerData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        rrn: formData.rrn,
+        birthDate: `${formData.birthYear}-${String(formData.birthMonth).padStart(2, '0')}-${String(formData.birthDay).padStart(2, '0')}`,
+        age: age,
+        job: formData.occupation,
+        address: formData.address,
+        gender: formData.gender,
+        isMarried: formData.maritalStatus === '기혼',
+        hasChildren: formData.hasChildren === '유',
+        diseaseList: diseases,
+    };
+
+    try {
+        await customerService.updateCustomer(id, customerData);
+        setPopup({
+            isOpen: true,
+            message: '고객 정보가 수정되었습니다.',
+            type: 'alert',
+            onConfirm: () => {
+                closePopup();
+                navigate(-1);
+            }
+        });
+    } catch (error) {
+        console.error("Failed to update customer:", error);
+        setPopup({ isOpen: true, message: '정보 수정에 실패했습니다.', type: 'alert', onConfirm: closePopup });
+    }
   };
 
-  // 삭제 실행 함수
-  const executeDelete = () => {
-    console.log(uniqueId, '고객 정보 삭제');
-    setPopup({
-        isOpen: true,
-        message: '고객 정보가 삭제되었습니다.',
-        type: 'alert',
-        onConfirm: () => {
-            closePopup();
-            navigate(-1);
-        }
-    });
+  const executeDelete = async () => {
+    try {
+        await customerService.deleteCustomer(id);
+        setPopup({
+            isOpen: true,
+            message: '고객 정보가 삭제되었습니다.',
+            type: 'alert',
+            onConfirm: () => {
+                closePopup();
+                navigate('/menu5'); // 삭제 후 목록 페이지로 이동
+            }
+        });
+    } catch (error) {
+        console.error("Failed to delete customer:", error);
+        setPopup({ isOpen: true, message: '정보 삭제에 실패했습니다.', type: 'alert', onConfirm: closePopup });
+    }
   };
 
-  // 삭제 버튼 클릭 핸들러
   const handleDeleteClick = () => {
     setPopup({
         isOpen: true,
         message: '정말로 이 고객 정보를 삭제하시겠습니까?',
         type: 'confirm',
         onConfirm: executeDelete,
+        onCancel: closePopup
     });
   };
 
@@ -171,7 +245,7 @@ const Menu5_1 = () => {
               </div>
               <div className="form-group">
                 <label className="form-label">고유 번호 (수정 불가)</label>
-                <input type="text" value={uniqueId} className="form-input-readonly" readOnly />
+                <input type="text" value={id} className="form-input-readonly" readOnly />
               </div>
               <div className="form-group">
                 <label className="form-label">이메일</label>
@@ -179,7 +253,11 @@ const Menu5_1 = () => {
               </div>
               <div className="form-group">
                 <label className="form-label">전화번호</label>
-                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="form-input" placeholder="숫자 11자리만 입력" maxLength="11" />
+                <input type="tel" name="phone" value={formData.phone} onChange={handlePhoneChange} className="form-input" placeholder="010-1234-5678" maxLength="13" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">주민등록번호</label>
+                <input type="text" name="rrn" value={formData.rrn} onChange={handleRrnChange} className="form-input" placeholder="xxxxxx-xxxxxxx" maxLength="14" />
               </div>
             </div>
 
@@ -383,11 +461,13 @@ const Menu5_1 = () => {
           background-color: rgba(255, 255, 255, 0.95);
         }
         
+        /* ▼▼▼ [수정] 읽기 전용 스타일 다시 추가 ▼▼▼ */
         .form-input-readonly {
           background-color: rgba(184, 134, 11, 0.1);
           color: #4A3728;
           cursor: not-allowed;
         }
+        /* ▲▲▲ [수정] 읽기 전용 스타일 다시 추가 ▲▲▲ */
 
         .form-input:focus, .form-select:focus {
           border-color: #D4AF37;

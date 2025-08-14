@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { verifyPassword } from '../services/userService';
+import { apiService } from '../services/api';
 import icon from '../assets/logo/icon01.png';
+
 
 const PasswordCheck = () => {
   const [password, setPassword] = useState('');
@@ -24,7 +24,7 @@ const PasswordCheck = () => {
     setError('');
 
     try {
-      const isValid = await verifyPassword(user.loginId, password);
+      const isValid = await apiService.verifyPassword(user.loginId, password, user.userType);
       if (isValid) {
         navigate('/user-config');
       } else {
@@ -39,7 +39,7 @@ const PasswordCheck = () => {
   return (
     <div className="page-wrapper" style={{
       '--navbar-height': '62px',
-      height: 'calc(100vh - var(--navbar-height))',
+      minHeight: 'calc(100vh - var(--navbar-height))', // height -> minHeight
       background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
       padding: '20px',
       boxSizing: 'border-box',
@@ -64,7 +64,8 @@ const PasswordCheck = () => {
         zIndex: 1,
         width: '100%',
         maxWidth: '940px',
-        height: '100%',
+        height: 'auto', // height: '100%' -> 'auto'
+        maxHeight: 'calc(100vh - 100px)', // max-height 추가
         overflowY: 'auto',
         margin: '0 auto',
         display: 'flex',
@@ -87,11 +88,13 @@ const PasswordCheck = () => {
           backdropFilter: 'blur(15px)',
           overflow: 'hidden',
           border: '2px solid rgba(184, 134, 11, 0.35)',
-          height: '100%'
+          height: '100%',
+          display: 'flex', // flex 추가
+          flexDirection: 'column' // flex-direction 추가
         }}>
           <div className="login-content" style={{
             display: 'flex',
-            height: '100%'
+            flexGrow: 1 // flex-grow 추가
           }}>
             <div className="login-left" style={{
               flex: '1',
@@ -100,18 +103,19 @@ const PasswordCheck = () => {
               alignItems: 'center',
               justifyContent: 'center',
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              padding: '40px 20px'
             }}>
               <div className="login-image-content" style={{
                 textAlign: 'center',
-                padding: '40px'
+                padding: '20px'
               }}>
-                <div style={{
-                  width: '150px',
-                  height: '150px',
+                <div className="logo-circle" style={{
+                  width: '120px',
+                  height: '120px',
                   background: 'linear-gradient(135deg, #2C1F14 0%, #4A3728 100%)',
                   borderRadius: '50%',
-                  margin: '0 auto 30px',
+                  margin: '0 auto 20px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -119,26 +123,26 @@ const PasswordCheck = () => {
                   border: '3px solid rgba(255, 255, 255, 0.35)',
                   overflow: 'hidden'
                 }}>
-                  <img 
-                    src={icon} 
+                  <img
+                    src={icon}
                     alt="Golden Gate Logo"
                     style={{
-                      width: '80px',
-                      height: '80px',
+                      width: '70px',
+                      height: '70px',
                       objectFit: 'contain',
                       filter: 'brightness(1.2) contrast(1.1)'
                     }}
                   />
                 </div>
-                <h3 style={{
+                <h3 className="logo-title" style={{
                   color: '#2C1F14',
                   fontWeight: '700',
-                  marginBottom: '15px',
-                  fontSize: '1.8rem'
+                  marginBottom: '10px',
+                  fontSize: '1.6rem'
                 }}>Golden Gate</h3>
-                <p style={{
+                <p className="logo-subtitle" style={{
                   color: '#4A3728',
-                  fontSize: '16px',
+                  fontSize: '15px',
                   lineHeight: '1.6',
                   margin: 0,
                   fontWeight: '500'
@@ -150,19 +154,20 @@ const PasswordCheck = () => {
 
             <div className="login-right" style={{
               flex: '1',
-              padding: '50px 40px',
+              padding: '40px 30px',
               display: 'flex',
               flexDirection: 'column',
+              justifyContent: 'center', // 세로 중앙 정렬
               background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
               borderRadius: '16px',
               boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
               border: '1px solid rgba(184, 134, 11, 0.2)'
             }}>
-              <div style={{ marginBottom: '30px' }}>
+              <div style={{ marginBottom: '25px' }}>
                 <h2 style={{
                   color: '#2C1F14',
                   fontWeight: '700',
-                  fontSize: '28px',
+                  fontSize: '24px',
                   marginBottom: '8px'
                 }}>비밀번호 확인</h2>
                 <p style={{
@@ -186,7 +191,7 @@ const PasswordCheck = () => {
                 </Alert>
               )}
 
-              <form onSubmit={handleSubmit} style={{ flex: 1 }}>
+              <form onSubmit={handleSubmit}>
                 <div className="login-form-group" style={{ marginBottom: '25px' }}>
                   <label className="login-form-label" style={{
                     display: 'block',
@@ -205,15 +210,15 @@ const PasswordCheck = () => {
                     required
                     style={{
                       width: '100%',
-                      padding: '15px 20px',
+                      padding: '12px 15px',
                       border: '2px solid rgba(184, 134, 11, 0.35)',
                       borderRadius: '12px',
-                      fontSize: '16px',
+                      fontSize: '15px',
                       transition: 'all 0.3s ease',
                       outline: 'none',
                       backgroundColor: 'rgba(255, 255, 255, 0.95)'
                     }}
-                     onFocus={(e) => {
+                    onFocus={(e) => {
                       e.target.style.borderColor = '#B8860B';
                       e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)';
                     }}
@@ -224,15 +229,15 @@ const PasswordCheck = () => {
                   />
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="login-btn"
                   disabled={loading}
                   style={{
                     width: '100%',
                     padding: '15px',
-                    background: loading 
-                      ? '#e9ecef' 
+                    background: loading
+                      ? '#e9ecef'
                       : 'linear-gradient(135deg, #D4AF37, #F5C23E)',
                     color: loading ? '#6c757d' : '#2C1F14',
                     border: 'none',
@@ -241,7 +246,6 @@ const PasswordCheck = () => {
                     fontWeight: '700',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.3s ease',
-                    marginBottom: '25px',
                     boxShadow: loading ? 'none' : '0 4px 15px rgba(184, 134, 11, 0.35)'
                   }}
                   onMouseEnter={(e) => {
@@ -259,7 +263,7 @@ const PasswordCheck = () => {
                 >
                   {loading ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" style={{ width: '0.8rem', height: '0.8rem' }}></span>
                       확인 중...
                     </>
                   ) : (
@@ -286,6 +290,52 @@ const PasswordCheck = () => {
         
         .animate-in {
           animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* 반응형 스타일 추가 */
+        @media (max-width: 768px) {
+          .page-wrapper {
+            padding: 10px !important;
+            align-items: flex-start !important;
+          }
+          .dashboard-container {
+            padding: 10px !important;
+            max-height: none !important;
+          }
+          .login-content {
+            flex-direction: column;
+          }
+          .login-left {
+            padding: 30px 20px !important;
+            flex: 0.5 !important;
+          }
+          .logo-circle {
+            width: 100px !important;
+            height: 100px !important;
+            margin-bottom: 15px !important;
+          }
+          .logo-circle img {
+            width: 60px !important;
+            height: 60px !important;
+          }
+          .logo-title {
+            font-size: 1.4rem !important;
+          }
+          .logo-subtitle {
+            font-size: 14px !important;
+          }
+          .login-right {
+            padding: 30px 20px !important;
+          }
+          .login-right h2 {
+            font-size: 22px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+            .login-right {
+                justify-content: flex-start;
+            }
         }
       `}</style>
     </div>

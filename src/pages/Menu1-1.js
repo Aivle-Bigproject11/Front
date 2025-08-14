@@ -1,14 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { Badge, Button } from 'react-bootstrap';
-import { Users, FileText, Phone, MapPin, Clock, Check, X, Eye } from 'lucide-react';
+import { Users, FileText, Home, MapPin, Check, X, Eye, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { customerService, customerUtils } from '../services/customerService';
+import { apiService } from '../services/api';
+
+// Helper functions formerly in customerUtils
+const getStatusText = (status) => {
+  switch(status) {
+    case 'pending': return '대기중';
+    case 'inProgress': return '진행중';
+    case 'completed': return '완료';
+    default: return '알수없음';
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '날짜 정보 없음';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
 
 const Menu1_1 = () => {
   const [customers, setCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [animateCard, setAnimateCard] = useState(false);
   const [error, setError] = useState(null);
   
@@ -18,15 +39,98 @@ const Menu1_1 = () => {
     loadCustomers();
   }, []);
 
+  useEffect(() => {
+    let result = customers;
+
+    if (activeFilter !== 'all') {
+      result = result.filter(customer => customer.status === activeFilter);
+    }
+
+    if (searchTerm) {
+      result = result.filter(customer => 
+        customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredCustomers(result);
+  }, [searchTerm, activeFilter, customers]);
+
   const loadCustomers = async () => {
     try {
       setLoading(true);
       setError(null);
       setAnimateCard(true);
       
-      const data = await customerService.getAllCustomers();
-      setCustomers(data);
-      setFilteredCustomers(data);
+      const [funeralInfosResponse, obituariesResponse, deathReportsResponse, schedulesResponse] = await Promise.all([
+        apiService.getFuneralInfos(),
+        apiService.getObituaries(),
+        apiService.getDeathReports(),
+        apiService.getSchedules()
+      ]);
+
+      if (!funeralInfosResponse?._embedded?.funeralInfos) {
+        console.error("API response is missing expected '_embedded.funeralInfos' data.", funeralInfosResponse);
+        setCustomers([]);
+        return;
+      }
+
+      const funeralInfos = funeralInfosResponse._embedded.funeralInfos;
+      const obituaries = obituariesResponse?._embedded?.obituaries || [];
+      const deathReports = deathReportsResponse?._embedded?.deathReports || [];
+      const schedules = schedulesResponse?._embedded?.schedules || [];
+
+      // Create maps for quick lookup of document statuses by funeralInfoId
+      const obituaryStatusMap = new Map();
+      obituaries.forEach(obituary => {
+        obituaryStatusMap.set(obituary.funeralInfoId, obituary.obituaryStatus);
+      });
+
+      const deathReportStatusMap = new Map();
+      deathReports.forEach(deathReport => {
+        deathReportStatusMap.set(deathReport.funeralInfoId, deathReport.deathReportStatus);
+      });
+
+      const scheduleStatusMap = new Map();
+      schedules.forEach(schedule => {
+        scheduleStatusMap.set(schedule.funeralInfoId, schedule.scheduleStatus);
+      });
+
+      const transformedData = funeralInfos.map(info => {
+        const selfHref = info._links?.self?.href;
+        const funeralInfoId = selfHref ? parseInt(selfHref.split('/').pop(), 10) : null;
+
+        const isObituaryCompleted = obituaryStatusMap.get(funeralInfoId) === 'COMPLETED';
+        const isDeathCertificateCompleted = deathReportStatusMap.get(funeralInfoId) === 'COMPLETED';
+        const isScheduleCompleted = scheduleStatusMap.get(funeralInfoId) === 'COMPLETED';
+
+        const documents = {
+          obituary: isObituaryCompleted,
+          deathCertificate: isDeathCertificateCompleted,
+          schedule: isScheduleCompleted,
+        };
+
+        const allCompleted = Object.values(documents).every(status => status);
+        const someCompleted = Object.values(documents).some(status => status);
+        let status = 'pending';
+        if (allCompleted) status = 'completed';
+        else if (someCompleted) status = 'inProgress';
+
+        return {
+          id: info.customerId,
+          name: info.deceasedName,
+          phone: info.funeralHomeName || '장례식장 정보 없음', // Changed to funeral home name
+          type: '고인',
+          status: status,
+          age: info.deceasedAge,
+          documents: documents,
+          funeralDate: info.deceasedDate,
+          location: info.funeralHomeAddress || '주소 정보 없음', // Changed to funeral home address
+          originalData: info 
+        };
+      });
+      
+      setCustomers(transformedData);
+      setFilteredCustomers(transformedData);
     } catch (err) {
       setError('고객 데이터를 불러오는데 실패했습니다.');
       console.error('Error loading customers:', err);
@@ -35,28 +139,31 @@ const Menu1_1 = () => {
     }
   };
 
-  const filterCustomers = (filterType) => {
+  const handleFilterChange = (filterType) => {
     setActiveFilter(filterType);
-    if (filterType === 'all') {
-      setFilteredCustomers(customers);
-    } else {
-      setFilteredCustomers(customers.filter(customer => customer.status === filterType));
-    }
   };
 
   const handleCustomerSelect = (customer) => {
-    localStorage.setItem('selectedCustomer', JSON.stringify(customer));
+    // Store the original, untransformed data for subsequent pages
+    localStorage.setItem('selectedCustomer', JSON.stringify(customer.originalData));
+    // Also store funeralInfoId separately for easier access in other components
+    if (customer.originalData._links && customer.originalData._links.self && customer.originalData._links.self.href) {
+      const funeralInfoId = customer.originalData._links.self.href.split('/').pop();
+      localStorage.setItem('selectedFuneralInfoId', funeralInfoId);
+    } else {
+      localStorage.removeItem('selectedFuneralInfoId'); // Clear if not found
+    }
   };
 
   const handleRegisterClick = (e, customer) => {
     e.stopPropagation();
-    handleCustomerSelect(customer);
-    navigate('/menu1-2');
+    handleCustomerSelect(customer); // Keep this for now to not break menu1-3 if it relies on localStorage
+        navigate('/menu1-2', { state: { funeralInfo: customer.originalData } }); // Pass data via state // Pass data via state
   };
 
   const handleDocumentsClick = (e, customer) => {
     e.stopPropagation();
-    handleCustomerSelect(customer);
+    handleCustomerSelect(customer); // Save to localStorage
     navigate('/menu1-3');
   };
 
@@ -83,13 +190,12 @@ const Menu1_1 = () => {
     );
   }
   
-  // Define background colors based on status 
   const statusBackgrounds = {
     pending: 'linear-gradient(135deg, #E5B83A, #E5B83A)',
     inProgress: 'linear-gradient(135deg, #133d6cff, #133d6cff', 
     completed: 'linear-gradient(135deg, #146c43 0%, #146c43 100%)', 
   };
-  const defaultBackground = 'linear-gradient(135deg, #B8860B, #B8860B)'; 
+  const defaultBackground = 'linear-gradient(135deg, #B8860B, #B8860B)'; 
 
   return (
     <div className="page-wrapper" style={{
@@ -120,7 +226,6 @@ const Menu1_1 = () => {
         gap: '20px',
         overflow: 'hidden',
       }}>
-        {/* 왼쪽 사이드바 */}
         <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
           <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px' }}>
             장례서류작성
@@ -167,7 +272,6 @@ const Menu1_1 = () => {
               확인하세요
             </p>
 
-            {/* 필터 버튼들 */}
             <div style={{ marginTop: '30px' }}>
               <h6 style={{ color: '#4A3728', marginBottom: '15px', fontSize: '14px', fontWeight: '600' }}>
                 상태별 필터
@@ -181,7 +285,7 @@ const Menu1_1 = () => {
                 ].map(filter => (
                   <button
                     key={filter.key}
-                    onClick={() => filterCustomers(filter.key)}
+                    onClick={() => handleFilterChange(filter.key)}
                     style={{
                       background: activeFilter === filter.key
                         ? (statusBackgrounds[filter.key] || defaultBackground) : 'transparent', 
@@ -211,31 +315,62 @@ const Menu1_1 = () => {
                 ))}
               </div>
             </div>
+
+            <div style={{ marginTop: '20px' }}>
+              <h6 style={{ color: '#4A3728', marginBottom: '15px', fontSize: '14px', fontWeight: '600' }}>
+                고객 검색
+              </h6>
+              <div className="search-bar-wrapper">
+                <Search className="search-icon" size={18} />
+                <input 
+                  type="text"
+                  placeholder="고객 이름으로 검색..."
+                  className="search-input"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* 오른쪽 메인 콘텐츠 */}
         <div className="dashboard-right" style={{
           flex: '1',
           overflowY: 'auto',
           height: '100%', 
           paddingRight: '10px'
         }}>
-          {/* 서브 헤더 */}
           <div style={{
             padding: '0 0 20px 0',
             borderBottom: '1px solid rgba(184, 134, 11, 0.2)',
             marginBottom: '20px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h3 style={{
-                color: '#2C1F14',
-                fontWeight: '600',
-                margin: 0, // marginBottom 제거
-                fontSize: '1.5rem'
-              }}>
-                {activeFilter === 'all' ? '전체' : customerUtils.getStatusText(activeFilter)} 고객 목록
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <h3 style={{
+                  color: '#2C1F14',
+                  fontWeight: '600',
+                  margin: 0,
+                  fontSize: '1.5rem'
+                }}>
+                  {activeFilter === 'all' ? '전체' : getStatusText(activeFilter)} 고객 목록
+                </h3>
+                <Button
+                  onClick={loadCustomers}
+                  className="btn-outline-golden"
+                  size="sm"
+                  style={{
+                      padding: '8px 16px',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      borderRadius: '8px',
+                      marginLeft: '10px'
+                  }}
+                >
+                  새로고침
+                </Button>
+              </div>
               <Button
                 onClick={() => navigate('/menu1-4')}
                 className="save-btn"
@@ -262,7 +397,6 @@ const Menu1_1 = () => {
             }}>총 {filteredCustomers.length}명의 고객</p>
           </div>
 
-          {/* 고객 카드 리스트 */}
           {filteredCustomers.length === 0 ? (
             <div style={{
               display: 'flex',
@@ -273,8 +407,8 @@ const Menu1_1 = () => {
               color: '#4A3728'
             }}>
               <Users size={64} style={{ opacity: 0.3, marginBottom: '16px' }} />
-              <h4>표시할 고객이 없습니다</h4>
-              <p>다른 필터를 선택하거나 새로운 고객을 추가해보세요.</p>
+              <h4>검색 결과가 없습니다</h4>
+              <p>입력하신 고객 이름을 다시 확인해주세요.</p>
             </div>
           ) : (
             <div style={{
@@ -318,7 +452,7 @@ const Menu1_1 = () => {
                             padding: '4px 8px',
                             border: '1px solid white',
                           }}>
-                          {customerUtils.getStatusText(customer.status)}
+                          {getStatusText(customer.status)}
                         </Badge>
                       </div>
                       <div style={{
@@ -329,7 +463,7 @@ const Menu1_1 = () => {
                           향년 {customer.age}세
                         </p>
                         <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.9 }}>
-                          {customerUtils.formatDate(customer.funeralDate)}
+                          {formatDate(customer.funeralDate)}
                         </p>
                       </div>
                     </div>
@@ -344,7 +478,7 @@ const Menu1_1 = () => {
                           gap: '8px', marginBottom: '12px'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', padding: '8px', background: 'rgba(184, 134, 11, 0.08)', borderRadius: '8px', border: '1px solid rgba(184, 134, 11, 0.15)' }}>
-                            <Phone size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
+                            <Home size={14} style={{ color: '#B8860B', marginRight: '6px' }} />
                             <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2C1F14' }}>
                               {customer.phone}
                             </span>
@@ -365,7 +499,7 @@ const Menu1_1 = () => {
                           </div>
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                             {Object.entries(customer.documents).map(([docType, isCompleted]) => {
-                              const docNames = { obituary: '부고장', schedule: '일정표', deathCertificate: '사망신고서' };
+                              const docNames = { obituary: '부고장', schedule: '장례일정표', deathCertificate: '사망신고서' };
                               return (
                                 <Badge key={docType} bg={isCompleted ? 'success' : 'danger'}
                                   style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '0.75rem' }}>
@@ -415,6 +549,30 @@ const Menu1_1 = () => {
       </div>
 
         <style>{`
+            .search-bar-wrapper {
+                position: relative;
+            }
+            .search-icon {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #B8860B;
+            }
+            .search-input {
+                width: 100%;
+                padding: 8px 12px 8px 38px;
+                border-radius: 8px;
+                border: 1px solid rgba(184, 134, 11, 0.2);
+                background-color: rgba(255, 255, 255, 0.8);
+                color: #4A3728;
+                transition: all 0.3s ease;
+            }
+            .search-input:focus {
+                outline: none;
+                border-color: #B8860B;
+                box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.2);
+            }
             @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }

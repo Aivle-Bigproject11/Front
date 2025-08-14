@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge } from 'react-bootstrap';
 import { ArrowLeft } from 'lucide-react';
-import { dummyData } from '../services/api';
+import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const MemorialDetail = () => {
@@ -10,17 +10,20 @@ const MemorialDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  
+  // 모든 useState 훅을 먼저 호출
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showGuestbookModal, setShowGuestbookModal] = useState(false);
   const [guestbookEntry, setGuestbookEntry] = useState({
     name: '',
-    message: '',
+    content: '',
     relationship: ''
   });
   const [guestbookList, setGuestbookList] = useState([]);
   const [activeTab, setActiveTab] = useState('video'); // 'video' 또는 'photos'
   const [videoUrl, setVideoUrl] = useState('');
+  const [photos, setPhotos] = useState([]);
   const [ribbonScrollIndex, setRibbonScrollIndex] = useState(0);
   const ribbonItemsPerView = 4; // 화면에 보이는 리본 개수
   const ribbonItemWidth = 220; // 리본 너비 + 간격
@@ -29,6 +32,16 @@ const MemorialDetail = () => {
   const [animateCard, setAnimateCard] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  
+  // 사진 업로드 관련 상태
+  const [showPhotoUploadModal, setShowPhotoUploadModal] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoForm, setPhotoForm] = useState({
+    photo: null,
+    title: '',
+    description: ''
+  });
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   // 접근 모드 확인: 고유번호 접근(guest), 유저 로그인(user), 관리자 로그인(admin)
   const isGuestAccess = !user; // 로그인하지 않고 고유번호로 접근
@@ -38,78 +51,234 @@ const MemorialDetail = () => {
   // 관리 페이지 접근 권한: 유저(유가족) 또는 관리자
   const canAccessSettings = !isGuestAccess; // 고유번호 접근이 아닌 경우
 
+  // useEffect 훅
   useEffect(() => {
     setAnimateCard(true);
-    // TODO: 실제 API 호출로 교체
-    setTimeout(() => {
-      const foundMemorial = dummyData.memorials._embedded.memorials.find(
-        m => m.id === parseInt(id)
-      );
-      setMemorial(foundMemorial);
-      if (foundMemorial && foundMemorial.videoUrl) {
-        setVideoUrl(foundMemorial.videoUrl);
+    const fetchMemorialDetails = async () => {
+      try {
+        // ID 검증은 여기서 수행
+        if (!id) {
+          console.error('❌ Memorial ID가 URL에서 추출되지 않음!');
+          navigate('/menu4');
+          return;
+        }
+
+        // UUID 형태인지 확인 (예: 1c337344-ad3c-4785-a5f8-0054698c3ebe)
+        const isValidUUID = id && id.includes('-') && id.length >= 36;
+        console.log('🔍 Is Valid UUID:', isValidUUID);
+        
+        if (!isValidUUID) {
+          console.error('❌ Memorial ID가 올바른 UUID 형태가 아님:', id);
+          // navigate('/menu4'); // 일단 주석처리해서 계속 진행
+        }
+
+        console.log('🔍 Final Memorial ID:', id);
+        
+        console.log('🔗 MemorialDetail API 호출 시작 - ID:', id);
+        console.log('🔗 API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8088');
+        const response = await apiService.getMemorialDetails(id);
+        console.log('✅ MemorialDetail API 응답 성공:', response);
+        
+        // 새로운 API 명세에 따른 응답 구조 처리
+        setMemorial(response); // 응답 자체가 memorial 정보
+        
+        // 사진 목록과 댓글 목록은 응답에 포함되어 있음
+        if (response.photos) {
+          console.log('✅ 사진 목록 로드 성공:', response.photos);
+          setPhotos(response.photos);
+        }
+        
+        if (response.comments) {
+          console.log('✅ 댓글 목록 로드 성공:', response.comments);
+          setGuestbookList(response.comments);
+        }
+        
+        // 영상 정보 처리
+        if (response.videos && response.videos.length > 0) {
+          console.log('✅ 영상 목록 로드 성공:', response.videos);
+          const latestVideo = response.videos[0]; // 최신 영상 사용
+          if (latestVideo.videoUrl && latestVideo.status === 'COMPLETED') {
+            setVideoUrl(latestVideo.videoUrl);
+          }
+        }
+      } catch (error) {
+        console.error("❌ MemorialDetail API 호출 실패:", error);
+        console.error("에러 상세:", error.response?.data, error.response?.status);
+        console.error("요청 URL:", error.config?.url);
+        
+        // CORS 에러인지 확인
+        if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
+          console.warn("🔧 CORS 문제 감지: 백엔드 설정 확인 필요");
+          alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
+        } else {
+          alert("추모관 정보를 불러오는 데 실패했습니다.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemorialDetails();
+  }, [id, navigate, location.search]); // location.search를 의존성으로 추가하여 URL 파라미터 변경 시 새로고침
+
+  // 사진 업로드 함수
+  const handlePhotoUpload = async (e) => {
+    e.preventDefault();
+    
+    if (!photoForm.photo || !photoForm.title.trim()) {
+      alert('사진과 제목을 모두 입력해주세요.');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', photoForm.photo);
+      formData.append('title', photoForm.title.trim());
+      formData.append('description', photoForm.description.trim());
+
+      console.log('🔗 사진 업로드 시작 - Memorial ID:', id);
+      const response = await apiService.uploadPhoto(id, formData);
+      console.log('✅ 사진 업로드 성공:', response);
+
+      // 전체 memorial 정보 다시 로드 (사진 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.photos) {
+        setPhotos(updatedMemorial.photos);
       }
       
-      // 더미 방명록 데이터
-      setGuestbookList([
-        {
-          id: 1,
-          name: '김철수',
-          message: '좋은 곳에서 편히 쉬세요. 항상 기억하겠습니다. 따뜻한 미소와 친절함을 잊지 못하겠습니다.',
-          relationship: '친구',
-          date: '2024-01-20'
-        },
-        {
-          id: 2,
-          name: '이영희',
-          message: '따뜻했던 미소를 잊지 못하겠습니다. 삼가 고인의 명복을 빕니다.',
-          relationship: '동료',
-          date: '2024-01-18'
-        },
-        {
-          id: 3,
-          name: '박민수',
-          message: '항상 밝고 긍정적이셨던 모습을 기억하겠습니다. 하늘에서 편히 쉬시길 바랍니다.',
-          relationship: '가족',
-          date: '2024-01-17'
-        },
-        {
-          id: 4,
-          name: '최지원',
-          message: '함께했던 소중한 추억들을 가슴에 간직하겠습니다. 감사했습니다.',
-          relationship: '지인',
-          date: '2024-01-16'
-        },
-        {
-          id: 5,
-          name: '강현우',
-          message: '언제나 다른 사람을 먼저 생각하시던 모습이 기억에 남습니다. 영원히 기억하겠습니다.',
-          relationship: '동료',
-          date: '2024-01-15'
-        },
-        {
-          id: 6,
-          name: '윤서연',
-          message: '고인의 인품과 마음씨를 본받아 살겠습니다. 삼가 고인의 명복을 빕니다.',
-          relationship: '친구',
-          date: '2024-01-14'
-        }
-      ]);
+      // 폼 초기화
+      setPhotoForm({ photo: null, title: '', description: '' });
+      setPhotoPreview(null);
+      setShowPhotoUploadModal(false);
+      
+      alert('사진이 성공적으로 업로드되었습니다.');
+    } catch (error) {
+      console.error('❌ 사진 업로드 실패:', error);
+      alert('사진 업로드에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
-      setLoading(false);
-    }, 1000);
-  }, [id]);
+  // 파일 선택 핸들러
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // 파일 타입 검증
+      if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드할 수 있습니다.');
+        return;
+      }
+      
+      // 파일 크기 검증 (5MB 제한)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('파일 크기는 5MB 이하여야 합니다.');
+        return;
+      }
 
-  const handleGuestbookSubmit = (e) => {
+      setPhotoForm({ ...photoForm, photo: file });
+      
+      // 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = (e) => setPhotoPreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 업로드 모달 닫기
+  const handleCloseUploadModal = () => {
+    setShowPhotoUploadModal(false);
+    setPhotoForm({ photo: null, title: '', description: '' });
+    setPhotoPreview(null);
+  };
+
+  // 사진 삭제 함수
+  const handleDeletePhoto = async (photoId) => {
+    try {
+      console.log('🔗 사진 삭제 시작 - Photo ID:', photoId);
+      await apiService.deletePhoto(photoId);
+      console.log('✅ 사진 삭제 성공');
+      
+      // 전체 memorial 정보 다시 로드 (사진 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.photos) {
+        setPhotos(updatedMemorial.photos);
+      }
+      setShowPhotoModal(false);
+      
+      alert('사진이 삭제되었습니다.');
+    } catch (error) {
+      console.error('❌ 사진 삭제 실패:', error);
+      alert('사진 삭제에 실패했습니다.');
+    }
+  };
+
+  const handleGuestbookSubmit = async (e) => {
     e.preventDefault();
-    const newEntry = {
-      id: guestbookList.length + 1,
-      ...guestbookEntry,
-      date: new Date().toISOString().split('T')[0]
-    };
-    setGuestbookList([newEntry, ...guestbookList]);
-    setGuestbookEntry({ name: '', message: '', relationship: '' });
-    setShowGuestbookModal(false);
+    try {
+      const response = await apiService.createComment(id, guestbookEntry);
+      console.log('✅ 댓글 생성 성공:', response);
+      
+      // 전체 memorial 정보 다시 로드 (댓글 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.comments) {
+        setGuestbookList(updatedMemorial.comments);
+      }
+      
+      setGuestbookEntry({ name: '', content: '', relationship: '' });
+      setShowGuestbookModal(false);
+      alert('소중한 위로의 말씀이 등록되었습니다.');
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      
+      // CORS 에러인지 확인
+      if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
+        alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
+      } else {
+        alert("방명록 작성에 실패했습니다.");
+      }
+    }
+  };
+
+  // 댓글 수정 함수
+  const handleEditComment = (comment) => {
+    setGuestbookEntry({
+      name: comment.name,
+      content: comment.content,
+      relationship: comment.relationship
+    });
+    setSelectedRibbon(null); // 상세보기 모달 닫기
+    setShowGuestbookModal(true); // 편집 모달 열기
+    // TODO: 수정 모드 상태 추가 (새로 생성 vs 수정 구분)
+  };
+
+  // 댓글 삭제 함수
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await apiService.deleteComment(commentId);
+      console.log('✅ 댓글 삭제 성공');
+      
+      // 전체 memorial 정보 다시 로드 (댓글 목록 포함)
+      const updatedMemorial = await apiService.getMemorialDetails(id);
+      setMemorial(updatedMemorial);
+      if (updatedMemorial.comments) {
+        setGuestbookList(updatedMemorial.comments);
+      }
+      
+      setSelectedRibbon(null); // 상세보기 모달 닫기
+      alert('댓글이 삭제되었습니다.');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      alert('댓글 삭제에 실패했습니다.');
+    }
   };
 
   const handlePhotoClick = (photo) => {
@@ -123,7 +292,11 @@ const MemorialDetail = () => {
 
   // 마우스 휠 이벤트 핸들러
   const handleRibbonWheel = (e) => {
-    e.preventDefault();
+    // 방명록이 비어있거나 스크롤할 필요가 없는 경우 무시
+    if (!guestbookList || guestbookList.length <= ribbonItemsPerView) {
+      return;
+    }
+
     const maxIndex = Math.max(0, guestbookList.length - ribbonItemsPerView);
     
     if (e.deltaY > 0) {
@@ -237,7 +410,7 @@ const MemorialDetail = () => {
         zIndex: 1,
         width: '100%',
         maxWidth: '1600px',
-        height: '100%', 
+        height: '100%',
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
@@ -248,11 +421,12 @@ const MemorialDetail = () => {
         padding: '24px',
         borderRadius: '28px',
         border: '2px solid rgba(184, 134, 11, 0.35)',
-        overflow: 'hidden'
+        overflowY: 'auto',
+        overflowX: 'hidden'
       }}>
-        {/* 프로필 섹션 */}
-        <div style={{ marginBottom: '24px' }}>
-          <div className="memorial-profile-section p-4" style={{
+               {/* 프로필 섹션 (수정됨) */}
+        <div style={{ marginBottom: '20px' }}>
+          <div className="memorial-profile-section p-3" style={{
             background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
             borderRadius: '16px',
             border: '1px solid rgba(184, 134, 11, 0.2)',
@@ -264,15 +438,15 @@ const MemorialDetail = () => {
               <Button
                 style={{
                   position: 'absolute',
-                  top: '24px',
-                  right: '24px',
+                  top: '16px',
+                  right: '16px',
                   background: 'linear-gradient(135deg, #b8860b, #965a25)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#fff',
                   fontWeight: '600',
-                  borderRadius: '12px',
-                  padding: '8px 24px',
-                  fontSize: '16px',
+                  borderRadius: '10px',
+                  padding: '6px 20px',
+                  fontSize: '14px',
                   boxShadow: '0 4px 15px rgba(44, 31, 20, 0.2)',
                   zIndex: 10
                 }}
@@ -285,26 +459,23 @@ const MemorialDetail = () => {
               type="button"
               className="back-btn"
               onClick={() => {
-                if (isGuestAccess) {
-                  window.history.back();
-                } else if (isUserAccess) {
-                  navigate('/lobby');
-                } else if (isAdminAccess) {
-                  navigate('/menu4');
-                }
+                if (isGuestAccess) { window.history.back(); }
+                else if (isUserAccess) { navigate('/lobby'); }
+                else if (isAdminAccess) { navigate('/menu4'); }
               }}
+              style={{ height: '40px', padding: '0 16px', fontSize: '14px' }} // 버튼 크기 조정
             >
-              <ArrowLeft size={16} style={{ marginRight: '6px' }} />
+              <ArrowLeft size={14} style={{ marginRight: '5px' }} />
               돌아가기
             </button>
             
             <Row className="align-items-center">
               <Col md={3} className="text-center">
                 <div className="memorial-profile-image" style={{
-                  width: '200px',
-                  height: '250px',
-                  background: memorial.imageUrl 
-                    ? `url(${memorial.imageUrl})` 
+                  width: '140px', // 크기 축소
+                  height: '175px', // 크기 축소
+                  background: memorial.profileImageUrl 
+                    ? `url(${memorial.profileImageUrl})` 
                     : 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
@@ -315,54 +486,48 @@ const MemorialDetail = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  {!memorial.imageUrl && (
-                    <i className="fas fa-user fa-4x" style={{ color: '#b8860b' }}></i>
+                  {!memorial.profileImageUrl && (
+                    <i className="fas fa-user fa-3x" style={{ color: '#b8860b' }}></i>
                   )}
                 </div>
-                <h5 className="mt-3 mb-0" style={{ color: '#2C1F14', fontWeight: '600' }}>프로필사진01</h5>
+                <h5 className="mt-2 mb-0" style={{ color: '#2C1F14', fontWeight: '600', fontSize: '0.9rem' }}>프로필사진01</h5>
               </Col>
               
               <Col md={9}>
                 <div className="memorial-info-text">
-                  <h1 className="display-4 mb-3" style={{ 
-                    fontWeight: '700', 
-                    color: '#2C1F14'
-                  }}>
+                  <h1 style={{ fontSize: '2.0rem', fontWeight: '700', color: '#2C1F14', marginBottom: '0.30rem' }}>
                     삼가 故人의 冥福을 빕니다
                   </h1>
-                  <div className="memorial-basic-info mb-4">
+                  <div className="memorial-basic-info mb-3">
                     <Row>
                       <Col md={6}>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
-                          <strong>성함:</strong> {memorial.name}
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+                          <strong>성함:</strong> {memorial.deceasedName}
                         </div>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
-                          <strong>나이:</strong> {memorial.age}세
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+                          <strong>나이:</strong> {memorial.deceasedAge}세
                         </div>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
-                          <strong>성별:</strong> {memorial.gender === 'MALE' ? '남성' : '여성'}
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+                          <strong>성별:</strong> {memorial.gender}
                         </div>
                       </Col>
                       <Col md={6}>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
-                          <strong>생년월일:</strong> {memorial.birthOfDate}
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+                          <strong>생년월일:</strong> {memorial.birthDate}
                         </div>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>별세일:</strong> {memorial.deceasedDate}
-                        </div>
-                        <div className="info-item mb-2" style={{ color: '#495057' }}>
-                          <strong>고객ID:</strong> {memorial.customerId}
                         </div>
                       </Col>
                     </Row>
                   </div>
                   
                   <div className="memorial-description" style={{ color: '#495057' }}>
-                    <p className="lead">
+                    <p className="lead" style={{ fontSize: '1rem' }}>
                       사랑하는 가족과 친구들에게 많은 사랑을 받았던 고인의 생전 모습과 
                       추억들을 이곳에서 영원히 기억하며 보존하겠습니다.
                     </p>
-                    <p>
+                    <p style={{ fontSize: '0.9rem' }}>
                       따뜻한 마음과 밝은 미소로 주변 사람들에게 기쁨을 주었던 분입니다. 
                       가족들과 함께한 소중한 시간들, 친구들과의 즐거운 추억들이 
                       이곳에서 계속해서 이어져 나갈 것입니다.
@@ -375,19 +540,19 @@ const MemorialDetail = () => {
         </div>
 
         {/* 메인 콘텐츠 영역 */}
-        <div className="memorial-detail-scroll-area" style={{ flex: '1', overflowY: 'auto', overflowX: 'hidden', height: '100%' }}>
           <Row>
           {/* 좌측: 영상/사진첩 + 방명록 리본 */}
-          <Col lg={8}>
+          <Col lg={8} className="mb-4 mb-lg-0">
             <Row>
               {/* 상단: 추모영상과 사진첩 - 겹쳐진 탭 구조 */}
               <Col lg={12}>
-                <div className="memorial-tabs-container position-relative mb-4" style={{ 
+                <div className="memorial-tabs-container position-relative" style={{ 
                   borderRadius: '16px', 
                   overflow: 'hidden',
                   background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
                   boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
-                  border: '1px solid rgba(184, 134, 11, 0.2)'
+                  border: '1px solid rgba(184, 134, 11, 0.2)',
+                  marginBottom: '20px'
                 }}>
                   
                   {/* 탭 헤더들 */}
@@ -473,37 +638,139 @@ const MemorialDetail = () => {
                         minHeight: '350px'
                       }}
                     >
-                      {videoUrl ? (
-                          <video src={videoUrl} controls style={{ width: '100%', borderRadius: '12px' }} />
-                      ) : (
-                          <div className="memorial-video-container" style={{
-                            width: '100%',
-                            aspectRatio: '16 / 9',
-                            background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white'
-                          }}>
-                            <div className="text-center">
-                              <i className="fas fa-play-circle fa-3x mb-2" style={{ opacity: 0.8 }}></i>
-                              <h5>추모영상</h5>
-                              <p className="small">AI로 생성된 추모영상</p>
-                              <Button 
-                                variant="light"
-                                style={{
-                                  background: 'rgba(255, 251, 235, 0.9)',
-                                  color: '#2C1F14',
-                                  border: 'none'
-                                }}
-                              >
-                                <i className="fas fa-play me-2"></i>
-                                재생하기
-                              </Button>
+                      {(() => {
+                        if (!memorial.videos || memorial.videos.length === 0) {
+                          // 영상이 없는 경우
+                          return (
+                            <div className="memorial-video-container" style={{
+                              width: '100%',
+                              aspectRatio: '16 / 9',
+                              background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white'
+                            }}>
+                              <div className="text-center">
+                                <i className="fas fa-video fa-3x mb-3" style={{ opacity: 0.8 }}></i>
+                                <h5>추모영상이 없습니다</h5>
+                                <p className="small">관리 페이지에서 AI 추모영상을 생성할 수 있습니다</p>
+                                {canAccessSettings && (
+                                  <Button 
+                                    variant="light"
+                                    style={{
+                                      background: 'rgba(255, 251, 235, 0.9)',
+                                      color: '#2C1F14',
+                                      border: 'none'
+                                    }}
+                                    onClick={goToSettings}
+                                  >
+                                    <i className="fas fa-cog me-2"></i>
+                                    영상 생성하기
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                      )}
+                          );
+                        }
+
+                        const latestVideo = memorial.videos[0];
+                        
+                        if (latestVideo.status === 'COMPLETED' && latestVideo.videoUrl) {
+                          // 영상 생성 완료된 경우
+                          return (
+                            <div>
+                              <video 
+                                src={latestVideo.videoUrl} 
+                                controls 
+                                style={{ width: '100%', borderRadius: '12px' }}
+                                poster={memorial.profileImageUrl}
+                              />
+                              <div className="mt-3 text-center">
+                                <small className="text-muted">
+                                  <i className="fas fa-calendar-alt me-1"></i>
+                                  생성일: {new Date(latestVideo.completedAt || latestVideo.createdAt).toLocaleDateString('ko-KR')}
+                                </small>
+                                {latestVideo.keywords && (
+                                  <div className="mt-1">
+                                    <small className="text-muted">
+                                      <i className="fas fa-tags me-1"></i>
+                                      키워드: {latestVideo.keywords}
+                                    </small>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        } else if (latestVideo.status === 'REQUESTED') {
+                          // 영상 생성 중인 경우
+                          return (
+                            <div className="memorial-video-container" style={{
+                              width: '100%',
+                              aspectRatio: '16 / 9',
+                              background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white'
+                            }}>
+                              <div className="text-center">
+                                <div className="spinner-border mb-3" role="status">
+                                  <span className="visually-hidden">Loading...</span>
+                                </div>
+                                <h5>추모영상 생성 중</h5>
+                                <p className="small">AI가 감동적인 추모영상을 제작하고 있습니다</p>
+                                <p className="small">
+                                  <i className="fas fa-clock me-1"></i>
+                                  요청일: {new Date(latestVideo.createdAt).toLocaleDateString('ko-KR')}
+                                </p>
+                                {latestVideo.keywords && (
+                                  <p className="small">
+                                    <i className="fas fa-tags me-1"></i>
+                                    키워드: {latestVideo.keywords}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        } else {
+                          // 기타 상태 (에러 등)
+                          return (
+                            <div className="memorial-video-container" style={{
+                              width: '100%',
+                              aspectRatio: '16 / 9',
+                              background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white'
+                            }}>
+                              <div className="text-center">
+                                <i className="fas fa-exclamation-triangle fa-3x mb-3" style={{ opacity: 0.8 }}></i>
+                                <h5>영상 생성 실패</h5>
+                                <p className="small">영상 생성 중 문제가 발생했습니다</p>
+                                {canAccessSettings && (
+                                  <Button 
+                                    variant="light"
+                                    style={{
+                                      background: 'rgba(255, 251, 235, 0.9)',
+                                      color: '#2C1F14',
+                                      border: 'none'
+                                    }}
+                                    onClick={goToSettings}
+                                  >
+                                    <i className="fas fa-redo me-2"></i>
+                                    다시 생성하기
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
 
                     {/* 사진첩 콘텐츠 */}
@@ -516,28 +783,102 @@ const MemorialDetail = () => {
                         overflowY: 'auto'
                       }}
                     >
-                      {memorial.photos && memorial.photos.length > 0 ? (
+                      {/* 사진 업로드 버튼 (유가족/관리자만) */}
+                      {canAccessSettings && (
+                        <div className="mb-4 text-end">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => setShowPhotoUploadModal(true)}
+                            style={{
+                              borderColor: '#B8860B',
+                              color: '#B8860B',
+                              background: 'rgba(184, 134, 11, 0.1)'
+                            }}
+                            className="hover-golden"
+                          >
+                            <i className="fas fa-plus me-2"></i>
+                            사진 추가
+                          </Button>
+                        </div>
+                      )}
+
+                      {photos && photos.length > 0 ? (
                         <Row xs={1} sm={2} md={2} lg={2} className="g-4">
-                          {memorial.photos.map(photo => (
-                            <Col key={photo.id}>
+                          {photos.map((photo, index) => (
+                            <Col key={photo.photoId || index}>
                               <Card 
                                 className="h-100 photo-card" 
                                 onClick={() => handlePhotoClick(photo)}
-                                style={{ cursor: 'pointer', overflow: 'hidden' }}
+                                style={{ 
+                                  cursor: 'pointer', 
+                                  overflow: 'hidden',
+                                  transition: 'transform 0.3s ease'
+                                }}
                               >
                                 <Card.Img 
                                   variant="top" 
-                                  src={photo.url} 
-                                  style={{ height: '200px', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                                  src={photo.photoUrl} 
+                                  alt={photo.title}
+                                  style={{ 
+                                    height: '200px', 
+                                    objectFit: 'cover', 
+                                    transition: 'transform 0.3s ease' 
+                                  }}
                                 />
+                                <Card.Body className="p-3">
+                                  <Card.Title 
+                                    className="h6 mb-1" 
+                                    style={{ 
+                                      fontSize: '0.9rem',
+                                      color: '#2C1F14',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                  >
+                                    {photo.title}
+                                  </Card.Title>
+                                  {photo.description && (
+                                    <Card.Text 
+                                      className="small text-muted mb-2"
+                                      style={{
+                                        fontSize: '0.8rem',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden'
+                                      }}
+                                    >
+                                      {photo.description}
+                                    </Card.Text>
+                                  )}
+                                  <small className="text-muted">
+                                    {new Date(photo.uploadedAt).toLocaleDateString('ko-KR')}
+                                  </small>
+                                </Card.Body>
                               </Card>
                             </Col>
                           ))}
                         </Row>
                       ) : (
                         <div className="text-center text-muted p-5">
-                          <i className="fas fa-images fa-3x mb-3"></i>
-                          <p>등록된 사진이 없습니다.</p>
+                          <i className="fas fa-images fa-3x mb-3" style={{ opacity: 0.5 }}></i>
+                          <p className="mb-3">등록된 사진이 없습니다.</p>
+                          {canAccessSettings && (
+                            <Button
+                              variant="outline-primary"
+                              onClick={() => setShowPhotoUploadModal(true)}
+                              style={{
+                                borderColor: '#B8860B',
+                                color: '#B8860B',
+                                background: 'rgba(184, 134, 11, 0.1)'
+                              }}
+                            >
+                              <i className="fas fa-plus me-2"></i>
+                              첫 번째 사진 추가하기
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -548,7 +889,7 @@ const MemorialDetail = () => {
             </Row>
 
             {/* 하단: 리본 방명록 */}
-            <Row className="mt-4">
+            <Row>
               <Col lg={12}>
                 <div className="ribbon-guestbook-container" style={{
                   background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
@@ -750,10 +1091,10 @@ const MemorialDetail = () => {
                                 WebkitBoxOrient: 'vertical',
                                 wordWrap: 'break-word'
                               }}>
-                                {entry.message}
+                                {entry.content}
                               </div>
                               
-                              {entry.message.length > 80 && (
+                              {entry.content.length > 80 && (
                                 <div style={{
                                   marginTop: '10px',
                                   fontSize: '0.75rem',
@@ -813,11 +1154,12 @@ const MemorialDetail = () => {
           {/* 우측: 추모사 + 위로의 말 전하기 */}
           <Col lg={4}>
             {/* 추모사 */}
-            <Card className="mb-4" style={{ 
+            <Card style={{ 
               borderRadius: '16px', 
               border: '1px solid rgba(184, 134, 11, 0.2)', 
               background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)' 
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
+              marginBottom: '20px'
             }}>
               <Card.Header style={{ 
                 background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
@@ -833,14 +1175,14 @@ const MemorialDetail = () => {
               </Card.Header>
               <Card.Body className="p-4" style={{ maxHeight: '500px', overflowY: 'auto' }}>
                 <div className="memorial-eulogy">
-                  {memorial.eulogy ? (
+                  {memorial.tribute ? (
                       <div className="eulogy-content" style={{ 
                         lineHeight: '1.8', 
                         fontSize: '0.9rem',
                         color: '#495057',
                         whiteSpace: 'pre-line'
                       }}>
-                          {memorial.eulogy}
+                          {memorial.tribute}
                       </div>
                   ) : (
                       <div className="text-center text-muted">
@@ -850,9 +1192,33 @@ const MemorialDetail = () => {
                 </div>
               </Card.Body>
             </Card>
-
+            {/* 공유 버튼 */}
+            <Card style={{ 
+              borderRadius: '16px', 
+              border: '1px solid rgba(184, 134, 11, 0.2)', 
+              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
+              marginBottom: '20px'
+            }}>
+              <Card.Body className="text-center p-3">
+                <Button 
+                  className="w-100"
+                  style={{
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    fontWeight: '600',
+                    padding: '12px'
+                  }}
+                >
+                  <i className="fas fa-share-alt me-2"></i>
+                  공유하기
+                </Button>
+              </Card.Body>
+            </Card>
             {/* 위로의 말 전하기 */}
-            <Card className="mb-4" style={{ 
+            <Card style={{ 
               borderRadius: '16px', 
               border: '1px solid rgba(184, 134, 11, 0.2)', 
               background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
@@ -891,34 +1257,8 @@ const MemorialDetail = () => {
                 </div>
               </Card.Body>
             </Card>
-
-            {/* 공유 버튼 */}
-            <Card style={{ 
-              borderRadius: '16px', 
-              border: '1px solid rgba(184, 134, 11, 0.2)', 
-              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)' 
-            }}>
-              <Card.Body className="text-center p-3">
-                <Button 
-                  className="w-100"
-                  style={{
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    color: '#fff',
-                    fontWeight: '600',
-                    padding: '12px'
-                  }}
-                >
-                  <i className="fas fa-share-alt me-2"></i>
-                  공유하기
-                </Button>
-              </Card.Body>
-            </Card>
           </Col>
         </Row>
-        </div>
       </div>
 
       {/* 방명록 작성 모달 */}
@@ -972,10 +1312,10 @@ const MemorialDetail = () => {
               <Form.Control
                 as="textarea"
                 rows={4}
-                value={guestbookEntry.message}
+                value={guestbookEntry.content}
                 onChange={(e) => setGuestbookEntry({
                   ...guestbookEntry,
-                  message: e.target.value
+                  content: e.target.value
                 })}
                 required
               />
@@ -1084,7 +1424,7 @@ const MemorialDetail = () => {
                     fontStyle: 'italic'
                   }}
                 >
-                  {selectedRibbon.message}
+                  {selectedRibbon.content}
                 </div>
               </div>
               
@@ -1093,6 +1433,27 @@ const MemorialDetail = () => {
                   <i className="fas fa-heart me-1"></i>
                   따뜻한 마음으로 전해진 위로의 말씀입니다
                 </small>
+                
+                {/* 댓글 작성자만 수정/삭제 가능 (임시로 모든 사용자가 가능하도록 설정) */}
+                <div className="mt-3">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    className="me-2"
+                    onClick={() => handleEditComment(selectedRibbon)}
+                  >
+                    <i className="fas fa-edit me-1"></i>
+                    수정
+                  </Button>
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => handleDeleteComment(selectedRibbon.commentId)}
+                  >
+                    <i className="fas fa-trash me-1"></i>
+                    삭제
+                  </Button>
+                </div>
               </div>
             </>
           )}
@@ -1123,19 +1484,229 @@ const MemorialDetail = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* 사진 업로드 모달 */}
+      <Modal 
+        show={showPhotoUploadModal} 
+        onHide={handleCloseUploadModal}
+        size="lg"
+        centered
+        backdrop="static"
+      >
+        <Modal.Header 
+          closeButton
+          style={{ 
+            background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+            color: 'white',
+            border: 'none'
+          }}
+        >
+          <Modal.Title style={{ display: 'flex', alignItems: 'center' }}>
+            <i className="fas fa-camera me-2"></i>
+            사진 업로드
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ 
+          padding: '2rem',
+          background: 'rgba(255, 251, 235, 0.95)'
+        }}>
+          <Form onSubmit={handlePhotoUpload}>
+            {/* 파일 선택 */}
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#2C1F14', fontWeight: '600' }}>
+                <i className="fas fa-image me-2"></i>
+                사진 선택
+              </Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                required
+                style={{
+                  border: '2px dashed #B8860B',
+                  borderRadius: '8px',
+                  padding: '1rem'
+                }}
+              />
+              <Form.Text className="text-muted">
+                JPG, PNG, GIF 파일만 업로드 가능 (최대 5MB)
+              </Form.Text>
+            </Form.Group>
+
+            {/* 미리보기 */}
+            {photoPreview && (
+              <div className="mb-4 text-center">
+                <img 
+                  src={photoPreview} 
+                  alt="미리보기" 
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '200px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                  }}
+                />
+              </div>
+            )}
+
+            {/* 제목 입력 */}
+            <Form.Group className="mb-3">
+              <Form.Label style={{ color: '#2C1F14', fontWeight: '600' }}>
+                <i className="fas fa-heading me-2"></i>
+                사진 제목 *
+              </Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="사진의 제목을 입력하세요"
+                value={photoForm.title}
+                onChange={(e) => setPhotoForm({ ...photoForm, title: e.target.value })}
+                required
+                maxLength={100}
+                style={{
+                  borderColor: '#B8860B',
+                  boxShadow: 'none'
+                }}
+              />
+            </Form.Group>
+
+            {/* 설명 입력 */}
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#2C1F14', fontWeight: '600' }}>
+                <i className="fas fa-comment me-2"></i>
+                사진 설명
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="사진에 대한 설명을 입력하세요 (선택사항)"
+                value={photoForm.description}
+                onChange={(e) => setPhotoForm({ ...photoForm, description: e.target.value })}
+                maxLength={500}
+                style={{
+                  borderColor: '#B8860B',
+                  boxShadow: 'none',
+                  resize: 'vertical'
+                }}
+              />
+            </Form.Group>
+
+            {/* 버튼들 */}
+            <div className="d-flex justify-content-end gap-2">
+              <Button
+                variant="outline-secondary"
+                onClick={handleCloseUploadModal}
+                disabled={uploadingPhoto}
+              >
+                취소
+              </Button>
+              <Button
+                type="submit"
+                disabled={uploadingPhoto || !photoForm.photo || !photoForm.title.trim()}
+                style={{
+                  background: uploadingPhoto ? '#ccc' : 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+                  border: 'none',
+                  color: 'white'
+                }}
+              >
+                {uploadingPhoto ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                    업로드 중...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-upload me-2"></i>
+                    업로드
+                  </>
+                )}
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
       {/* 사진 상세보기 모달 */}
-      <Modal show={showPhotoModal} onHide={() => setShowPhotoModal(false)} size="lg" centered>
-        {selectedPhoto && (
-          <>
-            <Modal.Header closeButton>
-              <Modal.Title>{selectedPhoto.title}</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <img src={selectedPhoto.url} alt={selectedPhoto.title} className="img-fluid mb-3" />
-              <p>{selectedPhoto.description}</p>
-            </Modal.Body>
-          </>
-        )}
+      <Modal 
+        show={showPhotoModal} 
+        onHide={() => setShowPhotoModal(false)} 
+        size="xl" 
+        centered
+      >
+        <Modal.Header 
+          closeButton
+          style={{ 
+            background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+            color: 'white',
+            border: 'none'
+          }}
+        >
+          <Modal.Title style={{ display: 'flex', alignItems: 'center' }}>
+            <i className="fas fa-image me-2"></i>
+            {selectedPhoto?.title}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ 
+          padding: '2rem',
+          background: 'rgba(255, 251, 235, 0.95)'
+        }}>
+          {selectedPhoto && (
+            <>
+              <div className="text-center mb-4">
+                <img 
+                  src={selectedPhoto.photoUrl} 
+                  alt={selectedPhoto.title}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '60vh',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                  }}
+                />
+              </div>
+              
+              <div className="photo-details">
+                <h5 style={{ color: '#2C1F14', fontWeight: '600' }}>
+                  {selectedPhoto.title}
+                </h5>
+                
+                {selectedPhoto.description && (
+                  <p className="text-muted mb-3" style={{ lineHeight: '1.6' }}>
+                    {selectedPhoto.description}
+                  </p>
+                )}
+                
+                <div className="d-flex justify-content-between align-items-center">
+                  <small className="text-muted">
+                    <i className="fas fa-calendar-alt me-1"></i>
+                    업로드: {selectedPhoto.uploadedAt && new Date(selectedPhoto.uploadedAt).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </small>
+                  
+                  {canAccessSettings && (
+                    <div className="d-flex gap-2">
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => {
+                          if (window.confirm('이 사진을 삭제하시겠습니까?')) {
+                            handleDeletePhoto(selectedPhoto.photoId);
+                          }
+                        }}
+                      >
+                        <i className="fas fa-trash me-1"></i>
+                        삭제
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </Modal.Body>
       </Modal>
 
       <style jsx global>{`
@@ -1182,14 +1753,14 @@ const MemorialDetail = () => {
           box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
         }
 
-        .memorial-detail-scroll-area::-webkit-scrollbar {
+        .memorial-container::-webkit-scrollbar {
           width: 6px;
         }
-        .memorial-detail-scroll-area::-webkit-scrollbar-track {
+        .memorial-container::-webkit-scrollbar-track {
           background: rgba(0,0,0,0.05);
           border-radius: 10px;
         }
-        .memorial-detail-scroll-area::-webkit-scrollbar-thumb {
+        .memorial-container::-webkit-scrollbar-thumb {
           background-color: rgba(184, 134, 11, 0.5);
           border-radius: 10px;
         }

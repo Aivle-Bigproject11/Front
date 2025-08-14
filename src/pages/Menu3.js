@@ -1,45 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Form, Button, Modal, Spinner } from 'react-bootstrap';
-import { Mail, Send, Search } from 'lucide-react';
-// [실제 백엔드 연동 시] axios가 설치되어 있는지 확인하세요. (npm install axios)
-import axios from 'axios';
-
-// =================================================================
-// [테스트용] Mock 데이터
-// =================================================================
-const mockApiData = [
-    { customerId: 'SB2001', name: '김말똥', birthOfDate: '1950.01.01', age: 74, gender: '남', phone: '010-1234-5678', address: '서울시 강남구', job: '의사', isMarried: true, hasChildren: true, hasDisease: true },
-    { customerId: 'SB2002', name: '김진우', birthOfDate: '1990.01.01', age: 34, gender: '남', phone: '010-2345-6789', address: '경기도 김포시', job: '무직', isMarried: false, hasChildren: false, hasDisease: false },
-    { customerId: 'SB2003', name: '최개똥', birthOfDate: '2000.01.01', age: 24, gender: '남', phone: '010-3456-7890', address: '인천시 서구', job: '정비사', isMarried: false, hasChildren: false, hasDisease: false },
-    { customerId: 'SB2004', name: '이철수', birthOfDate: '1975.01.01', age: 49, gender: '남', phone: '010-4567-8901', address: '서울시 마포구', job: '개발자', isMarried: true, hasChildren: true, hasDisease: true },
-    { customerId: 'SB2005', name: '박영희', birthOfDate: '1982.05.10', age: 42, gender: '여', phone: '010-5678-9012', address: '경기도 성남시', job: '주부', isMarried: true, hasChildren: false, hasDisease: false },
-];
-
-// [테스트용] 특정 고객(김말똥)의 발송 기록 Mock 데이터
-const mockHistoryData = [
-    {
-        messageId: 101,
-        createMessageDate: '2025.07.20',
-        recommendedServices: [
-            { serviceName: '결혼 서비스', imageUrl: 'https://placehold.co/600x400/FFF4E0/333?text=Wedding+Service', detailedUrl: 'http://example.com/wedding' },
-            { serviceName: '여행 서비스', imageUrl: 'https://placehold.co/600x400/D4EFFF/333?text=Travel+Service', detailedUrl: 'http://example.com/travel' }
-        ],
-        messageContent: `[○○상조] 김말똥님, 요즘 자녀가 결혼할 시기시죠? 
-아니면 은퇴 후 여행 생각 있으신가요? OO상조에서 맞춤 패키지를 추천드립니다!
-[🔍 상품 자세히 보기]`,
-    }
-];
+import { Mail, Send, Search, Edit, CheckCircle } from 'lucide-react'; 
+import { recommendationService } from '../services/api';
 
 
 const Menu3 = () => {
     // === 상태 관리 ===
-    const [allCustomers, setAllCustomers] = useState([]);
     const [filteredCustomers, setFilteredCustomers] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [animateCard, setAnimateCard] = useState(false);
-    const [isSearched, setIsSearched] = useState(false); // 조회 버튼 클릭 여부 상태
-    const [isGenerating, setIsGenerating] = useState(false); // 메시지 생성 로딩 상태
+    const [isSearched, setIsSearched] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const [filters, setFilters] = useState({
         id: '', name: '', age: '', gender: [], disease: [], isMarried: [], hasChildren: []
@@ -48,235 +20,222 @@ const Menu3 = () => {
     const [selectedCustomerForHistory, setSelectedCustomerForHistory] = useState(null);
     const [messageHistory, setMessageHistory] = useState([]);
     const [messagePreview, setMessagePreview] = useState('');
+    const [generatedMessageData, setGeneratedMessageData] = useState(null);
     const [showTransmissionCompletePopup, setShowTransmissionCompletePopup] = useState(false);
-    const [showEditCompletePopup, setShowEditCompletePopup] = useState(false);
+    
+    const [isEditing, setIsEditing] = useState(false);
 
-    // === 데이터 로딩 및 필터링 로직 (useEffect) ===
-
-    // 1. 최초 전체 고객 데이터 로딩 (화면에 표시는 안 함)
     useEffect(() => {
-        const fetchInitialDataWithMock = () => {
-            setLoading(true);
-            setTimeout(() => {
-                try {
-                    // 전체 고객 데이터를 `allCustomers` 상태에만 저장
-                    setAllCustomers(mockApiData);
-                    setError(null);
-                } catch (err) {
-                    setError("Mock 데이터 로딩에 실패했습니다.");
-                    console.error(err);
-                } finally {
-                    setLoading(false);
-                    setAnimateCard(true);
-                }
-            }, 500);
-        };
-        fetchInitialDataWithMock();
+        setAnimateCard(true);
     }, []);
 
     // === 핸들러 및 헬퍼 함수 ===
     const handleInputChange = (e) => setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
     const handleCheckboxChange = (e) => {
         const { name, value, checked } = e.target;
-        setFilters(prev => {
-            const currentValues = prev[name] || [];
-            const newValues = checked ? [...currentValues, value] : currentValues.filter(v => v !== value);
-            return { ...prev, [name]: newValues };
-        });
+        setFilters(prev => ({
+            ...prev,
+            [name]: checked ? [value] : []
+        }));
     };
 
-    // 2. 조회 버튼 클릭 시 필터링 수행
-    const handleSearch = () => {
-                // --- [실제 백엔드 연동 시] 여기서 API를 호출하여 필터링된 데이터를 가져옵니다. ---
-        /*
-        const fetchFilteredData = async () => {
-            setLoading(true);
-            try {
-                // GET 요청 시 params로 필터 객체를 전달
-                const response = await axios.get('/api/customers', { params: filters });
-                setFilteredCustomers(response.data);
-                setIsSearched(true);
-            } catch (err) {
-                setError("데이터 조회에 실패했습니다.");
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchFilteredData();
-        */
+    const formatKST = (dateString) => {
+        if (!dateString) return '';
+        
+        const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+        const date = new Date(utcDateString);
 
-        // --- [테스트용] Mock 데이터 필터링 로직 ---
-        if (loading) return;
-        let result = [...allCustomers];
-        if (filters.id) { result = result.filter(c => String(c.customerId).toLowerCase().includes(filters.id.toLowerCase())); }
-        if (filters.name) { result = result.filter(c => c.name.toLowerCase().includes(filters.name.toLowerCase())); }
-        if (filters.age) {
-            const [minAge, maxAge] = filters.age.split('-').map(Number);
-            result = result.filter(c => c.age >= minAge && c.age <= maxAge);
+        const formatter = new Intl.DateTimeFormat('ko-KR', {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: true
+        });
+
+        return formatter.format(date);
+    };
+
+    const formatPhone = (phone) => {
+        if (!phone) return '정보 없음';
+        const cleaned = ('' + phone).replace(/\D/g, '');
+        const match = cleaned.match(/^(01[016789]{1}|02|0[3-9]{1}[0-9]{1})(\d{3,4})(\d{4})$/);
+        if (match) {
+            return [match[1], match[2], match[3]].join('-');
         }
-        if (filters.gender.length > 0) { result = result.filter(c => filters.gender.includes(c.gender)); }
-        if (filters.disease.length > 0) {
-            const hasDisease = filters.disease.includes('유');
-            const noDisease = filters.disease.includes('무');
-            if (hasDisease && !noDisease) result = result.filter(c => c.hasDisease);
-            if (!hasDisease && noDisease) result = result.filter(c => !c.hasDisease);
+        return phone;
+    };
+
+    const handleSearch = async () => {
+        setLoading(true);
+        setError(null);
+        setFilteredCustomers([]);
+        try {
+            let response;
+            const apiParams = {
+                ageGroup: filters.age || undefined,
+                disease: filters.disease.length > 0 ? filters.disease[0] : undefined,
+                isMarried: filters.isMarried.length > 0 ? (filters.isMarried[0] === '기혼') : undefined,
+                hasChildren: filters.hasChildren.length > 0 ? (filters.hasChildren[0] === '유') : undefined,
+            };
+            Object.keys(apiParams).forEach(key => apiParams[key] === undefined && delete apiParams[key]);
+            
+            const hasApiFilters = Object.keys(apiParams).length > 0;
+
+            if (!hasApiFilters && !filters.id && !filters.name && filters.gender.length === 0) {
+                // 모든 필터가 비어있으면 전체 조회
+                response = await recommendationService.getAllCustomers();
+            } else {
+                // 상세 필터가 하나라도 있으면 필터 조회 API 호출
+                response = await recommendationService.getFilteredCustomers(apiParams);
+            }
+
+            let customers = response.data;
+            
+            // 프론트엔드에서 id, name, gender 필터링 적용
+            if (filters.id) {
+                customers = customers.filter(c => String(c.id).includes(filters.id));
+            }
+            if (filters.name) {
+                customers = customers.filter(c => c.name.toLowerCase().includes(filters.name.toLowerCase()));
+            }
+            if (filters.gender.length > 0) {
+                customers = customers.filter(c => {
+                    if (!c.gender) return false;
+                    return filters.gender.some(filterGender => c.gender.startsWith(filterGender));
+                });
+            }
+
+            setFilteredCustomers(customers);
+        } catch (err) {
+            setError("데이터 조회에 실패했습니다. 잠시 후 다시 시도해주세요.");
+            console.error(err);
+            setFilteredCustomers([]);
+        } finally {
+            setLoading(false);
+            setIsSearched(true);
         }
-        if (filters.isMarried.length > 0) {
-            const isMarried = filters.isMarried.includes('기혼');
-            const isNotMarried = filters.isMarried.includes('미혼');
-            result = result.filter(c => {
-                if (isMarried && !isNotMarried) return c.isMarried;
-                if (!isMarried && isNotMarried) return !c.isMarried;
-                return true;
-            });
-        }
-        if (filters.hasChildren.length > 0) {
-            const hasChildren = filters.hasChildren.includes('유');
-            const noChildren = filters.hasChildren.includes('무');
-            result = result.filter(c => {
-                if (hasChildren && !noChildren) return c.hasChildren;
-                if (!hasChildren && noChildren) return !c.hasChildren;
-                return true;
-            });
-        }
-        setFilteredCustomers(result);
-        setIsSearched(true);
     };
 
     const getFamilyInfo = (customer) => `${customer.isMarried ? '기혼' : '미혼'}, ${customer.hasChildren ? '자녀 있음' : '자녀 없음'}`;
-    
-    const handleHistoryClick = (customer) => {
-        setSelectedCustomerForHistory(customer);
-        setMessageHistory([]); // 기록을 초기화
 
-        // --- [테스트용] Mock 데이터로 발송 기록 표시 ---
-        // '김말똥' 고객일 경우에만 예시 기록을 보여줍니다.
-        if (customer.customerId === 'SB2001') {
-            setMessageHistory(mockHistoryData);
-        } else {
-            // 다른 고객은 기록이 없는 것으로 표시
+    const handleHistoryClick = async (customer) => {
+        setSelectedCustomerForHistory(customer);
+        setMessageHistory([]);
+        try {
+            const response = await recommendationService.getLatestCustomerHistory(customer.id);
+            if (response.data && response.data.createMessageDate) {
+                setMessageHistory([response.data]);
+            } else {
+                setMessageHistory([]);
+            }
+        } catch (err) {
+            console.error("발송 기록 로딩에 실패했습니다.", err);
             setMessageHistory([]);
         }
-        
-        // --- [실제 백엔드 연동 시] 발송 기록 API 호출 ---
-        /*
-        const fetchHistory = async () => {
-            try {
-                const response = await axios.get(`/api/messages/history/${customer.customerId}`);
-                setMessageHistory(response.data);
-            } catch (err) {
-                console.error("발송 기록 로딩에 실패했습니다.", err);
-                setMessageHistory([]); // 에러 발생 시 빈 배열로 설정
-            }
-        };
-        fetchHistory();
-        */
     };
 
-    const handleGenerateMessage = () => {
-        const noFiltersSet =
-            !filters.id &&
-            !filters.name &&
-            !filters.age &&
-            filters.gender.length === 0 &&
-            filters.disease.length === 0 &&
-            filters.isMarried.length === 0 &&
-            filters.hasChildren.length === 0;
-
-        if (noFiltersSet) {
-            alert('메세지를 보낼 고객의 조건을 정해주세요');
-            return;
-        }
-
+    const handleGenerateMessage = async () => {
         if (filteredCustomers.length === 0) {
             alert("메시지를 생성할 고객이 없습니다. 먼저 고객을 조회해주세요.");
             return;
         }
-
         setIsGenerating(true);
+        setMessagePreview('');
+        setGeneratedMessageData(null);
+        setIsEditing(false); 
 
-        // AI 메시지 생성 API 호출을 시뮬레이션합니다.
-        setTimeout(() => {
-            const firstCustomer = filteredCustomers[0];
-            let messageContentText;
-            if (filteredCustomers.length === 1) {
-                messageContentText = `[○○상조] ${firstCustomer.name}님, 요즘 자녀가 결혼할 시기시죠? 
-아니면 은퇴 후 여행 생각 있으신가요? OO상조에서 맞춤 패키지를 추천드립니다!`
-            } else {
-                messageContentText = `[○○상조] ${firstCustomer.name}님 외 ${filteredCustomers.length - 1}명에게 추천하는 맞춤 패키지!`
-            }
+        try {
+            let familyValue;
+            if (filters.hasChildren.includes('유')) familyValue = '자녀';
+            else if (filters.isMarried.includes('기혼')) familyValue = '기혼';
+            else if (filters.isMarried.includes('미혼')) familyValue = '미혼';
 
-            const mockAiResponse = {
-                recommendedServices: [
-                    { serviceName: '결혼 서비스' },
-                    { serviceName: '여행 서비스' }
-                ],
-                messageContent: messageContentText,
-                detailedUrlText: `[🔍 상품 자세히 보기]`
+            const requestData = {
+                ageGroup: filters.age || undefined,
+                gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
+                disease: filters.disease[0] || undefined,
+                family: familyValue,
             };
             
-            const formattedMessage = `[대상 고객: ${filteredCustomers.length}명]\n\n[추천된 전환서비스]\n- ${mockAiResponse.recommendedServices[0].serviceName}\n- ${mockAiResponse.recommendedServices[1].serviceName}\n\n[메시지 내용]\n${mockAiResponse.messageContent}\n${mockAiResponse.detailedUrlText}`;
-            
-            setMessagePreview(formattedMessage);
+            const response = await recommendationService.generatePreviewMessage(requestData);
+            setGeneratedMessageData(response.data);
+
+            const { service1, service2, service1DetailedUrl, service2DetailedUrl, message } = response.data;
+            let formattedMessage = `[추천된 전환서비스]\n- ${service1 || '추천 서비스 없음'}`;
+            if (service2) { formattedMessage += `\n- ${service2}`; }
+            formattedMessage += `\n\n[메시지 내용]\n${message || '생성된 메시지가 없습니다.'}`;
+            const detailsSection = [];
+            if (service1 && service1DetailedUrl) { detailsSection.push(`- ${service1} 자세히 보기: ${service1DetailedUrl}`); }
+            if (service2 && service2DetailedUrl) { detailsSection.push(`- ${service2} 자세히 보기: ${service2DetailedUrl}`); }
+            if (detailsSection.length > 0) { formattedMessage += `\n\n[서비스 바로가기]\n${detailsSection.join('\n')}`; }
+            setMessagePreview(formattedMessage.trim());
+
+        } catch (err) {
+            console.error("메시지 생성에 실패했습니다.", err);
+            setMessagePreview("오류: 메시지를 생성하지 못했습니다. 다시 시도해주세요.");
+        } finally {
             setIsGenerating(false);
-        }, 1500); // 1.5초 딜레이
-        
-        // --- [실제 백엔드 연동 시] AI 메시지 생성 API 호출 ---
-        /*
-        const generateMessage = async () => {
-            try {
-                const response = await axios.post('/api/generate-message', { customerIds: selectedCustomers });
-                const { recommendedServices, messageContent, detailedUrlText } = response.data;
-                const formattedMessage = `[추천된 전환서비스]
-${recommendedServices.map(s => `- ${s.serviceName}`).join('\n')}
-
-[메시지 내용]
-${messageContent}
-${detailedUrlText}`;
-                setMessagePreview(formattedMessage);
-            } catch (err) {
-                console.error("메시지 생성에 실패했습니다.", err);
-                setMessagePreview("오류: 메시지를 생성하지 못했습니다.");
-            }
-        };
-        generateMessage();
-        */
+        }
     };
     
-    const handleEditMessage = () => {
-        if (!messagePreview) { alert("수정할 메시지가 없습니다."); return; }
-        console.log("수정된 메시지 저장:", messagePreview);
-        setShowEditCompletePopup(true);
+    const handleToggleEdit = () => {
+        setIsEditing(!isEditing);
     };
 
-    const handleSendMessage = () => {
-        if (!messagePreview) { alert("전송할 메시지가 없습니다."); return; }
-        console.log("메시지 전송:", messagePreview);
-        setShowTransmissionCompletePopup(true);
+    const handleSendMessage = async () => {
+        if (!messagePreview) {
+            alert("전송할 메시지가 없습니다.");
+            return;
+        }
+        if (!generatedMessageData) {
+            alert("전송할 원본 메시지 데이터가 없습니다. 메시지를 다시 생성해주세요.");
+            return;
+        }
+
+        try {
+            const filterCriteria = {
+                ageGroup: filters.age || undefined,
+                gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
+                disease: filters.disease[0] || undefined,
+                family: generatedMessageData.family || undefined,
+            };
+            Object.keys(filterCriteria).forEach(key => filterCriteria[key] === undefined && delete filterCriteria[key]);
+
+            const requestBody = {
+                message: messagePreview,
+                serviceId1: generatedMessageData.serviceId1,
+                serviceId2: generatedMessageData.serviceId2,
+                imageUrl1: generatedMessageData.service1ImageUrl, 
+                imageUrl2: generatedMessageData.service2ImageUrl, 
+                detailedUrl1: generatedMessageData.detailedUrl1,
+                detailedUrl2: generatedMessageData.detailedUrl2,
+                filterCriteria: filterCriteria,
+            };
+
+            await recommendationService.sendGroupMessage(requestBody);
+
+            setShowTransmissionCompletePopup(true);
+            setMessagePreview('');
+            setGeneratedMessageData(null);
+            setIsEditing(false);
+
+        } catch (err) {
+            console.error("메시지 전송에 실패했습니다.", err);
+            alert("메시지 전송 중 오류가 발생했습니다.");
+        }
     };
 
-    
-    // === 렌더링(JSX) ===
-    if (loading && !animateCard) {
-        return (
-            <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)'}}>
-                <div className="text-center" style={{ color: '#4A3728' }}>
-                    <div className="spinner-border" role="status" style={{ width: '3rem', height: '3rem', color: '#B8860B' }}>
-                        <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p className="mt-3" style={{ fontSize: '1.2rem' }}>데이터를 불러오는 중입니다...</p>
-                </div>
-            </div>
-        );
-    }
-    if (error) return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}><h2 style={{color: 'red'}}>{error}</h2></div>;
+    if (error && !isSearched) return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}><h2 style={{color: 'red'}}>{error}</h2></div>;
 
     return (
         <>
             <div className="page-wrapper" style={{'--navbar-height': '62px', height: 'calc(100vh - var(--navbar-height))', background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)', padding: '20px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{width: '100%', maxWidth: '1600px', height: '100%', margin: '0 auto', display: 'flex', boxSizing: 'border-box', background: 'rgba(255, 251, 235, 0.95)', boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)', backdropFilter: 'blur(15px)', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '28px', padding: '20px', gap: '20px', overflow: 'hidden'}}>
-                    {/* 좌측 필터링 UI */} 
+                    {/* 좌측 필터링 UI */}
                     <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
                         <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px', flexShrink: 0 }}>전환서비스 추천</h4>
                         <div className="sidebar-scroll-area" style={{background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)', borderRadius: '15px', padding: '20px', flex: 1, overflowY: 'auto', minHeight: 0, border: '1px solid rgba(184, 134, 11, 0.2)'}}>
@@ -287,51 +246,61 @@ ${detailedUrlText}`;
                             <Form>
                                 <Row className="g-3 mb-3"><Col xs={6}><Form.Label style={{color: '#4A3728'}}>고객 고유번호</Form.Label><Form.Control name="id" value={filters.id} onChange={handleInputChange} placeholder="고유번호" /></Col><Col xs={6}><Form.Label style={{color: '#4A3728'}}>이름</Form.Label><Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" /></Col></Row>
                                 <hr className="my-4"/><Form.Label style={{color: '#4A3728'}}>상세 조건</Form.Label>
-                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>성별:</strong><Form.Check inline type="checkbox" label="남" name="gender" value="남" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여" name="gender" value="여" onChange={handleCheckboxChange} /></div>
-                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" onChange={handleCheckboxChange} /></div>
-                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" onChange={handleCheckboxChange} /></div>
-                                <div className="d-flex align-items-center mb-3"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" onChange={handleCheckboxChange} /></div>
-                                <Row className="g-3"><Col xs={12}><Form.Label style={{color: '#4A3728'}}>나이대</Form.Label><Form.Select name="age" value={filters.age} onChange={handleInputChange}><option value="">전체</option><option value="20-29">20대</option><option value="30-39">30대</option><option value="40-49">40대</option><option value="50-59">50대</option><option value="60-150">60대 이상</option></Form.Select></Col></Row>
-                                
-                                <Button className="btn-search" onClick={handleSearch}>
-                                    <Search size={18} className="me-2" />
-                                    고객 조회
+                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>성별:</strong><Form.Check inline type="checkbox" label="남" name="gender" value="남" checked={filters.gender.includes('남')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여" name="gender" value="여" checked={filters.gender.includes('여')} onChange={handleCheckboxChange} /></div>
+                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" checked={filters.disease.includes('유')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" checked={filters.disease.includes('무')} onChange={handleCheckboxChange} /></div>
+                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" checked={filters.isMarried.includes('기혼')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" checked={filters.isMarried.includes('미혼')} onChange={handleCheckboxChange} /></div>
+                                <div className="d-flex align-items-center mb-3"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" checked={filters.hasChildren.includes('유')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" checked={filters.hasChildren.includes('무')} onChange={handleCheckboxChange} /></div>
+                                <Row className="g-3">
+                                    <Col xs={12}>
+                                        <Form.Label style={{color: '#4A3728'}}>나이대</Form.Label>
+                                        <Form.Select name="age" value={filters.age} onChange={handleInputChange}>
+                                            <option value="">전체</option>
+                                            <option value="20대">20대</option>
+                                            <option value="30대">30대</option>
+                                            <option value="40대">40대</option>
+                                            <option value="50대">50대</option>
+                                            <option value="60대 이상">60대 이상</option>
+                                        </Form.Select>
+                                    </Col>
+                                </Row>
+                                <Button className="btn-search" onClick={handleSearch} disabled={loading}>
+                                    {loading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2"/> : <Search size={18} className="me-2" />}
+                                    {loading ? '조회 중...' : '고객 조회'}
                                 </Button>
                             </Form>
                         </div>
                     </div>
 
-                    {/* 오른쪽 메인 콘텐츠 */} 
                     <div className="dashboard-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, paddingBottom: '10px' }}>
-                            <div className="d-flex align-items-center">
-                               <h5 style={{ fontWeight: '600', color: '#2C1F14', margin: 0 }}>고객 목록 ({isSearched ? filteredCustomers.length : 0}명)</h5>
-                            </div>
-                            <Button className="btn-golden" onClick={handleGenerateMessage} disabled={!isSearched || filteredCustomers.length === 0}>메시지 생성</Button>
+                            <h5 style={{ fontWeight: '600', color: '#2C1F14', margin: 0 }}>고객 목록 ({isSearched ? filteredCustomers.length : 0}명)</h5>
+                            <Button className="btn-golden" onClick={handleGenerateMessage} disabled={!isSearched || filteredCustomers.length === 0}><Send size={16} className="me-2"/>메시지 생성</Button>
                         </div>
                         
                         <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px' }}>
-                            {!isSearched ? (
+                            {loading ? (
+                                <div className="d-flex justify-content-center align-items-center h-100"><Spinner animation="border" style={{ color: '#B8860B' }}/></div>
+                            ) : error ? (
+                                <div className="d-flex justify-content-center align-items-center h-100 text-center text-danger">{error}</div>
+                            ) : !isSearched ? (
                                 <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
-                                    <div>
-                                        <Search size={48} className="mb-3" />
-                                        <p>좌측 필터에서 조건을 선택하고<br/>'고객 조회' 버튼을 눌러주세요.</p>
-                                    </div>
+                                    <div><Search size={48} className="mb-3" /><p>좌측 필터에서 조건을 선택하고<br/>'고객 조회' 버튼을 눌러주세요.</p></div>
                                 </div>
                             ) : filteredCustomers.length > 0 ? (
                                 filteredCustomers.map(customer => (
-                                    <Card key={customer.customerId} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
+                                    <Card key={customer.id} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
                                         <Card.Body>
                                             <Row className="align-items-center">
-                                                <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.customerId}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
+                                                                                                <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>고객고유번호: {customer.id}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
                                                 <Col>
                                                     <Row>
-                                                        <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthOfDate} (만 {customer.age}세)</Col>
+                                                        <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthDate?.split('T')[0]}</Col>
                                                         <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
-                                                        <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>연락처:</strong> {formatPhone(customer.phone)}</Col>
                                                         <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
                                                         <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
                                                         <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
+                                                        <Col sm={12}><strong>질병:</strong> {customer.disease && customer.disease.length > 0 ? customer.disease.join(', ') : '없음'}</Col>
                                                     </Row>
                                                 </Col>
                                                 <Col md="auto" className="text-center text-md-end"><Button variant="secondary" size="sm" onClick={() => handleHistoryClick(customer)}>발송기록</Button></Col>
@@ -340,47 +309,88 @@ ${detailedUrlText}`;
                                     </Card>
                                 ))
                             ) : (
-                                 <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
-                                    <div>
-                                        <p>선택하신 조건에 맞는 고객 정보가 없습니다.</p>
+                                    <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
+                                        <div><p>선택하신 조건에 맞는 고객 정보가 없습니다.</p></div>
                                     </div>
-                                </div>
                             )}
                         </div>
-
-                        <div className="mt-3" style={{ flexShrink: 0 }}>
-                            <Row><Col lg={6} className="mb-3 mb-lg-0"><Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%' }}><Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)'}}>메시지 미리보기</Card.Header><Card.Body className="d-flex flex-column"><Form.Control as="textarea" rows={8} value={messagePreview} onChange={(e) => setMessagePreview(e.target.value)} className="mb-3 flex-grow-1" style={{whiteSpace: 'pre-wrap'}} /><div className="d-flex justify-content-end gap-2"><Button variant="secondary" onClick={handleEditMessage}>메시지 수정</Button><Button className="btn-golden" onClick={handleSendMessage}>메시지 전송</Button></div></Card.Body></Card></Col>
-                            <Col lg={6}><Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%' }}><Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)'}}>메시지 발송 기록</Card.Header>
-                            <Card.Body style={{overflowY: 'auto'}}>
-                                {selectedCustomerForHistory ? (
-                                    messageHistory.length > 0 ? (
-                                        messageHistory.map(history => (
-                                            <div key={history.messageId} className="mb-4">
-                                                <h6><strong>발송일시:</strong> {history.createMessageDate}</h6>
-                                                <div className="d-flex gap-2 my-2">
-                                                    {history.recommendedServices.map(service => (
-                                                        <img key={service.serviceName} src={service.imageUrl} alt={service.serviceName} style={{width: '50%', borderRadius: '8px'}} />
-                                                    ))}
-                                                </div>
-                                                <p style={{whiteSpace: 'pre-wrap', fontSize: '0.9rem'}}>{history.messageContent}</p>
-                                                
-                                                <hr/>
+                        
+                        <div className="mt-3" style={{ flexShrink: 0, height: '350px' }}>
+                            <Row style={{ height: '100%' }}>
+                                <Col lg={6} className="mb-3 mb-lg-0" style={{ height: '100%' }}>
+                                    <Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                        <Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)', flexShrink: 0}}>메시지 미리보기</Card.Header>
+                                        <Card.Body className="d-flex flex-column" style={{ flexGrow: 1, overflowY: 'auto' }}>
+                                            <Form.Control as="textarea" rows={8} value={messagePreview} onChange={(e) => setMessagePreview(e.target.value)} readOnly={!isEditing} className="mb-3 flex-grow-1" style={{whiteSpace: 'pre-wrap', backgroundColor: isEditing ? '#fff' : '#f8f9fa'}} />
+                                            <div className="d-flex justify-content-end gap-2">
+                                                <Button variant="secondary" onClick={handleToggleEdit} disabled={!messagePreview}>
+                                                    {isEditing ? <CheckCircle size={16} className="me-2"/> : <Edit size={16} className="me-2"/>}
+                                                    {isEditing ? '수정 완료' : '메시지 수정'}
+                                                </Button>
+                                                <Button className="btn-golden" onClick={handleSendMessage} disabled={!messagePreview || isEditing}>
+                                                    <Send size={16} className="me-2"/>
+                                                    메시지 전송
+                                                </Button>
                                             </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-muted"><strong>{selectedCustomerForHistory.name}</strong>님의 발송 기록이 없습니다.</p>
-                                    )
-                                ) : (
-                                    <p className="text-muted">고객 목록에서 '발송기록' 버튼을 클릭하여 확인하세요.</p>
-                                )}
-                            </Card.Body></Card></Col></Row>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                                <Col lg={6} style={{ height: '100%' }}>
+                                    <Card style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                        <Card.Header as="h5" style={{color: '#2C1F14', background: 'rgba(184, 134, 11, 0.1)', flexShrink: 0}}>
+                                            {selectedCustomerForHistory ? `${selectedCustomerForHistory.name}님의 메시지 발송 기록` : '메시지 발송 기록'}
+                                        </Card.Header>
+                                        <Card.Body style={{flexGrow: 1, overflowY: 'auto'}}>
+                                            {selectedCustomerForHistory ? (
+                                                messageHistory.length > 0 ? (
+                                                    messageHistory.map(history => {
+                                                        const recommendedServices = [];
+                                                        if (history.imageUrl1) {
+                                                            recommendedServices.push({ 
+                                                                serviceName: `추천 서비스 1 (ID: ${history.serviceId1})`, 
+                                                                imageUrl: history.imageUrl1 
+                                                            });
+                                                        }
+                                                        if (history.imageUrl2) {
+                                                            recommendedServices.push({ 
+                                                                serviceName: `추천 서비스 2 (ID: ${history.serviceId2})`, 
+                                                                imageUrl: history.imageUrl2 
+                                                            });
+                                                        }
+
+                                                        return (
+                                                            <div key={history.id || history.createMessageDate} className="mb-4">
+                                                                <h6><strong>발송일시:</strong> {formatKST(history.createMessageDate)}</h6>
+                                                                {recommendedServices.length > 0 && (
+                                                                    <div className="d-flex gap-2 my-2">
+                                                                        {recommendedServices.map(service => (
+                                                                            <img key={service.serviceName} src={service.imageUrl} alt={service.serviceName} style={{width: '40%', borderRadius: '8px', border: '1px solid #ddd'}}
+                                                                                onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/300x200/EEE/333?text=Image+Error'; }} />
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                <p style={{whiteSpace: 'pre-wrap', fontSize: '0.9rem', background: '#fff', padding: '10px', borderRadius: '8px', border: '1px solid #eee'}}>{history.message}</p>
+                                                                <hr/>
+                                                            </div>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <p className="text-muted"><strong>{selectedCustomerForHistory.name}</strong>님의 발송 기록이 없습니다.</p>
+                                                )
+                                            ) : (
+                                                <p className="text-muted">고객 목록에서 '발송기록' 버튼을 클릭하여 확인하세요.</p>
+                                            )}
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            </Row>
                         </div>
                     </div>
                 </div>
             </div>
             
-            {/* 모달 영역 */} 
-            <Modal show={isGenerating} centered backdrop="static" keyboard={false}> 
+            {/* 모달 영역 */}
+            <Modal show={isGenerating} centered backdrop="static" keyboard={false}>
                 <Modal.Body className="text-center p-4">
                     <Spinner animation="border" variant="primary" className="mb-3" />
                     <h4>메시지가 생성 중입니다...</h4>
@@ -388,7 +398,6 @@ ${detailedUrlText}`;
                 </Modal.Body>
             </Modal>
             <Modal show={showTransmissionCompletePopup} onHide={() => setShowTransmissionCompletePopup(false)} centered><Modal.Header closeButton><Modal.Title>알림</Modal.Title></Modal.Header><Modal.Body>메시지 전송이 완료되었습니다.</Modal.Body><Modal.Footer><Button className="btn-golden" onClick={() => setShowTransmissionCompletePopup(false)}>확인</Button></Modal.Footer></Modal>
-            <Modal show={showEditCompletePopup} onHide={() => setShowEditCompletePopup(false)} centered><Modal.Header closeButton><Modal.Title>알림</Modal.Title></Modal.Header><Modal.Body>메시지 수정이 완료되었습니다.</Modal.Body><Modal.Footer><Button className="btn-golden" onClick={() => setShowEditCompletePopup(false)}>확인</Button></Modal.Footer></Modal>
 
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
@@ -398,6 +407,7 @@ ${detailedUrlText}`;
                 .content-scroll-area::-webkit-scrollbar-thumb, .sidebar-scroll-area::-webkit-scrollbar-thumb, .card-body::-webkit-scrollbar-thumb { background-color: rgba(184, 134, 11, 0.5); border-radius: 10px; }
                 .btn-golden { background: linear-gradient(135deg, #D4AF37, #F5C23E); border: none; color: #2C1F14; font-weight: 700; box-shadow: 0 4px 15px rgba(184, 134, 11, 0.35); transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; }
                 .btn-golden:hover { background: linear-gradient(135deg, #CAA230, #E8B530); color: #2C1F14; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45); }
+                .btn-golden:disabled { background: #ccc; box-shadow: none; transform: none; }
                 
                 /* 조회 버튼 스타일 추가 */
                 .btn-search {
@@ -428,7 +438,7 @@ ${detailedUrlText}`;
                     transform: translateY(0);
                     box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
                 }
-                     /* 반응형 레이아웃 */
+                        /* 반응형 레이아웃 */
                 @media (max-width: 1200px) {
                     .page-wrapper {
                         height: auto !important;
@@ -445,7 +455,7 @@ ${detailedUrlText}`;
                         margin-bottom: 20px;
                     }
                 }
-                    
+                        
                 @media (max-width: 768px) {
                     .dashboard-container {
                         padding: 10px;
@@ -459,7 +469,7 @@ ${detailedUrlText}`;
                         padding-left: 12px;
                         padding-right: 12px;
                     }
-                     .customer-id-name-row > .col-6:first-of-type {
+                        .customer-id-name-row > .col-6:first-of-type {
                         margin-bottom: 1rem;
                     }
                 }

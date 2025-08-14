@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
-import { dummyData } from '../services/api';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
+import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const MemorialConfig = () => {
@@ -56,66 +56,49 @@ const MemorialConfig = () => {
     const [accessChecking, setAccessChecking] = useState(true);
 
     useEffect(() => {
-        // 유가족 권한 확인 및 추모관 데이터 로드
-        const checkAccessAndLoadData = async () => {
+        // 권한 확인 및 데이터 로드
+        const loadData = async () => {
             try {
-                // TODO: 실제 API로 유가족 권한 확인
-                const hasAccess = await checkFamilyAccess(id);
+                // TODO: 실제 API로 유가족 권한 확인 로직 필요
+                const hasAccess = isAdminAccess || isUserAccess; 
 
                 if (!hasAccess) {
                     alert('유가족 또는 관리자만 접근 가능한 페이지입니다.');
-                    if (isUserAccess) {
-                        navigate(`/user-memorial/${id}`);
-                    } else {
-                        navigate(`/memorial/${id}`);
-                    }
+                    navigate(`/memorial/${id}`);
                     return;
                 }
-
                 setIsFamilyMember(true);
 
-                // 추모관 데이터 로드
-                const foundMemorial = dummyData.memorials._embedded.memorials.find(
-                    m => m.id === parseInt(id)
-                );
+                const response = await apiService.getMemorial(id);
+                console.log('✅ MemorialConfig API 응답:', response);
+                
+                // API 명세에 따라 응답이 직접 memorial 객체
+                const memorialData = response;
 
-                if (!foundMemorial) {
-                    alert('추모관을 찾을 수 없습니다.');
-                    if (isUserAccess) {
-                        navigate(`/user-memorial/${id}`);
-                    } else {
-                        navigate(`/memorial/${id}`);
-                    }
-                    return;
-                }
-
-                setMemorial(foundMemorial);
+                setMemorial(memorialData);
+                setGeneratedEulogy(memorialData.tribute || '');
                 setFormData({
-                    name: foundMemorial.name,
-                    age: foundMemorial.age,
-                    birthOfDate: foundMemorial.birthOfDate,
-                    deceasedDate: foundMemorial.deceasedDate,
-                    gender: foundMemorial.gender,
-                    imageUrl: foundMemorial.imageUrl || '',
-                    customerId: foundMemorial.customerId
+                    name: memorialData.name,
+                    age: memorialData.age,
+                    birthOfDate: memorialData.birthDate, // API 명세에 따라 birthDate로 수정
+                    deceasedDate: memorialData.deceasedDate,
+                    gender: memorialData.gender,
+                    imageUrl: memorialData.profileImageUrl || '', // API 명세에 따라 profileImageUrl로 수정
+                    customerId: memorialData.customerId
                 });
 
             } catch (error) {
                 console.error('Error loading memorial config:', error);
                 alert('오류가 발생했습니다. 다시 시도해주세요.');
-                if (isUserAccess) {
-                    navigate(`/user-memorial/${id}`);
-                } else {
-                    navigate(`/memorial/${id}`);
-                }
+                navigate(`/memorial/${id}`);
             } finally {
                 setAccessChecking(false);
                 setLoading(false);
             }
         };
 
-        checkAccessAndLoadData();
-    }, [id, navigate]);
+        loadData();
+    }, [id, navigate, isAdminAccess, isUserAccess]);
 
     // 유가족 및 관리자 권한 확인 함수 (실제 API 구현 필요)
     const checkFamilyAccess = async (memorialId) => {
@@ -149,63 +132,167 @@ const MemorialConfig = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        try {
-            if (activeTab === 'basic') {
-                // 기본 정보 수정
+        if (activeTab === 'basic') {
+            // 기본 정보 수정
+            try {
+                // Menu4 API 명세에 맞는 간단한 형태로 수정
                 const updatedMemorial = {
-                    ...memorial,
-                    ...formData,
+                    name: formData.name,
                     age: parseInt(formData.age),
+                    birthDate: formData.birthOfDate,
+                    deceasedDate: formData.deceasedDate,
+                    gender: formData.gender,
                     customerId: parseInt(formData.customerId)
                 };
-
-                const data = new FormData();
-                data.append('profileImage', profileImageFile);
                 
-                // TODO: Implement actual API call
-                // await api.updateMemorial(id, data);
+                // Menu4 API 사용 (현재 구현된 방식 유지)
+                await apiService.updateMemorial(id, updatedMemorial);
 
-                setMemorial(updatedMemorial);
+                // 2. 프로필 이미지 업데이트 (파일이 선택된 경우)
+                if (profileImageFile) {
+                    const imageData = new FormData();
+                    imageData.append('photo', profileImageFile); // API 명세에 따라 'photo' 필드 사용
+                    await apiService.uploadMemorialProfileImage(id, imageData);
+                }
+
                 alert('추모관 정보가 성공적으로 수정되었습니다.');
-            } else if (activeTab === 'video') {
-                // 영상 생성 처리
-                setIsVideoLoading(true);
-                setGeneratedVideoUrl('');
+                navigate(`/memorial/${id}`);
 
-                // Simulate API call
-                setTimeout(() => {
-                    // 백엔드에서 받은 영상 URL이라고 가정
-                    const dummyVideoUrl = 'https://www.w3schools.com/html/mov_bbb.mp4';
-                    setGeneratedVideoUrl(dummyVideoUrl);
-                    setIsVideoLoading(false);
-                    alert('영상이 성공적으로 생성되었습니다.');
-                }, 3000);
-            } else if (activeTab === 'memorial') {
-                // 추모사 생성 처리
-                setIsEulogyLoading(true);
-                setGeneratedEulogy('');
-
-                const eulogyPrompt = {
-                    keywords: eulogyKeywords.filter(k => k).join(', '),
-                    prompt: basePrompt
-                };
-
-                // TODO: 실제 API 호출로 교체
-                // memorialService.generateEulogy(eulogyPrompt);
-
-                console.log("추모사 생성 요청 데이터:", eulogyPrompt);
-
-                // Simulate AI eulogy generation
-                setTimeout(() => {
-                    const dummyEulogy = `삼가 故 ${memorial.name}님의 명복을 빕니다.\n\n${eulogyKeywords.filter(k => k).join(', ')}(와)과 함께한 소중한 추억들을 영원히 간직하겠습니다. 하늘에서 편안히 쉬시길 바랍니다.`;
-                    setGeneratedEulogy(dummyEulogy);
-                    setIsEulogyLoading(false);
-                    alert('AI 추모사가 생성되었습니다.');
-                }, 2000);
+            } catch (error) {
+                console.error('Error updating memorial:', error);
+                alert('정보 수정에 실패했습니다.');
             }
-        } catch (error) {
-            console.error('Error processing request:', error);
-            alert('처리 중 오류가 발생했습니다.');
+        } else if (activeTab === 'video') {
+            // 영상 생성 처리
+            if (!slideshowPhotos || slideshowPhotos.length < 9) {
+                alert("슬라이드쇼용 사진을 최소 9장 이상 선택해주세요.");
+                return;
+            }
+            
+            if (slideshowPhotos.length > 15) {
+                alert("슬라이드쇼 사진은 최대 15개까지 선택 가능합니다.");
+                return;
+            }
+            
+            if (!animatedPhoto) {
+                alert("움직이는 효과를 적용할 사진을 선택해주세요.");
+                return;
+            }
+            
+            const validKeywords = keywords.filter(k => k.trim());
+            if (validKeywords.length === 0) {
+                alert("키워드를 최소 1개 이상 입력해주세요.");
+                return;
+            }
+
+            setIsVideoLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('memorialId', id);
+                
+                // keywords를 문장으로 변환
+                const keywordsText = validKeywords.join(', ');
+                formData.append('keywords', keywordsText);
+                formData.append('imagesCount', slideshowPhotos.length);
+                
+                // outroImage 원본 그대로 사용
+                formData.append('outroImage', animatedPhoto);
+                
+                // 슬라이드쇼 이미지들 원본 그대로 추가
+                slideshowPhotos.forEach((photo, index) => {
+                    formData.append('images', photo);
+                });
+
+                // FormData 내용 디버깅
+                console.log('🔗 FormData 내용:');
+                for (let [key, value] of formData.entries()) {
+                    if (value instanceof File) {
+                        console.log(`  ${key}: [File] ${value.name} (${value.size} bytes)`);
+                    } else {
+                        console.log(`  ${key}: ${value}`);
+                    }
+                }
+
+                console.log('🔗 CreateVideo 요청 시작 - Memorial ID:', id);
+                console.log('🔗 Keywords:', keywordsText);
+                console.log('🔗 Images Count:', slideshowPhotos.length);
+                console.log('🔗 영상 생성 시작...');
+                
+                const response = await apiService.createVideo(id, formData);
+                console.log('✅ CreateVideo 응답:', response);
+                
+                alert("영상 생성이 요청되었습니다. 생성이 완료되면 추모관에서 확인하실 수 있습니다.");
+                
+                // 폼 초기화
+                setSlideshowPhotos([]);
+                setAnimatedPhoto(null);
+                setKeywords(['', '', '', '', '']);
+                
+            } catch (error) {
+                console.error('❌ CreateVideo 실패:', error);
+                
+                // 에러 응답 상세 정보 출력
+                if (error.response) {
+                    console.error('응답 상태:', error.response.status);
+                    console.error('응답 데이터:', error.response.data);
+                    console.error('응답 헤더:', error.response.headers);
+                    
+                    if (error.response.data && error.response.data.message) {
+                        alert(`영상 생성 요청에 실패했습니다: ${error.response.data.message}`);
+                    } else {
+                        alert(`영상 생성 요청에 실패했습니다. (상태: ${error.response.status})`);
+                    }
+                } else if (error.request) {
+                    console.error('요청이 전송되지 않았습니다:', error.request);
+                    alert("서버에 연결할 수 없습니다. 네트워크를 확인해주세요.");
+                } else {
+                    console.error('요청 설정 오류:', error.message);
+                    alert("요청 처리 중 오류가 발생했습니다.");
+                }
+            } finally {
+                setIsVideoLoading(false);
+            }
+
+        } else if (activeTab === 'memorial') {
+            // 추모사 생성 처리
+            setIsEulogyLoading(true);
+            try {
+                const eulogyRequest = {
+                    keywords: eulogyKeywords.filter(k => k).join(', '), // API 명세에 따라 String으로 변경
+                    tributeRequest: basePrompt // API 명세에 따라 prompt -> tributeRequest로 변경
+                };
+                console.log('🔗 CreateTribute 요청 데이터:', eulogyRequest);
+                console.log('🔗 Memorial ID:', id);
+                console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8088'}/memorials/${id}/tribute`);
+                console.log('🔗 추모사 생성 시작... (최대 60초 소요)');
+                
+                const response = await apiService.createTribute(id, eulogyRequest);
+                console.log('✅ CreateTribute API 응답:', response);
+                setGeneratedEulogy(response.tribute || response);
+                alert('AI 추모사가 생성되었습니다.');
+            } catch (error) {
+                console.error('❌ 추모사 생성 실패:', error);
+                
+                // 에러 타입별 상세 메시지
+                if (error.code === 'ECONNABORTED') {
+                    alert('추모사 생성 시간이 초과되었습니다. AI 서버가 바쁠 수 있으니 잠시 후 다시 시도해주세요.');
+                } else if (error.response) {
+                    console.error('응답 상태:', error.response.status);
+                    console.error('응답 데이터:', error.response.data);
+                    
+                    if (error.response.status === 500) {
+                        alert('서버 오류로 인해 추모사 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+                    } else {
+                        alert(`추모사 생성에 실패했습니다. (오류 코드: ${error.response.status})`);
+                    }
+                } else if (error.request) {
+                    alert('서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.');
+                } else {
+                    alert('추모사 생성 중 예상치 못한 오류가 발생했습니다.');
+                }
+            } finally {
+                setIsEulogyLoading(false);
+            }
         }
     };
 
@@ -218,6 +305,13 @@ const MemorialConfig = () => {
 
     const handleRemoveEulogyKeyword = (keywordToRemove) => {
         setEulogyKeywords(eulogyKeywords.filter(keyword => keyword !== keywordToRemove));
+    };
+
+    const handleEulogyKeywordKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddEulogyKeyword();
+        }
     };
 
     
@@ -301,9 +395,8 @@ const MemorialConfig = () => {
                         boxShadow: '0 8px 32px rgba(44, 31, 20, 0.15)',
                         color: '#2C1F14'
                     }}>
-                        <Button
-                            variant="outline-secondary"
-                            size="sm"
+                        <button
+                            type="button"
                             onClick={() => {
                                 if (isUserAccess) {
                                     navigate(`/user-memorial/${id}`);
@@ -313,17 +406,27 @@ const MemorialConfig = () => {
                             }}
                             className="mb-3"
                             style={{
-                                borderRadius: '12px',
-                                padding: '8px 16px',
-                                border: '1px solid rgba(184, 134, 11, 0.3)',
-                                color: '#B8860B',
                                 display: 'flex',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                gap: '8px',
+                                height: '45px',
+                                padding: '0 20px',
+                                boxSizing: 'border-box',
+                                background: 'linear-gradient(135deg, #4A3728, #8B5A2B)',
+                                border: 'none',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '14px',
+                                boxShadow: '0 2px 8px rgba(74, 55, 40, 0.35)',
+                                transition: 'all 0.3s ease',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
                             }}
                         >
                             <i className="fas fa-arrow-left me-2"></i>
                             추모관으로 돌아가기
-                        </Button>
+                        </button>
 
                         <h1 className="mb-2" style={{ 
                             fontWeight: '700',
@@ -535,8 +638,8 @@ const MemorialConfig = () => {
                                                     }}
                                                 >
                                                     <option value="">성별 선택</option>
-                                                    <option value="MALE">남성</option>
-                                                    <option value="FEMALE">여성</option>
+                                                    <option value="남성">남성</option>
+                                                    <option value="여성">여성</option>
                                                 </Form.Select>
                                             </Form.Group>
 
@@ -671,20 +774,28 @@ const MemorialConfig = () => {
                                             marginBottom: '24px'
                                         }}>
                                             <i className="fas fa-info-circle me-2" style={{ color: '#B8860B' }}></i>
-                                            AI 기술을 활용하여 고인의 사진들로 감동적인 추모 영상을 제작합니다. 9장의 사진과 움직일 사진 1장을 선택하고, 키워드 5개를 입력해주세요.
+                                            AI 기술을 활용하여 고인의 사진들로 감동적인 추모 영상을 제작합니다. 9~15장의 사진과 움직일 사진 1장을 선택하고, 키워드 5개를 입력해주세요.
                                         </div>
 
                                         <Row>
                                             <Col md={6}>
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                        <i className="fas fa-images me-2" style={{ color: '#B8860B' }}></i>슬라이드쇼 사진 (9장)
-                                                    </Form.Label>
+                                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                                        <Form.Label className="fw-bold mb-0" style={{ color: '#2C1F14' }}>
+                                                            <i className="fas fa-images me-2" style={{ color: '#B8860B' }}></i>슬라이드쇼 사진 (9~15장)
+                                                        </Form.Label>
+                                                        <Badge 
+                                                            bg={slideshowPhotos.length >= 9 && slideshowPhotos.length <= 15 ? "success" : "warning"}
+                                                            style={{ fontSize: '0.8rem' }}
+                                                        >
+                                                            {slideshowPhotos.length}/15장 선택됨
+                                                        </Badge>
+                                                    </div>
                                                     <Form.Control
                                                         type="file"
                                                         multiple
                                                         accept="image/*"
-                                                        onChange={(e) => setSlideshowPhotos(Array.from(e.target.files).slice(0, 9))}
+                                                        onChange={(e) => setSlideshowPhotos(Array.from(e.target.files).slice(0, 15))}
                                                         style={{ 
                                                             borderRadius: '12px', 
                                                             padding: '12px 16px',
@@ -694,7 +805,9 @@ const MemorialConfig = () => {
                                                         }}
                                                     />
                                                     <Form.Text className="text-muted">
-                                                        영상에 포함될 9장의 사진을 선택하세요.
+                                                        영상에 포함될 9~15장의 사진을 선택하세요. 
+                                                        {slideshowPhotos.length < 9 && <span className="text-warning"> (최소 {9 - slideshowPhotos.length}장 더 필요)</span>}
+                                                        {slideshowPhotos.length > 15 && <span className="text-danger"> (최대 15장까지만 가능)</span>}
                                                     </Form.Text>
                                                 </Form.Group>
 
@@ -771,16 +884,18 @@ const MemorialConfig = () => {
                                                         fontWeight: '600',
                                                         boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
                                                     }}
-                                                    onClick={() => {
-                                                        const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
-                                                        if (memorialIndex !== -1) {
-                                                            dummyData.memorials._embedded.memorials[memorialIndex].videoUrl = generatedVideoUrl;
-                                                        }
-                                                        alert('영상이 등록되었습니다!');
-                                                        if (isUserAccess) {
-                                                            navigate(`/user-memorial/${id}`);
-                                                        } else {
-                                                            navigate(`/memorial/${id}`);
+                                                    onClick={async () => {
+                                                        try {
+                                                            await apiService.updateMemorial(id, { videoUrl: generatedVideoUrl });
+                                                            alert('영상이 등록되었습니다!');
+                                                            if (isUserAccess) {
+                                                                navigate(`/user-memorial/${id}`);
+                                                            } else {
+                                                                navigate(`/memorial/${id}`);
+                                                            }
+                                                        } catch (error) {
+                                                            console.error('Error updating memorial with video:', error);
+                                                            alert('영상 등록에 실패했습니다.');
                                                         }
                                                     }}
                                                 >
@@ -809,31 +924,68 @@ const MemorialConfig = () => {
                                         <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
                                             <i className="fas fa-tags me-2" style={{ color: '#B8860B' }}></i>키워드 (최대 5개)
                                         </Form.Label>
-                                        <div className="d-flex mb-2">
-                                            <Form.Control
-                                                type="text"
-                                                value={eulogyKeywordInput}
-                                                onChange={(e) => setEulogyKeywordInput(e.target.value)}
-                                                placeholder="키워드를 입력하세요"
-                                                style={{
-                                                    borderRadius: '12px 0 0 12px',
-                                                    padding: '12px 16px',
-                                                    border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                    background: 'rgba(255, 255, 255, 0.9)',
-                                                    color: '#2C1F14'
-                                                }}
-                                            />
+                                        <div className="d-flex align-items-center justify-content-between gap-3 mb-2">
+                                            {/* Left side: Input and Add button */}
+                                            <div className="d-flex align-items-center gap-2" style={{ maxWidth: '750px', flexGrow: 1 }}>
+                                                <Form.Control
+                                                    type="text"
+                                                    value={eulogyKeywordInput}
+                                                    onChange={(e) => setEulogyKeywordInput(e.target.value)}
+                                                    onKeyDown={handleEulogyKeywordKeyDown}
+                                                    placeholder="키워드를 입력하세요"
+                                                    style={{
+                                                        borderRadius: '12px',
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
+                                                />
+                                                <Button
+                                                    onClick={handleAddEulogyKeyword}
+                                                    style={{
+                                                        borderRadius: '12px',
+                                                        background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                        border: 'none',
+                                                        fontWeight: '600',
+                                                        boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                                                        flexShrink: 0
+                                                    }}
+                                                >
+                                                    추가
+                                                </Button>
+                                            </div>
+
+                                            {/* Right side: Generate button */}
                                             <Button
-                                                onClick={handleAddEulogyKeyword}
+                                                type="submit"
+                                                disabled={isEulogyLoading}
                                                 style={{
-                                                    borderRadius: '0 12px 12px 0',
-                                                    background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                    borderRadius: '12px',
+                                                    padding: '12px 24px',
+                                                    background: isEulogyLoading ? 
+                                                        '#6C757D' : 
+                                                        'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
                                                     border: 'none',
                                                     fontWeight: '600',
-                                                    boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
+                                                    boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                                                    opacity: isEulogyLoading ? 0.7 : 1,
+                                                    flexShrink: 0
                                                 }}
                                             >
-                                                추가
+                                                {isEulogyLoading ? (
+                                                    <>
+                                                        <div className="spinner-border spinner-border-sm me-2" role="status" style={{ width: '0.8rem', height: '0.8rem' }}>
+                                                            <span className="visually-hidden">Loading...</span>
+                                                        </div>
+                                                        처리 중...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-magic me-2"></i>
+                                                        추모사 생성
+                                                    </>
+                                                )}
                                             </Button>
                                         </div>
                                         <div className="d-flex flex-wrap gap-2 mb-3">
@@ -921,13 +1073,20 @@ const MemorialConfig = () => {
                                                 <div className="spinner-border" role="status" style={{ color: '#B8860B' }}>
                                                     <span className="visually-hidden">Loading...</span>
                                                 </div>
-                                                <p className="mt-2" style={{ color: '#2C1F14' }}>추모사를 생성 중입니다. 잠시만 기다려주세요...</p>
+                                                <p className="mt-2" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                                                    AI 추모사를 생성 중입니다...
+                                                </p>
+                                                <p className="mt-1" style={{ color: '#6C757D', fontSize: '0.9rem' }}>
+                                                    처리에 최대 1분 정도 소요될 수 있습니다.
+                                                </p>
                                             </div>
                                         )}
 
-                                        {generatedEulogy && (
-                                            <div className="mt-4">
-                                                <h5 className="fw-bold" style={{ color: '#2C1F14' }}>생성된 추모사</h5>
+                                        <div className="mt-4">
+                                                <div className="d-flex align-items-baseline mb-2">
+                                                    <h5 className="fw-bold mb-0" style={{ color: '#2C1F14' }}>추모사 내용</h5>
+                                                    <span className="ms-2" style={{ color: '#6c757d', fontSize: '0.85rem' }}>생성된 추모사를 확인하거나 추모사를 직접 수정할 수 있습니다</span>
+                                                </div>
                                                 <Form.Control
                                                     as="textarea"
                                                     rows={8}
@@ -942,33 +1101,7 @@ const MemorialConfig = () => {
                                                         color: '#2C1F14'
                                                     }}
                                                 />
-                                                <Button
-                                                    className="mt-2"
-                                                    style={{
-                                                        background: 'linear-gradient(135deg, #B8860B, #CD853F)',
-                                                        border: 'none',
-                                                        borderRadius: '12px',
-                                                        padding: '12px 24px',
-                                                        fontWeight: '600',
-                                                        boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
-                                                    }}
-                                                    onClick={() => {
-                                                        const memorialIndex = dummyData.memorials._embedded.memorials.findIndex(m => m.id === parseInt(id));
-                                                        if (memorialIndex !== -1) {
-                                                            dummyData.memorials._embedded.memorials[memorialIndex].eulogy = generatedEulogy;
-                                                        }
-                                                        alert('추모사가 등록되었습니다!');
-                                                        if (isUserAccess) {
-                                                            navigate(`/user-memorial/${id}`);
-                                                        } else {
-                                                            navigate(`/memorial/${id}`);
-                                                        }
-                                                    }}
-                                                >
-                                                    추모사 등록
-                                                </Button>
                                             </div>
-                                        )}
                                     </>
                                 )}
 
@@ -995,26 +1128,80 @@ const MemorialConfig = () => {
                                         <i className="fas fa-times me-2"></i>
                                         취소
                                     </Button>
+                                    {activeTab !== 'memorial' &&
                                     <Button
                                         type="submit"
+                                        disabled={isVideoLoading || isEulogyLoading}
                                         style={{
                                             borderRadius: '12px',
                                             padding: '12px 24px',
-                                            background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
+                                            background: (isVideoLoading || isEulogyLoading) ? 
+                                                '#6C757D' : 
+                                                'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
                                             border: 'none',
                                             fontWeight: '600',
-                                            boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
+                                            boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                                            opacity: (isVideoLoading || isEulogyLoading) ? 0.7 : 1
                                         }}
                                     >
-                                        <i className={`fas ${ 
-                                            activeTab === 'basic' ? 'fa-save' :
-                                            activeTab === 'video' ? 'fa-play' :
-                                            'fa-magic'
-                                        } me-2`}></i>
-                                        {activeTab === 'basic' ? '정보 수정' :
-                                         activeTab === 'video' ? '영상 생성' :
-                                         '추모사 생성'}
+                                        {(isVideoLoading || isEulogyLoading) ? (
+                                            <>
+                                                <div className="spinner-border spinner-border-sm me-2" role="status" style={{ width: '0.8rem', height: '0.8rem' }}>
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                                처리 중...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className={`fas ${ 
+                                                    activeTab === 'basic' ? 'fa-save' :
+                                                    activeTab === 'video' ? 'fa-play' :
+                                                    'fa-magic'
+                                                } me-2`}></i>
+                                                {activeTab === 'basic' ? '정보 수정' :
+                                                 activeTab === 'video' ? '영상 생성' :
+                                                 '추모사 생성'}
+                                            </>
+                                        )}
                                     </Button>
+                                    }
+                                    {activeTab === 'memorial' &&
+                                        <Button
+                                            disabled={isEulogyLoading}
+                                            style={{
+                                                background: isEulogyLoading ? '#6C757D' : 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                border: 'none',
+                                                borderRadius: '12px',
+                                                padding: '12px 24px',
+                                                fontWeight: '600',
+                                                boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                                                opacity: isEulogyLoading ? 0.7 : 1
+                                            }}
+                                            onClick={async () => {
+                                                if (!generatedEulogy.trim()) {
+                                                    alert('추모사를 생성해주세요!');
+                                                    return;
+                                                }
+                                                try {
+                                                    await apiService.updateTribute(id, { tribute: generatedEulogy });
+                                                    alert('추모사가 등록되었습니다!');
+                                                    
+                                                    // 추모사 등록 후 MemorialDetail 페이지로 이동하면서 새로고침 유도
+                                                    const timestamp = Date.now();
+                                                    if (isUserAccess) {
+                                                        navigate(`/user-memorial/${id}?updated=${timestamp}`);
+                                                    } else {
+                                                        navigate(`/memorial/${id}?updated=${timestamp}`);
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Error updating tribute:', error);
+                                                    alert('추모사 등록에 실패했습니다.');
+                                                }
+                                            }}
+                                        >
+                                            추모사 등록
+                                        </Button>
+                                    }
                                 </div>
                             </Form>
                         </Card.Body>
