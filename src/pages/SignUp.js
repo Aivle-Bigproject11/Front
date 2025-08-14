@@ -269,7 +269,7 @@ function SignUp() {
                   <label htmlFor="name">이름</label>
                   <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} onFocus={handleInputFocus} onBlur={handleInputBlur} required placeholder="이름 입력" />
                   <div className="feedback-wrapper">
-                    {<p className="unavailable-text" style={{ paddingLeft: 0, margin: '6px 0 0 0' }}></p>}
+                    
                   </div>
                 </div>
 
@@ -482,7 +482,6 @@ function SignUp() {
           flex-shrink: 0;
         }
         .feedback-wrapper {
-          height: 22px; 
         }
         .feedback-wrapper .available-text {
           padding-left: 50px;
@@ -514,8 +513,8 @@ function SignUp() {
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          min-height: 220px; 
-          max-height: 540px;
+          min-height: 200px; 
+          max-height: 500px;
         }
         .terms-title {
           font-size: 16px;
