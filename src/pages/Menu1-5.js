@@ -86,6 +86,7 @@ const Menu1_5 = () => {
           deceasedBirthOfDate: birthDate,
           deathDate: deathDate,
           deathDate_time: deathTime,
+          placeOfDeath: customer.address || ''
         };
         newFormData.ageAtDeath = calculateAge(newFormData.deceasedBirthOfDate, newFormData.deathDate);
         return newFormData;
@@ -375,6 +376,10 @@ const Menu1_5 = () => {
             {/* Column 2 */}
             <div className="form-column">
               <div className="form-group">
+                <label className="form-label">주소지</label>
+                <input type="text" name="placeOfDeath" value={formData.placeOfDeath} className={`form-input ${validationErrors.includes("placeOfDeath") ? "is-invalid" : ""}`} readOnly />
+              </div>
+              <div className="form-group">
                 <label className="form-label">생년월일</label>
                 <input
                   type="text"
@@ -433,10 +438,6 @@ const Menu1_5 = () => {
                     />
                   </Col>
                 </Row>
-              </div>
-              <div className="form-group">
-                <label className="form-label">주소지</label>
-                <input type="text" name="placeOfDeath" value={formData.placeOfDeath} onChange={handleChange} className={`form-input ${validationErrors.includes("placeOfDeath") ? "is-invalid" : ""}`} />
               </div>
               <div className="form-group">
                 <label className="form-label">향년</label>
