@@ -28,7 +28,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Check if the request was for login and if it has a custom header to skip redirect
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && originalRequest.headers['X-Skip-Auth-Redirect'] !== 'true') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -113,9 +115,50 @@ const realApiService = {
   getAnalyticsData: async () => (await api.get('/analytics')).data,
   getUsers: async () => (await api.get('/users')).data,
   createUser: async (data) => (await api.post('/users', data)).data,
+  getUserById: async (id) => (await api.get(`/users/${id}`)).data, 
   updateUser: async (id, data) => (await api.put(`/users/${id}`, data)).data,
+  updateUserPatch: async (id, data) => (await api.patch(`/users/${id}`, data)).data,
   deleteUser: async (id) => (await api.delete(`/users/${id}`)).data,
-};
+
+
+  // 직원 관련 API
+  createManager: (data) => api.post('/managers', data),
+  getManagerById: async (id) => (await api.get(`/managers/${id}`)).data, 
+  updateManagerPatch: async (id, managerData) => (await api.patch(`/managers/${id}`, managerData)).data,
+  // Manager login
+  loginManager: (credentials) => api.post('/managers/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
+
+
+  // 사용자 관련 API
+  createFamily: (data) => api.post('/families', data),
+  getFamilyById: async (id) => (await api.get(`/families/${id}`)).data,
+  updateFamilyPatch: async (id, data) => (await api.patch(`/families/${id}`, data)).data,
+  // User login
+  loginUser: (credentials) => api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
+
+ // Password verification
+  verifyPassword: async (loginId, password, userType) => {
+    try {
+      const credentials = { loginId, loginPassword: password }; // Use loginPassword for the key
+      let response;
+      if (userType === 'employee') {
+        response = await api.post('/managers/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } });
+      } else if (userType === 'user') {
+        response = await api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } });
+      } else {
+        // Handle unexpected userType or throw an error
+        console.error("Unknown userType for password verification:", userType);
+        return false;
+      }
+      // If the login endpoint returns 200 OK, it means the password is correct
+      return true;
+    } catch (error) {
+      // If the login endpoint returns an error (e.g., 401), it means the password is incorrect
+      console.error("Password verification failed using login endpoint:", error);
+      return false;
+    }
+  },
+}
 
 // --- 최종 서비스 객체 내보내기 ---
 const useMock = process.env.REACT_APP_API_MOCKING === 'true';

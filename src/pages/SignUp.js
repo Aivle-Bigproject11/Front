@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { apiService } from '../services/api';
 
 // 메인 SignUp 컴포넌트
 function SignUp() {
@@ -24,6 +25,7 @@ function SignUp() {
   const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [passwordsMatch, setPasswordsMatch] = useState(true);
   const [isEmailValid, setIsEmailValid] = useState(true);
+  const [isPhoneValid, setIsPhoneValid] = useState(true); // New state
 
   useEffect(() => {
     setAnimateCard(true);
@@ -44,6 +46,11 @@ function SignUp() {
   const validateEmail = (email) => {
     const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
+  };
+
+  const validatePhoneNumber = (phoneNumber) => {
+    const re = /^\d{3}-\d{4}-\d{4}$/;
+    return re.test(phoneNumber);
   };
 
   useEffect(() => {
@@ -80,26 +87,44 @@ function SignUp() {
       setShowPopup(true);
     } else {
       setIsIdAvailable(true);
-      setPopupMessage('사용 가능한 아이디입니다.');
-      setShowPopup(true);
     }
   };
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    if (value.length <= 11) {
-      setPhone(value);
+    let value = e.target.value.replace(/[^0-9]/g, ''); // Remove all non-digits
+    let formattedValue = '';
+
+    if (value.length > 0) {
+      formattedValue += value.substring(0, 3);
+      if (value.length > 3) {
+        formattedValue += '-' + value.substring(3, 7);
+        if (value.length > 7) {
+          formattedValue += '-' + value.substring(7, 11);
+        }
+      }
     }
+    setPhone(formattedValue);
+    setIsPhoneValid(validatePhoneNumber(formattedValue)); // Update validation state
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isIdAvailable !== true) {
       setPopupMessage('아이디 중복 확인을 해주세요.');
       setShowPopup(true);
       return;
     }
+    if (!name.trim()) {
+      setPopupMessage('이름을 입력해주세요.');
+      setShowPopup(true);
+      return;
+    }
     if (!validateEmail(email)) {
+      setPopupMessage('올바른 이메일 형식이 아닙니다.');
+      setShowPopup(true);
+      return;
+    }
+    if (!validatePhoneNumber(phone)) {
       return;
     }
     if (!validatePassword(password)) {
@@ -119,16 +144,57 @@ function SignUp() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setPopupMessage('회원가입이 완료되었습니다!');
-      setShowPopup(true);
-      navigate('/login'); 
-    }, 1500);
+
+    if (isEmployee) {
+      const managerData = {
+        email: email,
+        loginId: userId,
+        loginPassword: password,
+        name: name,
+        phone: phone,
+      };
+
+      try {
+        await apiService.createManager(managerData);
+        setPopupMessage('직원 회원가입이 완료되었습니다!');
+        setShowPopup(true);
+        // navigate('/login'); // Optionally navigate after popup confirmation
+      } catch (error) {
+        console.error("Manager creation failed:", error);
+        setPopupMessage('회원가입에 실패했습니다. 다시 시도해주세요.');
+        setShowPopup(true);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      const familyData = {
+        name: name,
+        loginId: userId,
+        loginPassword: password,
+        email: email,
+        phone: phone,
+      };
+
+      try {
+        await apiService.createFamily(familyData);
+        setPopupMessage('사용자 회원가입이 완료되었습니다!');
+        setShowPopup(true);
+        // navigate('/login'); // Optionally navigate after popup confirmation
+      } catch (error) {
+        console.error("Family creation failed:", error);
+        setPopupMessage('회원가입에 실패했습니다. 다시 시도해주세요.');
+        setShowPopup(true);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const closePopup = () => {
     setShowPopup(false);
+    if (popupMessage === '직원 회원가입이 완료되었습니다!' || popupMessage === '사용자 회원가입이 완료되었습니다!') {
+      navigate('/login');
+    }
   };
 
   const theme = {
@@ -202,6 +268,9 @@ function SignUp() {
                 <div className="signup-input-group">
                   <label htmlFor="name">이름</label>
                   <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} onFocus={handleInputFocus} onBlur={handleInputBlur} required placeholder="이름 입력" />
+                  <div className="feedback-wrapper">
+                    
+                  </div>
                 </div>
 
                 <div className="signup-input-group">
@@ -214,7 +283,10 @@ function SignUp() {
 
                 <div className="signup-input-group">
                   <label htmlFor="phone">전화번호</label>
-                  <input type="tel" id="phone" value={phone} onChange={handlePhoneChange} placeholder="'-' 없이 숫자 11자리 입력" maxLength="11" onFocus={handleInputFocus} onBlur={handleInputBlur} required />
+                  <input type="tel" id="phone" value={phone} onChange={handlePhoneChange} placeholder="'-' 없이 숫자 11자리 입력" onFocus={handleInputFocus} onBlur={handleInputBlur} required />
+                  <div className="feedback-wrapper">
+                    {!isPhoneValid && phone && <p className="unavailable-text" style={{ paddingLeft: 0, margin: '6px 0 0 0' }}>전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)</p>}
+                  </div>
                 </div>
               </div>
 
@@ -305,7 +377,7 @@ function SignUp() {
           background: rgba(184, 134, 11, 0.1);
           box-shadow: 0 12px 40px rgba(44, 31, 20, 0.25);
           backdrop-filter: blur(10px);
-          padding: 24px;
+          padding: 20px;
           border-radius: 28px;
           border: 1px solid rgba(184, 134, 11, 0.2);
           transform: translateY(30px);
@@ -331,7 +403,7 @@ function SignUp() {
           display: flex;
           flex-direction: column;
           height: 100%; 
-          padding: 25px 0;
+          padding: 15px 0;
         }
         .header {
           width: 100%;
@@ -342,7 +414,7 @@ function SignUp() {
           flex-shrink: 0;
         }
         .header h1 {
-          font-size: 28px;
+          font-size: 20px;
           font-weight: 700;
         }
         .form-container {
@@ -354,7 +426,13 @@ function SignUp() {
           overflow-y: hidden;
           min-height: 0;
         }
-        .input-section, .terms-section {
+        .input-section {
+          flex: 1;
+          min-width: 320px;
+          margin-left: 15px;
+          margin-right: 40px; /* Adjust as needed */
+        }
+        .terms-section {
           flex: 1;
           min-width: 320px;
         }
@@ -379,10 +457,10 @@ function SignUp() {
           width: 100%;
           padding: 0 20px;
           border: 2px solid rgba(184, 134, 11, 0.35);
-          border-radius: 12px;
-          font-size: 16px;
+          border-radius: 8px;
+          font-size: 14px;
           box-sizing: border-box;
-          height: 52px;
+          height: 40px;
           transition: all 0.3s ease;
           outline: none;
           background-color: rgba(255, 255, 255, 0.95);
@@ -404,7 +482,6 @@ function SignUp() {
           flex-shrink: 0;
         }
         .feedback-wrapper {
-          height: 22px; 
         }
         .feedback-wrapper .available-text {
           padding-left: 50px;
@@ -436,8 +513,8 @@ function SignUp() {
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          min-height: 220px; 
-          max-height: 600px;
+          min-height: 200px; 
+          max-height: 500px;
         }
         .terms-title {
           font-size: 16px;
@@ -549,7 +626,7 @@ function SignUp() {
           border: none;
           color: #B8860B;
           text-decoration: none;
-          font-size: 14px;
+          font-size: 12px;
           font-weight: 600;
           cursor: pointer;
           padding: 5px;
