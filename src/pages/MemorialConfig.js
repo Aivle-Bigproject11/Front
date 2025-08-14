@@ -76,6 +76,7 @@ const MemorialConfig = () => {
                 const memorialData = response;
 
                 setMemorial(memorialData);
+                setGeneratedEulogy(memorialData.tribute || '');
                 setFormData({
                     name: memorialData.name,
                     age: memorialData.age,
@@ -304,6 +305,13 @@ const MemorialConfig = () => {
 
     const handleRemoveEulogyKeyword = (keywordToRemove) => {
         setEulogyKeywords(eulogyKeywords.filter(keyword => keyword !== keywordToRemove));
+    };
+
+    const handleEulogyKeywordKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddEulogyKeyword();
+        }
     };
 
     
@@ -912,6 +920,7 @@ const MemorialConfig = () => {
                                                 type="text"
                                                 value={eulogyKeywordInput}
                                                 onChange={(e) => setEulogyKeywordInput(e.target.value)}
+                                                onKeyDown={handleEulogyKeywordKeyDown}
                                                 placeholder="키워드를 입력하세요"
                                                 style={{
                                                     borderRadius: '12px 0 0 12px',
@@ -1028,9 +1037,11 @@ const MemorialConfig = () => {
                                             </div>
                                         )}
 
-                                        {generatedEulogy && (
-                                            <div className="mt-4">
-                                                <h5 className="fw-bold" style={{ color: '#2C1F14' }}>생성된 추모사</h5>
+                                        <div className="mt-4">
+                                                <div className="d-flex align-items-baseline mb-2">
+                                                    <h5 className="fw-bold mb-0" style={{ color: '#2C1F14' }}>추모사 내용</h5>
+                                                    <span className="ms-2" style={{ color: '#6c757d', fontSize: '0.85rem' }}>생성된 추모사를 확인하거나 추모사를 직접 수정할 수 있습니다</span>
+                                                </div>
                                                 <Form.Control
                                                     as="textarea"
                                                     rows={8}
@@ -1078,7 +1089,6 @@ const MemorialConfig = () => {
                                                     추모사 등록
                                                 </Button>
                                             </div>
-                                        )}
                                     </>
                                 )}
 
@@ -1122,7 +1132,7 @@ const MemorialConfig = () => {
                                     >
                                         {(isVideoLoading || isEulogyLoading) ? (
                                             <>
-                                                <div className="spinner-border spinner-border-sm me-2" role="status">
+                                                <div className="spinner-border spinner-border-sm me-2" role="status" style={{ width: '0.8rem', height: '0.8rem' }}>
                                                     <span className="visually-hidden">Loading...</span>
                                                 </div>
                                                 처리 중...
