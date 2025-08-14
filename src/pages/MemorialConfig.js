@@ -76,6 +76,7 @@ const MemorialConfig = () => {
                 const memorialData = response;
 
                 setMemorial(memorialData);
+                setGeneratedEulogy(memorialData.tribute || '');
                 setFormData({
                     name: memorialData.name,
                     age: memorialData.age,
@@ -306,6 +307,13 @@ const MemorialConfig = () => {
         setEulogyKeywords(eulogyKeywords.filter(keyword => keyword !== keywordToRemove));
     };
 
+    const handleEulogyKeywordKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddEulogyKeyword();
+        }
+    };
+
     
 
     if (accessChecking || loading) {
@@ -387,9 +395,8 @@ const MemorialConfig = () => {
                         boxShadow: '0 8px 32px rgba(44, 31, 20, 0.15)',
                         color: '#2C1F14'
                     }}>
-                        <Button
-                            variant="outline-secondary"
-                            size="sm"
+                        <button
+                            type="button"
                             onClick={() => {
                                 if (isUserAccess) {
                                     navigate(`/user-memorial/${id}`);
@@ -399,17 +406,27 @@ const MemorialConfig = () => {
                             }}
                             className="mb-3"
                             style={{
-                                borderRadius: '12px',
-                                padding: '8px 16px',
-                                border: '1px solid rgba(184, 134, 11, 0.3)',
-                                color: '#B8860B',
                                 display: 'flex',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                gap: '8px',
+                                height: '45px',
+                                padding: '0 20px',
+                                boxSizing: 'border-box',
+                                background: 'linear-gradient(135deg, #4A3728, #8B5A2B)',
+                                border: 'none',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '14px',
+                                boxShadow: '0 2px 8px rgba(74, 55, 40, 0.35)',
+                                transition: 'all 0.3s ease',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
                             }}
                         >
                             <i className="fas fa-arrow-left me-2"></i>
                             추모관으로 돌아가기
-                        </Button>
+                        </button>
 
                         <h1 className="mb-2" style={{ 
                             fontWeight: '700',
@@ -907,31 +924,68 @@ const MemorialConfig = () => {
                                         <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
                                             <i className="fas fa-tags me-2" style={{ color: '#B8860B' }}></i>키워드 (최대 5개)
                                         </Form.Label>
-                                        <div className="d-flex mb-2">
-                                            <Form.Control
-                                                type="text"
-                                                value={eulogyKeywordInput}
-                                                onChange={(e) => setEulogyKeywordInput(e.target.value)}
-                                                placeholder="키워드를 입력하세요"
-                                                style={{
-                                                    borderRadius: '12px 0 0 12px',
-                                                    padding: '12px 16px',
-                                                    border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                    background: 'rgba(255, 255, 255, 0.9)',
-                                                    color: '#2C1F14'
-                                                }}
-                                            />
+                                        <div className="d-flex align-items-center justify-content-between gap-3 mb-2">
+                                            {/* Left side: Input and Add button */}
+                                            <div className="d-flex align-items-center gap-2" style={{ maxWidth: '750px', flexGrow: 1 }}>
+                                                <Form.Control
+                                                    type="text"
+                                                    value={eulogyKeywordInput}
+                                                    onChange={(e) => setEulogyKeywordInput(e.target.value)}
+                                                    onKeyDown={handleEulogyKeywordKeyDown}
+                                                    placeholder="키워드를 입력하세요"
+                                                    style={{
+                                                        borderRadius: '12px',
+                                                        padding: '12px 16px',
+                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                        background: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2C1F14'
+                                                    }}
+                                                />
+                                                <Button
+                                                    onClick={handleAddEulogyKeyword}
+                                                    style={{
+                                                        borderRadius: '12px',
+                                                        background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                        border: 'none',
+                                                        fontWeight: '600',
+                                                        boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                                                        flexShrink: 0
+                                                    }}
+                                                >
+                                                    추가
+                                                </Button>
+                                            </div>
+
+                                            {/* Right side: Generate button */}
                                             <Button
-                                                onClick={handleAddEulogyKeyword}
+                                                type="submit"
+                                                disabled={isEulogyLoading}
                                                 style={{
-                                                    borderRadius: '0 12px 12px 0',
-                                                    background: 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                    borderRadius: '12px',
+                                                    padding: '12px 24px',
+                                                    background: isEulogyLoading ? 
+                                                        '#6C757D' : 
+                                                        'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
                                                     border: 'none',
                                                     fontWeight: '600',
-                                                    boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)'
+                                                    boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                                                    opacity: isEulogyLoading ? 0.7 : 1,
+                                                    flexShrink: 0
                                                 }}
                                             >
-                                                추가
+                                                {isEulogyLoading ? (
+                                                    <>
+                                                        <div className="spinner-border spinner-border-sm me-2" role="status" style={{ width: '0.8rem', height: '0.8rem' }}>
+                                                            <span className="visually-hidden">Loading...</span>
+                                                        </div>
+                                                        처리 중...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-magic me-2"></i>
+                                                        추모사 생성
+                                                    </>
+                                                )}
                                             </Button>
                                         </div>
                                         <div className="d-flex flex-wrap gap-2 mb-3">
@@ -1028,9 +1082,11 @@ const MemorialConfig = () => {
                                             </div>
                                         )}
 
-                                        {generatedEulogy && (
-                                            <div className="mt-4">
-                                                <h5 className="fw-bold" style={{ color: '#2C1F14' }}>생성된 추모사</h5>
+                                        <div className="mt-4">
+                                                <div className="d-flex align-items-baseline mb-2">
+                                                    <h5 className="fw-bold mb-0" style={{ color: '#2C1F14' }}>추모사 내용</h5>
+                                                    <span className="ms-2" style={{ color: '#6c757d', fontSize: '0.85rem' }}>생성된 추모사를 확인하거나 추모사를 직접 수정할 수 있습니다</span>
+                                                </div>
                                                 <Form.Control
                                                     as="textarea"
                                                     rows={8}
@@ -1045,40 +1101,7 @@ const MemorialConfig = () => {
                                                         color: '#2C1F14'
                                                     }}
                                                 />
-                                                <Button
-                                                    disabled={isEulogyLoading}
-                                                    className="mt-2"
-                                                    style={{
-                                                        background: isEulogyLoading ? '#6C757D' : 'linear-gradient(135deg, #B8860B, #CD853F)',
-                                                        border: 'none',
-                                                        borderRadius: '12px',
-                                                        padding: '12px 24px',
-                                                        fontWeight: '600',
-                                                        boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
-                                                        opacity: isEulogyLoading ? 0.7 : 1
-                                                    }}
-                                                    onClick={async () => {
-                                                        try {
-                                                            await apiService.updateTribute(id, { tribute: generatedEulogy });
-                                                            alert('추모사가 등록되었습니다!');
-                                                            
-                                                            // 추모사 등록 후 MemorialDetail 페이지로 이동하면서 새로고침 유도
-                                                            const timestamp = Date.now();
-                                                            if (isUserAccess) {
-                                                                navigate(`/user-memorial/${id}?updated=${timestamp}`);
-                                                            } else {
-                                                                navigate(`/memorial/${id}?updated=${timestamp}`);
-                                                            }
-                                                        } catch (error) {
-                                                            console.error('Error updating tribute:', error);
-                                                            alert('추모사 등록에 실패했습니다.');
-                                                        }
-                                                    }}
-                                                >
-                                                    추모사 등록
-                                                </Button>
                                             </div>
-                                        )}
                                     </>
                                 )}
 
@@ -1105,6 +1128,7 @@ const MemorialConfig = () => {
                                         <i className="fas fa-times me-2"></i>
                                         취소
                                     </Button>
+                                    {activeTab !== 'memorial' &&
                                     <Button
                                         type="submit"
                                         disabled={isVideoLoading || isEulogyLoading}
@@ -1122,7 +1146,7 @@ const MemorialConfig = () => {
                                     >
                                         {(isVideoLoading || isEulogyLoading) ? (
                                             <>
-                                                <div className="spinner-border spinner-border-sm me-2" role="status">
+                                                <div className="spinner-border spinner-border-sm me-2" role="status" style={{ width: '0.8rem', height: '0.8rem' }}>
                                                     <span className="visually-hidden">Loading...</span>
                                                 </div>
                                                 처리 중...
@@ -1140,6 +1164,44 @@ const MemorialConfig = () => {
                                             </>
                                         )}
                                     </Button>
+                                    }
+                                    {activeTab === 'memorial' &&
+                                        <Button
+                                            disabled={isEulogyLoading}
+                                            style={{
+                                                background: isEulogyLoading ? '#6C757D' : 'linear-gradient(135deg, #B8860B, #CD853F)',
+                                                border: 'none',
+                                                borderRadius: '12px',
+                                                padding: '12px 24px',
+                                                fontWeight: '600',
+                                                boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                                                opacity: isEulogyLoading ? 0.7 : 1
+                                            }}
+                                            onClick={async () => {
+                                                if (!generatedEulogy.trim()) {
+                                                    alert('추모사를 생성해주세요!');
+                                                    return;
+                                                }
+                                                try {
+                                                    await apiService.updateTribute(id, { tribute: generatedEulogy });
+                                                    alert('추모사가 등록되었습니다!');
+                                                    
+                                                    // 추모사 등록 후 MemorialDetail 페이지로 이동하면서 새로고침 유도
+                                                    const timestamp = Date.now();
+                                                    if (isUserAccess) {
+                                                        navigate(`/user-memorial/${id}?updated=${timestamp}`);
+                                                    } else {
+                                                        navigate(`/memorial/${id}?updated=${timestamp}`);
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Error updating tribute:', error);
+                                                    alert('추모사 등록에 실패했습니다.');
+                                                }
+                                            }}
+                                        >
+                                            추모사 등록
+                                        </Button>
+                                    }
                                 </div>
                             </Form>
                         </Card.Body>
