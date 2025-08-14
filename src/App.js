@@ -63,7 +63,7 @@ function App() {
                             <Route path="/menu3" element={<NavbarWrapper><Menu3 /></NavbarWrapper>} />
                             <Route path="/menu4" element={<NavbarWrapper><Menu4 /></NavbarWrapper>} />
                             <Route path="/menu5" element={<NavbarWrapper><Menu5 /></NavbarWrapper>} />
-                            <Route path="/menu5_1" element={<NavbarWrapper><Menu5_1 /></NavbarWrapper>} />
+                            <Route path="/menu5_1/:id" element={<NavbarWrapper><Menu5_1 /></NavbarWrapper>} />
                             <Route path="/menu5_2" element={<NavbarWrapper><Menu5_2 /></NavbarWrapper>} />
                             <Route path="/memorial/:id" element={<NavbarWrapper><MemorialDetail /></NavbarWrapper>} />
                             <Route path="/memorial/:id/settings" element={<NavbarWrapper><MemorialConfig /></NavbarWrapper>} />
