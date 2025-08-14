@@ -300,7 +300,7 @@ const Menu3 = () => {
                                                         <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
                                                         <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
                                                         <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
-                                                        <Col sm={12}><strong>질병:</strong> {customer.diseaseList && customer.diseaseList.length > 0 ? customer.diseaseList.join(', ') : '없음'}</Col>
+                                                        <Col sm={12}><strong>질병:</strong> {customer.disease && customer.disease.length > 0 ? customer.disease.join(', ') : '없음'}</Col>
                                                     </Row>
                                                 </Col>
                                                 <Col md="auto" className="text-center text-md-end"><Button variant="secondary" size="sm" onClick={() => handleHistoryClick(customer)}>발송기록</Button></Col>
