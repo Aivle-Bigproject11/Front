@@ -25,7 +25,6 @@ const Menu3 = () => {
     
     const [isEditing, setIsEditing] = useState(false);
 
-    // === 데이터 로딩 및 필터링 로직 (useEffect) ===
     useEffect(() => {
         setAnimateCard(true);
     }, []);
@@ -38,12 +37,6 @@ const Menu3 = () => {
             ...prev,
             [name]: checked ? [value] : []
         }));
-    };
-
-    const isDetailedFilterEmpty = (filters) => {
-        if (filters.id || filters.name || filters.age) return false;
-        if (filters.gender.length > 0 || filters.disease.length > 0 || filters.isMarried.length > 0 || filters.hasChildren.length > 0) return false;
-        return true;
     };
 
     const formatKST = (dateString) => {
@@ -66,32 +59,56 @@ const Menu3 = () => {
         return formatter.format(date);
     };
 
+    const formatPhone = (phone) => {
+        if (!phone) return '정보 없음';
+        const cleaned = ('' + phone).replace(/\D/g, '');
+        const match = cleaned.match(/^(01[016789]{1}|02|0[3-9]{1}[0-9]{1})(\d{3,4})(\d{4})$/);
+        if (match) {
+            return [match[1], match[2], match[3]].join('-');
+        }
+        return phone;
+    };
+
     const handleSearch = async () => {
         setLoading(true);
         setError(null);
         setFilteredCustomers([]);
         try {
             let response;
-            if (isDetailedFilterEmpty(filters)) {
+            const apiParams = {
+                ageGroup: filters.age || undefined,
+                disease: filters.disease.length > 0 ? filters.disease[0] : undefined,
+                isMarried: filters.isMarried.length > 0 ? (filters.isMarried[0] === '기혼') : undefined,
+                hasChildren: filters.hasChildren.length > 0 ? (filters.hasChildren[0] === '유') : undefined,
+            };
+            Object.keys(apiParams).forEach(key => apiParams[key] === undefined && delete apiParams[key]);
+            
+            const hasApiFilters = Object.keys(apiParams).length > 0;
+
+            if (!hasApiFilters && !filters.id && !filters.name && filters.gender.length === 0) {
+                // 모든 필터가 비어있으면 전체 조회
                 response = await recommendationService.getAllCustomers();
             } else {
-                const apiParams = {
-                    ageGroup: filters.age || undefined,
-                    gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
-                    disease: filters.disease.length > 0 ? filters.disease[0] : undefined,
-                    isMarried: filters.isMarried.length > 0 ? (filters.isMarried[0] === '기혼') : undefined,
-                    hasChildren: filters.hasChildren.length > 0 ? (filters.hasChildren[0] === '유') : undefined,
-                };
-                Object.keys(apiParams).forEach(key => apiParams[key] === undefined && delete apiParams[key]);
+                // 상세 필터가 하나라도 있으면 필터 조회 API 호출
                 response = await recommendationService.getFilteredCustomers(apiParams);
             }
+
             let customers = response.data;
+            
+            // 프론트엔드에서 id, name, gender 필터링 적용
             if (filters.id) {
                 customers = customers.filter(c => String(c.id).includes(filters.id));
             }
             if (filters.name) {
                 customers = customers.filter(c => c.name.toLowerCase().includes(filters.name.toLowerCase()));
             }
+            if (filters.gender.length > 0) {
+                customers = customers.filter(c => {
+                    if (!c.gender) return false;
+                    return filters.gender.some(filterGender => c.gender.startsWith(filterGender));
+                });
+            }
+
             setFilteredCustomers(customers);
         } catch (err) {
             setError("데이터 조회에 실패했습니다. 잠시 후 다시 시도해주세요.");
@@ -212,7 +229,7 @@ const Menu3 = () => {
         }
     };
 
-    if (error) return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}><h2 style={{color: 'red'}}>{error}</h2></div>;
+    if (error && !isSearched) return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}><h2 style={{color: 'red'}}>{error}</h2></div>;
 
     return (
         <>
@@ -246,7 +263,10 @@ const Menu3 = () => {
                                         </Form.Select>
                                     </Col>
                                 </Row>
-                                <Button className="btn-search" onClick={handleSearch}><Search size={18} className="me-2" />고객 조회</Button>
+                                <Button className="btn-search" onClick={handleSearch} disabled={loading}>
+                                    {loading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2"/> : <Search size={18} className="me-2" />}
+                                    {loading ? '조회 중...' : '고객 조회'}
+                                </Button>
                             </Form>
                         </div>
                     </div>
@@ -258,9 +278,10 @@ const Menu3 = () => {
                         </div>
                         
                         <div className="content-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px' }}>
-                           {/* 고객 목록 렌더링 */}
-                           {loading ? (
+                            {loading ? (
                                 <div className="d-flex justify-content-center align-items-center h-100"><Spinner animation="border" style={{ color: '#B8860B' }}/></div>
+                            ) : error ? (
+                                <div className="d-flex justify-content-center align-items-center h-100 text-center text-danger">{error}</div>
                             ) : !isSearched ? (
                                 <div className="d-flex justify-content-center align-items-center h-100 text-center text-muted">
                                     <div><Search size={48} className="mb-3" /><p>좌측 필터에서 조건을 선택하고<br/>'고객 조회' 버튼을 눌러주세요.</p></div>
@@ -270,12 +291,12 @@ const Menu3 = () => {
                                     <Card key={customer.id} className="mb-3" style={{ background: 'rgba(253, 251, 243, 0.92)', border: '1px solid rgba(184, 134, 11, 0.2)' }}>
                                         <Card.Body>
                                             <Row className="align-items-center">
-                                                <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>고객ID: {customer.id}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
+                                                                                                <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>고객고유번호: {customer.id}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
                                                 <Col>
                                                     <Row>
                                                         <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthDate?.split('T')[0]}</Col>
                                                         <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
-                                                        <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>연락처:</strong> {formatPhone(customer.phone)}</Col>
                                                         <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
                                                         <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
                                                         <Col sm={12} className="mb-2"><strong>가족:</strong> {getFamilyInfo(customer)}</Col>
@@ -338,12 +359,12 @@ const Menu3 = () => {
                                                         }
 
                                                         return (
-                                                            <div key={history.id} className="mb-4">
+                                                            <div key={history.id || history.createMessageDate} className="mb-4">
                                                                 <h6><strong>발송일시:</strong> {formatKST(history.createMessageDate)}</h6>
                                                                 {recommendedServices.length > 0 && (
                                                                     <div className="d-flex gap-2 my-2">
                                                                         {recommendedServices.map(service => (
-                                                                            <img key={service.serviceName} src={service.imageUrl} alt={service.serviceName} style={{width: '40%', borderRadius: '8px', border: '1px solid #ddd'}} //이미지 크기 
+                                                                            <img key={service.serviceName} src={service.imageUrl} alt={service.serviceName} style={{width: '40%', borderRadius: '8px', border: '1px solid #ddd'}}
                                                                                 onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/300x200/EEE/333?text=Image+Error'; }} />
                                                                         ))}
                                                                     </div>

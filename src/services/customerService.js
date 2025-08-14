@@ -1,4 +1,5 @@
 // src/services/customerService.js
+import api from './api'; 
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8088';
 
@@ -76,131 +77,20 @@ export const mockCustomers = [
 
 // API 호출 함수들
 export const customerService = {
-  // 모든 고객 조회
-  getAllCustomers: async () => {
-    try {
-      // const response = await fetch(`${API_BASE_URL}/customers`);
-      // if (!response.ok) throw new Error('Failed to fetch customers');
-      // return await response.json();
-      
-      // Mock 데이터 반환 (개발용)
-      return new Promise(resolve => {
-        setTimeout(() => resolve(mockCustomers), 500);
-      });
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-      throw error;
-    }
-  },
+  // 1. 모든 고객 조회 
+  getAllCustomers: () => api.get('/customerProfiles'),
 
-  // 특정 고객 조회
-  getCustomerById: async (id) => {
-    try {
-      // const response = await fetch(`${API_BASE_URL}/customers/${id}`);
-      // if (!response.ok) throw new Error('Failed to fetch customer');
-      // return await response.json();
-      
-      // Mock 데이터 반환 (개발용)
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const customer = mockCustomers.find(c => c.id === parseInt(id));
-          resolve(customer);
-        }, 300);
-      });
-    } catch (error) {
-      console.error('Error fetching customer:', error);
-      throw error;
-    }
-  },
+  // 2. 특정 고객 조회 
+  getCustomerById: (id) => api.get(`/customerProfiles/${id}`),
 
-  // 고객 생성
-  createCustomer: async (customerData) => {
-    try {
-      // const response = await fetch(`${API_BASE_URL}/customers`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(customerData),
-      // });
-      // if (!response.ok) throw new Error('Failed to create customer');
-      // return await response.json();
-      
-      // Mock 데이터 반환 (개발용)
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const newCustomer = {
-            ...customerData,
-            id: Math.max(...mockCustomers.map(c => c.id)) + 1,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          mockCustomers.push(newCustomer);
-          resolve(newCustomer);
-        }, 500);
-      });
-    } catch (error) {
-      console.error('Error creating customer:', error);
-      throw error;
-    }
-  },
+  // 3. 고객 추가 
+  createCustomer: (customerData) => api.post('/customerProfiles', customerData),
 
-  // 고객 정보 업데이트
-  updateCustomer: async (id, customerData) => {
-    try {
-      // const response = await fetch(`${API_BASE_URL}/customers/${id}`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(customerData),
-      // });
-      // if (!response.ok) throw new Error('Failed to update customer');
-      // return await response.json();
-      
-      // Mock 데이터 반환 (개발용)
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const index = mockCustomers.findIndex(c => c.id === parseInt(id));
-          if (index !== -1) {
-            mockCustomers[index] = {
-              ...mockCustomers[index],
-              ...customerData,
-              updatedAt: new Date().toISOString()
-            };
-            resolve(mockCustomers[index]);
-          }
-        }, 500);
-      });
-    } catch (error) {
-      console.error('Error updating customer:', error);
-      throw error;
-    }
-  },
+  // 4. 고객 정보 수정
+  updateCustomer: (id, customerData) => api.patch(`/customerProfiles/${id}`, customerData),
 
-  // 고객 삭제
-  deleteCustomer: async (id) => {
-    try {
-      // const response = await fetch(`${API_BASE_URL}/customers/${id}`, {
-      //   method: 'DELETE',
-      // });
-      // if (!response.ok) throw new Error('Failed to delete customer');
-      
-      // Mock 데이터 반환 (개발용)
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const index = mockCustomers.findIndex(c => c.id === parseInt(id));
-          if (index !== -1) {
-            mockCustomers.splice(index, 1);
-          }
-          resolve({ success: true });
-        }, 300);
-      });
-    } catch (error) {
-      console.error('Error deleting customer:', error);
-      throw error;
-    }
-  },
+  // 5. 고객 삭제 
+  deleteCustomer: (id) => api.delete(`/customerProfiles/${id}`),
 
   // 서류 상태 업데이트
   updateDocumentStatus: async (customerId, docType, isCompleted) => {
