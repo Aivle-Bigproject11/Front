@@ -36,13 +36,19 @@ const Menu5 = () => {
     };
 
     const maskRrn = (rrn) => {
-        if (!rrn || typeof rrn !== 'string' || !rrn.includes('-')) return '정보 없음';
-        const parts = rrn.split('-');
-      if (parts.length !== 2 || parts[0].length !== 6 || parts[1].length < 1) {
-            return rrn; 
+        if (!rrn || typeof rrn !== 'string' || rrn.length < 6) return '정보 없음';
+        // 마지막 6자리를 '*'로 마스킹합니다.
+        return rrn.substring(0, rrn.length - 6) + '******';
+    };
+
+    const formatPhone = (phone) => {
+        if (!phone) return '정보 없음';
+        const cleaned = ('' + phone).replace(/\D/g, '');
+        const match = cleaned.match(/^(01[016789]{1}|02|0[3-9]{1}[0-9]{1})(\d{3,4})(\d{4})$/);
+        if (match) {
+            return [match[1], match[2], match[3]].join('-');
         }
-        const firstDigitOfBack = parts[1].substring(0, 1);
-        return `${parts[0]}-${firstDigitOfBack}******`;
+        return phone;
     };
 
     const handleSearch = async () => {
@@ -195,7 +201,7 @@ const Menu5 = () => {
                                    <Card.Body>
                                        <Row className="align-items-center">
                                            <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3">
-                                               <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>{customer.id}</p>
+                                               <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>고객고유번호: {customer.id}</p>
                                                <h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5>
                                            </Col>
                                            <Col md={7}>
@@ -203,7 +209,7 @@ const Menu5 = () => {
                                                    <Col sm={6} className="mb-2"><strong>생년월일:</strong> {formatDate(customer.birthDate)} (만 {customer.age}세)</Col>
                                                    <Col sm={6} className="mb-2"><strong>주민등록번호:</strong> {maskRrn(customer.rrn)}</Col>
                                                    <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
-                                                   <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
+                                                   <Col sm={6} className="mb-2"><strong>연락처:</strong> {formatPhone(customer.phone)}</Col>
                                                    <Col sm={6} className="mb-2"><strong>이메일:</strong> {customer.email || '정보 없음'}</Col>
                                                    <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
                                                    <Col sm={12} className="mb-2"><strong>주소:</strong> {customer.address}</Col>
