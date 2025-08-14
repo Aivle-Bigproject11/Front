@@ -105,6 +105,13 @@ const realApiService = {
   updateComment: async (commentId, data) => (await api.patch(`/comments/${commentId}`, data)).data,
   deleteComment: async (commentId) => (await api.delete(`/comments/${commentId}`)).data,
 
+  // 유가족 관리 Service
+  getFamilies: async () => (await api.get('/families')).data,
+  getFamily: async (id) => (await api.get(`/families/${id}`)).data,
+  createFamily: async (data) => (await api.post('/families', data)).data,
+  approveFamily: async (familyId, data) => (await api.post(`/families/${familyId}/approve`, data)).data,
+  deleteFamily: async (id) => (await api.delete(`/families/${id}`)).data,
+
   // Login/User-related Service
   // 참고: API 명세에 없어 추측하여 작성되었습니다. 실제 엔드포인트로 수정이 필요할 수 있습니다.
   getUserMemorialHalls: async (userId) => (await api.get(`/users/${userId}/memorials`)).data,

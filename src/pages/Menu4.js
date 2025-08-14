@@ -53,8 +53,7 @@ const Menu4 = () => {
           const memorialsWithStatus = await Promise.all(
             memorialsList.map(async (memorial) => {
               try {
-                const detailResponse = await apiService.get(`/memorials/${memorial.id}/detail`);
-                const detailData = detailResponse.data;
+                const detailData = await apiService.getMemorialDetails(memorial.id);
                 
                 return {
                   ...memorial,
