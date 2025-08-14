@@ -162,4 +162,13 @@ const GuestLayout = ({ children }) => {
     return children;
 };
 
+const NavbarWrapper = ({ children }) => {
+    return (
+        <>
+            <Navbar />
+            {children}
+        </>
+    );
+};
+
 export default App;
