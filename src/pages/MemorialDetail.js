@@ -428,6 +428,20 @@ const MemorialDetail = () => {
     }
   };
 
+  const handleCopyInviteCode = async () => {
+    if (memorial && memorial.memorialId) {
+      try {
+        await navigator.clipboard.writeText(memorial.memorialId);
+        alert('추모관 초대코드가 복사되었습니다!');
+      } catch (err) {
+        console.error('클립보드 복사 실패:', err);
+        alert('클립보드 복사에 실패했습니다.');
+      }
+    } else {
+      alert('초대 코드를 찾을 수 없습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="page-wrapper" style={{
@@ -1056,6 +1070,7 @@ const MemorialDetail = () => {
               <Card.Body className="text-center p-3">
                 <Button 
                   className="w-100"
+                  onClick={handleCopyInviteCode}
                   style={{
                     borderRadius: '12px',
                     background: 'linear-gradient(135deg, #b8860b, #965a25)',
@@ -1066,7 +1081,7 @@ const MemorialDetail = () => {
                   }}
                 >
                   <i className="fas fa-share-alt me-2"></i>
-                  공유하기
+                  추모관 초대코드 복사하기
                 </Button>
               </Card.Body>
             </Card>
