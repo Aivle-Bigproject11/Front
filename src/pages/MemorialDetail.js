@@ -12,6 +12,7 @@ const MemorialDetail = () => {
   const { user } = useAuth();
   const videoPanelRef = useRef(null);
   const photoPanelRef = useRef(null);
+  const rightPanelRef = useRef(null);
   
   // 모든 useState 훅을 먼저 호출
   const [memorial, setMemorial] = useState(null);
@@ -126,12 +127,14 @@ const MemorialDetail = () => {
   useEffect(() => {
     const videoEl = videoPanelRef.current;
     const photoEl = photoPanelRef.current;
+    const rightEl = rightPanelRef.current; // Get ref to right panel
 
-    if (videoEl && photoEl) {
+    if (videoEl && photoEl && rightEl) { // Check all refs
       const resizeObserver = new ResizeObserver(() => {
         const height = videoEl.offsetHeight;
         if (height > 0) {
             photoEl.style.height = `${height}px`;
+            rightEl.style.height = `${height}px`; // Set right panel height
         }
       });
 
@@ -648,7 +651,7 @@ const MemorialDetail = () => {
         </div>
 
         {/* 메인 콘텐츠 영역 */}
-          <Row>
+          <Row style={{ display: 'flex', height: '100%' }}>
           {/* 좌측: 영상/사진첩 */}
           <Col lg={8} className="mb-4 mb-lg-0">
             <Row>
@@ -1000,14 +1003,17 @@ const MemorialDetail = () => {
           </Col>
 
           {/* 우측: 추모사 + 공유 버튼 */}
-          <Col lg={4}>
+          <Col lg={4} ref={rightPanelRef} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* 추모사 */}
             <Card style={{ 
+              flexGrow: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0, // Changed from height: '100%'
               borderRadius: '16px', 
               border: '1px solid rgba(184, 134, 11, 0.2)', 
               background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
-              marginBottom: '20px'
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)'
             }}>
               <Card.Header style={{ 
                 background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
@@ -1021,7 +1027,7 @@ const MemorialDetail = () => {
                   </h5>
                 </div>
               </Card.Header>
-              <Card.Body className="p-4" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+              <Card.Body className="p-4" style={{ flexGrow: 1, height: '100%', overflowY: 'auto' }}>
                 <div className="memorial-eulogy">
                   {memorial.tribute ? (
                       <div className="eulogy-content" style={{ 
@@ -1045,8 +1051,7 @@ const MemorialDetail = () => {
               borderRadius: '16px', 
               border: '1px solid rgba(184, 134, 11, 0.2)', 
               background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
-              marginBottom: '20px'
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)'
             }}>
               <Card.Body className="text-center p-3">
                 <Button 
