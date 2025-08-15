@@ -1098,10 +1098,9 @@ const MemorialDetail = () => {
         {/* 하단: 리본 방명록 */}
         <Row className="mt-4">
           <Col lg={12}>
-            <Card style={{
-              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
+                        <Card style={{
+              background: 'rgba(255, 251, 235, 0.95)',
               borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
               border: '1px solid rgba(184, 134, 11, 0.2)',
               minHeight: '380px',
             }}>
@@ -1167,10 +1166,11 @@ const MemorialDetail = () => {
                   </div>
                 </div>
               </Card.Header>
-              <Card.Body style={{ padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+              <Card.Body style={{ padding: '2rem', position: 'relative', overflow: 'hidden', background: 'rgba(255, 251, 235, 0.95)' }}>
                 <div
                   className="ribbon-scroll-container"
                   style={{
+                    background: 'rgba(255, 251, 235, 0.95)',
                     height: '300px',
                     perspective: '1200px',
                     position: 'relative',
@@ -1208,7 +1208,7 @@ const MemorialDetail = () => {
                           width: '200px',
                           minWidth: '200px',
                           maxWidth: '200px',
-                          height: '290px', // Adjusted height
+                          height: '280px', // Adjusted height
                           display: 'flex', // Added flex
                           flexDirection: 'column', // Added flex direction
                           justifyContent: 'center', // Added justify content
@@ -1271,7 +1271,7 @@ const MemorialDetail = () => {
                           justifyContent: 'center',
                           alignItems: 'center',
                           padding: '25px 20px',
-                          boxShadow: '0 8px 25px rgba(44, 31, 20, 0.3)',
+                          
                           border: 'none',
                           position: 'relative',
                           overflow: 'visible',
