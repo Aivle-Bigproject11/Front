@@ -634,7 +634,10 @@ const MemorialDetail = () => {
                   justifyContent: 'center'
                 }}>
                   {!memorial.profileImageUrl && (
-                    <i className="fas fa-user fa-3x" style={{ color: '#b8860b' }}></i>
+                    <i className="fas fa-user fa-3x" style={{ 
+                        color: '#b8860b',
+                        display: 'block',
+                        margin: '0 auto' }}></i>
                   )}
                 </div>
                 <h5 className="mt-2 mb-0" style={{ color: '#2C1F14', fontWeight: '600', fontSize: '0.9rem' }}>프로필사진01</h5>
@@ -1189,7 +1192,7 @@ const MemorialDetail = () => {
                     perspective: '1200px',
                     position: 'relative',
                     overflow: 'hidden',
-                    maxWidth: '1200px',
+                    // maxWidth: '1200px',
                     margin: '0 auto',
                     padding: '10px 0'
                   }}
@@ -1379,7 +1382,9 @@ const MemorialDetail = () => {
                               <i className="fas fa-heart" style={{
                                 fontSize: '0.8rem',
                                 color: 'white',
-                                textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                                display: 'block',
+                                margin: '0 auto'
                               }}></i>
                             </div>
                           </div>
@@ -1545,7 +1550,10 @@ const MemorialDetail = () => {
                       margin: '0 auto',
                       boxShadow: '0 4px 15px rgba(44, 31, 20, 0.2)'
                     }}>
-                      <i className="fas fa-heart fa-2x" style={{ color: 'white' }}></i>
+                      <i className="fas fa-heart fa-2x" style={{ 
+                        color: 'white',
+                        display: 'block',
+                        margin: '0 auto' }}></i>
                     </div>
                   </Col>
                 </Row>
