@@ -554,7 +554,8 @@ const MemorialDetail = () => {
         borderRadius: '28px',
         border: '2px solid rgba(184, 134, 11, 0.35)',
         overflowY: 'auto',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        scrollbarGutter: 'stable'
       }}>
                {/* 프로필 섹션 (수정됨) */}
         <div style={{ marginBottom: '20px' }}>
