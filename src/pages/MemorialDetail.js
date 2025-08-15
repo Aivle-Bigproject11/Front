@@ -16,6 +16,8 @@ const MemorialDetail = () => {
   const rightPanelRef = useRef(null);
   const memorialContainerRef = useRef(null);
   
+  const [editingCommentId, setEditingCommentId] = useState(null); // Add this state
+
   // 모든 useState 훅을 먼저 호출
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -332,27 +334,36 @@ const MemorialDetail = () => {
   const handleGuestbookSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await apiService.createComment(id, guestbookEntry);
-      console.log('✅ 댓글 생성 성공:', response);
-      
+      let response;
+      if (editingCommentId) {
+        // This is an update operation
+        response = await apiService.updateComment(editingCommentId, guestbookEntry);
+        console.log('✅ 댓글 수정 성공:', response);
+      } else {
+        // This is a create operation
+        response = await apiService.createComment(id, guestbookEntry);
+        console.log('✅ 댓글 생성 성공:', response);
+      }
+
       // 전체 memorial 정보 다시 로드 (댓글 목록 포함)
       const updatedMemorial = await apiService.getMemorialDetails(id);
       setMemorial(updatedMemorial);
       if (updatedMemorial.comments) {
         setGuestbookList(updatedMemorial.comments);
       }
-      
+
       setGuestbookEntry({ name: '', content: '', relationship: '' });
+      setEditingCommentId(null); // Reset editing state
       setShowGuestbookModal(false);
-      alert('소중한 위로의 말씀이 등록되었습니다.');
+      alert(editingCommentId ? '댓글이 성공적으로 수정되었습니다.' : '소중한 위로의 말씀이 등록되었습니다.');
     } catch (error) {
-      console.error("Error creating comment:", error);
-      
+      console.error("Error submitting comment:", error); // Changed message
+
       // CORS 에러인지 확인
       if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
         alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
       } else {
-        alert("방명록 작성에 실패했습니다.");
+        alert(editingCommentId ? '댓글 수정에 실패했습니다.' : '방명록 작성에 실패했습니다.');
       }
     }
   };
@@ -365,6 +376,8 @@ const MemorialDetail = () => {
       relationship: comment.relationship
     });
     setSelectedRibbon(null); // 상세보기 모달 닫기
+    setShowRibbonDetailModal(false); // 상세보기 모달 닫기 추가
+    setEditingCommentId(comment.commentId); // Store the ID of the comment being edited
     setShowGuestbookModal(true); // 편집 모달 열기
     // TODO: 수정 모드 상태 추가 (새로 생성 vs 수정 구분)
   };
@@ -387,6 +400,7 @@ const MemorialDetail = () => {
       }
       
       setSelectedRibbon(null); // 상세보기 모달 닫기
+      setShowRibbonDetailModal(false);
       alert('댓글이 삭제되었습니다.');
     } catch (error) {
       console.error('Error deleting comment:', error);
