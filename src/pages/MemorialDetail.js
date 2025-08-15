@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge } from 'react-bootstrap';
 import { ArrowLeft } from 'lucide-react';
@@ -13,6 +14,7 @@ const MemorialDetail = () => {
   const videoPanelRef = useRef(null);
   const photoPanelRef = useRef(null);
   const rightPanelRef = useRef(null);
+  const memorialContainerRef = useRef(null);
   
   // 모든 useState 훅을 먼저 호출
   const [memorial, setMemorial] = useState(null);
@@ -403,6 +405,10 @@ const MemorialDetail = () => {
 
   // 마우스 휠 이벤트 핸들러
   const handleRibbonWheel = (e) => {
+    // 페이지 스크롤 방지
+    e.preventDefault();
+    e.stopPropagation();
+
     // 방명록이 비어있거나 스크롤할 필요가 없는 경우 무시
     if (!guestbookList || guestbookList.length <= ribbonItemsPerView) {
       return;
@@ -428,6 +434,7 @@ const MemorialDetail = () => {
     }
   };
 
+  // Function to handle copying invite code to clipboard
   const handleCopyInviteCode = async () => {
     if (memorial && memorial.memorialId) {
       try {
@@ -530,7 +537,7 @@ const MemorialDetail = () => {
         opacity: 0.7
       }}></div>
 
-      <div className={`memorial-container ${animateCard ? 'animate-in' : ''}`} style={{
+      <div ref={memorialContainerRef} className={`memorial-container ${animateCard ? 'animate-in' : ''}`} style={{
         position: 'relative',
         zIndex: 1,
         width: '100%',
@@ -1172,6 +1179,16 @@ const MemorialDetail = () => {
                     padding: '10px 0'
                   }}
                   onWheel={handleRibbonWheel}
+                  onMouseEnter={() => {
+                    if (memorialContainerRef.current) {
+                      memorialContainerRef.current.style.overflowY = 'hidden';
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (memorialContainerRef.current) {
+                      memorialContainerRef.current.style.overflowY = 'auto';
+                    }
+                  }}
                 >
                   <div className="ribbon-items-wrapper" style={{
                     display: 'flex',
@@ -1179,9 +1196,8 @@ const MemorialDetail = () => {
                     transform: `translateX(-${ribbonScrollIndex * ribbonItemWidth}px)`,
                     transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                     height: '100%',
-                    alignItems: 'flex-start',
-                    paddingTop: '20px',
-                    justifyContent: 'flex-start'
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}>
                     {guestbookList.map((entry, index) => (
                       <div
@@ -1191,13 +1207,17 @@ const MemorialDetail = () => {
                           width: '200px',
                           minWidth: '200px',
                           maxWidth: '200px',
-                          height: '350px',
+                          height: '290px', // Adjusted height
+                          display: 'flex', // Added flex
+                          flexDirection: 'column', // Added flex direction
+                          justifyContent: 'center', // Added justify content
+                          alignItems: 'center', // Added align items
                           position: 'relative',
                           cursor: 'pointer',
                           transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                           transform: `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`,
                           zIndex: guestbookList.length - Math.abs(index - ribbonScrollIndex),
-                          transformOrigin: 'center top',
+                          // transformOrigin: 'center top', // Removed transformOrigin
                           flexShrink: 0
                         }}
                         onClick={() => {
@@ -1238,7 +1258,8 @@ const MemorialDetail = () => {
                         {/* 실제 리본 모양 */}
                         <div className="ribbon-body" style={{
                           width: '100%',
-                          height: '280px',
+                          // height: '280px', // Removed fixed height
+                          flexGrow: 1, // Allow it to grow within flex parent
                           background: `linear-gradient(135deg, 
                             ${index % 4 === 0 ? '#b8860b' : index % 4 === 1 ? '#965a25' : index % 4 === 2 ? '#cd853f' : '#daa520'} 0%, 
                             ${index % 4 === 0 ? '#965a25' : index % 4 === 1 ? '#b8860b' : index % 4 === 2 ? '#b8860b' : '#cd853f'} 100%)`,
@@ -1246,7 +1267,7 @@ const MemorialDetail = () => {
                           color: 'white',
                           display: 'flex',
                           flexDirection: 'column',
-                          justifyContent: 'flex-start',
+                          justifyContent: 'center',
                           alignItems: 'center',
                           padding: '25px 20px',
                           boxShadow: '0 8px 25px rgba(44, 31, 20, 0.3)',
