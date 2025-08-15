@@ -1106,7 +1106,7 @@ const MemorialDetail = () => {
                   }}
                 >
                   <i className="fas fa-share-alt me-2"></i>
-                  추모관 초대코드 복사하기
+                  초대코드 복사하기
                 </Button>
               </Card.Body>
             </Card>
@@ -1487,7 +1487,7 @@ const MemorialDetail = () => {
             }}
           >
             <i className="fas fa-ribbon me-2"></i>
-            리본으로 등록하기
+            등록하기
           </Button>
         </Modal.Footer>
       </Modal>
@@ -1533,7 +1533,7 @@ const MemorialDetail = () => {
                     </p>
                     <p className="text-muted">
                       <i className="fas fa-calendar-alt me-2"></i>
-                      작성일: {selectedRibbon.date}
+                      작성일: {selectedRibbon.createdAt ? new Date(selectedRibbon.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day:'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : '날짜 없음'}
                     </p>
                   </Col>
                   <Col md={4} className="text-end">
@@ -1618,22 +1618,6 @@ const MemorialDetail = () => {
             onClick={() => setShowRibbonDetailModal(false)}
           >
             닫기
-          </Button>
-          <Button 
-            style={{
-              background: selectedRibbon ? `linear-gradient(135deg, 
-                ${selectedRibbon.id % 4 === 1 ? '#b8860b' : selectedRibbon.id % 4 === 2 ? '#965a25' : selectedRibbon.id % 4 === 3 ? '#cd853f' : '#daa520'} 0%, 
-                ${selectedRibbon.id % 4 === 1 ? '#965a25' : selectedRibbon.id % 4 === 2 ? '#b8860b' : selectedRibbon.id % 4 === 3 ? '#b8860b' : '#cd853f'} 100%)` : '#b8860b',
-              border: 'none',
-              color: '#fff'
-            }}
-            onClick={() => {
-              // 공유 기능 구현 예정
-              alert('공유 기능은 곧 구현될 예정입니다.');
-            }}
-          >
-            <i className="fas fa-share-alt me-2"></i>
-            공유하기
           </Button>
         </Modal.Footer>
       </Modal>
