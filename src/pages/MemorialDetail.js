@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge } from 'react-bootstrap';
 import { ArrowLeft } from 'lucide-react';
@@ -10,6 +10,8 @@ const MemorialDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const videoPanelRef = useRef(null);
+  const photoPanelRef = useRef(null);
   
   // 모든 useState 훅을 먼저 호출
   const [memorial, setMemorial] = useState(null);
@@ -120,6 +122,112 @@ const MemorialDetail = () => {
 
     fetchMemorialDetails();
   }, [id, navigate, location.search]); // location.search를 의존성으로 추가하여 URL 파라미터 변경 시 새로고침
+
+  useEffect(() => {
+    const videoEl = videoPanelRef.current;
+    const photoEl = photoPanelRef.current;
+
+    if (videoEl && photoEl) {
+      const resizeObserver = new ResizeObserver(() => {
+        const height = videoEl.offsetHeight;
+        if (height > 0) {
+            photoEl.style.height = `${height}px`;
+        }
+      });
+
+      resizeObserver.observe(videoEl);
+
+      return () => resizeObserver.disconnect();
+    }
+  }, [memorial]);
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        .memorial-container {
+            opacity: 0;
+        }
+
+        .animate-in {
+          animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .back-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          height: 45px;
+          padding: 0 20px;
+          margin-bottom: 1rem;
+          box-sizing: border-box;
+          background: linear-gradient(135deg, #4A3728, #8B5A2B);
+          border: none;
+          color: white;
+          font-weight: 700;
+          font-size: 14px;
+          box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
+          transition: all 0.3s ease;
+          border-radius: 8px;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+
+        .back-btn:hover {
+          background: linear-gradient(135deg, #3c2d20, #7a4e24);
+          transform: scale(1.03);
+          box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
+        }
+
+        .memorial-container::-webkit-scrollbar {
+          width: 6px;
+        }
+        .memorial-container::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.05);
+          border-radius: 10px;
+        }
+        .memorial-container::-webkit-scrollbar-thumb {
+          background-color: rgba(184, 134, 11, 0.5);
+          border-radius: 10px;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.1);
+        }
+
+        /* --- 수정된 반응형 코드 --- */
+        @media (max-width: 1200px) {
+          .page-wrapper {
+            height: auto !important; /* 고정 높이 해제 */
+            min-height: calc(100vh - var(--navbar-height));
+            overflow-y: auto !important; /* 전체 페이지 스크롤이 가능하도록 변경 */
+            align-items: flex-start !important; /* 컨텐츠를 위쪽으로 정렬 */
+          }
+          .memorial-container {
+            height: auto !important; 
+            overflow: visible !important; /* 내용이 넘쳐도 보이도록 설정 */
+          }
+          .memorial-detail-scroll-area {
+            height: auto !important; 
+            overflow: visible !important; /* 내부 스크롤을 제거,전체 스크롤을 따르도록 함 */
+            flex: none !important; /* flex-grow 속성 제거 */
+          }
+        }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []); // Runs only once on mount
 
   // 사진 업로드 함수
   const handlePhotoUpload = async (e) => {
@@ -541,7 +649,7 @@ const MemorialDetail = () => {
 
         {/* 메인 콘텐츠 영역 */}
           <Row>
-          {/* 좌측: 영상/사진첩 + 방명록 리본 */}
+          {/* 좌측: 영상/사진첩 */}
           <Col lg={8} className="mb-4 mb-lg-0">
             <Row>
               {/* 상단: 추모영상과 사진첩 - 겹쳐진 탭 구조 */}
@@ -631,6 +739,7 @@ const MemorialDetail = () => {
                     
                     {/* 추모영상 콘텐츠 */}
                     <div 
+                      ref={videoPanelRef}
                       className={`tab-content ${activeTab === 'video' ? 'active' : ''}`}
                       style={{
                         display: activeTab === 'video' ? 'block' : 'none',
@@ -775,6 +884,7 @@ const MemorialDetail = () => {
 
                     {/* 사진첩 콘텐츠 */}
                     <div 
+                      ref={photoPanelRef}
                       className={`tab-content ${activeTab === 'photos' ? 'active' : ''}`}
                       style={{
                         display: activeTab === 'photos' ? 'block' : 'none',
@@ -887,292 +997,9 @@ const MemorialDetail = () => {
 
               </Col>
             </Row>
-
-            {/* 하단: 리본 방명록 */}
-            <Row>
-              <Col lg={12}>
-                <Card style={{
-                  background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-                  borderRadius: '16px',
-                  boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
-                  border: '1px solid rgba(184, 134, 11, 0.2)',
-                  minHeight: '380px',
-                }}>
-                  <Card.Header style={{
-                    background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
-                    borderRadius: '16px 16px 0 0',
-                    border: 'none',
-                    padding: '1rem 2rem'
-                  }}>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h5 className="mb-0" style={{ color: '#2C1F14' }}>
-                        <i className="fas fa-ribbon me-2"></i>
-                        방명록 리본
-                      </h5>
-                      <div className="d-flex align-items-center">
-                        {guestbookList.length > ribbonItemsPerView && (
-                          <div className="ribbon-controls me-3">
-                            <button 
-                              className="btn btn-sm me-2"
-                              onClick={() => setRibbonScrollIndex(Math.max(0, ribbonScrollIndex - 1))}
-                              disabled={ribbonScrollIndex === 0}
-                              style={{ 
-                                border: 'none', 
-                                background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                                color: '#fff',
-                                borderRadius: '8px'
-                              }}
-                            >
-                              <i className="fas fa-chevron-left"></i>
-                            </button>
-                            <span className="text-muted small mx-2">
-                              {ribbonScrollIndex + 1}-{Math.min(ribbonScrollIndex + ribbonItemsPerView, guestbookList.length)} / {guestbookList.length}
-                            </span>
-                            <button 
-                              className="btn btn-sm ms-2"
-                              onClick={() => setRibbonScrollIndex(Math.min(guestbookList.length - ribbonItemsPerView, ribbonScrollIndex + 1))}
-                              disabled={ribbonScrollIndex >= guestbookList.length - ribbonItemsPerView}
-                              style={{ 
-                                border: 'none', 
-                                background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                                color: '#fff',
-                                borderRadius: '8px'
-                              }}
-                            >
-                              <i className="fas fa-chevron-right"></i>
-                            </button>
-                          </div>
-                        )}
-                        <Button
-                          size="sm"
-                          onClick={() => setShowGuestbookModal(true)}
-                          style={{
-                            background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            color: '#fff',
-                            fontWeight: '600',
-                            borderRadius: '8px'
-                          }}
-                        >
-                          <i className="fas fa-edit me-1"></i>
-                          작성
-                        </Button>
-                      </div>
-                    </div>
-                  </Card.Header>
-                  <Card.Body style={{ padding: '2rem', position: 'relative', overflow: 'hidden' }}>
-                    <div
-                      className="ribbon-scroll-container"
-                      style={{
-                        height: '300px',
-                        perspective: '1200px',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        maxWidth: '1200px',
-                        margin: '0 auto',
-                        padding: '10px 0'
-                      }}
-                      onWheel={handleRibbonWheel}
-                    >
-                      <div className="ribbon-items-wrapper" style={{
-                        display: 'flex',
-                        gap: '20px',
-                        transform: `translateX(-${ribbonScrollIndex * ribbonItemWidth}px)`,
-                        transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                        height: '100%',
-                        alignItems: 'flex-start',
-                        paddingTop: '20px',
-                        justifyContent: 'flex-start'
-                      }}>
-                        {guestbookList.map((entry, index) => (
-                          <div
-                            key={entry.id}
-                            className="ribbon-item"
-                            style={{
-                              width: '200px',
-                              minWidth: '200px',
-                              maxWidth: '200px',
-                              height: '350px',
-                              position: 'relative',
-                              cursor: 'pointer',
-                              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                              transform: `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`,
-                              zIndex: guestbookList.length - Math.abs(index - ribbonScrollIndex),
-                              transformOrigin: 'center top',
-                              flexShrink: 0
-                            }}
-                            onClick={() => {
-                              setSelectedRibbon(entry);
-                              setShowRibbonDetailModal(true);
-                            }}
-                            onMouseEnter={(e) => {
-                              const ribbonItem = e.currentTarget;
-                              const ribbonBody = ribbonItem.querySelector('.ribbon-body');
-                              const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
-
-                              ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15 + 15}px) scale(1.05)`;
-                              ribbonItem.style.filter = 'brightness(1.1)';
-
-                              if (ribbonBody) {
-                                ribbonBody.style.transform = 'translateY(-5px)';
-                              }
-                              if (ribbonTailWrapper) {
-                                ribbonTailWrapper.style.transform = 'translateY(-5px)';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              const ribbonItem = e.currentTarget;
-                              const ribbonBody = ribbonItem.querySelector('.ribbon-body');
-                              const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
-
-                              ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`;
-                              ribbonItem.style.filter = 'brightness(1)';
-
-                              if (ribbonBody) {
-                                ribbonBody.style.transform = 'translateY(0)';
-                              }
-                              if (ribbonTailWrapper) {
-                                ribbonTailWrapper.style.transform = 'translateY(0)';
-                              }
-                            }}
-                          >
-                            {/* 실제 리본 모양 */}
-                            <div className="ribbon-body" style={{
-                              width: '100%',
-                              height: '280px',
-                              background: `linear-gradient(135deg, 
-                                ${index % 4 === 0 ? '#b8860b' : index % 4 === 1 ? '#965a25' : index % 4 === 2 ? '#cd853f' : '#daa520'} 0%, 
-                                ${index % 4 === 0 ? '#965a25' : index % 4 === 1 ? '#b8860b' : index % 4 === 2 ? '#b8860b' : '#cd853f'} 100%)`,
-                              borderRadius: '12px',
-                              color: 'white',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'flex-start',
-                              alignItems: 'center',
-                              padding: '25px 20px',
-                              boxShadow: '0 8px 25px rgba(44, 31, 20, 0.3)',
-                              border: 'none',
-                              position: 'relative',
-                              overflow: 'visible',
-                              textAlign: 'center'
-                            }}>
-                              {/* 헤더 영역 */}
-                              <div className="ribbon-header" style={{
-                                textAlign: 'center',
-                                marginBottom: '20px',
-                                borderBottom: '1px solid rgba(255,255,255,0.3)',
-                                paddingBottom: '15px'
-                              }}>
-                                <div style={{
-                                  fontSize: '1.25rem',
-                                  fontWeight: 'bold',
-                                  textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                                  marginBottom: '8px',
-                                  lineHeight: '1.3'
-                                }}>
-                                  {entry.name}
-                                </div>
-                                <div style={{
-                                  fontSize: '0.95rem',
-                                  opacity: 0.9,
-                                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                  marginBottom: '5px',
-                                  lineHeight: '1.2'
-                                }}>
-                                  {entry.relationship}
-                                </div>
-                                <div style={{
-                                  fontSize: '0.8rem',
-                                  opacity: 0.8,
-                                  marginTop: '5px',
-                                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                  lineHeight: '1.2'
-                                }}>
-                                  {entry.date}
-                                </div>
-                              </div>
-
-                              {/* 메시지 영역 */}
-                              <div className="ribbon-message" style={{
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center',
-                                textAlign: 'center',
-                                padding: '10px 0'
-                              }}>
-                                <div style={{
-                                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                  lineHeight: '1.5',
-                                  fontSize: '0.95rem',
-                                  overflow: 'visible',
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 5,
-                                  WebkitBoxOrient: 'vertical',
-                                  wordWrap: 'break-word'
-                                }}>
-                                  {entry.content}
-                                </div>
-
-                                {entry.content.length > 80 && (
-                                  <div style={{
-                                    marginTop: '10px',
-                                    fontSize: '0.75rem',
-                                    opacity: 0.8,
-                                    fontStyle: 'italic'
-                                  }}>
-                                    클릭하여 전체보기
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* 하단 아이콘 */}
-                              <div className="ribbon-footer" style={{
-                                textAlign: 'center',
-                                marginTop: '15px'
-                              }}>
-                                <div style={{
-                                  width: '30px',
-                                  height: '30px',
-                                  background: 'rgba(255,255,255,0.25)',
-                                  borderRadius: '50%',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  border: '2px solid rgba(255,255,255,0.4)'
-                                }}>
-                                  <i className="fas fa-heart" style={{
-                                    fontSize: '0.8rem',
-                                    color: 'white',
-                                    textShadow: '0 1px 2px rgba(0,0,0,0.5)'
-                                  }}></i>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {guestbookList.length === 0 && (
-                        <div className="text-center" style={{
-                          position: 'absolute',
-                          top: '50%',
-                          left: '50%',
-                          transform: 'translate(-50%, -50%)',
-                          color: '#b8860b'
-                        }}>
-                          <i className="fas fa-ribbon fa-3x mb-3 opacity-50"></i>
-                          <p>첫 번째 리본을 남겨주세요</p>
-                        </div>
-                      )}
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
           </Col>
 
-          {/* 우측: 추모사 + 위로의 말 전하기 */}
+          {/* 우측: 추모사 + 공유 버튼 */}
           <Col lg={4}>
             {/* 추모사 */}
             <Card style={{ 
@@ -1238,7 +1065,288 @@ const MemorialDetail = () => {
                 </Button>
               </Card.Body>
             </Card>
-            
+          </Col>
+        </Row>
+        {/* 하단: 리본 방명록 */}
+        <Row className="mt-4">
+          <Col lg={12}>
+            <Card style={{
+              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
+              border: '1px solid rgba(184, 134, 11, 0.2)',
+              minHeight: '380px',
+            }}>
+              <Card.Header style={{
+                background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
+                borderRadius: '16px 16px 0 0',
+                border: 'none',
+                padding: '1rem 2rem'
+              }}>
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5 className="mb-0" style={{ color: '#2C1F14' }}>
+                    <i className="fas fa-ribbon me-2"></i>
+                    방명록 리본
+                  </h5>
+                  <div className="d-flex align-items-center">
+                    {guestbookList.length > ribbonItemsPerView && (
+                      <div className="ribbon-controls me-3">
+                        <button 
+                          className="btn btn-sm me-2"
+                          onClick={() => setRibbonScrollIndex(Math.max(0, ribbonScrollIndex - 1))}
+                          disabled={ribbonScrollIndex === 0}
+                          style={{ 
+                            border: 'none', 
+                            background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                            color: '#fff',
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <i className="fas fa-chevron-left"></i>
+                        </button>
+                        <span className="text-muted small mx-2">
+                          {ribbonScrollIndex + 1}-{Math.min(ribbonScrollIndex + ribbonItemsPerView, guestbookList.length)} / {guestbookList.length}
+                        </span>
+                        <button 
+                          className="btn btn-sm ms-2"
+                          onClick={() => setRibbonScrollIndex(Math.min(guestbookList.length - ribbonItemsPerView, ribbonScrollIndex + 1))}
+                          disabled={ribbonScrollIndex >= guestbookList.length - ribbonItemsPerView}
+                          style={{ 
+                            border: 'none', 
+                            background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                            color: '#fff',
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <i className="fas fa-chevron-right"></i>
+                        </button>
+                      </div>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={() => setShowGuestbookModal(true)}
+                      style={{
+                        background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        color: '#fff',
+                        fontWeight: '600',
+                        borderRadius: '8px'
+                      }}
+                    >
+                      <i className="fas fa-edit me-1"></i>
+                      작성
+                    </Button>
+                  </div>
+                </div>
+              </Card.Header>
+              <Card.Body style={{ padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+                <div
+                  className="ribbon-scroll-container"
+                  style={{
+                    height: '300px',
+                    perspective: '1200px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    maxWidth: '1200px',
+                    margin: '0 auto',
+                    padding: '10px 0'
+                  }}
+                  onWheel={handleRibbonWheel}
+                >
+                  <div className="ribbon-items-wrapper" style={{
+                    display: 'flex',
+                    gap: '20px',
+                    transform: `translateX(-${ribbonScrollIndex * ribbonItemWidth}px)`,
+                    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                    height: '100%',
+                    alignItems: 'flex-start',
+                    paddingTop: '20px',
+                    justifyContent: 'flex-start'
+                  }}>
+                    {guestbookList.map((entry, index) => (
+                      <div
+                        key={entry.id}
+                        className="ribbon-item"
+                        style={{
+                          width: '200px',
+                          minWidth: '200px',
+                          maxWidth: '200px',
+                          height: '350px',
+                          position: 'relative',
+                          cursor: 'pointer',
+                          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transform: `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`,
+                          zIndex: guestbookList.length - Math.abs(index - ribbonScrollIndex),
+                          transformOrigin: 'center top',
+                          flexShrink: 0
+                        }}
+                        onClick={() => {
+                          setSelectedRibbon(entry);
+                          setShowRibbonDetailModal(true);
+                        }}
+                        onMouseEnter={(e) => {
+                          const ribbonItem = e.currentTarget;
+                          const ribbonBody = ribbonItem.querySelector('.ribbon-body');
+                          const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
+
+                          ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15 + 15}px) scale(1.05)`;
+                          ribbonItem.style.filter = 'brightness(1.1)';
+
+                          if (ribbonBody) {
+                            ribbonBody.style.transform = 'translateY(-5px)';
+                          }
+                          if (ribbonTailWrapper) {
+                            ribbonTailWrapper.style.transform = 'translateY(-5px)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          const ribbonItem = e.currentTarget;
+                          const ribbonBody = ribbonItem.querySelector('.ribbon-body');
+                          const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
+
+                          ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`;
+                          ribbonItem.style.filter = 'brightness(1)';
+
+                          if (ribbonBody) {
+                            ribbonBody.style.transform = 'translateY(0)';
+                          }
+                          if (ribbonTailWrapper) {
+                            ribbonTailWrapper.style.transform = 'translateY(0)';
+                          }
+                        }}
+                      >
+                        {/* 실제 리본 모양 */}
+                        <div className="ribbon-body" style={{
+                          width: '100%',
+                          height: '280px',
+                          background: `linear-gradient(135deg, 
+                            ${index % 4 === 0 ? '#b8860b' : index % 4 === 1 ? '#965a25' : index % 4 === 2 ? '#cd853f' : '#daa520'} 0%, 
+                            ${index % 4 === 0 ? '#965a25' : index % 4 === 1 ? '#b8860b' : index % 4 === 2 ? '#b8860b' : '#cd853f'} 100%)`,
+                          borderRadius: '12px',
+                          color: 'white',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'flex-start',
+                          alignItems: 'center',
+                          padding: '25px 20px',
+                          boxShadow: '0 8px 25px rgba(44, 31, 20, 0.3)',
+                          border: 'none',
+                          position: 'relative',
+                          overflow: 'visible',
+                          textAlign: 'center'
+                        }}>
+                          {/* 헤더 영역 */}
+                          <div className="ribbon-header" style={{
+                            textAlign: 'center',
+                            marginBottom: '20px',
+                            borderBottom: '1px solid rgba(255,255,255,0.3)',
+                            paddingBottom: '15px'
+                          }}>
+                            <div style={{
+                              fontSize: '1.25rem',
+                              fontWeight: 'bold',
+                              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                              marginBottom: '8px',
+                              lineHeight: '1.3'
+                            }}>
+                              {entry.name}
+                            </div>
+                            <div style={{
+                              fontSize: '0.95rem',
+                              opacity: 0.9,
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              marginBottom: '5px',
+                              lineHeight: '1.2'
+                            }}>
+                              {entry.relationship}
+                            </div>
+                            <div style={{
+                              fontSize: '0.8rem',
+                              opacity: 0.8,
+                              marginTop: '5px',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              lineHeight: '1.2'
+                            }}>
+                              {entry.date}
+                            </div>
+                          </div>
+
+                          {/* 메시지 영역 */}
+                          <div className="ribbon-message" style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            textAlign: 'center',
+                            padding: '10px 0'
+                          }}>
+                            <div style={{
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              lineHeight: '1.5',
+                              fontSize: '0.95rem',
+                              overflow: 'visible',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 5,
+                              WebkitBoxOrient: 'vertical',
+                              wordWrap: 'break-word'
+                            }}>
+                              {entry.content}
+                            </div>
+
+                            {entry.content.length > 80 && (
+                              <div style={{
+                                marginTop: '10px',
+                                fontSize: '0.75rem',
+                                opacity: 0.8,
+                                fontStyle: 'italic'
+                              }}>
+                                클릭하여 전체보기
+                              </div>
+                            )}
+                          </div>
+
+                          {/* 하단 아이콘 */}
+                          <div className="ribbon-footer" style={{
+                            textAlign: 'center',
+                            marginTop: '15px'
+                          }}>
+                            <div style={{
+                              width: '30px',
+                              height: '30px',
+                              background: 'rgba(255,255,255,0.25)',
+                              borderRadius: '50%',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              border: '2px solid rgba(255,255,255,0.4)'
+                            }}>
+                              <i className="fas fa-heart" style={{
+                                fontSize: '0.8rem',
+                                color: 'white',
+                                textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                              }}></i>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {guestbookList.length === 0 && (
+                    <div className="text-center" style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      color: '#b8860b'
+                    }}>
+                      <i className="fas fa-ribbon fa-3x mb-3 opacity-50"></i>
+                      <p>첫 번째 리본을 남겨주세요</p>
+                    </div>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
           </Col>
         </Row>
       </div>
@@ -1690,88 +1798,6 @@ const MemorialDetail = () => {
           )}
         </Modal.Body>
       </Modal>
-
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        
-        .memorial-container {
-            opacity: 0;
-        }
-
-        .animate-in {
-          animation: fadeIn 0.6s ease-out forwards;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          height: 45px;
-          padding: 0 20px;
-          margin-bottom: 1rem;
-          box-sizing: border-box;
-          background: linear-gradient(135deg, #4A3728, #8B5A2B);
-          border: none;
-          color: white;
-          font-weight: 700;
-          font-size: 14px;
-          box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
-          transition: all 0.3s ease;
-          border-radius: 8px;
-          cursor: pointer;
-          white-space: nowrap;
-        }
-
-        .back-btn:hover {
-          background: linear-gradient(135deg, #3c2d20, #7a4e24);
-          transform: scale(1.03);
-          box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
-        }
-
-        .memorial-container::-webkit-scrollbar {
-          width: 6px;
-        }
-        .memorial-container::-webkit-scrollbar-track {
-          background: rgba(0,0,0,0.05);
-          border-radius: 10px;
-        }
-        .memorial-container::-webkit-scrollbar-thumb {
-          background-color: rgba(184, 134, 11, 0.5);
-          border-radius: 10px;
-        }
-
-        .photo-card:hover img {
-            transform: scale(1.1);
-        }
-
-        /* --- 수정된 반응형 코드 --- */
-        @media (max-width: 1200px) {
-          .page-wrapper {
-            height: auto !important; /* 고정 높이 해제제 */
-            min-height: calc(100vh - var(--navbar-height));
-            overflow-y: auto !important; /* 전체 페이지 스크롤이 가능하도록 변경 */
-            align-items: flex-start !important; /* 컨텐츠를 위쪽으로 정렬 */
-          }
-          .memorial-container {
-            height: auto !important; 
-            overflow: visible !important; /* 내용이 넘쳐도 보이도록 설정 */
-          }
-          .memorial-detail-scroll-area {
-            height: auto !important; 
-            overflow: visible !important; /* 내부 스크롤을 제거,전체 스크롤을 따르도록 함 */
-            flex: none !important; /* flex-grow 속성 제거 */
-          }
-        }
-
-        
-      `}</style>
     </div>
   );
 };
