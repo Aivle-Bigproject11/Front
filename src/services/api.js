@@ -113,15 +113,17 @@ const realApiService = {
   deleteFamily: async (id) => (await api.delete(`/families/${id}`)).data,
   
   // 유가족 검색 관련 API
-  // 검색 방식 선택: true = 백엔드 직접 검색, false = 프론트엔드 필터링
-  USE_BACKEND_SEARCH: false, // 나중에 백엔드 구현 완료시 true로 변경
+  // 검색 방식 선택: true = 백엔드 API 직접 검색, false = 프론트엔드 필터링
+  USE_BACKEND_SEARCH: false, // 나중에 백엔드 API 구현 완료시 true로 변경
   
-  // 백엔드 직접 검색 방식 (문서 명세대로)
+  // 백엔드 API 직접 검색 방식 (문서 명세대로 - 아직 미구현)
+  // 엔드포인트: /families/search-name, /families/search-email, /families/search-phone
   searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search-name?name=${name}`)).data,
   searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search-email?email=${email}`)).data,
   searchFamiliesByPhoneBackend: async (phone) => (await api.get(`/families/search-phone?phone=${phone}`)).data,
   
-  // 프론트엔드 필터링 방식 (현재 백엔드 상태에 맞춤)
+  // 프론트엔드 필터링 방식 (현재 백엔드 상태에 맞춤 - 안정적)
+  // 엔드포인트: /families 전체 조회 후 브라우저에서 필터링
   searchFamiliesByNameFrontend: async (name) => {
     const allFamilies = await (await api.get('/families')).data;
     if (allFamilies._embedded && allFamilies._embedded.families) {
@@ -162,7 +164,7 @@ const realApiService = {
     return allFamilies;
   },
   
-  // 통합 검색 함수들 (설정에 따라 방식 자동 선택)
+  // 통합 검색 함수들 (설정에 따라 백엔드 API vs 프론트엔드 필터링 자동 선택)
   searchFamiliesByName: async function(name) {
     return this.USE_BACKEND_SEARCH ? 
       this.searchFamiliesByNameBackend(name) : 
