@@ -328,3 +328,177 @@ HTTP Method: DELETE
 ### 🔹 HTTP 204 No Content
 
 삭제 성공 (응답 본문 없음)
+
+---
+
+# 유가족 이름으로 검색
+
+API Path: /families/search/name
+HTTP Method: GET
+개발현황: 개발 완료
+설명: 이름으로 유가족 검색
+토큰: O
+
+# 📥 Request
+
+### 🔹 Query Parameters
+
+| 이름 | 타입 | 필수 | 설명 |
+| --- | --- | --- | --- |
+| name | String | ✅ | 검색할 유가족 이름 |
+
+### 🔹 Headers
+
+| 이름 | 필수 | 값 | 설명 |
+| --- | --- | --- | --- |
+| Content-Type | ✅ | application/json |  |
+
+# 📤 Response
+
+### 🔹 HTTP 200 OK
+
+| 필드명 | 타입 | 설명 |
+| --- | --- | --- |
+| [] | Array | 유가족 객체들 리스트 |
+| ↳ .name | String | 유가족 이름 |
+| ↳ .loginId | String | 로그인 ID |
+| ↳ .email | String | 이메일 주소 |
+| ↳ .phone | String | 전화번호 |
+| ↳ .status | String | 승인 상태 (PENDING, APPROVED) |
+| ↳ .memorialId | String or null | 연결된 추모관 ID |
+
+### 🔹 HTTP 400 Bad Request
+
+```json
+"입력하신 정보와 일치하는 계정을 찾을 수 없습니다."
+```
+
+---
+
+# 유가족 이메일로 검색
+
+API Path: /families/search/email
+HTTP Method: GET
+개발현황: 개발 완료
+설명: 이메일로 유가족 검색
+토큰: O
+
+# 📥 Request
+
+### 🔹 Query Parameters
+
+| 이름 | 타입 | 필수 | 설명 |
+| --- | --- | --- | --- |
+| email | String | ✅ | 검색할 유가족 이메일 |
+
+### 🔹 Headers
+
+| 이름 | 필수 | 값 | 설명 |
+| --- | --- | --- | --- |
+| Content-Type | ✅ | application/json |  |
+
+# 📤 Response
+
+### 🔹 HTTP 200 OK
+
+| 필드명 | 타입 | 설명 |
+| --- | --- | --- |
+| name | String | 유가족 이름 |
+| loginId | String | 로그인 ID |
+| email | String | 이메일 주소 |
+| phone | String | 전화번호 |
+| status | String | 승인 상태 (PENDING, APPROVED) |
+| memorialId | String or null | 연결된 추모관 ID |
+
+### 🔹 HTTP 400 Bad Request
+
+```json
+"입력하신 정보와 일치하는 계정을 찾을 수 없습니다."
+```
+
+---
+
+# 유가족 전화번호로 검색
+
+API Path: /families/search/phone
+HTTP Method: GET
+개발현황: 개발 완료
+설명: 전화번호로 유가족 검색
+토큰: O
+
+# 📥 Request
+
+### 🔹 Query Parameters
+
+| 이름 | 타입 | 필수 | 설명 |
+| --- | --- | --- | --- |
+| phone | String | ✅ | 검색할 유가족 전화번호 |
+
+### 🔹 Headers
+
+| 이름 | 필수 | 값 | 설명 |
+| --- | --- | --- | --- |
+| Content-Type | ✅ | application/json |  |
+
+# 📤 Response
+
+### 🔹 HTTP 200 OK
+
+| 필드명 | 타입 | 설명 |
+| --- | --- | --- |
+| [] | Array | 유가족 객체들 리스트 |
+| ↳ .name | String | 유가족 이름 |
+| ↳ .loginId | String | 로그인 ID |
+| ↳ .email | String | 이메일 주소 |
+| ↳ .phone | String | 전화번호 |
+| ↳ .status | String | 승인 상태 (PENDING, APPROVED) |
+| ↳ .memorialId | String or null | 연결된 추모관 ID |
+
+### 🔹 HTTP 400 Bad Request
+
+```json
+"입력하신 정보와 일치하는 계정을 찾을 수 없습니다."
+```
+
+---
+
+# 유가족 로그인ID로 검색
+
+API Path: /families/search/loginId
+HTTP Method: GET
+개발현황: 개발 완료
+설명: 로그인ID로 유가족 검색
+토큰: O
+
+# 📥 Request
+
+### 🔹 Query Parameters
+
+| 이름 | 타입 | 필수 | 설명 |
+| --- | --- | --- | --- |
+| loginId | String | ✅ | 검색할 유가족 로그인ID |
+
+### 🔹 Headers
+
+| 이름 | 필수 | 값 | 설명 |
+| --- | --- | --- | --- |
+| Content-Type | ✅ | application/json |  |
+
+# 📤 Response
+
+### 🔹 HTTP 200 OK
+
+| 필드명 | 타입 | 설명 |
+| --- | --- | --- |
+| name | String | 유가족 이름 |
+| loginId | String | 로그인 ID |
+| email | String | 이메일 주소 |
+| phone | String | 전화번호 |
+| status | String | 승인 상태 (PENDING, APPROVED) |
+| memorialId | String or null | 연결된 추모관 ID |
+
+### 🔹 HTTP 400 Bad Request
+
+```json
+"입력하신 정보와 일치하는 계정을 찾을 수 없습니다."
+```
