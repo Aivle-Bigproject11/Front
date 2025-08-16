@@ -3,15 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Badge, Spinner, Alert, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Calendar, Users, Search, LogOut, User, ArrowRight, FileText, Check, X, Phone, MapPin, Printer, Eye } from 'lucide-react';
+import { Heart, Calendar, Search, LogOut, User, ArrowRight, Check, X, Printer, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
-import { customerService, customerUtils } from '../services/customerService';
+import { customerService } from '../services/customerService';
 import { documentService } from '../services/documentService';
 
 const Lobby = () => {
   const [memorialHalls, setMemorialHalls] = useState([]);
-  const [customerDocuments, setCustomerDocuments] = useState([]);
+  const [memorialDetails, setMemorialDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [documentsLoading, setDocumentsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -24,9 +24,16 @@ const Lobby = () => {
 
   useEffect(() => {
     loadMemorialHalls();
-    loadCustomerDocuments();
     setTimeout(() => setAnimateCard(true), 100);
   }, [user]);
+
+  useEffect(() => {
+    if (memorialHalls.length > 0) {
+      loadCustomerDocuments(); 
+    } else if (!loading) {
+      setDocumentsLoading(false);
+    }
+  }, [memorialHalls, loading]);
 
   const loadMemorialHalls = async () => {
     try {
@@ -34,25 +41,54 @@ const Lobby = () => {
       setError('');
       const userMemorials = await apiService.getUserMemorialHalls(user?.id || user?.loginId);
       setMemorialHalls(userMemorials);
-      setLoading(false);
     } catch (err) {
       setError('추모관 목록을 불러오는데 실패했습니다.');
+    } finally {
       setLoading(false);
     }
   };
 
+  // 각 추모관에 대한 고객 정보 및 서류 상태를 가져오는 함수
   const loadCustomerDocuments = async () => {
     try {
       setDocumentsLoading(true);
       const allCustomers = await customerService.getAllCustomers();
-      const userMemorials = await apiService.getUserMemorialHalls(user?.id || user?.loginId);
-      const userRelatedCustomers = allCustomers.filter(customer => 
-        userMemorials.some(memorial => memorial.name === customer.name)
-      );
-      setCustomerDocuments(userRelatedCustomers);
-      setDocumentsLoading(false);
+
+      const detailsPromises = memorialHalls.map(async (memorial) => {
+        const customer = allCustomers.find(c => c.name === memorial.name);
+        
+        if (!customer) {
+          return [memorial.id, { customer: null, statuses: { obituary: false, schedule: false, deathCertificate: false } }];
+        }
+
+        const statusPromises = [
+          apiService.getObituaryByCustomerId(customer.id),
+          apiService.getScheduleByCustomerId(customer.id),
+          apiService.getDeathReportByCustomerId(customer.id)
+        ];
+
+        const results = await Promise.allSettled(statusPromises);
+
+        const statuses = {
+          obituary: results[0].status === 'fulfilled' && results[0].value,
+          schedule: results[1].status === 'fulfilled' && results[1].value,
+          deathCertificate: results[2].status === 'fulfilled' && results[2].value,
+        };
+
+        return [memorial.id, { customer, statuses }];
+      });
+
+      const detailsArray = await Promise.all(detailsPromises);
+      setMemorialDetails(Object.fromEntries(detailsArray));
+
     } catch (err) {
-      console.error('Error loading customer documents:', err);
+      console.error('Error loading customer documents status:', err);
+      const resetDetails = memorialHalls.reduce((acc, memorial) => {
+        acc[memorial.id] = { customer: null, statuses: { obituary: false, schedule: false, deathCertificate: false } };
+        return acc;
+      }, {});
+      setMemorialDetails(resetDetails);
+    } finally {
       setDocumentsLoading(false);
     }
   };
@@ -80,8 +116,18 @@ const Lobby = () => {
     }
   };
 
-  const handleMemorialClick = (memorial) => {
-    navigate(`/user-memorial/${memorial.id}`);
+  const handleMemorialClick = async (memorial) => {
+    try {
+      setError('');
+      const details = await apiService.getMemorialDetails(memorial.id);
+      if (details) {
+        navigate(`/user-memorial/${details.id}`);
+      } else {
+        setError('추모관 정보를 불러올 수 없습니다.');
+      }
+    } catch (err) {
+      setError('추모관 정보를 불러오는 중 오류가 발생했습니다.');
+    }
   };
 
   const handlePreview = async (docType, customer) => {
@@ -240,131 +286,134 @@ const Lobby = () => {
               gap: '20px'
             }}>
               {memorialHalls.map((memorial, index) => {
-                const customer = customerDocuments.find(doc => doc.name === memorial.name);
-                const isAnyDocumentReady = customer && documentsInfo.some(docInfo => customer.documents[docInfo.type]);
+                const details = memorialDetails[memorial.id];
+                const customer = details?.customer;
+                const statuses = details?.statuses;
 
                 return (
-                <Card
-                  key={memorial.id}
-                  style={{
-                    border: 'none',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
-                    opacity: animateCard ? 1 : 0,
-                    transition: `all 0.6s ease-out ${index * 0.1}s`,
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
-                  }}
-                >
-                  <div 
-                    onClick={() => handleMemorialClick(memorial)}
+                  <Card
+                    key={memorial.id}
                     style={{
-                      cursor: 'pointer',
-                      background: memorial.status === 'active' 
-                        ? 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)'
-                        : memorial.status === 'completed'
-                        ? 'linear-gradient(135deg, #6c757d 0%, #495057 100%)'
-                        : 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)',
-                      padding: '20px',
-                      color: 'white'
-                  }}>
-                    <div style={{
+                      border: 'none',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
                       display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: '15px'
-                    }}>
-                      <div>
-                        <h5 style={{ margin: '0 0 5px 0', fontSize: '1.3rem', fontWeight: '700' }}>
-                          {memorial.name}
-                        </h5>
-                        <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>
-                          {memorial.description}
-                        </p>
+                      flexDirection: 'column',
+                      transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
+                      opacity: animateCard ? 1 : 0,
+                      transition: `all 0.6s ease-out ${index * 0.1}s`,
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+                    }}
+                  >
+                    <div 
+                      onClick={() => handleMemorialClick(memorial)}
+                      style={{
+                        cursor: 'pointer',
+                        background: memorial.status === 'active' 
+                          ? 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)'
+                          : memorial.status === 'completed'
+                          ? 'linear-gradient(135deg, #6c757d 0%, #495057 100%)'
+                          : 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)',
+                        padding: '20px',
+                        color: 'white'
+                      }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: '15px'
+                      }}>
+                        <div>
+                          <h5 style={{ margin: '0 0 5px 0', fontSize: '1.3rem', fontWeight: '700' }}>
+                            {memorial.name}
+                          </h5>
+                          <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>
+                            {memorial.description}
+                          </p>
+                        </div>
+                        {getStatusBadge(memorial.status)}
                       </div>
-                      {getStatusBadge(memorial.status)}
-                    </div>
-                    
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.15)',
-                      padding: '12px',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
-                          {memorial.period}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Card.Body onClick={() => handleMemorialClick(memorial)} style={{ padding: '20px', cursor: 'pointer' }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <div>
-                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>추모관 고유번호</small>
-                        <div 
-                          className="fw-bold" 
-                          style={{ 
-                            color: '#B8860B', 
-                            fontSize: '1rem', 
-                            letterSpacing: '0.5px' 
-                          }}
-                        >
-                          {memorial.joinCode}
+                      
+                      <div style={{
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        padding: '12px',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
+                            {memorial.period}
+                          </span>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '600', marginRight: '5px' }}>
-                          입장하기
-                        </span>
-                        <ArrowRight size={16} />
-                      </div>
                     </div>
-                  </Card.Body>
-                  <Card.Footer style={{ background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', padding: '15px 20px' }}>
-                    <div style={{ fontWeight: '600', color: '#555', marginBottom: '12px', fontSize: '0.9rem' }}>서류 작성 상태</div>
-                    {documentsLoading ? <Spinner animation="border" size="sm" /> :
-                    !customer ? <div style={{fontSize: '0.85rem', color: '#888'}}>서류 정보 없음</div> :
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {documentsInfo.map(docInfo => {
-                        const isCompleted = customer.documents[docInfo.type];
-                        return (
-                          <div key={docInfo.type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                              {isCompleted ? <Check size={16} style={{ color: '#28a745', marginRight: '6px' }} /> : <X size={16} style={{ color: '#dc3545', marginRight: '6px' }} />}
-                              <span style={{ fontWeight: 500, color: isCompleted ? '#333' : '#888' }}>{docInfo.name}</span>
-                            </div>
-                            {isCompleted && (
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePreview(docInfo.type, customer); }}>
-                                  <Eye size={12} />
-                                </Button>
-                                <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePrint(); }}>
-                                  <Printer size={12} />
-                                </Button>
-                              </div>
-                            )}
+                    
+                    <Card.Body onClick={() => handleMemorialClick(memorial)} style={{ padding: '20px', cursor: 'pointer', flexGrow: 1 }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <div>
+                          <small className="text-muted" style={{ fontSize: '0.8rem' }}>추모관 고유번호</small>
+                          <div 
+                            className="fw-bold" 
+                            style={{ 
+                              color: '#B8860B', 
+                              fontSize: '1rem', 
+                              letterSpacing: '0.5px' 
+                            }}
+                          >
+                            {memorial.joinCode}
                           </div>
-                        );
-                      })}
-                    </div>
-                    }
-                  </Card.Footer>
-                </Card>
-              )})}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: '600', marginRight: '5px' }}>
+                            입장하기
+                          </span>
+                          <ArrowRight size={16} />
+                        </div>
+                      </div>
+                    </Card.Body>
+                    <Card.Footer style={{ background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', padding: '15px 20px' }}>
+                      <div style={{ fontWeight: '600', color: '#555', marginBottom: '12px', fontSize: '0.9rem' }}>서류 작성 상태</div>
+                      {documentsLoading ? <Spinner animation="border" size="sm" /> :
+                      !customer ? <div style={{fontSize: '0.85rem', color: '#888'}}>서류 정보 없음</div> :
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {documentsInfo.map(docInfo => {
+                          const isCompleted = statuses && statuses[docInfo.type];
+                          return (
+                            <div key={docInfo.type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                {isCompleted ? <Check size={16} style={{ color: '#28a745', marginRight: '6px' }} /> : <X size={16} style={{ color: '#dc3545', marginRight: '6px' }} />}
+                                <span style={{ fontWeight: 500, color: isCompleted ? '#333' : '#888' }}>{docInfo.name}</span>
+                              </div>
+                              {isCompleted && (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePreview(docInfo.type, customer); }}>
+                                    <Eye size={12} />
+                                  </Button>
+                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePrint(); }}>
+                                    <Printer size={12} />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      }
+                    </Card.Footer>
+                  </Card>
+                )})}
             </div>
           )}
         </div>
