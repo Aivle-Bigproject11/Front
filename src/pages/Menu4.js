@@ -98,16 +98,27 @@ const Menu4 = () => {
 
   const openFamilyModal = async (memorial) => {
     setSelectedMemorial(memorial);
+    console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: ${apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트엔드 필터링'}`);
+    
     try {
       // 해당 추모관에 등록된 유가족 목록 조회
       const familyResponse = await apiService.getFamiliesByMemorialId(memorial.id);
       if (familyResponse._embedded && familyResponse._embedded.families) {
+        console.log(`✅ 유가족 조회 성공 - ${familyResponse._embedded.families.length}명`);
         setFamilyMembers(familyResponse._embedded.families);
       } else {
+        console.log('ℹ️ 등록된 유가족이 없습니다');
         setFamilyMembers([]);
       }
     } catch (error) {
-      console.error("Error fetching family members:", error);
+      console.error("❌ 유가족 조회 에러:", error);
+      
+      // 백엔드 검색 실패시 자동으로 프론트엔드 방식 제안
+      if (apiService.USE_BACKEND_SEARCH && error.response?.status >= 400) {
+        console.log("💡 백엔드 유가족 조회 실패 - 프론트엔드 필터링 방식으로 전환을 고려해보세요");
+        alert("백엔드 유가족 조회가 실패했습니다.\n검색 방식을 '프론트 필터링'으로 변경해보세요.\n\n현재 백엔드에는 findByMemorialId API가 구현되지 않았을 수 있습니다.");
+      }
+      
       setFamilyMembers([]);
       // 에러가 있어도 모달은 열어줌 (빈 목록으로)
     }

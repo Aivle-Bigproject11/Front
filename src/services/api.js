@@ -116,7 +116,7 @@ const realApiService = {
   // 검색 방식 선택: true = 백엔드 API 직접 검색, false = 프론트엔드 필터링
   USE_BACKEND_SEARCH: false, // 나중에 백엔드 API 구현 완료시 true로 변경
   
-  // 백엔드 API 직접 검색 방식 (문서 명세대로 - 아직 미구현)
+  // 백엔드 API 직접 검색 방식 (문서 명세대로)
   // 엔드포인트: /families/search-name, /families/search-email, /families/search-phone
   searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search-name?name=${name}`)).data,
   searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search-email?email=${email}`)).data,
@@ -180,7 +180,27 @@ const realApiService = {
       this.searchFamiliesByPhoneBackend(phone) : 
       this.searchFamiliesByPhoneFrontend(phone);
   },
-  getFamiliesByMemorialId: async (memorialId) => (await api.get(`/families/search/findByMemorialId?memorialId=${memorialId}`)).data,
+  
+  // 추모관 ID로 유가족 조회 - 백엔드/프론트엔드 방식 모두 지원
+  getFamiliesByMemorialIdBackend: async (memorialId) => (await api.get(`/families/search/findByMemorialId?memorialId=${memorialId}`)).data,
+  getFamiliesByMemorialIdFrontend: async (memorialId) => {
+    const allFamilies = await (await api.get('/families')).data;
+    if (allFamilies._embedded && allFamilies._embedded.families) {
+      const filtered = allFamilies._embedded.families.filter(family => 
+        family.memorialId === memorialId
+      );
+      return {
+        ...allFamilies,
+        _embedded: { families: filtered }
+      };
+    }
+    return allFamilies;
+  },
+  getFamiliesByMemorialId: async function(memorialId) {
+    return this.USE_BACKEND_SEARCH ? 
+      this.getFamiliesByMemorialIdBackend(memorialId) : 
+      this.getFamiliesByMemorialIdFrontend(memorialId);
+  },
   updateFamilyMemorialId: async (familyId, memorialId) => (await api.patch(`/families/${familyId}`, { memorialId })).data,
 
   // Login/User-related Service
