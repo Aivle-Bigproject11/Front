@@ -36,6 +36,7 @@ const MemorialConfig = () => {
     const [profileImageFile, setProfileImageFile] = useState(null);
     const [imagePreviewUrl, setImagePreviewUrl] = useState('');
     const [slideshowPhotos, setSlideshowPhotos] = useState([]);
+    const [slideshowPhotoURLs, setSlideshowPhotoURLs] = useState([]);
     const [animatedPhoto, setAnimatedPhoto] = useState(null);
     const [keywords, setKeywords] = useState(['', '', '', '', '']);
     const [generatedVideoUrl, setGeneratedVideoUrl] = useState('');
@@ -100,6 +101,16 @@ const MemorialConfig = () => {
         loadData();
     }, [id, navigate, isAdminAccess, isUserAccess]);
 
+    useEffect(() => {
+        const urls = slideshowPhotos.map(photo => URL.createObjectURL(photo));
+        setSlideshowPhotoURLs(urls);
+
+        // Cleanup function to revoke URLs
+        return () => {
+            urls.forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [slideshowPhotos]);
+
     // 유가족 및 관리자 권한 확인 함수 (실제 API 구현 필요)
     const checkFamilyAccess = async (memorialId) => {
         // TODO: 실제 API 호출로 교체
@@ -126,6 +137,27 @@ const MemorialConfig = () => {
         setVideoData({
             ...videoData,
             [e.target.name]: e.target.value
+        });
+    };
+
+    const handleSlideshowPhotoChange = (e) => {
+        const newFiles = Array.from(e.target.files);
+        if (slideshowPhotos.length + newFiles.length > 15) {
+            alert('슬라이드쇼 사진은 최대 15개까지 선택 가능합니다.');
+            return;
+        }
+        setSlideshowPhotos(prevPhotos => [...prevPhotos, ...newFiles]);
+    };
+
+    const handleRemoveSlideshowPhoto = (index) => {
+        setSlideshowPhotos(prevPhotos => prevPhotos.filter((_, i) => i !== index));
+    };
+
+    const handleChangeSlideshowPhoto = (index, file) => {
+        setSlideshowPhotos(prevPhotos => {
+            const newPhotos = [...prevPhotos];
+            newPhotos[index] = file;
+            return newPhotos;
         });
     };
 
@@ -780,56 +812,143 @@ const MemorialConfig = () => {
                                         <Row>
                                             <Col md={6}>
                                                 <Form.Group className="mb-3">
-                                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <Form.Label className="fw-bold mb-0" style={{ color: '#2C1F14' }}>
-                                                            <i className="fas fa-images me-2" style={{ color: '#B8860B' }}></i>슬라이드쇼 사진 (9~15장)
-                                                        </Form.Label>
-                                                        <Badge 
-                                                            bg={slideshowPhotos.length >= 9 && slideshowPhotos.length <= 15 ? "success" : "warning"}
-                                                            style={{ fontSize: '0.8rem' }}
-                                                        >
-                                                            {slideshowPhotos.length}/15장 선택됨
-                                                        </Badge>
-                                                    </div>
-                                                    <Form.Control
-                                                        type="file"
-                                                        multiple
-                                                        accept="image/*"
-                                                        onChange={(e) => setSlideshowPhotos(Array.from(e.target.files).slice(0, 15))}
-                                                        style={{ 
-                                                            borderRadius: '12px', 
-                                                            padding: '12px 16px',
-                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                            background: 'rgba(255, 255, 255, 0.9)',
-                                                            color: '#2C1F14'
-                                                        }}
-                                                    />
-                                                    <Form.Text className="text-muted">
-                                                        영상에 포함될 9~15장의 사진을 선택하세요. 
-                                                        {slideshowPhotos.length < 9 && <span className="text-warning"> (최소 {9 - slideshowPhotos.length}장 더 필요)</span>}
-                                                        {slideshowPhotos.length > 15 && <span className="text-danger"> (최대 15장까지만 가능)</span>}
-                                                    </Form.Text>
-                                                </Form.Group>
+    <div className="d-flex justify-content-between align-items-center mb-2">
+        <Form.Label className="fw-bold mb-0" style={{ color: '#2C1F14' }}>
+            <i className="fas fa-images me-2" style={{ color: '#B8860B' }}></i>슬라이드쇼 사진 (9~15장)
+        </Form.Label>
+        <Badge 
+            bg={slideshowPhotos.length >= 9 && slideshowPhotos.length <= 15 ? "success" : "warning"}
+            style={{ fontSize: '0.8rem' }}
+        >
+            {slideshowPhotos.length}/15장 선택됨
+        </Badge>
+    </div>
+    <Form.Control
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={handleSlideshowPhotoChange}
+        style={{ 
+            borderRadius: '12px', 
+            padding: '12px 16px',
+            border: '2px solid rgba(184, 134, 11, 0.2)',
+            background: 'rgba(255, 255, 255, 0.9)',
+            color: '#2C1F14'
+        }}
+    />
+    <Form.Text className="text-muted">
+        영상에 포함될 9~15장의 사진을 선택하세요. 
+        {slideshowPhotos.length < 9 && <span className="text-warning"> (최소 {9 - slideshowPhotos.length}장 더 필요)</span>}
+        {slideshowPhotos.length > 15 && <span className="text-danger"> (최대 15장까지만 가능)</span>}
+    </Form.Text>
+
+    {/* 이미지 미리보기 및 관리 */}
+    <div className="mt-3 d-flex flex-wrap gap-3">
+        {slideshowPhotoURLs.map((url, index) => (
+            <div key={index} className="position-relative" style={{ width: '100px', height: '100px' }}>
+                <img
+                    src={url}
+                    alt={`슬라이드쇼 이미지 ${index + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                />
+                <div className="position-absolute top-0 end-0 p-1">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            if (e.target.files[0]) {
+                                handleChangeSlideshowPhoto(index, e.target.files[0]);
+                            }
+                        }}
+                        style={{ display: 'none' }}
+                        id={`change-photo-${index}`}
+                    />
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => document.getElementById(`change-photo-${index}`).click()}
+                        style={{ lineHeight: '1', padding: '0.2rem 0.4rem', marginRight: '4px' }}
+                    >
+                        변경
+                    </Button>
+                    <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleRemoveSlideshowPhoto(index)}
+                        style={{ lineHeight: '1', padding: '0.2rem 0.4rem' }}
+                    >
+                        삭제
+                    </Button>
+                </div>
+            </div>
+        ))}
+    </div>
+</Form.Group>
 
                                                 <Form.Group className="mb-3">
                                                     <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
                                                         <i className="fas fa-running me-2" style={{ color: '#B8860B' }}></i>움직이는 사진 (1장)
                                                     </Form.Label>
-                                                    <Form.Control
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => setAnimatedPhoto(e.target.files[0])}
-                                                        style={{ 
-                                                            borderRadius: '12px', 
-                                                            padding: '12px 16px',
-                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                            background: 'rgba(255, 255, 255, 0.9)',
-                                                            color: '#2C1F14'
-                                                        }}
-                                                    />
-                                                    <Form.Text className="text-muted">
-                                                        영상에서 움직이는 효과를 적용할 사진 1장을 선택하세요.
-                                                    </Form.Text>
+                                                    {animatedPhoto ? (
+                                                        <div className="position-relative" style={{ width: '100px', height: '100px' }}>
+                                                            <img
+                                                                src={URL.createObjectURL(animatedPhoto)}
+                                                                alt="움직이는 사진"
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                                            />
+                                                            <div className="position-absolute top-0 end-0 p-1">
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    onChange={(e) => {
+                                                                        if (e.target.files[0]) {
+                                                                            setAnimatedPhoto(e.target.files[0]);
+                                                                        }
+                                                                    }}
+                                                                    style={{ display: 'none' }}
+                                                                    id="change-animated-photo"
+                                                                />
+                                                                <Button
+                                                                    variant="secondary"
+                                                                    size="sm"
+                                                                    onClick={() => document.getElementById('change-animated-photo').click()}
+                                                                    style={{ lineHeight: '1', padding: '0.2rem 0.4rem', marginRight: '4px' }}
+                                                                >
+                                                                    변경
+                                                                </Button>
+                                                                <Button
+                                                                    variant="danger"
+                                                                    size="sm"
+                                                                    onClick={() => setAnimatedPhoto(null)}
+                                                                    style={{ lineHeight: '1', padding: '0.2rem 0.4rem' }}
+                                                                >
+                                                                    삭제
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <Form.Control
+                                                                type="file"
+                                                                accept="image/*"
+                                                                onChange={(e) => {
+                                                                    if (e.target.files[0]) {
+                                                                        setAnimatedPhoto(e.target.files[0]);
+                                                                    }
+                                                                }}
+                                                                style={{ 
+                                                                    borderRadius: '12px', 
+                                                                    padding: '12px 16px',
+                                                                    border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                                    background: 'rgba(255, 255, 255, 0.9)',
+                                                                    color: '#2C1F14'
+                                                                }}
+                                                            />
+                                                            <Form.Text className="text-muted">
+                                                                영상에서 움직이는 효과를 적용할 사진 1장을 선택하세요.
+                                                            </Form.Text>
+                                                        </>
+                                                    )}
                                                 </Form.Group>
                                             </Col>
 
