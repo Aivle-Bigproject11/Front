@@ -111,6 +111,75 @@ const realApiService = {
   createFamily: async (data) => (await api.post('/families', data)).data,
   approveFamily: async (familyId, data) => (await api.post(`/families/${familyId}/approve`, data)).data,
   deleteFamily: async (id) => (await api.delete(`/families/${id}`)).data,
+  
+  // 유가족 검색 관련 API
+  // 검색 방식 선택: true = 백엔드 직접 검색, false = 프론트엔드 필터링
+  USE_BACKEND_SEARCH: false, // 나중에 백엔드 구현 완료시 true로 변경
+  
+  // 백엔드 직접 검색 방식 (문서 명세대로)
+  searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search-name?name=${name}`)).data,
+  searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search-email?email=${email}`)).data,
+  searchFamiliesByPhoneBackend: async (phone) => (await api.get(`/families/search-phone?phone=${phone}`)).data,
+  
+  // 프론트엔드 필터링 방식 (현재 백엔드 상태에 맞춤)
+  searchFamiliesByNameFrontend: async (name) => {
+    const allFamilies = await (await api.get('/families')).data;
+    if (allFamilies._embedded && allFamilies._embedded.families) {
+      const filtered = allFamilies._embedded.families.filter(family => 
+        family.name && family.name.toLowerCase().includes(name.toLowerCase())
+      );
+      return {
+        ...allFamilies,
+        _embedded: { families: filtered }
+      };
+    }
+    return allFamilies;
+  },
+  searchFamiliesByEmailFrontend: async (email) => {
+    const allFamilies = await (await api.get('/families')).data;
+    if (allFamilies._embedded && allFamilies._embedded.families) {
+      const filtered = allFamilies._embedded.families.filter(family => 
+        family.email && family.email.toLowerCase().includes(email.toLowerCase())
+      );
+      return {
+        ...allFamilies,
+        _embedded: { families: filtered }
+      };
+    }
+    return allFamilies;
+  },
+  searchFamiliesByPhoneFrontend: async (phone) => {
+    const allFamilies = await (await api.get('/families')).data;
+    if (allFamilies._embedded && allFamilies._embedded.families) {
+      const filtered = allFamilies._embedded.families.filter(family => 
+        family.phone && family.phone.includes(phone)
+      );
+      return {
+        ...allFamilies,
+        _embedded: { families: filtered }
+      };
+    }
+    return allFamilies;
+  },
+  
+  // 통합 검색 함수들 (설정에 따라 방식 자동 선택)
+  searchFamiliesByName: async function(name) {
+    return this.USE_BACKEND_SEARCH ? 
+      this.searchFamiliesByNameBackend(name) : 
+      this.searchFamiliesByNameFrontend(name);
+  },
+  searchFamiliesByEmail: async function(email) {
+    return this.USE_BACKEND_SEARCH ? 
+      this.searchFamiliesByEmailBackend(email) : 
+      this.searchFamiliesByEmailFrontend(email);
+  },
+  searchFamiliesByPhone: async function(phone) {
+    return this.USE_BACKEND_SEARCH ? 
+      this.searchFamiliesByPhoneBackend(phone) : 
+      this.searchFamiliesByPhoneFrontend(phone);
+  },
+  getFamiliesByMemorialId: async (memorialId) => (await api.get(`/families/search/findByMemorialId?memorialId=${memorialId}`)).data,
+  updateFamilyMemorialId: async (familyId, memorialId) => (await api.patch(`/families/${familyId}`, { memorialId })).data,
 
   // Login/User-related Service
   // 참고: API 명세에 없어 추측하여 작성되었습니다. 실제 엔드포인트로 수정이 필요할 수 있습니다.
