@@ -113,6 +113,13 @@ const Lobby = () => {
     return <Badge bg="warning">예정</Badge>;
   };
 
+  const maskName = (name) => {
+    if (!name || name.length < 2) {
+      return name;
+    }
+    return name.slice(0, -1) + '*';
+  };
+
   const documentsInfo = [
     { type: 'obituary', name: '부고장' },
     { type: 'schedule', name: '일정표' },
@@ -159,7 +166,7 @@ const Lobby = () => {
             alignItems: 'center'
           }}>
             <User size={16} style={{ marginRight: '8px', color: '#B8860B' }} />
-            <span style={{ fontWeight: '600', color: '#333' }}>{user?.name || '사용자'}님</span>
+            <span style={{ fontWeight: '600', color: '#333' }}>{maskName(user?.name) || '사용자'}님</span>
           </div>
           <Button
             variant="outline-secondary"
