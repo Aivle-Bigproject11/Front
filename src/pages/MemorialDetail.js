@@ -508,7 +508,7 @@ const MemorialDetail = () => {
                           <strong>나이:</strong> {memorial.deceasedAge}세
                         </div>
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                          <strong>성별:</strong> {memorial.gender}
+                          <strong>성별:</strong> {memorial.gender === '남성' ? '남' : memorial.gender === '여성' ? '여' : memorial.gender}
                         </div>
                       </Col>
                       <Col md={6}>

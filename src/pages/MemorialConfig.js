@@ -638,8 +638,8 @@ const MemorialConfig = () => {
                                                     }}
                                                 >
                                                     <option value="">성별 선택</option>
-                                                    <option value="남성">남성</option>
-                                                    <option value="여성">여성</option>
+                                                    <option value="남">남</option>
+                                                    <option value="여">여</option>
                                                 </Form.Select>
                                             </Form.Group>
 
