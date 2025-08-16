@@ -144,19 +144,30 @@ const Menu4 = () => {
       switch (searchType) {
         case 'name':
           const nameResponse = await apiService.searchFamiliesByName(keyword.trim());
-          if (nameResponse._embedded && nameResponse._embedded.families) {
+          // 백엔드는 직접 List<Family>를 반환, 프론트엔드는 _embedded 구조
+          if (Array.isArray(nameResponse)) {
+            searchResults = nameResponse;
+          } else if (nameResponse._embedded && nameResponse._embedded.families) {
             searchResults = nameResponse._embedded.families;
           }
           break;
         case 'email':
           const emailResponse = await apiService.searchFamiliesByEmail(keyword.trim());
-          if (emailResponse._embedded && emailResponse._embedded.families) {
+          // 백엔드는 Optional<Family>를 반환, 프론트엔드는 _embedded 구조
+          if (emailResponse && !Array.isArray(emailResponse)) {
+            searchResults = [emailResponse]; // 단일 객체를 배열로 변환
+          } else if (Array.isArray(emailResponse)) {
+            searchResults = emailResponse;
+          } else if (emailResponse._embedded && emailResponse._embedded.families) {
             searchResults = emailResponse._embedded.families;
           }
           break;
         case 'phone':
           const phoneResponse = await apiService.searchFamiliesByPhone(keyword.trim());
-          if (phoneResponse._embedded && phoneResponse._embedded.families) {
+          // 백엔드는 직접 List<Family>를 반환, 프론트엔드는 _embedded 구조
+          if (Array.isArray(phoneResponse)) {
+            searchResults = phoneResponse;
+          } else if (phoneResponse._embedded && phoneResponse._embedded.families) {
             searchResults = phoneResponse._embedded.families;
           }
           break;

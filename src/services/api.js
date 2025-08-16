@@ -114,13 +114,13 @@ const realApiService = {
   
   // 유가족 검색 관련 API
   // 검색 방식 선택: true = 백엔드 API 직접 검색, false = 프론트엔드 필터링
-  USE_BACKEND_SEARCH: false, // 나중에 백엔드 API 구현 완료시 true로 변경
+  USE_BACKEND_SEARCH: true, // 백엔드 API가 올바른 경로로 구현되어 기본값을 true로 변경
   
-  // 백엔드 API 직접 검색 방식 (문서 명세대로)
-  // 엔드포인트: /families/search-name, /families/search-email, /families/search-phone
-  searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search-name?name=${name}`)).data,
-  searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search-email?email=${email}`)).data,
-  searchFamiliesByPhoneBackend: async (phone) => (await api.get(`/families/search-phone?phone=${phone}`)).data,
+  // 백엔드 API 직접 검색 방식 (수정된 경로)
+  // 엔드포인트: /families/search/name, /families/search/email, /families/search/phone
+  searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search/name?name=${name}`)).data,
+  searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search/email?email=${email}`)).data,
+  searchFamiliesByPhoneBackend: async (phone) => (await api.get(`/families/search/phone?phone=${phone}`)).data,
   
   // 프론트엔드 필터링 방식 (현재 백엔드 상태에 맞춤 - 안정적)
   // 엔드포인트: /families 전체 조회 후 브라우저에서 필터링
@@ -130,12 +130,10 @@ const realApiService = {
       const filtered = allFamilies._embedded.families.filter(family => 
         family.name && family.name.toLowerCase().includes(name.toLowerCase())
       );
-      return {
-        ...allFamilies,
-        _embedded: { families: filtered }
-      };
+      // 백엔드 응답 형식에 맞게 반환 (List 형태)
+      return filtered;
     }
-    return allFamilies;
+    return [];
   },
   searchFamiliesByEmailFrontend: async (email) => {
     const allFamilies = await (await api.get('/families')).data;
@@ -143,12 +141,10 @@ const realApiService = {
       const filtered = allFamilies._embedded.families.filter(family => 
         family.email && family.email.toLowerCase().includes(email.toLowerCase())
       );
-      return {
-        ...allFamilies,
-        _embedded: { families: filtered }
-      };
+      // 백엔드는 Optional<Family>를 반환하므로 첫 번째 결과만 반환
+      return filtered.length > 0 ? filtered[0] : null;
     }
-    return allFamilies;
+    return null;
   },
   searchFamiliesByPhoneFrontend: async (phone) => {
     const allFamilies = await (await api.get('/families')).data;
@@ -156,12 +152,10 @@ const realApiService = {
       const filtered = allFamilies._embedded.families.filter(family => 
         family.phone && family.phone.includes(phone)
       );
-      return {
-        ...allFamilies,
-        _embedded: { families: filtered }
-      };
+      // 백엔드 응답 형식에 맞게 반환 (List 형태)
+      return filtered;
     }
-    return allFamilies;
+    return [];
   },
   
   // 통합 검색 함수들 (설정에 따라 백엔드 API vs 프론트엔드 필터링 자동 선택)
@@ -182,7 +176,15 @@ const realApiService = {
   },
   
   // 추모관 ID로 유가족 조회 - 백엔드/프론트엔드 방식 모두 지원
-  getFamiliesByMemorialIdBackend: async (memorialId) => (await api.get(`/families/search/findByMemorialId?memorialId=${memorialId}`)).data,
+  getFamiliesByMemorialIdBackend: async (memorialId) => {
+    // UUID 형식 검증
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memorialId)) {
+      console.warn(`⚠️ 잘못된 UUID 형식: ${memorialId}`);
+      throw new Error(`Invalid UUID format: ${memorialId}`);
+    }
+    return (await api.get(`/families/search/findByMemorialId?memorialId=${memorialId}`)).data;
+  },
   getFamiliesByMemorialIdFrontend: async (memorialId) => {
     const allFamilies = await (await api.get('/families')).data;
     if (allFamilies._embedded && allFamilies._embedded.families) {
