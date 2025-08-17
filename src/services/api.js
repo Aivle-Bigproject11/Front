@@ -132,6 +132,7 @@ const realApiService = {
   createManager: (data) => api.post('/managers', data),
   getManagerById: async (id) => (await api.get(`/managers/${id}`)).data, 
   updateManagerPatch: async (id, managerData) => (await api.patch(`/managers/${id}`, managerData)).data,
+  checkManagerId: async (loginId) => (await api.get(`/managers/check/id?loginId=${loginId}`)).data,
   // Manager login
   loginManager: (credentials) => api.post('/managers/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
 
@@ -140,6 +141,7 @@ const realApiService = {
   createFamily: (data) => api.post('/families', data),
   getFamilyById: async (id) => (await api.get(`/families/${id}`)).data,
   updateFamilyPatch: async (id, data) => (await api.patch(`/families/${id}`, data)).data,
+  checkFamilyId: async (loginId) => (await api.get(`/families/check/id?loginId=${loginId}`)).data,
   // User login
   loginUser: (credentials) => api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
 
