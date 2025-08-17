@@ -627,7 +627,6 @@ const MemorialDetail = () => {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   borderRadius: '15px',
-                  border: '3px solid rgba(184, 134, 11, 0.3)',
                   margin: '0 auto',
                   display: 'flex',
                   alignItems: 'center',
