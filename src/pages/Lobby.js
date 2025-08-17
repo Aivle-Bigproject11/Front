@@ -23,7 +23,9 @@ const Lobby = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadMemorialHalls();
+    if (user?.id) {
+      loadMemorialHalls();
+    }
     setTimeout(() => setAnimateCard(true), 100);
   }, [user]);
 
@@ -39,10 +41,35 @@ const Lobby = () => {
     try {
       setLoading(true);
       setError('');
-      const userMemorials = await apiService.getUserMemorialHalls(user?.id || user?.loginId);
-      setMemorialHalls(userMemorials);
+      setMemorialHalls([]); 
+
+      // 1단계: 로그인한 유저(유가족)의 정보를 조회하여 memorialId를 가져오기
+      const familyInfo = await apiService.getFamily(user.id);
+      const memorialId = familyInfo.memorialId; 
+
+      // 2단계: memorialId가 존재할 경우, 해당 ID로 추모관의 상세 정보 조회
+      if (memorialId) {
+        const memorialData = await apiService.getMemorial(memorialId);
+        
+        // 화면에 표시할 데이터 형태로 가공
+        const formattedMemorial = {
+          id: memorialId,
+          name: `故 ${memorialData.name || '고인'} 추모관`, // API 응답에 맞게 필드명 수정
+          period: `${memorialData.birthDate} ~ ${memorialData.deceasedDate}`,
+          joinCode: '확인 불가', //임시
+          status: customerStatus,
+          customerId: memorialData.customerId 
+        };
+
+        setMemorialHalls([formattedMemorial]);
+      } else {
+        setMemorialHalls([]);
+      }
+
     } catch (err) {
-      setError('추모관 목록을 불러오는데 실패했습니다.');
+      console.error('추모관 정보를 불러오는 중 오류 발생:', err);
+      setError('추모관 정보를 불러오는데 실패했습니다.');
+      setMemorialHalls([]); 
     } finally {
       setLoading(false);
     }
