@@ -50,14 +50,39 @@ const Lobby = () => {
       // 2단계: memorialId가 존재할 경우, 해당 ID로 추모관의 상세 정보 조회
       if (memorialId) {
         const memorialData = await apiService.getMemorial(memorialId);
+
+        let customerStatus = 'active'; 
+        if (memorialData.customerId) {
+          try {
+            // customerId로 고객 정보를 가져오기
+            const customerInfo = await customerService.getCustomerById(memorialData.customerId);
+            
+            // customerInfo.status 값에 따라 진행상태 상태값
+            if (customerInfo && customerInfo.status) {
+              switch (customerInfo.status) {
+                case 'inProgress':
+                  customerStatus = 'active'; 
+                  break;
+                case 'completed':
+                  customerStatus = 'completed'; 
+                  break;
+                case 'pending':
+                default:
+                  customerStatus = 'scheduled'; 
+              }
+            }
+          } catch (e) {
+            console.error("고객 상태 정보를 불러오는데 실패했습니다:", e);
+          }
+        }
         
         // 화면에 표시할 데이터 형태로 가공
         const formattedMemorial = {
           id: memorialId,
           name: `故 ${memorialData.name || '고인'} 추모관`, // API 응답에 맞게 필드명 수정
           period: `${memorialData.birthDate} ~ ${memorialData.deceasedDate}`,
-          joinCode: '확인 불가', //임시
-          status: customerStatus,
+          joinCode: memorialData.joinCode,
+          status: customerStatus, 
           customerId: memorialData.customerId 
         };
 
