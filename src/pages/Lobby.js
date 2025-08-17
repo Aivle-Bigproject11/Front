@@ -173,9 +173,52 @@ const Lobby = () => {
     }
   };
 
-  const handlePrint = () => {
-      window.print();
+  
+  // 카드 목록에서 바로 인쇄 버튼을 눌렀을 때 실행되는 함수
+  const handlePrintDocument = async (docType, customer) => {
+    if (!customer || !customer.formData) {
+      setError("인쇄할 서류 데이터를 불러올 수 없습니다.");
+      return;
+    }
+    try {
+      const documentToPrint = await documentService.previewDocument(docType, customer.formData);
+      const printArea = document.getElementById('printable-area');
+      
+      if (printArea) {
+        printArea.innerHTML = `
+          <div style="background: white; font-family: serif; padding: 32px;">
+            <h2 style="text-align: center; margin-bottom: 32px; font-size: 24px; font-weight: bold;">${documentToPrint.title}</h2>
+            <div style="white-space: pre-line; line-height: 1.8; font-size: 16px;">${documentToPrint.content}</div>
+          </div>
+        `;
+        
+        window.print(); 
+        printArea.innerHTML = ''; 
+      } else {
+        setError("인쇄 영역을 찾을 수 없습니다.");
+      }
+    } catch (error) {
+      setError("서류를 인쇄하는 중 오류가 발생했습니다.");
+      console.error("Error during printing:", error);
+    }
   };
+
+  const handlePrintFromModal = () => {
+    const printArea = document.getElementById('printable-area');
+    if (printArea && previewContent.content) {
+      printArea.innerHTML = `
+        <div style="background: white; font-family: serif; padding: 32px;">
+          <h2 style="text-align: center; margin-bottom: 32px; font-size: 24px; font-weight: bold;">${previewContent.title}</h2>
+          <div style="white-space: pre-line; line-height: 1.8; font-size: 16px;">${previewContent.content}</div>
+        </div>
+      `;
+      window.print();
+      printArea.innerHTML = '';
+    } else {
+      setError("인쇄할 미리보기 내용이 없습니다.");
+    }
+  };
+
 
   const getStatusBadge = (status) => {
     if (status === 'active') {
@@ -428,8 +471,8 @@ const Lobby = () => {
                                   <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePreview(docInfo.type, customer); }}>
                                     <Eye size={12} />
                                   </Button>
-                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePrint(); }}>
-                                    <Printer size={12} />
+                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePrintDocument(docInfo.type, customer); }}>
+                                     <Printer size={12} />
                                   </Button>
                                 </div>
                               )}
@@ -572,7 +615,7 @@ const Lobby = () => {
           <Button variant="secondary" onClick={() => setShowPreviewModal(false)}>
             닫기
           </Button>
-          <Button variant="primary" onClick={handlePrint}>
+          <Button variant="primary" onClick={handlePrintFromModal}>
             <Printer size={16} style={{ marginRight: '6px' }} />
             인쇄
           </Button>
@@ -593,7 +636,13 @@ const Lobby = () => {
         @media print {
             body * { visibility: hidden; }
             .printable-content, .printable-content * { visibility: visible; }
-            .printable-content { position: absolute; left: 0; top: 0; width: 100%; }
+            .printable-content { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%;
+                height: 100%;
+            }
         }
       `}</style>
     </div>
