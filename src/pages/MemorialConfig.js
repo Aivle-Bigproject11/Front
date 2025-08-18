@@ -328,6 +328,16 @@ const MemorialConfig = () => {
         } else if (activeTab === 'memorial') {
             // 추모사 생성 처리
             setIsEulogyLoading(true);
+            
+            // 토큰 확인
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('인증 토큰이 없습니다. 다시 로그인해주세요.');
+                navigate('/login');
+                setIsEulogyLoading(false);
+                return;
+            }
+            
             try {
                 const eulogyRequest = {
                     keywords: eulogyKeywords.filter(k => k).join(', '), // API 명세에 따라 String으로 변경
@@ -364,6 +374,9 @@ const MemorialConfig = () => {
                         } else {
                             alert(`서버 오류로 인해 추모사 생성에 실패했습니다.\n오류: ${errorMessage}\n잠시 후 다시 시도해주세요.`);
                         }
+                    } else if (error.response.status === 401) {
+                        alert('인증 토큰이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.');
+                        navigate('/login');
                     } else if (error.response.status === 403) {
                         alert('추모사 생성 권한이 없습니다. 유가족만 이용 가능한 기능입니다.');
                     } else if (error.response.status === 404) {
