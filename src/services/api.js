@@ -111,6 +111,99 @@ const realApiService = {
   createFamily: async (data) => (await api.post('/families', data)).data,
   approveFamily: async (familyId, data) => (await api.post(`/families/${familyId}/approve`, data)).data,
   deleteFamily: async (id) => (await api.delete(`/families/${id}`)).data,
+  
+  // 유가족 검색 관련 API
+  // 검색 방식 선택: true = 백엔드 API 직접 검색, false = 프론트엔드 필터링
+  USE_BACKEND_SEARCH: true, // 백엔드 API가 올바른 경로로 구현되어 기본값을 true로 변경
+  
+  // 백엔드 API 직접 검색 방식 (수정된 경로)
+  // 엔드포인트: /families/search/name, /families/search/email, /families/search/phone
+  searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search/name?name=${name}`)).data,
+  searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search/email?email=${email}`)).data,
+  searchFamiliesByPhoneBackend: async (phone) => (await api.get(`/families/search/phone?phone=${phone}`)).data,
+  
+  // 프론트엔드 필터링 방식 (현재 백엔드 상태에 맞춤 - 안정적)
+  // 엔드포인트: /families 전체 조회 후 브라우저에서 필터링
+  searchFamiliesByNameFrontend: async (name) => {
+    const allFamilies = await (await api.get('/families')).data;
+    if (allFamilies._embedded && allFamilies._embedded.families) {
+      const filtered = allFamilies._embedded.families.filter(family => 
+        family.name && family.name.toLowerCase().includes(name.toLowerCase())
+      );
+      // 백엔드 응답 형식에 맞게 반환 (List 형태)
+      return filtered;
+    }
+    return [];
+  },
+  searchFamiliesByEmailFrontend: async (email) => {
+    const allFamilies = await (await api.get('/families')).data;
+    if (allFamilies._embedded && allFamilies._embedded.families) {
+      const filtered = allFamilies._embedded.families.filter(family => 
+        family.email && family.email.toLowerCase().includes(email.toLowerCase())
+      );
+      // 백엔드는 Optional<Family>를 반환하므로 첫 번째 결과만 반환
+      return filtered.length > 0 ? filtered[0] : null;
+    }
+    return null;
+  },
+  searchFamiliesByPhoneFrontend: async (phone) => {
+    const allFamilies = await (await api.get('/families')).data;
+    if (allFamilies._embedded && allFamilies._embedded.families) {
+      const filtered = allFamilies._embedded.families.filter(family => 
+        family.phone && family.phone.includes(phone)
+      );
+      // 백엔드 응답 형식에 맞게 반환 (List 형태)
+      return filtered;
+    }
+    return [];
+  },
+  
+  // 통합 검색 함수들 (설정에 따라 백엔드 API vs 프론트엔드 필터링 자동 선택)
+  searchFamiliesByName: async function(name) {
+    return this.USE_BACKEND_SEARCH ? 
+      this.searchFamiliesByNameBackend(name) : 
+      this.searchFamiliesByNameFrontend(name);
+  },
+  searchFamiliesByEmail: async function(email) {
+    return this.USE_BACKEND_SEARCH ? 
+      this.searchFamiliesByEmailBackend(email) : 
+      this.searchFamiliesByEmailFrontend(email);
+  },
+  searchFamiliesByPhone: async function(phone) {
+    return this.USE_BACKEND_SEARCH ? 
+      this.searchFamiliesByPhoneBackend(phone) : 
+      this.searchFamiliesByPhoneFrontend(phone);
+  },
+  
+  // 추모관 ID로 유가족 조회 - 백엔드/프론트엔드 방식 모두 지원
+  getFamiliesByMemorialIdBackend: async (memorialId) => {
+    // UUID 형식 검증
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memorialId)) {
+      console.warn(`⚠️ 잘못된 UUID 형식: ${memorialId}`);
+      throw new Error(`Invalid UUID format: ${memorialId}`);
+    }
+    return (await api.get(`/families/search/findByMemorialId?memorialId=${memorialId}`)).data;
+  },
+  getFamiliesByMemorialIdFrontend: async (memorialId) => {
+    const allFamilies = await (await api.get('/families')).data;
+    if (allFamilies._embedded && allFamilies._embedded.families) {
+      const filtered = allFamilies._embedded.families.filter(family => 
+        family.memorialId === memorialId
+      );
+      return {
+        ...allFamilies,
+        _embedded: { families: filtered }
+      };
+    }
+    return allFamilies;
+  },
+  getFamiliesByMemorialId: async function(memorialId) {
+    return this.USE_BACKEND_SEARCH ? 
+      this.getFamiliesByMemorialIdBackend(memorialId) : 
+      this.getFamiliesByMemorialIdFrontend(memorialId);
+  },
+  updateFamilyMemorialId: async (familyId, memorialId) => (await api.patch(`/families/${familyId}`, { memorialId })).data,
 
   // Login/User-related Service
   // 참고: API 명세에 없어 추측하여 작성되었습니다. 실제 엔드포인트로 수정이 필요할 수 있습니다.

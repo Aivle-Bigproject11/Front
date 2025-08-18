@@ -15,7 +15,7 @@ const Menu4 = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [relationship, setRelationship] = useState('');
+  const [searchType, setSearchType] = useState('name'); // 'name', 'email', 'phone'
   
   const [animateCard, setAnimateCard] = useState(false);
 
@@ -98,20 +98,34 @@ const Menu4 = () => {
 
   const openFamilyModal = async (memorial) => {
     setSelectedMemorial(memorial);
+    console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: ${apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트엔드 필터링'}`);
+    
     try {
-      // NOTE: API 명세에 유가족 목록 조회는 없어서 임시로 familyList를 사용합니다.
-      // 추후 해당 API가 추가되면 수정해야 합니다.
-      if (memorial.familyList) {
-        setFamilyMembers(memorial.familyList);
+      // 해당 추모관에 등록된 유가족 목록 조회
+      const familyResponse = await apiService.getFamiliesByMemorialId(memorial.id);
+      if (familyResponse._embedded && familyResponse._embedded.families) {
+        console.log(`✅ 유가족 조회 성공 - ${familyResponse._embedded.families.length}명`);
+        setFamilyMembers(familyResponse._embedded.families);
+      } else {
+        console.log('ℹ️ 등록된 유가족이 없습니다');
+        setFamilyMembers([]);
       }
     } catch (error) {
-      console.error("Error fetching family members:", error);
-      alert("유가족 정보를 불러오는 데 실패했습니다.");
+      console.error("❌ 유가족 조회 에러:", error);
+      
+      // 백엔드 검색 실패시 자동으로 프론트엔드 방식 제안
+      if (apiService.USE_BACKEND_SEARCH && error.response?.status >= 400) {
+        console.log("💡 백엔드 유가족 조회 실패 - 프론트엔드 필터링 방식으로 전환을 고려해보세요");
+        alert("백엔드 유가족 조회가 실패했습니다.\n검색 방식을 '프론트 필터링'으로 변경해보세요.\n\n현재 백엔드에는 findByMemorialId API가 구현되지 않았을 수 있습니다.");
+      }
+      
+      setFamilyMembers([]);
+      // 에러가 있어도 모달은 열어줌 (빈 목록으로)
     }
     setSearchKeyword('');
     setSearchResults([]);
     setSelectedMember(null);
-    setRelationship('');
+    setSearchType('name'); // 검색 타입도 초기화
     setShowFamilyModal(true);
   };
 
@@ -121,18 +135,63 @@ const Menu4 = () => {
       return;
     }
     setIsSearching(true);
+    console.log(`🔍 검색 시작 - 방식: ${apiService.USE_BACKEND_SEARCH ? '백엔드 API 검색' : '프론트엔드 필터링'}, 타입: ${searchType}, 키워드: ${keyword}`);
+    
     try {
-      const response = await apiService.getUsers();
-      const allUsers = response.data._embedded.users; // 실제 데이터 구조에 따라 변경 필요
-      const results = allUsers.filter(user =>
-        user.name.toLowerCase().includes(keyword.toLowerCase()) ||
-        user.phone.includes(keyword) ||
-        user.email.toLowerCase().includes(keyword.toLowerCase())
+      let searchResults = [];
+      
+      // 선택된 검색 방식에 따라 검색
+      switch (searchType) {
+        case 'name':
+          const nameResponse = await apiService.searchFamiliesByName(keyword.trim());
+          // 백엔드는 직접 List<Family>를 반환, 프론트엔드는 _embedded 구조
+          if (Array.isArray(nameResponse)) {
+            searchResults = nameResponse;
+          } else if (nameResponse._embedded && nameResponse._embedded.families) {
+            searchResults = nameResponse._embedded.families;
+          }
+          break;
+        case 'email':
+          const emailResponse = await apiService.searchFamiliesByEmail(keyword.trim());
+          // 백엔드는 Optional<Family>를 반환, 프론트엔드는 _embedded 구조
+          if (emailResponse && !Array.isArray(emailResponse)) {
+            searchResults = [emailResponse]; // 단일 객체를 배열로 변환
+          } else if (Array.isArray(emailResponse)) {
+            searchResults = emailResponse;
+          } else if (emailResponse._embedded && emailResponse._embedded.families) {
+            searchResults = emailResponse._embedded.families;
+          }
+          break;
+        case 'phone':
+          const phoneResponse = await apiService.searchFamiliesByPhone(keyword.trim());
+          // 백엔드는 직접 List<Family>를 반환, 프론트엔드는 _embedded 구조
+          if (Array.isArray(phoneResponse)) {
+            searchResults = phoneResponse;
+          } else if (phoneResponse._embedded && phoneResponse._embedded.families) {
+            searchResults = phoneResponse._embedded.families;
+          }
+          break;
+        default:
+          searchResults = [];
+      }
+      
+      // 중복 제거 (ID 기준)
+      const uniqueResults = searchResults.filter((family, index, self) => 
+        index === self.findIndex(f => f._links.self.href === family._links.self.href)
       );
-      setSearchResults(results);
+      
+      console.log(`✅ 검색 완료 - 결과: ${uniqueResults.length}개`);
+      setSearchResults(uniqueResults);
     } catch (error) {
-      console.error("Error searching members:", error);
-      alert("회원 검색에 실패했습니다.");
+      console.error("❌ 검색 에러:", error);
+      
+      // 백엔드 검색 실패시 자동으로 프론트엔드 방식으로 전환 제안
+      if (apiService.USE_BACKEND_SEARCH && error.response?.status >= 400) {
+        console.log("💡 백엔드 API 검색 실패 - 프론트엔드 필터링 방식으로 전환을 고려해보세요");
+        alert("백엔드 API 검색이 실패했습니다.\n검색 방식을 '프론트 필터링'으로 변경해보세요.\n\n현재 백엔드에는 다음 API가 구현되지 않았을 수 있습니다:\n- /families/search-name\n- /families/search-email\n- /families/search-phone");
+      }
+      
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -141,50 +200,78 @@ const Menu4 = () => {
   const handleSearchChange = (e) => {
     const keyword = e.target.value;
     setSearchKeyword(keyword);
-    searchMembers(keyword);
+    // 실시간 검색 제거 - 버튼 클릭으로만 검색
   };
 
-  const selectMember = (member) => {
-    setSelectedMember(member);
-    setSearchKeyword(member.name);
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && searchKeyword.trim()) {
+      searchMembers(searchKeyword);
+    }
+  };
+
+  const selectMember = (family) => {
+    // HATEOAS 링크에서 ID 추출
+    const familyId = family._links.self.href.split('/').pop();
+    const familyWithId = {
+      ...family,
+      id: familyId
+    };
+    
+    setSelectedMember(familyWithId);
+    setSearchKeyword(family.name);
     setSearchResults([]);
   };
 
   const addFamilyMember = async () => {
-    if (selectedMember && relationship) {
-      const isAlreadyRegistered = familyMembers.some(fm => fm.memberId === selectedMember.id);
+    if (selectedMember) {
+      // 이미 등록된 유가족인지 확인
+      const isAlreadyRegistered = familyMembers.some(fm => {
+        const familyId = fm._links?.self?.href?.split('/').pop() || fm.id;
+        return familyId === selectedMember.id;
+      });
+      
       if (isAlreadyRegistered) {
-        alert('이미 등록된 회원입니다.');
+        alert('이미 등록된 유가족입니다.');
         return;
       }
-      const newFamilyMember = {
-        // API 명세에 따라 필요한 정보 추가
-        memberId: selectedMember.id,
-        name: selectedMember.name,
-        relationship: relationship
-      };
-
-      const updatedFamilyList = [...familyMembers, newFamilyMember];
 
       try {
-        await apiService.updateMemorial(selectedMemorial.id, { familyList: updatedFamilyList });
-        setFamilyMembers(updatedFamilyList);
+        // 선택된 유가족의 memorialId를 현재 추모관 ID로 업데이트
+        await apiService.updateFamilyMemorialId(selectedMember.id, selectedMemorial.id);
+        
+        // 유가족 목록 다시 조회
+        const familyResponse = await apiService.getFamiliesByMemorialId(selectedMemorial.id);
+        if (familyResponse._embedded && familyResponse._embedded.families) {
+          setFamilyMembers(familyResponse._embedded.families);
+        }
+        
         setSelectedMember(null);
         setSearchKeyword('');
-        setRelationship('');
+        setSearchResults([]); // 검색 결과도 초기화
         alert('유가족이 등록되었습니다.');
       } catch (error) {
         console.error("Error adding family member:", error);
         alert("유가족 등록에 실패했습니다.");
       }
+    } else {
+      alert('유가족을 선택해주세요.');
     }
   };
 
-  const removeFamilyMember = async (memberIdToRemove) => {
-    const updatedFamilyList = familyMembers.filter(member => member.memberId !== memberIdToRemove);
+  const removeFamilyMember = async (familyToRemove) => {
     try {
-      await apiService.updateMemorial(selectedMemorial.id, { familyList: updatedFamilyList });
-      setFamilyMembers(updatedFamilyList);
+      // 해당 유가족의 memorialId를 null로 설정하여 추모관에서 제거
+      const familyId = familyToRemove._links?.self?.href?.split('/').pop() || familyToRemove.id;
+      await apiService.updateFamilyMemorialId(familyId, null);
+      
+      // 유가족 목록 다시 조회
+      const familyResponse = await apiService.getFamiliesByMemorialId(selectedMemorial.id);
+      if (familyResponse._embedded && familyResponse._embedded.families) {
+        setFamilyMembers(familyResponse._embedded.families);
+      } else {
+        setFamilyMembers([]);
+      }
+      
       alert('유가족이 삭제되었습니다.');
     } catch (error) {
       console.error("Error removing family member:", error);
@@ -410,52 +497,159 @@ const Menu4 = () => {
             <div className="col-12">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h6 className="mb-0"><i className="fas fa-search me-2"></i> 회원 검색 및 유가족 등록</h6>
+                {/* 개발용 검색 방식 선택 */}
+                <div className="d-flex align-items-center">
+                  <small className="text-muted me-2">검색 방식:</small>
+                  <div className="d-flex align-items-center">
+                    <span className="badge bg-secondary me-2" style={{ fontSize: '0.75rem' }}>
+                      {apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트 필터링'}
+                    </span>
+                    <Form.Check 
+                      type="switch"
+                      id="search-mode-switch"
+                      label=""
+                      checked={apiService.USE_BACKEND_SEARCH}
+                      onChange={(e) => {
+                        apiService.USE_BACKEND_SEARCH = e.target.checked;
+                        console.log('검색 방식 변경:', e.target.checked ? '백엔드 API 검색' : '프론트엔드 필터링');
+                      }}
+                      className="user-select-none"
+                    />
+                    <small className="text-muted ms-2">
+                      {apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트 필터링'}
+                    </small>
+                  </div>
+                </div>
               </div>
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <div className="position-relative">
-                    <Form.Control type="text" placeholder="이름, 전화번호, 이메일로 검색..." value={searchKeyword} onChange={handleSearchChange} className="pe-5" />
-                    <div className="position-absolute top-50 end-0 translate-middle-y pe-3">
-                      {isSearching ? <div className="spinner-border spinner-border-sm" role="status"><span className="visually-hidden">검색 중...</span></div> : <i className="fas fa-search text-muted"></i>}
+              
+              {/* 검색 방식 설명 */}
+              <div className={`alert p-3 mb-3 ${apiService.USE_BACKEND_SEARCH ? 'alert-warning' : 'alert-success'}`} style={{ fontSize: '0.875rem' }}>
+                <div className="d-flex align-items-start">
+                  <i className={`fas ${apiService.USE_BACKEND_SEARCH ? 'fa-exclamation-triangle' : 'fa-check-circle'} me-2 mt-1`}></i>
+                  <div>
+                    <div className="fw-bold mb-1">
+                      현재 모드: {apiService.USE_BACKEND_SEARCH ? '백엔드 API 검색' : '프론트엔드 필터링'}
+                    </div>
+                    <div className="mb-2">
+                      {apiService.USE_BACKEND_SEARCH ? 
+                        '서버의 전용 검색 API를 사용합니다. (/families/search-name, /families/search-email, /families/search-phone)' : 
+                        '전체 유가족 목록을 가져와서 브라우저에서 필터링합니다. (/families 전체 조회)'
+                      }
+                    </div>
+                    <div className="small text-muted">
+                      {apiService.USE_BACKEND_SEARCH ? 
+                        '⚠️ 백엔드에 해당 API가 구현되지 않은 경우 에러가 발생할 수 있습니다.' : 
+                        '✅ 현재 백엔드 상태와 호환되며 안정적으로 작동합니다.'
+                      }
                     </div>
                   </div>
-                  {searchResults.length > 0 && (
-                    <div className="position-absolute w-100" style={{ zIndex: 1050 }}>
-                      <div className="card mt-1 shadow-sm">
-                        <div className="card-body p-0">
-                          <div className="list-group list-group-flush">
-                            {searchResults.slice(0, 5).map(member => (
-                              <button key={member.id} type="button" className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onClick={() => selectMember(member)}>
-                                <div>
-                                  <div className="fw-bold">{member.name}</div>
-                                  <small className="text-muted">{member.phone} | {member.email}</small>
-                                </div>
-                                <Badge bg="secondary">{member.gender === 'MALE' ? '남' : '여'}</Badge>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
+              </div>
+              
+              <div className="row g-3 mb-3">
                 <div className="col-md-3">
-                  <Form.Select value={relationship} onChange={(e) => setRelationship(e.target.value)} disabled={!selectedMember}>
-                    <option value="">관계 선택</option>
-                    <option value="배우자">배우자</option>
-                    <option value="아들">아들</option>
-                    <option value="딸">딸</option>
-                    <option value="부모">부모</option>
-                    <option value="형제자매">형제자매</option>
-                    <option value="기타">기타</option>
+                  <Form.Select value={searchType} onChange={(e) => setSearchType(e.target.value)}>
+                    <option value="name">이름으로 검색</option>
+                    <option value="email">이메일로 검색</option>
+                    <option value="phone">전화번호로 검색</option>
                   </Form.Select>
                 </div>
+                <div className="col-md-6">
+                  <div className="d-flex">
+                    <Form.Control 
+                      type="text" 
+                      placeholder={
+                        searchType === 'name' ? '이름을 입력하세요...' :
+                        searchType === 'email' ? '이메일을 입력하세요...' :
+                        '전화번호를 입력하세요...'
+                      }
+                      value={searchKeyword} 
+                      onChange={handleSearchChange}
+                      onKeyPress={handleKeyPress}
+                      className="me-2"
+                    />
+                    <Button 
+                      variant="outline-primary" 
+                      onClick={() => searchMembers(searchKeyword)}
+                      disabled={isSearching || !searchKeyword.trim()}
+                    >
+                      {isSearching ? (
+                        <div className="spinner-border spinner-border-sm" role="status">
+                          <span className="visually-hidden">검색 중...</span>
+                        </div>
+                      ) : (
+                        <i className="fas fa-search"></i>
+                      )}
+                    </Button>
+                  </div>
+                </div>
                 <div className="col-md-3">
-                  <Button variant="primary" onClick={addFamilyMember} disabled={!selectedMember || !relationship} className="w-100">
+                  <Button variant="primary" onClick={addFamilyMember} disabled={!selectedMember} className="w-100">
                     <i className="fas fa-user-plus me-2"></i> 유가족 등록
                   </Button>
                 </div>
               </div>
+              
+              {/* 검색 결과 리스트 */}
+              {searchResults.length > 0 && (
+                <div className="mb-4">
+                  <h6 className="mb-3"><i className="fas fa-list me-2"></i> 검색 결과 ({searchResults.length}명)</h6>
+                  <div className="card">
+                    <div className="card-body p-0">
+                      <div className="table-responsive" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        <table className="table table-hover mb-0">
+                          <thead className="table-light sticky-top">
+                            <tr>
+                              <th>이름</th>
+                              <th>전화번호</th>
+                              <th>이메일</th>
+                              <th>상태</th>
+                              <th width="100">선택</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {searchResults.map(family => {
+                              const familyId = family._links.self.href.split('/').pop();
+                              return (
+                                <tr key={familyId} className={selectedMember?.id === familyId ? 'table-primary' : ''}>
+                                  <td>{family.name}</td>
+                                  <td>{family.phone}</td>
+                                  <td>{family.email}</td>
+                                  <td>
+                                    <Badge bg={family.status === 'APPROVED' ? 'success' : 'warning'}>
+                                      {family.status === 'APPROVED' ? '승인됨' : '대기중'}
+                                    </Badge>
+                                  </td>
+                                  <td>
+                                    <Button 
+                                      size="sm" 
+                                      variant={selectedMember?.id === familyId ? 'success' : 'outline-primary'}
+                                      onClick={() => selectMember(family)}
+                                    >
+                                      {selectedMember?.id === familyId ? (
+                                        <><i className="fas fa-check me-1"></i>선택됨</>
+                                      ) : (
+                                        '선택'
+                                      )}
+                                    </Button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {searchKeyword && searchResults.length === 0 && !isSearching && (
+                <div className="alert alert-info">
+                  <i className="fas fa-info-circle me-2"></i>
+                  검색 결과가 없습니다. 다른 키워드로 검색해보세요.
+                </div>
+              )}
             </div>
           </div>
           <hr />
@@ -475,20 +669,31 @@ const Menu4 = () => {
                         <th>이름</th>
                         <th>전화번호</th>
                         <th>이메일</th>
-                        <th>관계</th>
+                        <th>상태</th>
                         <th width="100">관리</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {familyMembers.map(member => (
-                        <tr key={member.id}>
-                          <td>{member.name}</td>
-                          <td>{member.phone}</td>
-                          <td>{member.email || '-'}</td>
-                          <td><Badge bg="info">{member.relationship || '미지정'}</Badge></td>
-                          <td><Button size="sm" variant="outline-danger" onClick={() => removeFamilyMember(member.id)}><i className="fas fa-trash"></i></Button></td>
-                        </tr>
-                      ))}
+                      {familyMembers.map(family => {
+                        const familyId = family._links?.self?.href?.split('/').pop() || family.id;
+                        return (
+                          <tr key={familyId}>
+                            <td>{family.name}</td>
+                            <td>{family.phone}</td>
+                            <td>{family.email || '-'}</td>
+                            <td>
+                              <Badge bg={family.status === 'APPROVED' ? 'success' : 'warning'}>
+                                {family.status === 'APPROVED' ? '승인됨' : '대기중'}
+                              </Badge>
+                            </td>
+                            <td>
+                              <Button size="sm" variant="outline-danger" onClick={() => removeFamilyMember(family)}>
+                                <i className="fas fa-trash"></i>
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -556,6 +761,39 @@ const Menu4 = () => {
         .memorial-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 25px rgba(44, 31, 20, 0.15);
+        }
+
+        .table-responsive {
+          border-radius: 8px;
+        }
+        
+        .table-responsive::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 4px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+        
+        .table-hover tbody tr:hover {
+          background-color: rgba(184, 134, 11, 0.1);
+        }
+        
+        .sticky-top {
+          position: sticky;
+          top: 0;
+          z-index: 10;
         }
 
         @media (max-width: 1200px) {
