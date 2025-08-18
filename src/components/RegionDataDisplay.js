@@ -408,17 +408,25 @@ const RegionDataDisplay = ({ region }) => {
     
     const multiplier = multipliers[selectedRegion] || 1;
     
-    // CSV 데이터에서 임시 증가율 계산 (더미 데이터)
+    // CSV 데이터에서 임시 증가율 계산 (백엔드 실제 지역명으로 더미 데이터)
     const dummyRegionData = [
-      { region: '서울', growthRate: 8.5 },
-      { region: '경기', growthRate: 7.2 },
-      { region: '부산', growthRate: 6.8 },
-      { region: '대구', growthRate: 4.1 },
-      { region: '인천', growthRate: 3.7 },
-      { region: '충남', growthRate: 2.9 },
-      { region: '광주', growthRate: 1.8 },
-      { region: '울산', growthRate: 0.5 },
-      { region: '세종', growthRate: -0.3 }
+      { region: '서울특별시', growthRate: 8.5 },
+      { region: '경기도', growthRate: 7.2 },
+      { region: '부산광역시', growthRate: 6.8 },
+      { region: '대구광역시', growthRate: 4.1 },
+      { region: '인천광역시', growthRate: 3.7 },
+      { region: '충청남도', growthRate: 2.9 },
+      { region: '광주광역시', growthRate: 1.8 },
+      { region: '울산광역시', growthRate: 0.5 },
+      { region: '세종특별자치시', growthRate: -0.3 },
+      { region: '대전광역시', growthRate: 3.2 },
+      { region: '강원특별자치도', growthRate: 1.5 },
+      { region: '충청북도', growthRate: 2.1 },
+      { region: '전북특별자치도', growthRate: 0.8 },
+      { region: '전라남도', growthRate: -0.1 },
+      { region: '경상북도', growthRate: 1.2 },
+      { region: '경상남도', growthRate: 2.3 },
+      { region: '제주특별자치도', growthRate: 4.6 }
     ];
     
     const regionStatus = classifyRegionsByGrowthRate(dummyRegionData);
