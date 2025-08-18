@@ -87,52 +87,74 @@ const RegionDataDisplay = ({ region }) => {
     // 백엔드 가용성 체크
     const checkBackendAvailability = async () => {
       try {
-        // Spring Boot Actuator health 엔드포인트로 서버 상태 확인
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/actuator/health`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          timeout: 5000
-        });
+        console.log('🔍 백엔드 서버 연결 상태 확인 중...');
         
-        if (response.ok) {
-          const healthData = await response.text();
-          console.log('백엔드 서버 헬스체크 성공:', healthData);
+        // 1차: 기본 GET 요청으로 서버 응답 확인
+        try {
+          const basicResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            timeout: 3000
+          });
           
-          // 실제 API 엔드포인트도 테스트해보기
-          try {
-            const testResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/deathPredictions/by-date/2025-01`, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                ...(localStorage.getItem('token') && {
-                  'Authorization': `Bearer ${localStorage.getItem('token')}`
-                })
-              },
-              timeout: 3000
-            });
-            
-            if (testResponse.ok) {
-              setBackendAvailable(true);
-              console.log('백엔드 API 엔드포인트 정상 작동');
-            } else if (testResponse.status === 500) {
-              console.log('백엔드 서버 내부 오류 (500) - 서버는 실행 중이지만 API에 문제가 있음');
-              setBackendAvailable(false);
-            } else {
-              console.log('백엔드 API 응답:', testResponse.status);
-              setBackendAvailable(true); // 인증 에러 등은 서버가 살아있음을 의미
-            }
-          } catch (apiError) {
-            console.log('백엔드 API 테스트 실패:', apiError.message);
-            setBackendAvailable(false);
+          if (basicResponse.status) {
+            console.log('✅ 백엔드 서버 기본 연결 성공 (상태:', basicResponse.status, ')');
+            setBackendAvailable(true);
+            return;
           }
-        } else {
-          console.log('백엔드 헬스체크 실패:', response.status);
-          setBackendAvailable(false);
+        } catch (basicError) {
+          console.log('⚠️ 기본 GET 연결 실패:', basicError.message);
         }
+
+        // 2차: actuator/health 시도
+        try {
+          const healthResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/actuator/health`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            timeout: 3000
+          });
+          
+          if (healthResponse.ok) {
+            const healthData = await healthResponse.text();
+            console.log('✅ 백엔드 서버 actuator/health 성공:', healthData);
+            setBackendAvailable(true);
+            return;
+          }
+        } catch (healthError) {
+          console.log('⚠️ actuator/health 실패:', healthError.message);
+        }
+
+        // 3차: 로그인 엔드포인트로 서버 생존 확인
+        try {
+          const loginResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/managers/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ loginId: 'test', loginPassword: 'test' }),
+            timeout: 3000
+          });
+          
+          // 400, 401 등의 응답도 서버가 살아있다는 의미
+          if (loginResponse.status) {
+            console.log('✅ 백엔드 서버 로그인 엔드포인트로 생존 확인 (상태:', loginResponse.status, ')');
+            setBackendAvailable(true);
+            return;
+          }
+        } catch (loginError) {
+          console.log('⚠️ 로그인 엔드포인트도 실패:', loginError.message);
+        }
+
+        // 모든 시도 실패
+        console.log('❌ 모든 백엔드 연결 시도 실패');
+        setBackendAvailable(false);
+        
       } catch (error) {
-        console.log('백엔드 서버 연결 불가:', error.message);
+        console.log('💥 백엔드 서버 연결 불가:', error.message);
         setBackendAvailable(false);
       }
     };
