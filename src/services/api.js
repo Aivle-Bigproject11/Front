@@ -394,21 +394,25 @@ const realApiService = {
     }
   },
 
-  // Dashboard API - 백엔드팀 코드에 맞게 수정
+  // Dashboard API - 백엔드 실제 엔드포인트에 맞게 수정
   getDashboardByDate: async (date) => {
     // 백엔드: GET /deathPredictions/by-date/{date}
+    console.log(`🔗 API 호출: GET /deathPredictions/by-date/${date}`);
     return (await api.get(`/deathPredictions/by-date/${date}`)).data;
   },
   getDashboardByRegion: async (region) => {
     // 백엔드: GET /deathPredictions/by-region/{region}
+    console.log(`🔗 API 호출: GET /deathPredictions/by-region/${region}`);
     return (await api.get(`/deathPredictions/by-region/${region}`)).data;
   },
   getDeathPrediction: async (date, region) => {
     // 백엔드: GET /deathPredictions/{date}/{region}
+    console.log(`🔗 API 호출: GET /deathPredictions/${date}/${region}`);
     return (await api.get(`/deathPredictions/${date}/${region}`)).data;
   },
   requestPrediction: async (data) => {
     // 백엔드: POST /deathPredictions/request-prediction
+    console.log('🔗 API 호출: POST /deathPredictions/request-prediction', data);
     return (await api.post('/deathPredictions/request-prediction', data)).data;
   },
   // 기존 API들은 다른 서비스용이므로 유지
