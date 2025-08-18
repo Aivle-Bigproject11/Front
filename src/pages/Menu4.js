@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 // This component will now have the design of Menu2.js but the functionality of the original Menu4.js.
 const Menu4 = () => {
   const navigate = useNavigate();
-  const { user, userType } = useAuth();
+  const { user, userType, isAuthenticated } = useAuth();
   const [memorials, setMemorials] = useState([]);
   const [showFamilyModal, setShowFamilyModal] = useState(false);
   const [selectedMemorial, setSelectedMemorial] = useState(null);
@@ -22,14 +22,41 @@ const Menu4 = () => {
   const [animateCard, setAnimateCard] = useState(false);
 
   useEffect(() => {
-    // 관리자 권한 확인
-    if (userType !== 'employee') {
-      console.error('❌ 관리자 권한이 필요합니다. 현재 사용자 타입:', userType);
-      alert('관리자만 접근할 수 있는 페이지입니다.');
-      navigate('/login');
+    console.log('🔍 Menu4 권한 확인 시작...');
+    console.log('🔍 현재 인증 상태:', { isAuthenticated, user, userType });
+    
+    // 로딩이 완료되지 않았으면 대기
+    if (!user && !isAuthenticated) {
+      console.log('🔄 인증 정보 로딩 중...');
       return;
     }
     
+    // 인증되지 않은 사용자는 로그인 페이지로
+    if (!isAuthenticated || !user) {
+      console.error('❌ 인증되지 않은 사용자입니다.');
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    // 관리자 권한 확인 - Login.js처럼 user.userType을 우선적으로 확인
+    const currentUserType = user.userType || userType;
+    console.log('🔍 사용자 타입 최종 확인:', { 
+      finalUserType: currentUserType,
+      fromUserObject: user.userType, 
+      fromContext: userType,
+      user: user 
+    });
+    
+    if (currentUserType !== 'employee') {
+      console.error('❌ 관리자 권한이 필요합니다. 현재 사용자 타입:', currentUserType);
+      alert('관리자만 접근할 수 있는 페이지입니다.');
+      // Login.js처럼 직원이 아니면 로비로, 로그인 안 됐으면 로그인으로
+      navigate('/lobby');
+      return;
+    }
+    
+    console.log('✅ 관리자 권한 확인 완료. 페이지 로딩 시작...');
     setAnimateCard(true);
     const fetchMemorials = async () => {
       try {
@@ -115,7 +142,7 @@ const Menu4 = () => {
     };
 
     fetchMemorials();
-  }, [userType, navigate]);
+  }, [user, userType, isAuthenticated, navigate]);
 
   // All handler functions from the original Menu4.js
   
