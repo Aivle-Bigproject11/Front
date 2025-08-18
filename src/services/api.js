@@ -262,6 +262,15 @@ const realApiService = {
       return false;
     }
   },
+
+  // Dashboard API
+  getDashboardByDate: async (date) => (await api.get('/by-date', { params: { date } })).data,
+  getDashboardByRegion: async (region) => (await api.get('/by-region', { params: { region } })).data,
+  getPredictCheck: async () => (await api.get('/predict-check')).data,
+  requestPrediction: async (data) => (await api.post('/predict-request', data)).data,
+  updatePredictionRequest: async (data) => (await api.put('/predict-request-update', data)).data,
+  getPredictResponse: async () => (await api.get('/predict-response')).data,
+  updatePredictResponse: async (data) => (await api.put('/predict-response-update', data)).data,
 }
 
 // --- 최종 서비스 객체 내보내기 ---

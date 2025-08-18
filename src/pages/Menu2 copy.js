@@ -1,37 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import InteractiveMap from '../components/InteractiveMap';
 import RegionDataDisplay from '../components/RegionDataDisplay';
-import { apiService } from '../services/api';
 
 const Menu2 = () => {
   const [selectedRegion, setSelectedRegion] = useState('전체');
   const [animateCard, setAnimateCard] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     setAnimateCard(true);
   }, []);
 
-  const handleRefresh = async () => {
-    // 분석 새로고침 로직
+  const handleRefresh = () => {
+    // 분석 새로고침 로직을 여기에 추가할 수 있습니다.
     console.log(`'${selectedRegion}' 지역 분석을 새로고침합니다.`);
-    
-    try {
-      // 예측 요청 API 호출 (선택적)
-      const currentDate = new Date().toISOString().slice(0, 7); // YYYY-MM
-      await apiService.requestPrediction({ 
-        region: selectedRegion === '전체' ? null : selectedRegion,
-        period: currentDate 
-      });
-      
-      // RegionDataDisplay 컴포넌트를 다시 렌더링하기 위해 key 변경
-      setRefreshKey(prev => prev + 1);
-      
-    } catch (error) {
-      console.error('예측 요청 실패:', error);
-      // 에러가 발생해도 화면은 새로고침
-      setRefreshKey(prev => prev + 1);
-    }
   };
 
   return (
@@ -112,7 +93,7 @@ const Menu2 = () => {
           boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
           border: '1px solid rgba(184, 134, 11, 0.2)'
         }}>
-          <RegionDataDisplay key={refreshKey} region={selectedRegion} />
+          <RegionDataDisplay region={selectedRegion} />
         </div>
       </div>
 

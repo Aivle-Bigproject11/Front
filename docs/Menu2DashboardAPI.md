@@ -613,8 +613,10 @@ request: https://www.notion.so/noahbibi/req-24d18731459c803698f3f84eb484a33e
 
 API: /deathPredictions/request-prediction
 HTTP 메서드: POST
-reponse: https://www.notion.so/noahbibi/predictResponse-24618731459c802b9a39f055ee055fd1
-request: https://www.notion.so/noahbibi/predictrequest-24618731459c801792e9e662b34f3ec3
+reponse: {'eventType': 'DeathPredictionEvent','date':'2025-11','region':'전라북도','predictionDeaths':1520}
+request: {
+	'date':'2025-01'
+}
 상태: 완료
 
 --- C:\Users\User\Downloads\API명세서\대시보드-로그인 API명세\인구 사망율 예측 업데이트 251518971cba818bb419c24be6bdbd71.md ---
@@ -623,8 +625,10 @@ request: https://www.notion.so/noahbibi/predictrequest-24618731459c801792e9e662b
 
 API: /deathPredictions/request-prediction
 HTTP 메서드: POST
-reponse: https://www.notion.so/noahbibi/predictResponseUpdate-24618731459c80349a4efb48746064ee
-request: https://www.notion.so/noahbibi/predictrequestupdate-24618731459c80199e49e52f585afe7d
+reponse: {'eventType': 'DeathPredictionEvent','date':'2025-11','region':'전라북도','predictionDeaths':1520}
+request: {
+	'date':'2025-01'
+}
 상태: 완료
 
 --- C:\Users\User\Downloads\API명세서\대시보드-로그인 API명세\인구 사망율 예측 조회 251518971cba81ac8974da301f029b7a.md ---
@@ -633,8 +637,16 @@ request: https://www.notion.so/noahbibi/predictrequestupdate-24618731459c80199e4
 
 API: /deathPredictions/{date}/{region}
 HTTP 메서드: GET
-reponse: https://www.notion.so/noahbibi/predictResponseUpdateCheck-24618731459c80c3ba7fd4c5d64e612d
-request: https://www.notion.so/noahbibi/predictCheck-24618731459c807ebd3febe7b967dd21
+reponse: {
+	'eventType' : 'DeathPredictionEvent'
+	'date':'2025-01'
+	'region':'서울특별시'
+	'predictedDeaths':'2189.1'
+}
+request: {
+	'date':'2025-01'
+	'region':'seoul'
+}
 상태: 완료
 
 --- C:\Users\User\Downloads\API명세서\대시보드-로그인 API명세\인구 사망율 월 조회 251518971cba8168a4bdc7c4f64b3bf3.md ---
@@ -643,7 +655,162 @@ request: https://www.notion.so/noahbibi/predictCheck-24618731459c807ebd3febe7b96
 
 API: /deathPredictions/by-date/{region}
 HTTP 메서드: GET
-reponse: https://www.notion.so/noahbibi/by-date-24618731459c80558cc2ebfb5230c8d2
+reponse: 
+[
+    {
+        "date": "2025-01",
+        "deaths": 1269,
+        "id": {
+            "date": "2025-01",
+            "region": "강원도"
+        },
+        "region": "강원도"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 6730,
+        "id": {
+            "date": "2025-01",
+            "region": "경기도"
+        },
+        "region": "경기도"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 2365,
+        "id": {
+            "date": "2025-01",
+            "region": "경상남도"
+        },
+        "region": "경상남도"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 2297,
+        "id": {
+            "date": "2025-01",
+            "region": "경상북도"
+        },
+        "region": "경상북도"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 790,
+        "id": {
+            "date": "2025-01",
+            "region": "광주광역시"
+        },
+        "region": "광주광역시"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 1480,
+        "id": {
+            "date": "2025-01",
+            "region": "대구광역시"
+        },
+        "region": "대구광역시"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 771,
+        "id": {
+            "date": "2025-01",
+            "region": "대전광역시"
+        },
+        "region": "대전광역시"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 2355,
+        "id": {
+            "date": "2025-01",
+            "region": "부산광역시"
+        },
+        "region": "부산광역시"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 4581,
+        "id": {
+            "date": "2025-01",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 143,
+        "id": {
+            "date": "2025-01",
+            "region": "세종특별자치시"
+        },
+        "region": "세종특별자치시"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 534,
+        "id": {
+            "date": "2025-01",
+            "region": "울산광역시"
+        },
+        "region": "울산광역시"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 1615,
+        "id": {
+            "date": "2025-01",
+            "region": "인천광역시"
+        },
+        "region": "인천광역시"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 1765,
+        "id": {
+            "date": "2025-01",
+            "region": "전라남도"
+        },
+        "region": "전라남도"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 1545,
+        "id": {
+            "date": "2025-01",
+            "region": "전라북도"
+        },
+        "region": "전라북도"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 422,
+        "id": {
+            "date": "2025-01",
+            "region": "제주도"
+        },
+        "region": "제주도"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 1662,
+        "id": {
+            "date": "2025-01",
+            "region": "충청남도"
+        },
+        "region": "충청남도"
+    },
+    {
+        "date": "2025-01",
+        "deaths": 1205,
+        "id": {
+            "date": "2025-01",
+            "region": "충청북도"
+        },
+        "region": "충청북도"
+    }
+]
 request: { 'date':'2025-01'  }
 상태: 완료
 
@@ -653,6 +820,115 @@ request: { 'date':'2025-01'  }
 
 API: /deathPredictions/by-region/{region}
 HTTP 메서드: GET
-reponse: https://www.notion.so/noahbibi/by-region-24718731459c807a96ede359a3687d75
+reponse: [
+    {
+        "date": "2025-01",
+        "deaths": 4581,
+        "id": {
+            "date": "2025-01",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-02",
+        "deaths": 4541,
+        "id": {
+            "date": "2025-02",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-03",
+        "deaths": 4710,
+        "id": {
+            "date": "2025-03",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-04",
+        "deaths": 4408,
+        "id": {
+            "date": "2025-04",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-05",
+        "deaths": 4280,
+        "id": {
+            "date": "2025-05",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-06",
+        "deaths": 4171,
+        "id": {
+            "date": "2025-06",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-07",
+        "deaths": 4217,
+        "id": {
+            "date": "2025-07",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-08",
+        "deaths": 4333,
+        "id": {
+            "date": "2025-08",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-09",
+        "deaths": 4377,
+        "id": {
+            "date": "2025-09",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-10",
+        "deaths": 4554,
+        "id": {
+            "date": "2025-10",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-11",
+        "deaths": 4620,
+        "id": {
+            "date": "2025-11",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    },
+    {
+        "date": "2025-12",
+        "deaths": 4758,
+        "id": {
+            "date": "2025-12",
+            "region": "서울특별시"
+        },
+        "region": "서울특별시"
+    }
+]
 request: {'region':'seoul' }
 상태: 완료
