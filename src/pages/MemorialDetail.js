@@ -63,20 +63,23 @@ const MemorialDetail = () => {
     setAnimateCard(true);
     const fetchMemorialDetails = async () => {
       try {
-        // ID 검증은 여기서 수행
+        // memorialId 검증
         if (!id) {
-          console.error('❌ Memorial ID가 URL에서 추출되지 않음!');
-          navigate('/menu4');
+          console.error('❌ 추모관 고유번호가 URL에서 추출되지 않음!');
+          navigate('/lobby');
           return;
         }
 
-        // UUID 형태인지 확인 (예: 1c337344-ad3c-4785-a5f8-0054698c3ebe)
-        const isValidUUID = id && id.includes('-') && id.length >= 36;
-        console.log('🔍 Is Valid UUID:', isValidUUID);
+        // UUID 형태 검증 (8-4-4-4-12 패턴)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isValidMemorialId = uuidRegex.test(id);
+        console.log('🔍 추모관 고유번호 검증:', id, '유효성:', isValidMemorialId);
         
-        if (!isValidUUID) {
-          console.error('❌ Memorial ID가 올바른 UUID 형태가 아님:', id);
-          // navigate('/menu4'); // 일단 주석처리해서 계속 진행
+        if (!isValidMemorialId) {
+          console.error('❌ 유효하지 않은 추모관 고유번호 형태:', id);
+          alert('유효하지 않은 추모관 고유번호입니다.');
+          navigate('/lobby');
+          return;
         }
 
         console.log('🔍 Final Memorial ID:', id);
@@ -109,15 +112,24 @@ const MemorialDetail = () => {
           }
         }
       } catch (error) {
-        console.error("❌ MemorialDetail API 호출 실패:", error);
+        console.error("❌ 추모관 정보 로드 실패:", error);
         console.error("에러 상세:", error.response?.data, error.response?.status);
         console.error("요청 URL:", error.config?.url);
         
-        // CORS 에러인지 확인
-        if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
-          console.warn("🔧 CORS 문제 감지: 백엔드 설정 확인 필요");
-          alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
+        // 에러 유형별 처리
+        if (error.response?.status === 404) {
+          console.error("❌ 추모관을 찾을 수 없음 (404)");
+          alert("존재하지 않는 추모관 고유번호입니다.");
+          navigate('/lobby');
+        } else if (error.response?.status === 403) {
+          console.error("❌ 접근 권한 없음 (403)");
+          alert("해당 추모관에 접근할 권한이 없습니다.");
+          navigate('/lobby');
+        } else if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
+          console.warn("🔧 네트워크 연결 문제 감지");
+          alert("네트워크 연결 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
         } else {
+          console.error("❌ 기타 에러:", error.message);
           alert("추모관 정보를 불러오는 데 실패했습니다.");
         }
       } finally {
