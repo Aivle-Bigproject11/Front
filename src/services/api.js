@@ -45,7 +45,7 @@ const realApiService = {
   getMemorials: async () => (await api.get('/memorials')).data,
   getMemorial: async (id) => (await api.get(`/memorials/${id}`)).data,
   updateMemorial: async (id, data) => (await api.patch(`/memorials/${id}`, data)).data,
-  getMemorialDetails: async (id) => (await api.get(`/memorials/${id}/detail`)).data, // API 명세에 맞게 수정
+  getMemorialDetails: async (id) => (await api.get(`/memorials/${id}`)).data, // 기본 memorial 조회와 동일
   uploadMemorialProfileImage: async (id, formData) => (await api.patch(`/memorials/${id}/profile-image`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
   
   createTribute: async (id, data) => {

@@ -196,13 +196,17 @@ const Lobby = () => {
   const handleMemorialClick = async (memorial) => {
     try {
       setError('');
-      const details = await apiService.getMemorialDetails(memorial.id);
-      if (details) {
-        navigate(`/user-memorial/${details.id}`);
-      } else {
-        setError('추모관 정보를 불러올 수 없습니다.');
-      }
+      // 상세한 로깅 추가
+      console.log('🔗 추모관 클릭:', memorial);
+      console.log('🔗 추모관 ID:', memorial.id);
+      console.log('🔗 추모관 ID 타입:', typeof memorial.id);
+      console.log('🔗 Navigation 경로:', `/user-memorial/${memorial.id}`);
+      
+      // 이미 memorial 정보가 있으므로 직접 navigate
+      navigate(`/user-memorial/${memorial.id}`);
+      console.log('✅ Navigation 완료');
     } catch (err) {
+      console.error('❌ Navigation error:', err);
       setError('추모관 정보를 불러오는 중 오류가 발생했습니다.');
     }
   };
