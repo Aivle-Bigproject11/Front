@@ -28,21 +28,9 @@ const Menu2 = () => {
       }
       console.log('✅ 백엔드 서버 헬스체크 성공');
 
-      // 2. 날짜별 데이터 테스트 (가장 기본적인 조회부터)
+      // 2. 예측 요청 API 호출 먼저 (데이터 생성)
       const currentDate = new Date().toISOString().slice(0, 7); // YYYY-MM
-      console.log(`2. 날짜별 데이터 요청: ${currentDate}`);
-      const dateData = await apiService.getDashboardByDate(currentDate);
-      console.log('✅ 날짜별 데이터 응답:', dateData);
-      
-      // 3. 지역별 데이터 테스트 (전체가 아닌 경우)
-      if (selectedRegion !== '전체') {
-        console.log(`3. 지역별 데이터 요청: ${selectedRegion}`);
-        const regionData = await apiService.getDashboardByRegion(selectedRegion);
-        console.log('✅ 지역별 데이터 응답:', regionData);
-      }
-
-      // 4. 예측 요청 API 호출 (POST 요청이므로 마지막에)
-      console.log('4. 예측 요청 API 호출...');
+      console.log('2. 예측 요청 API 호출...');
       
       const predictionRequest = {
         date: currentDate,
@@ -52,8 +40,24 @@ const Menu2 = () => {
       
       console.log('예측 요청 데이터:', predictionRequest);
       
-      const predictionResponse = await apiService.requestPrediction(predictionRequest);
-      console.log('✅ 예측 요청 성공:', predictionResponse);
+      try {
+        const predictionResponse = await apiService.requestPrediction(predictionRequest);
+        console.log('✅ 예측 요청 성공:', predictionResponse);
+      } catch (predError) {
+        console.log('⚠️ 예측 요청 실패 (기존 데이터가 있을 수 있음):', predError.message);
+      }
+
+      // 3. 날짜별 데이터 테스트
+      console.log(`3. 날짜별 데이터 요청: ${currentDate}`);
+      const dateData = await apiService.getDashboardByDate(currentDate);
+      console.log('✅ 날짜별 데이터 응답:', dateData);
+      
+      // 4. 지역별 데이터 테스트 (전체가 아닌 경우)
+      if (selectedRegion !== '전체') {
+        console.log(`4. 지역별 데이터 요청: ${selectedRegion}`);
+        const regionData = await apiService.getDashboardByRegion(selectedRegion);
+        console.log('✅ 지역별 데이터 응답:', regionData);
+      }
       
       // RegionDataDisplay 컴포넌트를 다시 렌더링하기 위해 key 변경
       setRefreshKey(prev => prev + 1);
