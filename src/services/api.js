@@ -394,17 +394,25 @@ const realApiService = {
     }
   },
 
-  // Dashboard API - 문서 명세에 맞게 수정
+  // Dashboard API - 백엔드팀 코드에 맞게 수정
   getDashboardByDate: async (date) => {
-    const params = date ? { date } : {};
-    return (await api.get('/by-date', { params })).data;
+    // 백엔드: GET /deathPredictions/by-date/{date}
+    return (await api.get(`/deathPredictions/by-date/${date}`)).data;
   },
   getDashboardByRegion: async (region) => {
-    const params = region ? { region } : {};
-    return (await api.get('/by-region', { params })).data;
+    // 백엔드: GET /deathPredictions/by-region/{region}
+    return (await api.get(`/deathPredictions/by-region/${region}`)).data;
   },
+  getDeathPrediction: async (date, region) => {
+    // 백엔드: GET /deathPredictions/{date}/{region}
+    return (await api.get(`/deathPredictions/${date}/${region}`)).data;
+  },
+  requestPrediction: async (data) => {
+    // 백엔드: POST /deathPredictions/request-prediction
+    return (await api.post('/deathPredictions/request-prediction', data)).data;
+  },
+  // 기존 API들은 다른 서비스용이므로 유지
   getPredictCheck: async () => (await api.get('/predict-check')).data,
-  requestPrediction: async (data) => (await api.post('/predict-request', data)).data,
   updatePredictionRequest: async (data) => (await api.put('/predict-request-update', data)).data,
   getPredictResponse: async () => (await api.get('/predict-response')).data,
   updatePredictResponse: async (data) => (await api.put('/predict-response-update', data)).data,

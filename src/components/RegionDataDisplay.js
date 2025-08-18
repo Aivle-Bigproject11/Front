@@ -24,17 +24,22 @@ const RegionDataDisplay = ({ region }) => {
     // 백엔드 가용성 체크
     const checkBackendAvailability = async () => {
       try {
-        // 간단한 헬스체크 요청
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/by-date`, {
+        // 간단한 헬스체크 요청 - 새로운 엔드포인트로 수정
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/deathPredictions/by-date/2025-01`, {
           method: 'HEAD', // HEAD 요청으로 서버 응답만 확인
           timeout: 3000 // 3초 타임아웃
         });
         
-        if (response.ok || response.status < 500) {
+        // 404는 엔드포인트가 존재함을 의미하므로 백엔드 가용으로 판단
+        if (response.ok || response.status === 404) {
           setBackendAvailable(true);
           console.log('백엔드 서버 가용 확인됨');
+        } else if (response.status >= 500) {
+          console.log('백엔드 서버 내부 오류:', response.status);
+          setBackendAvailable(false);
         } else {
-          console.log('백엔드 서버 응답 오류:', response.status);
+          console.log('백엔드 서버 응답:', response.status);
+          setBackendAvailable(true); // 400 등은 서버가 살아있음을 의미
         }
       } catch (error) {
         console.log('백엔드 서버 연결 불가:', error.message);
