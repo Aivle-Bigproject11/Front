@@ -30,12 +30,21 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       const userData = localStorage.getItem('user');
       
+      console.log('🔍 localStorage에서 불러온 데이터:', { token: !!token, userData });
+      
       if (token && userData) {
+        const parsedUser = JSON.parse(userData);
+        console.log('🔍 파싱된 사용자 데이터:', parsedUser);
+        console.log('🔍 사용자 타입:', parsedUser.userType);
+        
         setIsAuthenticated(true);
-        setUser(JSON.parse(userData));
+        setUser(parsedUser);
       }
     } catch (error) {
       console.error("사용자 정보를 불러오는 데 실패했습니다.", error);
+      // localStorage 데이터가 손상된 경우 정리
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
     setLoading(false);
   }, []);
@@ -226,6 +235,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     isAuthenticated,
     user,
+    userType: user?.userType, // userType 추가
     loading,
     login,
     loginByType,
@@ -235,6 +245,13 @@ export const AuthProvider = ({ children }) => {
     changePassword,
     changePasswordByType
   };
+
+  // 디버깅을 위한 로그
+  console.log('🔍 AuthContext value:', { 
+    isAuthenticated, 
+    user: user ? { ...user, loginPassword: '[HIDDEN]' } : null, 
+    userType: user?.userType 
+  });
 
   return (
     <AuthContext.Provider value={value}>
