@@ -114,7 +114,7 @@ const realApiService = {
 
   // Login/User-related Service
   // 참고: API 명세에 없어 추측하여 작성되었습니다. 실제 엔드포인트로 수정이 필요할 수 있습니다.
-  getUserMemorialHalls: async (userId) => (await api.get(`/users/${userId}/memorials`)).data,
+  //getUserMemorialHalls: async (userId) => (await api.get(`/users/${userId}/memorials`)).data,
   getMemorialByCode: async (code) => (await api.get(`/memorials?code=${code}`)).data,
 
   // Other Services
