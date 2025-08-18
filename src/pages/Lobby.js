@@ -424,11 +424,7 @@ const Lobby = () => {
                       onClick={() => handleMemorialClick(memorial)}
                       style={{
                         cursor: 'pointer',
-                        background: memorial.status === 'active' 
-                          ? 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)'
-                          : memorial.status === 'completed'
-                          ? 'linear-gradient(135deg, #6c757d 0%, #495057 100%)'
-                          : 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)',
+                        background: 'linear-gradient(135deg, #b8860b, #965a25)',
                         padding: '20px',
                         color: 'white'
                       }}>
