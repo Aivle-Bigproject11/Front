@@ -24,22 +24,49 @@ const RegionDataDisplay = ({ region }) => {
     // 백엔드 가용성 체크
     const checkBackendAvailability = async () => {
       try {
-        // 간단한 헬스체크 요청 - 새로운 엔드포인트로 수정
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/deathPredictions/by-date/2025-01`, {
-          method: 'HEAD', // HEAD 요청으로 서버 응답만 확인
-          timeout: 3000 // 3초 타임아웃
+        // Spring Boot Actuator health 엔드포인트로 서버 상태 확인
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/actuator/health`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
         });
         
-        // 404는 엔드포인트가 존재함을 의미하므로 백엔드 가용으로 판단
-        if (response.ok || response.status === 404) {
-          setBackendAvailable(true);
-          console.log('백엔드 서버 가용 확인됨');
-        } else if (response.status >= 500) {
-          console.log('백엔드 서버 내부 오류:', response.status);
-          setBackendAvailable(false);
+        if (response.ok) {
+          const healthData = await response.text();
+          console.log('백엔드 서버 헬스체크 성공:', healthData);
+          
+          // 실제 API 엔드포인트도 테스트해보기
+          try {
+            const testResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/deathPredictions/by-date/2025-01`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(localStorage.getItem('token') && {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                })
+              },
+              timeout: 3000
+            });
+            
+            if (testResponse.ok) {
+              setBackendAvailable(true);
+              console.log('백엔드 API 엔드포인트 정상 작동');
+            } else if (testResponse.status === 500) {
+              console.log('백엔드 서버 내부 오류 (500) - 서버는 실행 중이지만 API에 문제가 있음');
+              setBackendAvailable(false);
+            } else {
+              console.log('백엔드 API 응답:', testResponse.status);
+              setBackendAvailable(true); // 인증 에러 등은 서버가 살아있음을 의미
+            }
+          } catch (apiError) {
+            console.log('백엔드 API 테스트 실패:', apiError.message);
+            setBackendAvailable(false);
+          }
         } else {
-          console.log('백엔드 서버 응답:', response.status);
-          setBackendAvailable(true); // 400 등은 서버가 살아있음을 의미
+          console.log('백엔드 헬스체크 실패:', response.status);
+          setBackendAvailable(false);
         }
       } catch (error) {
         console.log('백엔드 서버 연결 불가:', error.message);
@@ -61,9 +88,11 @@ const RegionDataDisplay = ({ region }) => {
           let regionData;
           if (region === '전체') {
             console.log('전체 지역 데이터 요청 중...');
+            console.log('API 호출:', `GET /deathPredictions/by-date/${currentDate}`);
             regionData = await apiService.getDashboardByDate(currentDate);
           } else {
             console.log(`${region} 지역 데이터 요청 중...`);
+            console.log('API 호출:', `GET /deathPredictions/by-region/${region}`);
             regionData = await apiService.getDashboardByRegion(region);
           }
 
@@ -79,14 +108,35 @@ const RegionDataDisplay = ({ region }) => {
       } catch (error) {
         console.error('백엔드 데이터 로딩 실패:', error);
         
-        // 네트워크 에러인지 확인
-        if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
-          setError('백엔드 서버에 연결할 수 없습니다. CSV 데이터를 사용합니다.');
+        // 에러 유형별 상세한 메시지 제공
+        let errorMessage;
+        if (error.response) {
+          // 서버가 응답했지만 에러 상태 코드
+          const status = error.response.status;
+          if (status === 404) {
+            errorMessage = `API 엔드포인트를 찾을 수 없습니다 (${status}). 백엔드 서버의 API 경로를 확인해주세요.`;
+          } else if (status === 401) {
+            errorMessage = `인증이 필요합니다 (${status}). 로그인 후 다시 시도해주세요.`;
+          } else if (status === 403) {
+            errorMessage = `접근 권한이 없습니다 (${status}).`;
+          } else if (status === 500) {
+            errorMessage = `백엔드 서버 내부 오류 (${status}). 서버에서 데이터베이스 연결 등에 문제가 있을 수 있습니다.`;
+          } else if (status >= 500) {
+            errorMessage = `서버 내부 오류 (${status}). 잠시 후 다시 시도해주세요.`;
+          } else {
+            errorMessage = `API 오류 (${status}): ${error.response.data?.message || '알 수 없는 오류'}`;
+          }
+        } else if (error.request) {
+          // 요청이 전송되었지만 응답을 받지 못함
+          errorMessage = '백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.';
         } else {
-          setError(`백엔드 API 오류: ${error.response?.status || 'Unknown'}. CSV 데이터를 사용합니다.`);
+          // 요청 설정 중 에러
+          errorMessage = `요청 설정 오류: ${error.message}`;
         }
         
+        setError(`${errorMessage} CSV 데이터를 사용합니다.`);
         setUseBackendData(false);
+        setBackendAvailable(false); // 실패 시 백엔드를 사용 불가로 표시
         
         // 폴백: CSV 데이터 사용
         loadCsvData();
@@ -288,22 +338,13 @@ const RegionDataDisplay = ({ region }) => {
           <p>{error}</p>
           <div className="mt-3">
             <button 
-              className="btn btn-primary me-2" 
+              className="btn btn-primary" 
               onClick={() => {
-                setUseBackendData(true);
+                setUseBackendData(!useBackendData);
                 setError(null);
               }}
             >
-              백엔드 API 재시도
-            </button>
-            <button 
-              className="btn btn-secondary" 
-              onClick={() => {
-                setUseBackendData(false);
-                setError(null);
-              }}
-            >
-              CSV 데이터 사용
+              {useBackendData ? 'CSV 데이터로 전환' : '백엔드 API로 전환'}
             </button>
           </div>
         </div>
@@ -392,14 +433,13 @@ const RegionDataDisplay = ({ region }) => {
             {useBackendData ? '백엔드 데이터' : 'CSV 데이터'} 사용 중
           </span>
         </div>
-        {backendAvailable && (
-          <button
-            className={`btn btn-sm ${useBackendData ? 'btn-secondary' : 'btn-primary'}`}
-            onClick={() => setUseBackendData(!useBackendData)}
-          >
-            {useBackendData ? 'CSV로 전환' : '백엔드로 전환'}
-          </button>
-        )}
+        <button
+          className={`btn btn-sm ${useBackendData ? 'btn-outline-secondary' : 'btn-outline-primary'}`}
+          onClick={() => setUseBackendData(!useBackendData)}
+          disabled={!backendAvailable && !useBackendData}
+        >
+          {useBackendData ? 'CSV 모드로 전환' : '백엔드 모드로 전환'}
+        </button>
       </div>
 
       {/* 에러 메시지 */}
@@ -416,17 +456,9 @@ const RegionDataDisplay = ({ region }) => {
           <i className="fas fa-map-marker-alt me-2" style={{ color: '#D4AF37' }}></i>
           {region} 예측 결과 분석
         </h2>
-        <div>
-          <small className="text-muted">
-            데이터 소스: {useBackendData ? '백엔드 API' : 'CSV 파일'}
-          </small>
-          <button 
-            className="btn btn-sm btn-outline-secondary ms-2"
-            onClick={() => setUseBackendData(!useBackendData)}
-          >
-            {useBackendData ? 'CSV 모드' : 'API 모드'}
-          </button>
-        </div>
+        <small className="text-muted">
+          데이터 소스: {useBackendData ? '백엔드 API' : 'CSV 파일'}
+        </small>
       </div>
 
       {/* 주요지역 현황 요약 */}
