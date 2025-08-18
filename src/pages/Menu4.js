@@ -453,10 +453,43 @@ const Menu4 = () => {
                       <div className="mt-auto">
                         <hr className="my-2" />
                         <div className="d-flex justify-content-between align-items-center">
-                          <div>
-                            <small className="text-muted" style={{ fontSize: '0.8rem' }}>참여코드</small>
-                            <div className="fw-bold" style={{ color: '#b8860b', letterSpacing: '0.5px' }}>
-                              {memorial.joinCode}
+                          <div style={{ flex: 1, marginRight: '10px' }}>
+                            <small className="text-muted" style={{ fontSize: '0.75rem' }}>추모관 고유번호</small>
+                            <div 
+                              className="fw-bold" 
+                              style={{ 
+                                color: '#b8860b', 
+                                fontSize: '0.75rem',
+                                letterSpacing: '0.3px',
+                                cursor: 'pointer',
+                                wordBreak: 'break-all',
+                                lineHeight: '1.2',
+                                padding: '2px 4px',
+                                borderRadius: '4px',
+                                backgroundColor: 'rgba(184, 134, 11, 0.1)',
+                                border: '1px dashed rgba(184, 134, 11, 0.3)',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(memorial.id);
+                                // 복사 완료 표시
+                                const element = e.target;
+                                const originalText = element.textContent;
+                                element.textContent = '복사완료!';
+                                element.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                                element.style.borderColor = 'rgba(40, 167, 69, 0.3)';
+                                element.style.color = '#28a745';
+                                setTimeout(() => {
+                                  element.textContent = originalText;
+                                  element.style.backgroundColor = 'rgba(184, 134, 11, 0.1)';
+                                  element.style.borderColor = 'rgba(184, 134, 11, 0.3)';
+                                  element.style.color = '#b8860b';
+                                }, 1500);
+                              }}
+                              title="클릭하여 복사"
+                            >
+                              {memorial.id}
                             </div>
                           </div>
                           <Dropdown align="end" onClick={(e) => e.stopPropagation()}>
@@ -489,7 +522,13 @@ const Menu4 = () => {
       <Modal show={showFamilyModal} onHide={() => setShowFamilyModal(false)} size="lg">
         {/* Family modal content remains the same as in original Menu4.js */}
         <Modal.Header closeButton>
-          <Modal.Title><i className="fas fa-users me-2"></i> 유가족 관리 - {selectedMemorial?.name}</Modal.Title>
+          <Modal.Title>
+            <i className="fas fa-users me-2"></i> 유가족 관리 - {selectedMemorial?.name}
+            <br />
+            <small className="text-muted" style={{ fontSize: '0.8rem' }}>
+              추모관 고유번호: {selectedMemorial?.id}
+            </small>
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {/* Search and Add Section */}
