@@ -8,9 +8,30 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 // 데이터 처리 로직 시작
 const nationalRegionStatus = [
-  { level: '고위험 지역', color: 'rgba(183, 28, 28, 0.2)', regions: ['서울', '경기', '부산'] },
-  { level: '주의 지역', color: 'rgba(251, 192, 45, 0.2)', regions: ['대구', '인천', '충남'] },
-  { level: '안정 지역', color: 'rgba(51, 105, 30, 0.2)', regions: ['광주', '울산', '세종'] },
+  { 
+    level: '우선 지역', 
+    description: '전원 대비 증가율이 가장 높은 지역들',
+    color: 'rgba(220, 53, 69, 0.15)', 
+    borderColor: 'rgba(220, 53, 69, 0.8)',
+    textColor: '#dc3545',
+    regions: ['서울', '경기', '부산'] 
+  },
+  { 
+    level: '관심 지역', 
+    description: '평상 수준 이상의 증가율을 보이는 주의 필요한 지역',
+    color: 'rgba(255, 193, 7, 0.15)', 
+    borderColor: 'rgba(255, 193, 7, 0.8)',
+    textColor: '#ffc107',
+    regions: ['대구', '인천', '충남'] 
+  },
+  { 
+    level: '안정 지역', 
+    description: '증가율이 낮거나 감소세를 보이는 지역',
+    color: 'rgba(25, 135, 84, 0.15)', 
+    borderColor: 'rgba(25, 135, 84, 0.8)',
+    textColor: '#198754',
+    regions: ['광주', '울산', '세종'] 
+  },
 ];
 
 const RegionDataDisplay = ({ region }) => {
@@ -521,13 +542,73 @@ const RegionDataDisplay = ({ region }) => {
 
       {/* 주요지역 현황 요약 */}
       <div className="p-4 mb-4" style={cardStyle}>
-        <h5 className="mb-3" style={{ fontWeight: '600' }}>주요지역 현황 요약</h5>
-        <Row>
+        <h5 className="mb-4" style={{ fontWeight: '600', color: '#343a40' }}>주요지역 현황 요약</h5>
+        <Row className="g-3">
           {data.regionStatus.map((status, index) => (
-            <Col md={4} key={index} className="mb-2">
-              <div className="p-3 text-black rounded d-flex flex-column" style={{ backgroundColor: status.color, height: '100%' }}>
-                <h6 className="mb-1" style={{ fontWeight: 'bold', fontSize: '15px', color: '#505050ff' }}>{status.level}</h6>
-                <p className="mb-0" style={{ fontWeight: 'bold', fontSize: '20px' }}>{status.regions.join(', ')}</p>
+            <Col md={4} key={index}>
+              <div 
+                className="p-4 rounded-3 h-100 d-flex flex-column position-relative" 
+                style={{ 
+                  backgroundColor: status.color,
+                  border: `2px solid ${status.borderColor}`,
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {/* 상태 표시 도트 */}
+                <div 
+                  className="position-absolute top-0 end-0 m-3 rounded-circle"
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: status.textColor,
+                    boxShadow: `0 0 0 4px ${status.color}`
+                  }}
+                ></div>
+                
+                {/* 제목 */}
+                <h6 
+                  className="mb-2 fw-bold" 
+                  style={{ 
+                    fontSize: '16px', 
+                    color: status.textColor,
+                    letterSpacing: '-0.5px'
+                  }}
+                >
+                  ● {status.level}
+                </h6>
+                
+                {/* 설명 */}
+                <p 
+                  className="mb-3 small" 
+                  style={{ 
+                    color: '#6c757d',
+                    fontSize: '13px',
+                    lineHeight: '1.4',
+                    minHeight: '34px'
+                  }}
+                >
+                  {status.description}
+                </p>
+                
+                {/* 지역 목록 */}
+                <div className="mt-auto">
+                  <div className="d-flex flex-wrap gap-1">
+                    {status.regions.map((region, regionIndex) => (
+                      <span 
+                        key={regionIndex}
+                        className="badge rounded-pill px-2 py-1"
+                        style={{ 
+                          backgroundColor: status.textColor,
+                          color: 'white',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        {region}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </Col>
           ))}
