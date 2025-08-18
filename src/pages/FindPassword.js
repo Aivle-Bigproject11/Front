@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const FindPassword = () => {
@@ -13,13 +13,21 @@ const FindPassword = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [animateCard, setAnimateCard] = useState(false);
+    const [title, setTitle] = useState('비밀번호 변경'); // 제목을 위한 상태
 
-    const { changePassword } = useAuth();
+    const { changePasswordByType } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
+        const userType = location.state?.userType;
+        if (userType === 'employee') {
+            setTitle('직원 비밀번호 변경');
+        } else {
+            setTitle('사용자 비밀번호 변경');
+        }
         setAnimateCard(true);
-    }, []);
+    }, [location.state]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,6 +40,7 @@ const FindPassword = () => {
         setLoading(true);
 
         const { loginId, newPassword, confirmPassword } = formData;
+        const userType = location.state?.userType || 'user';
 
         // 유효성 검사
         if (!loginId || !newPassword || !confirmPassword) {
@@ -45,7 +54,7 @@ const FindPassword = () => {
             return;
         }
 
-        const result = await changePassword(loginId, newPassword);
+        const result = await changePasswordByType(loginId, newPassword, userType);
 
         setLoading(false);
 
@@ -138,7 +147,7 @@ const FindPassword = () => {
                         }}>
                             {/* 제목 */}
                             <div style={{ marginBottom: '30px' }}>
-                                <h2 style={{ color: '#2C1F14', fontWeight: '700', fontSize: '28px', marginBottom: '8px' }}>비밀번호 변경</h2>
+                                <h2 style={{ color: '#2C1F14', fontWeight: '700', fontSize: '28px', marginBottom: '8px' }}>{title}</h2>
                                 <p style={{ color: '#4A3728', fontSize: '14px', margin: 0 }}>아이디와 새 비밀번호를 입력해주세요.</p>
                             </div>
 

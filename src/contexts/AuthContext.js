@@ -5,9 +5,8 @@ import {
     getUserByCredentials, 
     getEmployeeByCredentials,
     getUserByNameAndEmail,
-    getEmployeeByNameAndEmail,
-    updateUserPasswordByLoginId,
-    updateEmployeePasswordByLoginId } 
+    getEmployeeByNameAndEmail
+} 
 from '../services/userService';
 import { apiService } from '../services/api'; // Added for direct API calls
 
@@ -197,12 +196,14 @@ export const AuthProvider = ({ children }) => {
    */
   const changePasswordByType = async (loginId, newPassword, userType) => {
     try {
-      const updateFunction = userType === 'employee' ? updateEmployeePasswordByLoginId : updateUserPasswordByLoginId;
-      const result = await updateFunction(loginId, newPassword);
-      return result; // { success: true, message: '...' }
+      const updateFunction = userType === 'employee' ? apiService.changeEmployeePassword : apiService.changeUserPassword;
+      await updateFunction(loginId, newPassword);
+      return { success: true, message: '비밀번호가 성공적으로 변경되었습니다.' };
     } catch (error) {
-      console.error(error);
-      return { success: false, message: error.message };
+      console.error("Password change error:", error);
+      // Axios 에러인 경우, 백엔드에서 보낸 커스텀 메시지(error.response.data)를 우선적으로 사용합니다.
+      const message = error.response?.data || error.message;
+      return { success: false, message: message };
     }
   };
 
@@ -211,11 +212,14 @@ export const AuthProvider = ({ children }) => {
    */
   const changePassword = async (loginId, newPassword) => {
     try {
-      const result = await updateUserPasswordByLoginId(loginId, newPassword);
-      return result; // { success: true, message: '...' }
+      // 기본값을 사용자 비밀번호 변경으로 설정
+      await apiService.changeUserPassword(loginId, newPassword);
+      return { success: true, message: '비밀번호가 성공적으로 변경되었습니다.' };
     } catch (error) {
-      console.error(error);
-      return { success: false, message: error.message };
+      console.error("Password change error:", error);
+      // Axios 에러인 경우, 백엔드에서 보낸 커스텀 메시지(error.response.data)를 우선적으로 사용합니다.
+      const message = error.response?.data || error.message;
+      return { success: false, message: message };
     }
   };
 

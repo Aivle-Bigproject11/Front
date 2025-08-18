@@ -741,7 +741,7 @@ const Login = () => {
                     fontSize: '14px', 
                     fontWeight: '600' 
                     }}>아이디 찾기</button>
-                  <button onClick={() => navigate('/FindPassword', { state: { isEmployee: activeTab === 'employee' } })} className="login-link" style={{ 
+                  <button onClick={() => navigate('/FindPassword', { state: { userType: activeTab } })} className="login-link" style={{ 
                     background: 'none',
                     border: 'none',
                     padding: 0,
