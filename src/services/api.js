@@ -44,6 +44,15 @@ api.interceptors.response.use(
   }
 );
 
+// 지역명 매핑 함수 (백엔드 DB 형식에 맞춤)
+const mapRegionName = (region) => {
+  const regionMapping = {
+    '서울': '서울특별시'
+  };
+  
+  return regionMapping[region] || region;
+};
+
 // --- 실제 API 서비스 정의 (Axios 응답에서 data를 추출하여 반환하도록 수정) ---
 const realApiService = {
   // Memorial Service
@@ -402,8 +411,9 @@ const realApiService = {
   },
   getDashboardByRegion: async (region) => {
     // 백엔드: GET /deathPredictions/by-region/{region}
-    console.log(`🔗 API 호출: GET /deathPredictions/by-region/${region}`);
-    return (await api.get(`/deathPredictions/by-region/${region}`)).data;
+    const mappedRegion = mapRegionName(region);
+    console.log(`🔗 API 호출: GET /deathPredictions/by-region/${mappedRegion} (원본: ${region})`);
+    return (await api.get(`/deathPredictions/by-region/${encodeURIComponent(mappedRegion)}`)).data;
   },
   getDeathPrediction: async (date, region) => {
     // 백엔드: GET /deathPredictions/{date}/{region}
@@ -412,8 +422,12 @@ const realApiService = {
   },
   requestPrediction: async (data) => {
     // 백엔드: POST /deathPredictions/request-prediction
-    console.log('🔗 API 호출: POST /deathPredictions/request-prediction', data);
-    return (await api.post('/deathPredictions/request-prediction', data)).data;
+    const mappedData = {
+      ...data,
+      region: mapRegionName(data.region)
+    };
+    console.log('🔗 API 호출: POST /deathPredictions/request-prediction', mappedData);
+    return (await api.post('/deathPredictions/request-prediction', mappedData)).data;
   },
   // 기존 API들은 다른 서비스용이므로 유지
   getPredictCheck: async () => (await api.get('/predict-check')).data,
