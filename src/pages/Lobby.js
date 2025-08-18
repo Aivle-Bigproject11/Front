@@ -5,7 +5,6 @@ import { Heart, Calendar, Search, LogOut, User, ArrowRight, Check, X, Printer, E
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { customerService } from '../services/customerService';
-import { documentService } from '../services/documentService';
 
 const Lobby = () => {
   const [memorialHalls, setMemorialHalls] = useState([]);
@@ -82,6 +81,7 @@ const Lobby = () => {
           const formattedMemorial = {
             id: memorialId,
             name: `故 ${memorialData.name || '고인'} 추모관`, // API 응답에 맞게 필드명 수정
+            description: memorialData.tribute || '',
             period: `${memorialData.birthDate || '미상'} ~ ${memorialData.deceasedDate || '미상'}`,
             joinCode: memorialId, // 추모관 고유번호는 memorialId를 사용
             status: customerStatus, 
@@ -123,46 +123,45 @@ const Lobby = () => {
     }
   };
 
-  // 각 추모관에 대한 고객 정보 및 서류 상태를 가져오는 함수
   const loadCustomerDocuments = async () => {
     try {
       setDocumentsLoading(true);
-      const allCustomers = await customerService.getAllCustomers();
-
       const detailsPromises = memorialHalls.map(async (memorial) => {
-        const customer = allCustomers.find(c => c.name === memorial.name);
-        
-        if (!customer) {
-          return [memorial.id, { customer: null, statuses: { obituary: false, schedule: false, deathCertificate: false } }];
+        if (!memorial.customerId) {
+          return [memorial.id, { customer: null, statuses: {} }];
+        }
+
+        let customer = null;
+        try {
+            const response = await customerService.getCustomerById(memorial.customerId);
+            customer = response.data; 
+        } catch (e) {
+            console.error(`Failed to fetch customer ${memorial.customerId}`, e);
         }
 
         const statusPromises = [
-          apiService.getObituaryByCustomerId(customer.id),
-          apiService.getScheduleByCustomerId(customer.id),
-          apiService.getDeathReportByCustomerId(customer.id)
+          apiService.getObituaryByCustomerId(memorial.customerId),
+          apiService.getScheduleByCustomerId(memorial.customerId),
+          apiService.getDeathReportByCustomerId(memorial.customerId)
         ];
-
+        
         const results = await Promise.allSettled(statusPromises);
-
+        
         const statuses = {
-          obituary: results[0].status === 'fulfilled' && results[0].value,
-          schedule: results[1].status === 'fulfilled' && results[1].value,
-          deathCertificate: results[2].status === 'fulfilled' && results[2].value,
+          obituary: results[0].status === 'fulfilled' ? results[0].value?.data : null,
+          schedule: results[1].status === 'fulfilled' ? results[1].value?.data : null,
+          deathCertificate: results[2].status === 'fulfilled' ? results[2].value?.data : null,
         };
-
+        
         return [memorial.id, { customer, statuses }];
       });
-
+      
       const detailsArray = await Promise.all(detailsPromises);
       setMemorialDetails(Object.fromEntries(detailsArray));
-
-    } catch (err) {
+    } catch (err)
+    {
       console.error('Error loading customer documents status:', err);
-      const resetDetails = memorialHalls.reduce((acc, memorial) => {
-        acc[memorial.id] = { customer: null, statuses: { obituary: false, schedule: false, deathCertificate: false } };
-        return acc;
-      }, {});
-      setMemorialDetails(resetDetails);
+      setError('서류 상태를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setDocumentsLoading(false);
     }
@@ -218,65 +217,42 @@ const Lobby = () => {
     }
   };
 
-  const handlePreview = async (docType, customer) => {
-    if (!customer || !customer.formData) {
-        setPreviewContent({ title: '오류', content: '미리보기를 위한 데이터가 없습니다.' });
-        setShowPreviewModal(true);
-        return;
-    }
-    try {
-        const preview = await documentService.previewDocument(docType, customer.formData);
-        setPreviewContent(preview);
-        setShowPreviewModal(true);
-    } catch (error) {
-        setPreviewContent({ title: '미리보기 오류', content: '미리보기를 불러올 수 없습니다.' });
-        setShowPreviewModal(true);
-    }
-  };
+  const handlePreview = (docType, documentData) => {
+    const urlKeys = {
+      obituary: 'obituaryFileUrl',
+      schedule: 'scheduleFileUrl', 
+      deathCertificate: 'deathReportFileUrl' 
+    };
+    const documentUrl = documentData ? documentData[urlKeys[docType]] : null;
 
-  
-  // 카드 목록에서 바로 인쇄 버튼을 눌렀을 때 실행되는 함수
-  const handlePrintDocument = async (docType, customer) => {
-    if (!customer || !customer.formData) {
-      setError("인쇄할 서류 데이터를 불러올 수 없습니다.");
-      return;
-    }
-    try {
-      const documentToPrint = await documentService.previewDocument(docType, customer.formData);
-      const printArea = document.getElementById('printable-area');
-      
-      if (printArea) {
-        printArea.innerHTML = `
-          <div style="background: white; font-family: serif; padding: 32px;">
-            <h2 style="text-align: center; margin-bottom: 32px; font-size: 24px; font-weight: bold;">${documentToPrint.title}</h2>
-            <div style="white-space: pre-line; line-height: 1.8; font-size: 16px;">${documentToPrint.content}</div>
-          </div>
-        `;
-        
-        window.print(); 
-        printArea.innerHTML = ''; 
-      } else {
-        setError("인쇄 영역을 찾을 수 없습니다.");
-      }
-    } catch (error) {
-      setError("서류를 인쇄하는 중 오류가 발생했습니다.");
-      console.error("Error during printing:", error);
-    }
-  };
+    if (documentUrl) {
+      const docName = documentsInfo.find(d => d.type === docType)?.name || '문서';
+      setPreviewContent({
+        title: `${docName} 미리보기`,
+        // PDF를 모달 안에 보여주기 위해 iframe을 사용
+        content: `<iframe src="${documentUrl}#toolbar=0" style="width: 100%; height: 65vh; border: none;"></iframe>`
 
-  const handlePrintFromModal = () => {
-    const printArea = document.getElementById('printable-area');
-    if (printArea && previewContent.content) {
-      printArea.innerHTML = `
-        <div style="background: white; font-family: serif; padding: 32px;">
-          <h2 style="text-align: center; margin-bottom: 32px; font-size: 24px; font-weight: bold;">${previewContent.title}</h2>
-          <div style="white-space: pre-line; line-height: 1.8; font-size: 16px;">${previewContent.content}</div>
-        </div>
-      `;
-      window.print();
-      printArea.innerHTML = '';
+      });
+      setShowPreviewModal(true);
     } else {
-      setError("인쇄할 미리보기 내용이 없습니다.");
+      alert('미리보기할 서류 파일을 찾을 수 없습니다.');
+      console.error("Document URL not found for:", docType, documentData);
+    }
+  };
+
+  const handlePrint = (docType, documentData) => {
+    const urlKeys = {
+      obituary: 'obituaryFileUrl',
+      schedule: 'scheduleFileUrl',
+      deathCertificate: 'deathReportFileUrl'
+    };
+    const documentUrl = documentData ? documentData[urlKeys[docType]] : null;
+
+    if (documentUrl) {
+      // 인쇄는 새 탭에서 PDF를 열어 브라우저의 인쇄 사용
+      window.open(documentUrl, '_blank');
+    } else {
+      alert('인쇄할 서류 파일을 찾을 수 없습니다.');
     }
   };
 
@@ -408,7 +384,7 @@ const Lobby = () => {
             <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6c757d' }}>
               <Heart size={64} style={{ opacity: 0.3, marginBottom: '20px' }} />
               <h4>등록된 추모관이 없습니다</h4>
-              <p>아래 추모관 고유번호로 추모관에 참여하시거나, 관리자에게 문의해주세요.</p>
+              <p>아래 고유번호로 추모관에 참여하시거나, 관리자에게 문의해주세요.</p>
             </div>
           ) : (
             <div style={{
@@ -546,7 +522,8 @@ const Lobby = () => {
                       !customer ? <div style={{fontSize: '0.85rem', color: '#888'}}>서류 정보 없음</div> :
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {documentsInfo.map(docInfo => {
-                          const isCompleted = statuses && statuses[docInfo.type];
+                          const documentData = statuses ? statuses[docInfo.type] : null;
+                          const isCompleted = !!documentData;
                           return (
                             <div key={docInfo.type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -555,19 +532,18 @@ const Lobby = () => {
                               </div>
                               {isCompleted && (
                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePreview(docInfo.type, customer); }}>
+                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePreview(docInfo.type, documentData); }}>
                                     <Eye size={12} />
                                   </Button>
-                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePrintDocument(docInfo.type, customer); }}>
-                                     <Printer size={12} />
+                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePrint(docInfo.type, documentData); }}>
+                                    <Printer size={12} />
                                   </Button>
                                 </div>
                               )}
                             </div>
                           );
                         })}
-                      </div>
-                      }
+                      </div>}
                     </Card.Footer>
                   </Card>
                 )})}
@@ -601,7 +577,7 @@ const Lobby = () => {
               fontWeight: '700',
               color: '#333'
             }}>
-              추모관 고유번호로 입장
+              고유번호로 입장
             </h3>
           </div>
 
@@ -693,19 +669,13 @@ const Lobby = () => {
         <Modal.Header closeButton>
           <Modal.Title>{previewContent.title}</Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ background: '#f9f9f9', maxHeight: '70vh', overflowY: 'auto' }}>
-            <div style={{ background: 'white', fontFamily: 'serif', padding: '32px', border: '1px solid #ddd' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '32px', fontSize: '24px', fontWeight: 'bold' }}>{previewContent.title}</h2>
-                <div style={{ whiteSpace: 'pre-line', lineHeight: '1.8', fontSize: '16px' }} dangerouslySetInnerHTML={{ __html: previewContent.content }} />
-            </div>
+        <Modal.Body>
+            {/* dangerouslySetInnerHTML을 사용하여 iframe을 렌더링합니다. */}
+            <div dangerouslySetInnerHTML={{ __html: previewContent.content }} />
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowPreviewModal(false)}>
             닫기
-          </Button>
-          <Button variant="primary" onClick={handlePrintFromModal}>
-            <Printer size={16} style={{ marginRight: '6px' }} />
-            인쇄
           </Button>
         </Modal.Footer>
       </Modal>
@@ -716,21 +686,11 @@ const Lobby = () => {
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-in { animation: fadeInUp 0.6s ease-out; }
-        @media (max-width: 768px) {
-          .lobby-wrapper > div { grid-template-columns: 1fr !important; gap: 20px !important; }
-          .memorial-section > div:last-child { grid-template-columns: 1fr !important; }
-        }
-        .printable-content { display: none; }
-        @media print {
-            body * { visibility: hidden; }
-            .printable-content, .printable-content * { visibility: visible; }
-            .printable-content { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 100%;
-                height: 100%;
-            }
+        @media (max-width: 992px) {
+          div[style*="grid-template-columns: 2fr 1fr"] { 
+            grid-template-columns: 1fr !important; 
+            gap: 20px !important; 
+          }
         }
       `}</style>
     </div>
