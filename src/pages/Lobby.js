@@ -177,19 +177,28 @@ const Lobby = () => {
 
   const handleJoinByCode = async () => {
     if (!joinCode.trim()) {
-      setError('고유 번호를 입력해주세요.');
+      setError('추모관 고유번호를 입력해주세요.');
       return;
     }
     try {
       setError('');
-      const memorial = await apiService.getMemorialByCode(joinCode);
+      console.log('🔍 고유번호로 추모관 검색:', joinCode.trim());
+      
+      // memorialId로 직접 추모관 조회
+      const memorial = await apiService.getMemorialById(joinCode.trim());
       if (memorial) {
-        navigate(`/user-memorial/${memorial.id}`);
+        console.log('✅ 추모관 발견:', memorial);
+        navigate(`/user-memorial/${joinCode.trim()}`);
       } else {
-        setError('유효하지 않은 고유번호입니다.');
+        setError('유효하지 않은 추모관 고유번호입니다.');
       }
     } catch (err) {
-      setError('추모관을 찾는데 실패했습니다.');
+      console.error('❌ 추모관 조회 실패:', err);
+      if (err.response?.status === 404) {
+        setError('존재하지 않는 추모관 고유번호입니다.');
+      } else {
+        setError('추모관을 찾는데 실패했습니다. 네트워크 연결을 확인해주세요.');
+      }
     }
   };
 
@@ -611,7 +620,7 @@ const Lobby = () => {
               type="text"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value)}
-              placeholder="예: MEM001"
+              placeholder="예: 1c1425e1-8f64-43ea-9798-f747e1a97c0e"
               style={{
                 width: '100%',
                 padding: '12px 16px',
@@ -673,9 +682,10 @@ const Lobby = () => {
               paddingLeft: '15px',
               margin: 0
             }}>
-              <li>추모관 고유번호는 관리자에게 문의하세요</li>
-              <li>유가족 등록이 필요한 경우 관리자가 도움을 드립니다</li>
-              <li>추모관 참여 후 조문 글을 남기실 수 있습니다</li>
+              <li>추모관 고유번호(memorialId)는 유가족이나 관리자에게 문의하세요</li>
+              <li>고유번호는 UUID 형태입니다 (예: 1c1425e1-8f64-43ea-9798-f747e1a97c0e)</li>
+              <li>추모관 카드에서 고유번호를 클릭하여 복사할 수 있습니다</li>
+              <li>추모관 참여 후 조문 글과 사진을 남기실 수 있습니다</li>
             </ul>
           </div>
         </div>
