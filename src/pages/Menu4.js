@@ -211,7 +211,8 @@ const Menu4 = () => {
     // family 객체에는 이미 정규화된 id가 있으므로 바로 사용
     setSelectedMember(family);
     setSearchKeyword(family.name);
-    setSearchResults([]);
+    // 검색 결과를 유지하여 다른 유가족도 선택할 수 있도록 함
+    // setSearchResults([]);
   };
 
   const addFamilyMember = async () => {
@@ -235,8 +236,9 @@ const Menu4 = () => {
         }
         
         setSelectedMember(null);
-        setSearchKeyword('');
-        setSearchResults([]);
+        // 검색어와 결과는 유지하여 추가 등록이 용이하도록 함
+        // setSearchKeyword('');
+        // setSearchResults([]);
         alert('유가족이 등록되었습니다.');
       } catch (error) {
         console.error("Error adding family member:", error);
@@ -494,21 +496,44 @@ const Menu4 = () => {
       </div>
 
       <Modal show={showFamilyModal} onHide={() => setShowFamilyModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <i className="fas fa-users me-2"></i> 유가족 관리 - {selectedMemorial?.name}
+        <Modal.Header 
+          closeButton 
+          style={{
+            background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+            borderBottom: '2px solid rgba(184, 134, 11, 0.2)'
+          }}
+        >
+          <Modal.Title style={{ color: '#2C1F14', fontWeight: '700' }}>
+            <i className="fas fa-users me-2" style={{ color: '#b8860b' }}></i> 
+            유가족 관리 - {selectedMemorial?.name}
             <br />
-            <small className="text-muted" style={{ fontSize: '0.8rem' }}>
+            <small className="text-muted" style={{ fontSize: '0.8rem', fontWeight: '400' }}>
+              <i className="fas fa-id-card me-1"></i>
               추모관 고유번호: {selectedMemorial?.id}
             </small>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body style={{
+          background: 'linear-gradient(135deg, rgba(247, 243, 233, 0.3) 0%, rgba(232, 226, 213, 0.3) 100%)',
+          padding: '24px'
+        }}>
           <div className="row mb-4">
             <div className="col-12">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h6 className="mb-0"><i className="fas fa-search me-2"></i> 회원 검색 및 유가족 등록</h6>
-              </div>
+              <div 
+                className="search-section p-4 mb-4" 
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(184, 134, 11, 0.2)',
+                  boxShadow: '0 4px 15px rgba(44, 31, 20, 0.1)'
+                }}
+              >
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="mb-0" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                    <i className="fas fa-search me-2" style={{ color: '#b8860b' }}></i> 
+                    회원 검색 및 유가족 등록
+                  </h6>
+                </div>
               
               <div className="row g-3 mb-3">
                 <div className="col-md-3">
@@ -556,12 +581,22 @@ const Menu4 = () => {
               
               {searchResults.length > 0 && (
                 <div className="mb-4">
-                  <h6 className="mb-3"><i className="fas fa-list me-2"></i> 검색 결과 ({searchResults.length}명)</h6>
-                  <div className="card">
+                  <h6 className="mb-3" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                    <i className="fas fa-list me-2" style={{ color: '#b8860b' }}></i> 
+                    검색 결과 ({searchResults.length}명)
+                  </h6>
+                  <div className="card" style={{ 
+                    border: '1px solid rgba(184, 134, 11, 0.3)',
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}>
                     <div className="card-body p-0">
                       <div className="table-responsive" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                         <table className="table table-hover mb-0">
-                          <thead className="table-light sticky-top">
+                          <thead className="sticky-top" style={{ 
+                            background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+                            color: '#2C1F14'
+                          }}>
                             <tr>
                               <th>이름</th>
                               <th>전화번호</th>
@@ -578,8 +613,8 @@ const Menu4 = () => {
                                 <td>{family.phone}</td>
                                 <td>{family.email}</td>
                                 <td>
-                                  <Badge bg={family.status === 'APPROVED' ? 'success' : 'warning'}>
-                                    {family.status === 'APPROVED' ? '승인됨' : '대기중'}
+                                  <Badge bg="success">
+                                    <i className="fas fa-check me-1"></i>활성
                                   </Badge>
                                 </td>
                                 <td>
@@ -611,12 +646,25 @@ const Menu4 = () => {
                   검색 결과가 없습니다. 다른 키워드로 검색해보세요.
                 </div>
               )}
+              </div>
             </div>
           </div>
-          <hr />
+          <hr style={{ border: '1px solid rgba(184, 134, 11, 0.2)', margin: '24px 0' }} />
           <div className="row">
             <div className="col-12">
-              <h6 className="mb-3"><i className="fas fa-list me-2"></i> 등록된 유가족 목록 ({familyMembers.length}명)</h6>
+              <div 
+                className="family-list-section p-4" 
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(184, 134, 11, 0.2)',
+                  boxShadow: '0 4px 15px rgba(44, 31, 20, 0.1)'
+                }}
+              >
+                <h6 className="mb-3" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                  <i className="fas fa-list me-2" style={{ color: '#b8860b' }}></i> 
+                  등록된 유가족 목록 ({familyMembers.length}명)
+                </h6>
               {familyMembers.length === 0 ? (
                 <div className="text-center p-4" style={{ background: '#f8f9fa', borderRadius: '8px', border: '2px dashed #dee2e6' }}>
                   <p className="text-muted mb-0">등록된 유가족이 없습니다</p>
@@ -624,7 +672,10 @@ const Menu4 = () => {
               ) : (
                 <div className="table-responsive">
                   <table className="table table-hover">
-                    <thead className="table-light">
+                    <thead style={{ 
+                      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+                      color: '#2C1F14'
+                    }}>
                       <tr>
                         <th>이름</th>
                         <th>전화번호</th>
@@ -642,8 +693,8 @@ const Menu4 = () => {
                             <td>{family.phone}</td>
                             <td>{family.email || '-'}</td>
                             <td>
-                              <Badge bg={family.status === 'APPROVED' ? 'success' : 'warning'}>
-                                {family.status === 'APPROVED' ? '승인됨' : '대기중'}
+                              <Badge bg="success">
+                                <i className="fas fa-check me-1"></i>활성
                               </Badge>
                             </td>
                             <td>
@@ -658,11 +709,25 @@ const Menu4 = () => {
                   </table>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowFamilyModal(false)}>닫기</Button>
+        <Modal.Footer style={{
+          background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+          borderTop: '2px solid rgba(184, 134, 11, 0.2)'
+        }}>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowFamilyModal(false)}
+            style={{
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontWeight: '500'
+            }}
+          >
+            <i className="fas fa-times me-2"></i>닫기
+          </Button>
         </Modal.Footer>
       </Modal>
 
