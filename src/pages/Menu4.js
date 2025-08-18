@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Button, Modal, Form, Badge, Dropdown, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 // This component will now have the design of Menu2.js but the functionality of the original Menu4.js.
 const Menu4 = () => {
   const navigate = useNavigate();
+  const { user, userType, isAuthenticated } = useAuth();
   const [memorials, setMemorials] = useState([]);
   const [showFamilyModal, setShowFamilyModal] = useState(false);
   const [selectedMemorial, setSelectedMemorial] = useState(null);
@@ -20,10 +22,46 @@ const Menu4 = () => {
   const [animateCard, setAnimateCard] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 Menu4 권한 확인 시작...');
+    console.log('🔍 현재 인증 상태:', { isAuthenticated, user, userType });
+    
+    // 로딩이 완료되지 않았으면 대기
+    if (!user && !isAuthenticated) {
+      console.log('🔄 인증 정보 로딩 중...');
+      return;
+    }
+    
+    // 인증되지 않은 사용자는 로그인 페이지로
+    if (!isAuthenticated || !user) {
+      console.error('❌ 인증되지 않은 사용자입니다.');
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    // 관리자 권한 확인 - Login.js처럼 user.userType을 우선적으로 확인
+    const currentUserType = user.userType || userType;
+    console.log('🔍 사용자 타입 최종 확인:', { 
+      finalUserType: currentUserType,
+      fromUserObject: user.userType, 
+      fromContext: userType,
+      user: user 
+    });
+    
+    if (currentUserType !== 'employee') {
+      console.error('❌ 관리자 권한이 필요합니다. 현재 사용자 타입:', currentUserType);
+      alert('관리자만 접근할 수 있는 페이지입니다.');
+      // Login.js처럼 직원이 아니면 로비로, 로그인 안 됐으면 로그인으로
+      navigate('/lobby');
+      return;
+    }
+    
+    console.log('✅ 관리자 권한 확인 완료. 페이지 로딩 시작...');
     setAnimateCard(true);
     const fetchMemorials = async () => {
       try {
         console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8088');
+        console.log('👤 현재 사용자:', user?.name || 'Unknown', '/ 타입:', userType);
         const response = await apiService.getMemorials();
         console.log('✅ 백엔드 API 응답 성공:', response);
         console.log('✅ response._embedded:', response._embedded);
@@ -34,13 +72,23 @@ const Menu4 = () => {
             // API 명세에 따라 UUID 형태의 ID 추출
             let memorialId = memorial.id;
             
+            console.log(`🔍 처리 중인 추모관:`, memorial.name, `/ 원본 ID:`, memorial.id);
+            
             // _links.self.href에서 UUID 추출 (예: "http://localhost:8085/memorials/1c337344-ad3c-4785-a5f8-0054698c3ebe")
             if (memorial._links && memorial._links.self && memorial._links.self.href) {
               const hrefParts = memorial._links.self.href.split('/');
               const uuidFromHref = hrefParts[hrefParts.length - 1];
+              console.log(`🔗 href에서 추출한 ID:`, uuidFromHref);
               if (uuidFromHref && uuidFromHref.includes('-')) {
                 memorialId = uuidFromHref;
+                console.log(`✅ UUID 형식 ID로 변경:`, memorialId);
               }
+            }
+            
+            // UUID 형식 검증
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(memorialId)) {
+              console.warn(`⚠️ UUID 형식이 아닌 ID 발견:`, memorialId, `추모관:`, memorial.name);
             }
             
             return {
@@ -94,7 +142,7 @@ const Menu4 = () => {
     };
 
     fetchMemorials();
-  }, []);
+  }, [user, userType, isAuthenticated, navigate]);
 
   // All handler functions from the original Menu4.js
   
@@ -103,6 +151,21 @@ const Menu4 = () => {
     setSelectedMemorial(memorial);
     console.log(`[현재 모드: 백엔드 API 검색] 서버의 전용 검색 API를 사용합니다. (/families/search-name, /families/search-email, /families/search-phone)`);
     console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: 백엔드 API`);
+    
+    // Memorial ID 유효성 검사
+    if (!memorial.id) {
+      console.error('❌ Memorial ID가 없습니다');
+      alert('추모관 ID가 유효하지 않습니다.');
+      return;
+    }
+    
+    // UUID 형식 검사
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memorial.id)) {
+      console.error(`❌ 잘못된 UUID 형식: ${memorial.id}`);
+      alert('추모관 ID 형식이 올바르지 않습니다.');
+      return;
+    }
     
     try {
       // 해당 추모관에 등록된 유가족 목록 조회
@@ -118,10 +181,25 @@ const Menu4 = () => {
       console.error("❌ 유가족 조회 에러:", error);
       
       if (error.response?.status >= 400) {
-        alert("백엔드 유가족 조회가 실패했습니다.\n\n현재 백엔드에는 findByMemorialId API가 구현되지 않았을 수 있습니다.");
+        console.warn("⚠️ 백엔드 API 실패, 프론트엔드 필터링으로 폴백 시도");
+        try {
+          // 프론트엔드 필터링으로 폴백
+          const fallbackResponse = await apiService.getFamiliesByMemorialIdFrontend(memorial.id);
+          if (fallbackResponse._embedded && fallbackResponse._embedded.families) {
+            console.log(`✅ 프론트엔드 필터링으로 유가족 조회 성공 - ${fallbackResponse._embedded.families.length}명`);
+            setFamilyMembers(fallbackResponse._embedded.families);
+          } else {
+            setFamilyMembers([]);
+          }
+        } catch (fallbackError) {
+          console.error("❌ 프론트엔드 필터링도 실패:", fallbackError);
+          alert("유가족 조회에 실패했습니다. 네트워크 연결을 확인해주세요.");
+          setFamilyMembers([]);
+        }
+      } else {
+        alert("유가족 조회에 실패했습니다. 네트워크 연결을 확인해주세요.");
+        setFamilyMembers([]);
       }
-      
-      setFamilyMembers([]);
     }
     setSearchKeyword('');
     setSearchResults([]);
@@ -187,10 +265,39 @@ const Menu4 = () => {
       console.error("❌ 검색 에러:", error);
       
       if (error.response?.status >= 400) {
-        alert("백엔드 API 검색이 실패했습니다.\n\n현재 백엔드에는 다음 API가 구현되지 않았을 수 있습니다:\n- /families/search-name\n- /families/search-email\n- /families/search-phone");
+        console.warn("⚠️ 백엔드 API 검색 실패, 프론트엔드 검색으로 폴백 시도");
+        try {
+          // 프론트엔드 검색으로 폴백
+          let fallbackResults = [];
+          switch (searchType) {
+            case 'name':
+              fallbackResults = await apiService.searchFamiliesByNameFrontend(keyword.trim());
+              break;
+            case 'email':
+              const emailResult = await apiService.searchFamiliesByEmailFrontend(keyword.trim());
+              fallbackResults = emailResult ? [emailResult] : [];
+              break;
+            case 'phone':
+              fallbackResults = await apiService.searchFamiliesByPhoneFrontend(keyword.trim());
+              break;
+          }
+          
+          const processedFallback = fallbackResults.map(family => {
+            const id = (family._links?.self?.href)?.split('/').pop() || family.id;
+            return { ...family, id };
+          }).filter(family => family.id);
+          
+          console.log(`✅ 프론트엔드 검색으로 복구 성공 - 결과: ${processedFallback.length}개`);
+          setSearchResults(processedFallback);
+        } catch (fallbackError) {
+          console.error("❌ 프론트엔드 검색도 실패:", fallbackError);
+          alert("검색에 실패했습니다. 네트워크 연결을 확인해주세요.");
+          setSearchResults([]);
+        }
+      } else {
+        alert("검색에 실패했습니다. 네트워크 연결을 확인해주세요.");
+        setSearchResults([]);
       }
-      
-      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -211,7 +318,8 @@ const Menu4 = () => {
     // family 객체에는 이미 정규화된 id가 있으므로 바로 사용
     setSelectedMember(family);
     setSearchKeyword(family.name);
-    setSearchResults([]);
+    // 검색 결과를 유지하여 다른 유가족도 선택할 수 있도록 함
+    // setSearchResults([]);
   };
 
   const addFamilyMember = async () => {
@@ -235,8 +343,9 @@ const Menu4 = () => {
         }
         
         setSelectedMember(null);
-        setSearchKeyword('');
-        setSearchResults([]);
+        // 검색어와 결과는 유지하여 추가 등록이 용이하도록 함
+        // setSearchKeyword('');
+        // setSearchResults([]);
         alert('유가족이 등록되었습니다.');
       } catch (error) {
         console.error("Error adding family member:", error);
@@ -270,8 +379,19 @@ const Menu4 = () => {
     const memorialId = memorial?.id;
     if (!memorialId) {
       console.error('❌ Memorial ID가 undefined입니다!');
+      alert('추모관 ID가 유효하지 않습니다.');
       return;
     }
+    
+    // UUID 형식 검사
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memorialId)) {
+      console.error(`❌ 잘못된 UUID 형식: ${memorialId}`);
+      alert('추모관 ID 형식이 올바르지 않습니다.');
+      return;
+    }
+    
+    console.log(`🔗 추모관 상세보기로 이동: /memorial/${memorialId}`);
     navigate(`/memorial/${memorialId}`);
   };
 
@@ -494,21 +614,44 @@ const Menu4 = () => {
       </div>
 
       <Modal show={showFamilyModal} onHide={() => setShowFamilyModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <i className="fas fa-users me-2"></i> 유가족 관리 - {selectedMemorial?.name}
+        <Modal.Header 
+          closeButton 
+          style={{
+            background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+            borderBottom: '2px solid rgba(184, 134, 11, 0.2)'
+          }}
+        >
+          <Modal.Title style={{ color: '#2C1F14', fontWeight: '700' }}>
+            <i className="fas fa-users me-2" style={{ color: '#b8860b' }}></i> 
+            유가족 관리 - {selectedMemorial?.name}
             <br />
-            <small className="text-muted" style={{ fontSize: '0.8rem' }}>
+            <small className="text-muted" style={{ fontSize: '0.8rem', fontWeight: '400' }}>
+              <i className="fas fa-id-card me-1"></i>
               추모관 고유번호: {selectedMemorial?.id}
             </small>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body style={{
+          background: 'linear-gradient(135deg, rgba(247, 243, 233, 0.3) 0%, rgba(232, 226, 213, 0.3) 100%)',
+          padding: '24px'
+        }}>
           <div className="row mb-4">
             <div className="col-12">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h6 className="mb-0"><i className="fas fa-search me-2"></i> 회원 검색 및 유가족 등록</h6>
-              </div>
+              <div 
+                className="search-section p-4 mb-4" 
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(184, 134, 11, 0.2)',
+                  boxShadow: '0 4px 15px rgba(44, 31, 20, 0.1)'
+                }}
+              >
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="mb-0" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                    <i className="fas fa-search me-2" style={{ color: '#b8860b' }}></i> 
+                    회원 검색 및 유가족 등록
+                  </h6>
+                </div>
               
               <div className="row g-3 mb-3">
                 <div className="col-md-3">
@@ -556,12 +699,22 @@ const Menu4 = () => {
               
               {searchResults.length > 0 && (
                 <div className="mb-4">
-                  <h6 className="mb-3"><i className="fas fa-list me-2"></i> 검색 결과 ({searchResults.length}명)</h6>
-                  <div className="card">
+                  <h6 className="mb-3" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                    <i className="fas fa-list me-2" style={{ color: '#b8860b' }}></i> 
+                    검색 결과 ({searchResults.length}명)
+                  </h6>
+                  <div className="card" style={{ 
+                    border: '1px solid rgba(184, 134, 11, 0.3)',
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}>
                     <div className="card-body p-0">
                       <div className="table-responsive" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                         <table className="table table-hover mb-0">
-                          <thead className="table-light sticky-top">
+                          <thead className="sticky-top" style={{ 
+                            background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+                            color: '#2C1F14'
+                          }}>
                             <tr>
                               <th>이름</th>
                               <th>전화번호</th>
@@ -578,8 +731,8 @@ const Menu4 = () => {
                                 <td>{family.phone}</td>
                                 <td>{family.email}</td>
                                 <td>
-                                  <Badge bg={family.status === 'APPROVED' ? 'success' : 'warning'}>
-                                    {family.status === 'APPROVED' ? '승인됨' : '대기중'}
+                                  <Badge bg="success">
+                                    <i className="fas fa-check me-1"></i>활성
                                   </Badge>
                                 </td>
                                 <td>
@@ -611,12 +764,25 @@ const Menu4 = () => {
                   검색 결과가 없습니다. 다른 키워드로 검색해보세요.
                 </div>
               )}
+              </div>
             </div>
           </div>
-          <hr />
+          <hr style={{ border: '1px solid rgba(184, 134, 11, 0.2)', margin: '24px 0' }} />
           <div className="row">
             <div className="col-12">
-              <h6 className="mb-3"><i className="fas fa-list me-2"></i> 등록된 유가족 목록 ({familyMembers.length}명)</h6>
+              <div 
+                className="family-list-section p-4" 
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(184, 134, 11, 0.2)',
+                  boxShadow: '0 4px 15px rgba(44, 31, 20, 0.1)'
+                }}
+              >
+                <h6 className="mb-3" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                  <i className="fas fa-list me-2" style={{ color: '#b8860b' }}></i> 
+                  등록된 유가족 목록 ({familyMembers.length}명)
+                </h6>
               {familyMembers.length === 0 ? (
                 <div className="text-center p-4" style={{ background: '#f8f9fa', borderRadius: '8px', border: '2px dashed #dee2e6' }}>
                   <p className="text-muted mb-0">등록된 유가족이 없습니다</p>
@@ -624,7 +790,10 @@ const Menu4 = () => {
               ) : (
                 <div className="table-responsive">
                   <table className="table table-hover">
-                    <thead className="table-light">
+                    <thead style={{ 
+                      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+                      color: '#2C1F14'
+                    }}>
                       <tr>
                         <th>이름</th>
                         <th>전화번호</th>
@@ -642,8 +811,8 @@ const Menu4 = () => {
                             <td>{family.phone}</td>
                             <td>{family.email || '-'}</td>
                             <td>
-                              <Badge bg={family.status === 'APPROVED' ? 'success' : 'warning'}>
-                                {family.status === 'APPROVED' ? '승인됨' : '대기중'}
+                              <Badge bg="success">
+                                <i className="fas fa-check me-1"></i>활성
                               </Badge>
                             </td>
                             <td>
@@ -658,11 +827,25 @@ const Menu4 = () => {
                   </table>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowFamilyModal(false)}>닫기</Button>
+        <Modal.Footer style={{
+          background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+          borderTop: '2px solid rgba(184, 134, 11, 0.2)'
+        }}>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowFamilyModal(false)}
+            style={{
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontWeight: '500'
+            }}
+          >
+            <i className="fas fa-times me-2"></i>닫기
+          </Button>
         </Modal.Footer>
       </Modal>
 
