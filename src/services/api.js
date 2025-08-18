@@ -45,7 +45,16 @@ const realApiService = {
   getMemorials: async () => (await api.get('/memorials')).data,
   getMemorial: async (id) => (await api.get(`/memorials/${id}`)).data,
   updateMemorial: async (id, data) => (await api.patch(`/memorials/${id}`, data)).data,
-  getMemorialDetails: async (id) => (await api.get(`/memorials/${id}`)).data, // 기본 memorial 조회와 동일
+  getMemorialDetails: async (id) => {
+    try {
+      // detail 엔드포인트로 사진과 댓글이 포함된 전체 정보 가져오기
+      const response = await api.get(`/memorials/${id}/detail`);
+      return response.data;
+    } catch (error) {
+      console.error('getMemorialDetails 에러:', error);
+      throw error;
+    }
+  },
   uploadMemorialProfileImage: async (id, formData) => (await api.patch(`/memorials/${id}/profile-image`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
   
   createTribute: async (id, data) => {
