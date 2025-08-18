@@ -98,7 +98,9 @@ const Menu4 = () => {
 
   const openFamilyModal = async (memorial) => {
     setSelectedMemorial(memorial);
-    console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: ${apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트엔드 필터링'}`);
+    // 검색 방식은 백엔드로 고정하고, 콘솔에만 로그
+    console.log(`[현재 모드: 백엔드 API 검색] 서버의 전용 검색 API를 사용합니다. (/families/search-name, /families/search-email, /families/search-phone)`);
+    console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: 백엔드 API`);
     
     try {
       // 해당 추모관에 등록된 유가족 목록 조회
@@ -113,10 +115,8 @@ const Menu4 = () => {
     } catch (error) {
       console.error("❌ 유가족 조회 에러:", error);
       
-      // 백엔드 검색 실패시 자동으로 프론트엔드 방식 제안
-      if (apiService.USE_BACKEND_SEARCH && error.response?.status >= 400) {
-        console.log("💡 백엔드 유가족 조회 실패 - 프론트엔드 필터링 방식으로 전환을 고려해보세요");
-        alert("백엔드 유가족 조회가 실패했습니다.\n검색 방식을 '프론트 필터링'으로 변경해보세요.\n\n현재 백엔드에는 findByMemorialId API가 구현되지 않았을 수 있습니다.");
+      if (error.response?.status >= 400) {
+        alert("백엔드 유가족 조회가 실패했습니다.\n\n현재 백엔드에는 findByMemorialId API가 구현되지 않았을 수 있습니다.");
       }
       
       setFamilyMembers([]);
@@ -135,7 +135,8 @@ const Menu4 = () => {
       return;
     }
     setIsSearching(true);
-    console.log(`🔍 검색 시작 - 방식: ${apiService.USE_BACKEND_SEARCH ? '백엔드 API 검색' : '프론트엔드 필터링'}, 타입: ${searchType}, 키워드: ${keyword}`);
+    // 검색 방식은 백엔드로
+    console.log(`🔍 검색 시작- 타입: ${searchType}, 키워드: ${keyword}`);
     
     try {
       let searchResults = [];
@@ -185,10 +186,8 @@ const Menu4 = () => {
     } catch (error) {
       console.error("❌ 검색 에러:", error);
       
-      // 백엔드 검색 실패시 자동으로 프론트엔드 방식으로 전환 제안
-      if (apiService.USE_BACKEND_SEARCH && error.response?.status >= 400) {
-        console.log("💡 백엔드 API 검색 실패 - 프론트엔드 필터링 방식으로 전환을 고려해보세요");
-        alert("백엔드 API 검색이 실패했습니다.\n검색 방식을 '프론트 필터링'으로 변경해보세요.\n\n현재 백엔드에는 다음 API가 구현되지 않았을 수 있습니다:\n- /families/search-name\n- /families/search-email\n- /families/search-phone");
+      if (error.response?.status >= 400) {
+        alert("백엔드 API 검색이 실패했습니다.\n\n현재 백엔드에는 다음 API가 구현되지 않았을 수 있습니다:\n- /families/search-name\n- /families/search-email\n- /families/search-phone");
       }
       
       setSearchResults([]);
@@ -375,9 +374,9 @@ const Menu4 = () => {
         }}>
           {loading ? (
              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-              <Spinner animation="border" role="status" className="me-2" />
-              <span>추모관 목록을 불러오는 중...</span>
-            </div>
+               <Spinner animation="border" role="status" className="me-2" />
+               <span>추모관 목록을 불러오는 중...</span>
+             </div>
           ) : memorials.length === 0 ? (
             <div className="text-center p-5">
               <i className="fas fa-heart fa-3x mb-3" style={{color: '#b8860b'}}></i>
@@ -497,53 +496,6 @@ const Menu4 = () => {
             <div className="col-12">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h6 className="mb-0"><i className="fas fa-search me-2"></i> 회원 검색 및 유가족 등록</h6>
-                {/* 개발용 검색 방식 선택 */}
-                <div className="d-flex align-items-center">
-                  <small className="text-muted me-2">검색 방식:</small>
-                  <div className="d-flex align-items-center">
-                    <span className="badge bg-secondary me-2" style={{ fontSize: '0.75rem' }}>
-                      {apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트 필터링'}
-                    </span>
-                    <Form.Check 
-                      type="switch"
-                      id="search-mode-switch"
-                      label=""
-                      checked={apiService.USE_BACKEND_SEARCH}
-                      onChange={(e) => {
-                        apiService.USE_BACKEND_SEARCH = e.target.checked;
-                        console.log('검색 방식 변경:', e.target.checked ? '백엔드 API 검색' : '프론트엔드 필터링');
-                      }}
-                      className="user-select-none"
-                    />
-                    <small className="text-muted ms-2">
-                      {apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트 필터링'}
-                    </small>
-                  </div>
-                </div>
-              </div>
-              
-              {/* 검색 방식 설명 */}
-              <div className={`alert p-3 mb-3 ${apiService.USE_BACKEND_SEARCH ? 'alert-warning' : 'alert-success'}`} style={{ fontSize: '0.875rem' }}>
-                <div className="d-flex align-items-start">
-                  <i className={`fas ${apiService.USE_BACKEND_SEARCH ? 'fa-exclamation-triangle' : 'fa-check-circle'} me-2 mt-1`}></i>
-                  <div>
-                    <div className="fw-bold mb-1">
-                      현재 모드: {apiService.USE_BACKEND_SEARCH ? '백엔드 API 검색' : '프론트엔드 필터링'}
-                    </div>
-                    <div className="mb-2">
-                      {apiService.USE_BACKEND_SEARCH ? 
-                        '서버의 전용 검색 API를 사용합니다. (/families/search-name, /families/search-email, /families/search-phone)' : 
-                        '전체 유가족 목록을 가져와서 브라우저에서 필터링합니다. (/families 전체 조회)'
-                      }
-                    </div>
-                    <div className="small text-muted">
-                      {apiService.USE_BACKEND_SEARCH ? 
-                        '⚠️ 백엔드에 해당 API가 구현되지 않은 경우 에러가 발생할 수 있습니다.' : 
-                        '✅ 현재 백엔드 상태와 호환되며 안정적으로 작동합니다.'
-                      }
-                    </div>
-                  </div>
-                </div>
               </div>
               
               <div className="row g-3 mb-3">
