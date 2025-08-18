@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Button, Modal, Form, Badge, Dropdown, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 // This component will now have the design of Menu2.js but the functionality of the original Menu4.js.
 const Menu4 = () => {
   const navigate = useNavigate();
+  const { user, userType } = useAuth();
   const [memorials, setMemorials] = useState([]);
   const [showFamilyModal, setShowFamilyModal] = useState(false);
   const [selectedMemorial, setSelectedMemorial] = useState(null);
@@ -20,10 +22,19 @@ const Menu4 = () => {
   const [animateCard, setAnimateCard] = useState(false);
 
   useEffect(() => {
+    // 관리자 권한 확인
+    if (userType !== 'employee') {
+      console.error('❌ 관리자 권한이 필요합니다. 현재 사용자 타입:', userType);
+      alert('관리자만 접근할 수 있는 페이지입니다.');
+      navigate('/login');
+      return;
+    }
+    
     setAnimateCard(true);
     const fetchMemorials = async () => {
       try {
         console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8088');
+        console.log('👤 현재 사용자:', user?.name || 'Unknown', '/ 타입:', userType);
         const response = await apiService.getMemorials();
         console.log('✅ 백엔드 API 응답 성공:', response);
         console.log('✅ response._embedded:', response._embedded);
@@ -34,13 +45,23 @@ const Menu4 = () => {
             // API 명세에 따라 UUID 형태의 ID 추출
             let memorialId = memorial.id;
             
+            console.log(`🔍 처리 중인 추모관:`, memorial.name, `/ 원본 ID:`, memorial.id);
+            
             // _links.self.href에서 UUID 추출 (예: "http://localhost:8085/memorials/1c337344-ad3c-4785-a5f8-0054698c3ebe")
             if (memorial._links && memorial._links.self && memorial._links.self.href) {
               const hrefParts = memorial._links.self.href.split('/');
               const uuidFromHref = hrefParts[hrefParts.length - 1];
+              console.log(`🔗 href에서 추출한 ID:`, uuidFromHref);
               if (uuidFromHref && uuidFromHref.includes('-')) {
                 memorialId = uuidFromHref;
+                console.log(`✅ UUID 형식 ID로 변경:`, memorialId);
               }
+            }
+            
+            // UUID 형식 검증
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(memorialId)) {
+              console.warn(`⚠️ UUID 형식이 아닌 ID 발견:`, memorialId, `추모관:`, memorial.name);
             }
             
             return {
@@ -94,7 +115,7 @@ const Menu4 = () => {
     };
 
     fetchMemorials();
-  }, []);
+  }, [userType, navigate]);
 
   // All handler functions from the original Menu4.js
   
@@ -103,6 +124,21 @@ const Menu4 = () => {
     setSelectedMemorial(memorial);
     console.log(`[현재 모드: 백엔드 API 검색] 서버의 전용 검색 API를 사용합니다. (/families/search-name, /families/search-email, /families/search-phone)`);
     console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: 백엔드 API`);
+    
+    // Memorial ID 유효성 검사
+    if (!memorial.id) {
+      console.error('❌ Memorial ID가 없습니다');
+      alert('추모관 ID가 유효하지 않습니다.');
+      return;
+    }
+    
+    // UUID 형식 검사
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memorial.id)) {
+      console.error(`❌ 잘못된 UUID 형식: ${memorial.id}`);
+      alert('추모관 ID 형식이 올바르지 않습니다.');
+      return;
+    }
     
     try {
       // 해당 추모관에 등록된 유가족 목록 조회
@@ -118,10 +154,25 @@ const Menu4 = () => {
       console.error("❌ 유가족 조회 에러:", error);
       
       if (error.response?.status >= 400) {
-        alert("백엔드 유가족 조회가 실패했습니다.\n\n현재 백엔드에는 findByMemorialId API가 구현되지 않았을 수 있습니다.");
+        console.warn("⚠️ 백엔드 API 실패, 프론트엔드 필터링으로 폴백 시도");
+        try {
+          // 프론트엔드 필터링으로 폴백
+          const fallbackResponse = await apiService.getFamiliesByMemorialIdFrontend(memorial.id);
+          if (fallbackResponse._embedded && fallbackResponse._embedded.families) {
+            console.log(`✅ 프론트엔드 필터링으로 유가족 조회 성공 - ${fallbackResponse._embedded.families.length}명`);
+            setFamilyMembers(fallbackResponse._embedded.families);
+          } else {
+            setFamilyMembers([]);
+          }
+        } catch (fallbackError) {
+          console.error("❌ 프론트엔드 필터링도 실패:", fallbackError);
+          alert("유가족 조회에 실패했습니다. 네트워크 연결을 확인해주세요.");
+          setFamilyMembers([]);
+        }
+      } else {
+        alert("유가족 조회에 실패했습니다. 네트워크 연결을 확인해주세요.");
+        setFamilyMembers([]);
       }
-      
-      setFamilyMembers([]);
     }
     setSearchKeyword('');
     setSearchResults([]);
@@ -187,10 +238,39 @@ const Menu4 = () => {
       console.error("❌ 검색 에러:", error);
       
       if (error.response?.status >= 400) {
-        alert("백엔드 API 검색이 실패했습니다.\n\n현재 백엔드에는 다음 API가 구현되지 않았을 수 있습니다:\n- /families/search-name\n- /families/search-email\n- /families/search-phone");
+        console.warn("⚠️ 백엔드 API 검색 실패, 프론트엔드 검색으로 폴백 시도");
+        try {
+          // 프론트엔드 검색으로 폴백
+          let fallbackResults = [];
+          switch (searchType) {
+            case 'name':
+              fallbackResults = await apiService.searchFamiliesByNameFrontend(keyword.trim());
+              break;
+            case 'email':
+              const emailResult = await apiService.searchFamiliesByEmailFrontend(keyword.trim());
+              fallbackResults = emailResult ? [emailResult] : [];
+              break;
+            case 'phone':
+              fallbackResults = await apiService.searchFamiliesByPhoneFrontend(keyword.trim());
+              break;
+          }
+          
+          const processedFallback = fallbackResults.map(family => {
+            const id = (family._links?.self?.href)?.split('/').pop() || family.id;
+            return { ...family, id };
+          }).filter(family => family.id);
+          
+          console.log(`✅ 프론트엔드 검색으로 복구 성공 - 결과: ${processedFallback.length}개`);
+          setSearchResults(processedFallback);
+        } catch (fallbackError) {
+          console.error("❌ 프론트엔드 검색도 실패:", fallbackError);
+          alert("검색에 실패했습니다. 네트워크 연결을 확인해주세요.");
+          setSearchResults([]);
+        }
+      } else {
+        alert("검색에 실패했습니다. 네트워크 연결을 확인해주세요.");
+        setSearchResults([]);
       }
-      
-      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -272,8 +352,19 @@ const Menu4 = () => {
     const memorialId = memorial?.id;
     if (!memorialId) {
       console.error('❌ Memorial ID가 undefined입니다!');
+      alert('추모관 ID가 유효하지 않습니다.');
       return;
     }
+    
+    // UUID 형식 검사
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memorialId)) {
+      console.error(`❌ 잘못된 UUID 형식: ${memorialId}`);
+      alert('추모관 ID 형식이 올바르지 않습니다.');
+      return;
+    }
+    
+    console.log(`🔗 추모관 상세보기로 이동: /memorial/${memorialId}`);
     navigate(`/memorial/${memorialId}`);
   };
 
