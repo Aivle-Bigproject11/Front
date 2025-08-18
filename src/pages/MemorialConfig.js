@@ -677,28 +677,6 @@ const MemorialConfig = () => {
 
                                             <Form.Group className="mb-3">
                                                 <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                    <i className="fas fa-id-card me-2" style={{ color: '#B8860B' }}></i>고객ID *
-                                                </Form.Label>
-                                                <Form.Control
-                                                    type="number"
-                                                    name="customerId"
-                                                    value={formData.customerId}
-                                                    onChange={handleInputChange}
-                                                    required
-                                                    style={{ 
-                                                        borderRadius: '12px', 
-                                                        padding: '12px 16px',
-                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                        background: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2C1F14'
-                                                    }}
-                                                />
-                                            </Form.Group>
-                                        </Col>
-
-                                        <Col md={6}>
-                                            <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
                                                     <i className="fas fa-calendar-alt me-2" style={{ color: '#B8860B' }}></i>생년월일 *
                                                 </Form.Label>
                                                 <Form.Control
@@ -736,7 +714,9 @@ const MemorialConfig = () => {
                                                     }}
                                                 />
                                             </Form.Group>
+                                        </Col>
 
+                                        <Col md={6} className="d-flex flex-column justify-content-center">
                                             <div style={{
                                                 border: '2px solid rgba(184, 134, 11, 0.2)',
                                                 borderRadius: '16px',
