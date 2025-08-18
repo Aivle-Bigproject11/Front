@@ -442,9 +442,7 @@ const Lobby = () => {
                           <h5 style={{ margin: '0 0 5px 0', fontSize: '1.3rem', fontWeight: '700' }}>
                             {memorial.name}
                           </h5>
-                          <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>
-                            {memorial.description}
-                          </p>
+                          
                         </div>
                         {getStatusBadge(memorial.status)}
                       </div>
