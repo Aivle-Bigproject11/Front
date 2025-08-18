@@ -75,18 +75,34 @@ function SignUp() {
     }
   }, [email]);
 
-  const handleIdCheck = () => {
+  const handleIdCheck = async () => {
     if (!userId) {
       setPopupMessage('아이디를 입력해주세요.');
       setShowPopup(true);
       return;
     }
-    if (userId === 'testuser') {
-      setIsIdAvailable(false);
-      setPopupMessage('이미 사용 중인 아이디입니다.');
+
+    // Reset previous check result
+    setIsIdAvailable(null);
+
+    try {
+      const isTaken = isEmployee 
+        ? await apiService.checkManagerId(userId)
+        : await apiService.checkFamilyId(userId);
+
+      if (isTaken) { // true means taken/unavailable
+        setIsIdAvailable(false);
+        setPopupMessage('이미 사용 중인 아이디입니다.');
+      } else { // false means available
+        setIsIdAvailable(true);
+        setPopupMessage('사용 가능한 아이디입니다.');
+      }
       setShowPopup(true);
-    } else {
-      setIsIdAvailable(true);
+
+    } catch (error) {
+      console.error("ID check failed:", error);
+      setPopupMessage('아이디 확인 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setShowPopup(true);
     }
   };
 

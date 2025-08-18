@@ -731,18 +731,26 @@ const Login = () => {
                     marginBottom: '20px',
                     justifyContent: 'center'
                     }}>
-                  <a href="/FindId" className="login-link" style={{ 
+                  <button onClick={() => navigate('/FindId', { state: { isEmployee: activeTab === 'employee' } })} className="login-link" style={{ 
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
                     color: '#B8860B', 
                     textDecoration: 'none', 
                     fontSize: '14px', 
                     fontWeight: '600' 
-                    }}>아이디 찾기</a>
-                  <a href="/FindPassword" className="login-link" style={{ 
+                    }}>아이디 찾기</button>
+                  <button onClick={() => navigate('/FindPassword', { state: { isEmployee: activeTab === 'employee' } })} className="login-link" style={{ 
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
                     color: '#B8860B', 
                     textDecoration: 'none', 
                     fontSize: '14px', 
                     fontWeight: '600' 
-                    }}>비밀번호 재설정</a>
+                    }}>비밀번호 재설정</button>
                 </div>
 
                 <button 

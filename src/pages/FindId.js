@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { apiService } from '../services/api';
 
 const FindId = () => {
     const [formData, setFormData] = useState({ name: '', email: '' });
@@ -10,8 +10,9 @@ const FindId = () => {
     const [foundId, setFoundId] = useState('');
     const [animateCard, setAnimateCard] = useState(false);
 
-    const { findId } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isEmployee = location.state?.isEmployee ?? false; // Get user type from location state
 
     useEffect(() => {
         // 카드 애니메이션 효과
@@ -33,22 +34,37 @@ const FindId = () => {
         setError('');
         setFoundId('');
 
-        // 이름과 이메일이 모두 입력되었는지 확인
         if (!formData.name || !formData.email) {
             setError('이름과 이메일을 모두 입력해주세요.');
             setLoading(false);
             return;
         }
 
-        const result = await findId(formData.name, formData.email);
+        try {
+            const response = isEmployee
+                ? await apiService.findManagerId(formData.name, formData.email)
+                : await apiService.findFamilyId(formData.name, formData.email);
 
-        if (result.success) {
-            setFoundId(result.loginId);
-        } else {
-            setError(result.message);
+            // 성공 응답 (2xx) 처리
+            if (typeof response === 'string' && response.startsWith('찾으시는 아이디는:')) {
+                const id = response.split(': ')[1];
+                setFoundId(id);
+            } else {
+                setError(response || '알 수 없는 응답입니다.');
+            }
+        } catch (err) {
+            console.error("Find ID failed:", err);
+            // 실패 응답 (4xx, 5xx) 처리
+            if (err.response && err.response.data) {
+                // 서버가 보낸 에러 메시지를 그대로 표시
+                setError(err.response.data);
+            } else {
+                // 네트워크 에러 등 그 외의 경우
+                setError('아이디 찾기 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        } finally {
+            setLoading(false);
         }
-        
-        setLoading(false);
     };
 
     return (
@@ -132,7 +148,7 @@ const FindId = () => {
                         }}>
                             {/* 제목 */}
                             <div style={{ marginBottom: '30px' }}>
-                                <h2 style={{ color: '#2C1F14', fontWeight: '700', fontSize: '28px', marginBottom: '8px' }}>아이디 찾기</h2>
+                                <h2 style={{ color: '#2C1F14', fontWeight: '700', fontSize: '28px', marginBottom: '8px' }}>{isEmployee ? '직원 아이디 찾기' : '사용자 아이디 찾기'}</h2>
                                 <p style={{ color: '#4A3728', fontSize: '14px', margin: 0 }}>이름과 이메일을 입력해주세요.</p>
                             </div>
 
@@ -148,7 +164,7 @@ const FindId = () => {
                                 <div style={{ padding: '20px', background: 'rgba(184, 134, 11, 0.1)', borderRadius: '12px', border: '1px solid rgba(184, 134, 11, 0.2)', marginBottom: '20px', textAlign: 'center' }}>
                                     <p style={{ fontSize: '14px', color: '#4A3728', margin: 0, fontWeight: '500' }}>
                                         <i className="fas fa-check-circle me-2"></i>
-                                        회원님의 아이디는 <strong>{foundId}</strong> 입니다.
+                                        회원님의 아이디는 <strong>{foundId.length > 2 ? foundId.slice(0, -2) + '**' : '**'}</strong> 입니다.
                                     </p>
                                 </div>
                             )}
