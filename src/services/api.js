@@ -240,6 +240,40 @@ const realApiService = {
   // User login
   loginUser: (credentials) => api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
 
+  // 직원 비밀번호 변경
+  changeEmployeePassword: async (loginId, newPassword) => {
+    // 1. loginId로 직원 정보를 GET 요청하여 id 값을 얻습니다.
+    const searchResponse = await api.get(`/managers/search/loginId?loginId=${loginId}`);
+    const manager = searchResponse.data;
+
+    if (!manager || !manager.id) {
+      throw new Error('해당 아이디를 가진 직원을 찾을 수 없습니다.');
+    }
+    const managerId = manager.id;
+
+    // 2. 얻어온 id를 사용하여 비밀번호를 PATCH 요청으로 업데이트합니다.
+    return await api.patch(`/managers/${managerId}`, {
+      loginPassword: newPassword,
+    });
+  },
+
+  // 사용자 비밀번호 변경
+  changeUserPassword: async (loginId, newPassword) => {
+    // 1. loginId로 사용자 정보를 GET 요청하여 id 값을 얻습니다.
+    const searchResponse = await api.get(`/families/search/loginId?loginId=${loginId}`);
+    const user = searchResponse.data;
+
+    if (!user || !user.id) {
+      throw new Error('해당 아이디를 가진 사용자를 찾을 수 없습니다.');
+    }
+    const userId = user.id;
+
+    // 2. 얻어온 id를 사용하여 비밀번호를 PATCH 요청으로 업데이트합니다.
+    return await api.patch(`/families/${userId}`, {
+      loginPassword: newPassword,
+    });
+  },
+
  // Password verification
   verifyPassword: async (loginId, password, userType) => {
     try {
