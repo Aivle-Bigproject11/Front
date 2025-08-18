@@ -270,9 +270,13 @@ const MemorialDetail = () => {
 
       // 전체 memorial 정보 다시 로드 (사진 목록 포함)
       const updatedMemorial = await apiService.getMemorialDetails(id);
+      console.log('🔄 사진 업로드 후 memorial 데이터:', updatedMemorial);
       setMemorial(updatedMemorial);
       if (updatedMemorial.photos) {
+        console.log('🖼️ 업데이트된 사진 목록:', updatedMemorial.photos);
         setPhotos(updatedMemorial.photos);
+      } else {
+        console.log('⚠️ 업데이트된 memorial에 photos가 없음');
       }
       
       // 폼 초기화
@@ -387,7 +391,10 @@ const MemorialDetail = () => {
       setMemorial(updatedMemorial);
       if (updatedMemorial.comments) {
         console.log('📋 댓글 목록 업데이트:', updatedMemorial.comments.length, '개');
+        console.log('📋 댓글 상세:', updatedMemorial.comments);
         setGuestbookList(updatedMemorial.comments);
+      } else {
+        console.log('⚠️ 업데이트된 memorial에 comments가 없음');
       }
 
       setGuestbookEntry({ name: '', content: '', relationship: '' });
@@ -1023,6 +1030,12 @@ const MemorialDetail = () => {
                         </div>
                       )}
 
+                      {(() => {
+                        console.log('🖼️ 사진 렌더링 체크 - photos:', photos);
+                        console.log('🖼️ photos 타입:', typeof photos, 'length:', photos?.length);
+                        return null;
+                      })()}
+                      
                       {photos && photos.length > 0 ? (
                         <Row xs={1} sm={2} md={2} lg={2} className="g-4">
                           {photos.map((photo, index) => (
@@ -1285,6 +1298,12 @@ const MemorialDetail = () => {
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
+                    {(() => {
+                      console.log('🎗️ 방명록 렌더링 체크 - guestbookList:', guestbookList);
+                      console.log('🎗️ guestbookList 타입:', typeof guestbookList, 'length:', guestbookList?.length);
+                      return null;
+                    })()}
+                    
                     {guestbookList.map((entry, index) => (
                       <div
                         key={entry.id}
@@ -1469,6 +1488,10 @@ const MemorialDetail = () => {
                       transform: 'translate(-50%, -50%)',
                       color: '#b8860b'
                     }}>
+                      {(() => {
+                        console.log('🎗️ 빈 방명록 표시 중 - guestbookList.length:', guestbookList.length);
+                        return null;
+                      })()}
                       <i className="fas fa-ribbon fa-3x mb-3 opacity-50"></i>
                       <p>첫 번째 리본을 남겨주세요</p>
                     </div>
