@@ -7,14 +7,14 @@ import { apiService } from '../services/api';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 // 데이터 처리 로직 시작
-const nationalRegionStatus = [
+const getRegionStatusTemplate = () => [
   { 
     level: '우선 지역', 
     description: '전원 대비 증가율이 가장 높은 지역들',
     color: 'rgba(220, 53, 69, 0.15)', 
     borderColor: 'rgba(220, 53, 69, 0.8)',
     textColor: '#dc3545',
-    regions: ['서울', '경기', '부산'] 
+    regions: [] 
   },
   { 
     level: '관심 지역', 
@@ -22,7 +22,7 @@ const nationalRegionStatus = [
     color: 'rgba(255, 193, 7, 0.15)', 
     borderColor: 'rgba(255, 193, 7, 0.8)',
     textColor: '#ffc107',
-    regions: ['대구', '인천', '충남'] 
+    regions: [] 
   },
   { 
     level: '안정 지역', 
@@ -30,9 +30,51 @@ const nationalRegionStatus = [
     color: 'rgba(25, 135, 84, 0.15)', 
     borderColor: 'rgba(25, 135, 84, 0.8)',
     textColor: '#198754',
-    regions: ['광주', '울산', '세종'] 
+    regions: [] 
   },
 ];
+
+// 증가율에 따른 지역 분류 함수
+const classifyRegionsByGrowthRate = (dataArray) => {
+  if (!dataArray || dataArray.length === 0) {
+    return getRegionStatusTemplate();
+  }
+
+  // 지역별 증가율 계산 (최신 데이터 기준)
+  const regionGrowthRates = dataArray
+    .filter(item => item.region && item.growthRate !== undefined)
+    .map(item => ({
+      region: item.region,
+      growthRate: item.growthRate || 0
+    }))
+    .sort((a, b) => b.growthRate - a.growthRate); // 증가율 내림차순 정렬
+
+  if (regionGrowthRates.length === 0) {
+    return getRegionStatusTemplate();
+  }
+
+  const regionStatus = getRegionStatusTemplate();
+  const totalRegions = regionGrowthRates.length;
+
+  // 3등분으로 나누기
+  const highThreshold = Math.ceil(totalRegions / 3);
+  const mediumThreshold = Math.ceil((totalRegions * 2) / 3);
+
+  regionGrowthRates.forEach((item, index) => {
+    if (index < highThreshold) {
+      // 상위 33% - 우선 지역
+      regionStatus[0].regions.push(`${item.region} (${item.growthRate.toFixed(1)}%)`);
+    } else if (index < mediumThreshold) {
+      // 중위 33% - 관심 지역
+      regionStatus[1].regions.push(`${item.region} (${item.growthRate.toFixed(1)}%)`);
+    } else {
+      // 하위 33% - 안정 지역
+      regionStatus[2].regions.push(`${item.region} (${item.growthRate.toFixed(1)}%)`);
+    }
+  });
+
+  return regionStatus;
+};
 
 const RegionDataDisplay = ({ region }) => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -303,8 +345,12 @@ const RegionDataDisplay = ({ region }) => {
     
     console.log('🔄 차트 데이터:', chartData);
 
+    // 실제 API 데이터로 지역 분류
+    const regionStatus = classifyRegionsByGrowthRate(processedData);
+    console.log('🔄 지역 분류 결과:', regionStatus);
+
     return {
-      regionStatus: nationalRegionStatus,
+      regionStatus: regionStatus,
       charts: {
         longTermTrend: {
           labels: chartData.map(item => item.date),
@@ -331,7 +377,6 @@ const RegionDataDisplay = ({ region }) => {
     };
   };
 
-  // CSV 데이터를 UI에 맞게 변환 (기존 로직 유지)
   const formatCsvData = (csvData, predictionJson, selectedRegion) => {
     const multipliers = { 
       '전체': 1, '서울': 0.21, '경기': 0.26, '부산': 0.07, 
@@ -341,8 +386,23 @@ const RegionDataDisplay = ({ region }) => {
     
     const multiplier = multipliers[selectedRegion] || 1;
     
+    // CSV 데이터에서 임시 증가율 계산 (더미 데이터)
+    const dummyRegionData = [
+      { region: '서울', growthRate: 8.5 },
+      { region: '경기', growthRate: 7.2 },
+      { region: '부산', growthRate: 6.8 },
+      { region: '대구', growthRate: 4.1 },
+      { region: '인천', growthRate: 3.7 },
+      { region: '충남', growthRate: 2.9 },
+      { region: '광주', growthRate: 1.8 },
+      { region: '울산', growthRate: 0.5 },
+      { region: '세종', growthRate: -0.3 }
+    ];
+    
+    const regionStatus = classifyRegionsByGrowthRate(dummyRegionData);
+    
     return {
-      regionStatus: nationalRegionStatus,
+      regionStatus: regionStatus,
       charts: {
         longTermTrend: {
           labels: csvData.map(row => row['연월']),
@@ -377,7 +437,7 @@ const RegionDataDisplay = ({ region }) => {
   };
 
   const getEmptyData = () => ({
-    regionStatus: nationalRegionStatus,
+    regionStatus: getRegionStatusTemplate(),
     charts: {
       longTermTrend: { labels: [], data: [] },
       predictionTrend: { labels: [], actualData: [], predictedData: [] },
@@ -581,7 +641,7 @@ const RegionDataDisplay = ({ region }) => {
                 <p 
                   className="mb-3 small" 
                   style={{ 
-                    color: '#6c757d',
+                    color: '#212529',
                     fontSize: '13px',
                     lineHeight: '1.4',
                     minHeight: '34px'
@@ -608,6 +668,9 @@ const RegionDataDisplay = ({ region }) => {
                       </span>
                     ))}
                   </div>
+                  {status.regions.length === 0 && (
+                    <p className="text-muted small mb-0">데이터가 없습니다</p>
+                  )}
                 </div>
               </div>
             </Col>
