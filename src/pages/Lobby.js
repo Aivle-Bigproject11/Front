@@ -424,6 +424,10 @@ const Lobby = () => {
               background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)', border: 'none',
               boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)', transition: 'all 0.3s ease'
             }}>
+            입장하기
+          </Button>
+          <div style={{ marginTop: '20px', fontSize: '0.9rem', color: '#666' }}>
+            <ul style={{ paddingLeft: '20px', margin: 0 }}>
               <li>추모관 고유번호(memorialId)는 유가족이나 관리자에게 문의하세요</li>
               <li>고유번호는 UUID 형태입니다 (예: 1c1425e1-8f64-43ea-9798-f747e1a97c0e)</li>
               <li>추모관 카드에서 고유번호를 클릭하여 복사할 수 있습니다</li>
