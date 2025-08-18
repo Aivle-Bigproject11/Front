@@ -198,7 +198,7 @@ const Lobby = () => {
     const documentUrl = documentData ? documentData[urlKeys[docType]] : null;
 
     if (documentUrl) {
-      // 인쇄는 새 탭에서 PDF를 열어 브라우저의 인쇄 기능을 사용하는 것이 가장 안정적
+      // 인쇄는 새 탭에서 PDF를 열어 브라우저의 인쇄 사용
       window.open(documentUrl, '_blank');
     } else {
       alert('인쇄할 서류 파일을 찾을 수 없습니다.');
@@ -298,7 +298,7 @@ const Lobby = () => {
                     }}>
                     <div onClick={() => handleMemorialClick(memorial)} style={{
                         cursor: 'pointer', color: 'white', padding: '20px',
-                        background: memorial.status === 'active' ? 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)' : memorial.status === 'completed' ? 'linear-gradient(135deg, #6c757d 0%, #495057 100%)' : 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)'
+                        background: 'linear-gradient(135deg, #b8860b, #965a25)'
                       }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
                         <div>
@@ -416,7 +416,6 @@ const Lobby = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* 애니메이션과 반응형을 위한 스타일 태그를 다시 추가합니다. */}
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(30px); }
