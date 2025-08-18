@@ -14,8 +14,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log('🔗 API 요청:', config.method?.toUpperCase(), config.url);
+    console.log('🔗 토큰 존재:', !!token);
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn('⚠️ 토큰이 없습니다. 인증이 필요한 API 호출에서 오류가 발생할 수 있습니다.');
     }
     return config;
   },
@@ -42,30 +47,96 @@ api.interceptors.response.use(
 // --- 실제 API 서비스 정의 (Axios 응답에서 data를 추출하여 반환하도록 수정) ---
 const realApiService = {
   // Memorial Service
-  getMemorials: async () => (await api.get('/memorials')).data,
-  getMemorial: async (id) => (await api.get(`/memorials/${id}`)).data,
-  updateMemorial: async (id, data) => (await api.patch(`/memorials/${id}`, data)).data,
+  getMemorials: async () => {
+    const token = localStorage.getItem('token');
+    const config = { headers: {} };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.get('/memorials', config)).data;
+  },
+  getMemorial: async (id) => {
+    const token = localStorage.getItem('token');
+    const config = { headers: {} };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.get(`/memorials/${id}`, config)).data;
+  },
+  updateMemorial: async (id, data) => {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.patch(`/memorials/${id}`, data, config)).data;
+  },
   getMemorialDetails: async (id) => {
     try {
       // detail 엔드포인트로 사진과 댓글이 포함된 전체 정보 가져오기
-      const response = await api.get(`/memorials/${id}/detail`);
+      const token = localStorage.getItem('token');
+      const config = { headers: {} };
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await api.get(`/memorials/${id}/detail`, config);
       return response.data;
     } catch (error) {
       console.error('getMemorialDetails 에러:', error);
       throw error;
     }
   },
-  uploadMemorialProfileImage: async (id, formData) => (await api.patch(`/memorials/${id}/profile-image`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
+  uploadMemorialProfileImage: async (id, formData) => {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'multipart/form-data'
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.patch(`/memorials/${id}/profile-image`, formData, { headers })).data;
+  },
   
   createTribute: async (id, data) => {
     // AI 추모사 생성은 시간이 오래 걸릴 수 있으므로 타임아웃을 60초로 설정
+    const token = localStorage.getItem('token');
     const config = { 
-      timeout: 60000
+      timeout: 60000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return (await api.post(`/memorials/${id}/tribute`, data, config)).data;
   },
-  updateTribute: async (id, data) => (await api.patch(`/memorials/${id}/tribute`, data)).data,
-  deleteTribute: async (id) => (await api.delete(`/memorials/${id}/tribute`)).data,
+  updateTribute: async (id, data) => {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.patch(`/memorials/${id}/tribute`, data, config)).data;
+  },
+  deleteTribute: async (id) => {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {}
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.delete(`/memorials/${id}/tribute`, config)).data;
+  },
 
   // 장례서류 관련 API
   getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
@@ -100,14 +171,32 @@ const realApiService = {
 
   createVideo: async (memorialId, formData) => {
     // 영상 생성은 시간이 오래 걸릴 수 있으므로 타임아웃을 30초로 설정
+    const token = localStorage.getItem('token');
     const config = { 
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 30000
     };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return (await api.post(`/memorials/${memorialId}/videos`, formData, config)).data;
   },
-  getVideo: async (videoId) => (await api.get(`/videos/${videoId}`)).data,
-  deleteVideo: async (videoId) => (await api.delete(`/videos/${videoId}`)).data,
+  getVideo: async (videoId) => {
+    const token = localStorage.getItem('token');
+    const config = { headers: {} };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.get(`/videos/${videoId}`, config)).data;
+  },
+  deleteVideo: async (videoId) => {
+    const token = localStorage.getItem('token');
+    const config = { headers: {} };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.delete(`/videos/${videoId}`, config)).data;
+  },
 
   createComment: async (id, data) => (await api.post(`/memorials/${id}/comments`, data)).data,
   getComments: async (id) => (await api.get(`/memorials/${id}/comments`)).data,
