@@ -17,19 +17,53 @@ const Menu2 = () => {
     console.log(`'${selectedRegion}' 지역 분석을 새로고침합니다.`);
     
     try {
-      // 예측 요청 API 호출 (선택적)
+      // 백엔드 API 테스트
+      console.log('백엔드 API 테스트 시작...');
+      
+      // 1. 예측 요청 API 호출 (가장 기본적인 API부터 테스트)
       const currentDate = new Date().toISOString().slice(0, 7); // YYYY-MM
-      await apiService.requestPrediction({ 
+      console.log('예측 요청 API 호출...');
+      
+      const predictionRequest = {
         region: selectedRegion === '전체' ? null : selectedRegion,
         period: currentDate 
-      });
+      };
+      
+      console.log('예측 요청 데이터:', predictionRequest);
+      
+      const predictionResponse = await apiService.requestPrediction(predictionRequest);
+      console.log('예측 요청 성공:', predictionResponse);
+      
+      // 2. 날짜별 데이터 테스트
+      console.log(`날짜별 데이터 요청: ${currentDate}`);
+      const dateData = await apiService.getDashboardByDate(currentDate);
+      console.log('날짜별 데이터 응답:', dateData);
+      
+      // 3. 지역별 데이터 테스트 (전체가 아닌 경우)
+      if (selectedRegion !== '전체') {
+        console.log(`지역별 데이터 요청: ${selectedRegion}`);
+        const regionData = await apiService.getDashboardByRegion(selectedRegion);
+        console.log('지역별 데이터 응답:', regionData);
+      }
       
       // RegionDataDisplay 컴포넌트를 다시 렌더링하기 위해 key 변경
       setRefreshKey(prev => prev + 1);
       
+      alert('백엔드 API 테스트 성공! 콘솔에서 응답 데이터를 확인하세요.');
+      
     } catch (error) {
-      console.error('예측 요청 실패:', error);
-      // 에러가 발생해도 화면은 새로고침
+      console.error('API 테스트 실패:', error);
+      console.error('에러 상세:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: error.config
+      });
+      
+      alert(`백엔드 API 테스트 실패: ${error.message}. 자세한 내용은 콘솔을 확인하세요.`);
+      
+      // 에러가 발생해도 화면은 새로고침 (CSV 데이터로 폴백)
       setRefreshKey(prev => prev + 1);
     }
   };

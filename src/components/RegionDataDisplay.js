@@ -17,32 +17,70 @@ const RegionDataDisplay = ({ region }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [useBackendData, setUseBackendData] = useState(true);
+  const [useBackendData, setUseBackendData] = useState(false); // 기본값을 false로 변경
+  const [backendAvailable, setBackendAvailable] = useState(false);
 
   useEffect(() => {
+    // 백엔드 가용성 체크
+    const checkBackendAvailability = async () => {
+      try {
+        // 간단한 헬스체크 요청
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/by-date`, {
+          method: 'HEAD', // HEAD 요청으로 서버 응답만 확인
+          timeout: 3000 // 3초 타임아웃
+        });
+        
+        if (response.ok || response.status < 500) {
+          setBackendAvailable(true);
+          console.log('백엔드 서버 가용 확인됨');
+        } else {
+          console.log('백엔드 서버 응답 오류:', response.status);
+        }
+      } catch (error) {
+        console.log('백엔드 서버 연결 불가:', error.message);
+        setBackendAvailable(false);
+      }
+    };
+
+    checkBackendAvailability();
+
     const loadDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        if (useBackendData) {
+        if (useBackendData && backendAvailable) {
           // 백엔드 API 사용
           const currentDate = new Date().toISOString().slice(0, 7); // YYYY-MM
           
           let regionData;
           if (region === '전체') {
+            console.log('전체 지역 데이터 요청 중...');
             regionData = await apiService.getDashboardByDate(currentDate);
           } else {
+            console.log(`${region} 지역 데이터 요청 중...`);
             regionData = await apiService.getDashboardByRegion(region);
           }
+
+          console.log('백엔드 응답 데이터:', regionData);
 
           // 백엔드 데이터를 기존 형식으로 변환
           const processedData = formatBackendData(regionData, region);
           setDashboardData(processedData);
+        } else {
+          // CSV 데이터 사용
+          loadCsvData();
         }
       } catch (error) {
         console.error('백엔드 데이터 로딩 실패:', error);
-        setError('백엔드 데이터를 불러올 수 없습니다. CSV 데이터를 사용합니다.');
+        
+        // 네트워크 에러인지 확인
+        if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+          setError('백엔드 서버에 연결할 수 없습니다. CSV 데이터를 사용합니다.');
+        } else {
+          setError(`백엔드 API 오류: ${error.response?.status || 'Unknown'}. CSV 데이터를 사용합니다.`);
+        }
+        
         setUseBackendData(false);
         
         // 폴백: CSV 데이터 사용
@@ -55,6 +93,7 @@ const RegionDataDisplay = ({ region }) => {
     const loadCsvData = async () => {
       // 기존 CSV 로딩 로직 (폴백용)
       try {
+        console.log('CSV 데이터 로딩 중...');
         const [csvResponse, jsonResponse] = await Promise.all([
           fetch('/15년치_월별.csv'),
           fetch('/monthly_predictions.json')
@@ -88,12 +127,9 @@ const RegionDataDisplay = ({ region }) => {
       }
     };
 
-    if (useBackendData) {
-      loadDashboardData();
-    } else {
-      loadCsvData();
-    }
-  }, [region, useBackendData]);
+    // 초기 로딩 시에는 항상 CSV부터 시작
+    loadDashboardData();
+  }, [region, useBackendData, backendAvailable]);
 
   // 백엔드 데이터를 UI에 맞게 변환
   const formatBackendData = (data, selectedRegion) => {
@@ -102,32 +138,61 @@ const RegionDataDisplay = ({ region }) => {
       return getEmptyData();
     }
 
+    if (data.length === 0) {
+      console.warn('백엔드에서 빈 데이터를 받았습니다');
+      return getEmptyData();
+    }
+
+    // 날짜순으로 정렬
     const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // 선택된 지역에 맞게 필터링 (전체가 아닌 경우)
+    const filteredData = selectedRegion === '전체' 
+      ? sortedData 
+      : sortedData.filter(item => item.region === selectedRegion);
+
+    // 전체 지역인 경우 지역별로 그룹화해서 합계 계산
+    let chartData;
+    if (selectedRegion === '전체') {
+      const groupedByDate = {};
+      sortedData.forEach(item => {
+        if (!groupedByDate[item.date]) {
+          groupedByDate[item.date] = 0;
+        }
+        groupedByDate[item.date] += item.deaths;
+      });
+      
+      chartData = Object.entries(groupedByDate)
+        .sort(([a], [b]) => new Date(a) - new Date(b))
+        .map(([date, deaths]) => ({ date, deaths }));
+    } else {
+      chartData = filteredData;
+    }
     
     return {
       regionStatus: nationalRegionStatus,
       charts: {
         longTermTrend: {
-          labels: sortedData.map(item => item.date),
-          data: sortedData.map(item => item.deaths),
+          labels: chartData.map(item => item.date),
+          data: chartData.map(item => item.deaths),
         },
         predictionTrend: {
-          labels: sortedData.map(item => item.date),
-          actualData: sortedData.map(item => item.deaths),
-          predictedData: new Array(sortedData.length).fill(null), // 예측 데이터는 별도 처리 필요
+          labels: chartData.map(item => item.date),
+          actualData: chartData.map(item => item.deaths),
+          predictedData: new Array(chartData.length).fill(null), // 예측 데이터는 별도 API에서 처리
         },
       },
-      monthlyPredictions: sortedData.map((item, index) => ({
+      monthlyPredictions: chartData.map((item, index) => ({
         month: item.date,
         count: item.deaths.toLocaleString('ko-KR') + '명',
-        vsLastYear: index > 11 ? calculateChange(item.deaths, sortedData[index - 12]?.deaths) : 'N/A',
-        vsLastMonth: index > 0 ? calculateChange(item.deaths, sortedData[index - 1]?.deaths) : 'N/A',
+        vsLastYear: index >= 12 ? calculateChange(item.deaths, chartData[index - 12]?.deaths) : 'N/A',
+        vsLastMonth: index > 0 ? calculateChange(item.deaths, chartData[index - 1]?.deaths) : 'N/A',
       })),
       predictionSummary: {
-        avg: Math.round(sortedData.reduce((sum, item) => sum + item.deaths, 0) / sortedData.length).toLocaleString('ko-KR') + '명',
-        max: Math.max(...sortedData.map(item => item.deaths)).toLocaleString('ko-KR') + '명',
-        min: Math.min(...sortedData.map(item => item.deaths)).toLocaleString('ko-KR') + '명',
-        totalNext12: sortedData.reduce((sum, item) => sum + item.deaths, 0).toLocaleString('ko-KR') + '명',
+        avg: chartData.length > 0 ? Math.round(chartData.reduce((sum, item) => sum + item.deaths, 0) / chartData.length).toLocaleString('ko-KR') + '명' : '0명',
+        max: chartData.length > 0 ? Math.max(...chartData.map(item => item.deaths)).toLocaleString('ko-KR') + '명' : '0명',
+        min: chartData.length > 0 ? Math.min(...chartData.map(item => item.deaths)).toLocaleString('ko-KR') + '명' : '0명',
+        totalNext12: chartData.reduce((sum, item) => sum + item.deaths, 0).toLocaleString('ko-KR') + '명',
       },
     };
   };
@@ -204,6 +269,11 @@ const RegionDataDisplay = ({ region }) => {
     );
   }
 
+  // 에러가 있지만 데이터가 있을 때 경고 표시
+  if (error && dashboardData) {
+    console.warn('백엔드 연결 실패, CSV 데이터 사용 중:', error);
+  }
+
   // 에러가 있을 때 (하지만 데이터가 있으면 표시)
   if (error && !dashboardData) {
     return (
@@ -211,12 +281,26 @@ const RegionDataDisplay = ({ region }) => {
         <div className="alert alert-warning" role="alert">
           <h5>데이터 로딩 오류</h5>
           <p>{error}</p>
-          <button 
-            className="btn btn-primary" 
-            onClick={() => window.location.reload()}
-          >
-            다시 시도
-          </button>
+          <div className="mt-3">
+            <button 
+              className="btn btn-primary me-2" 
+              onClick={() => {
+                setUseBackendData(true);
+                setError(null);
+              }}
+            >
+              백엔드 API 재시도
+            </button>
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => {
+                setUseBackendData(false);
+                setError(null);
+              }}
+            >
+              CSV 데이터 사용
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -293,7 +377,27 @@ const RegionDataDisplay = ({ region }) => {
 
   return (
     <div>
-      {/* 데이터 소스 표시 */}
+      {/* 데이터 소스 상태 및 토글 */}
+      <div className="mb-3 d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center">
+          <span className={`badge ${backendAvailable ? 'bg-success' : 'bg-warning'} me-2`}>
+            {backendAvailable ? '백엔드 연결됨' : '백엔드 연결 안됨'}
+          </span>
+          <span className={`badge ${useBackendData ? 'bg-primary' : 'bg-secondary'}`}>
+            {useBackendData ? '백엔드 데이터' : 'CSV 데이터'} 사용 중
+          </span>
+        </div>
+        {backendAvailable && (
+          <button
+            className={`btn btn-sm ${useBackendData ? 'btn-secondary' : 'btn-primary'}`}
+            onClick={() => setUseBackendData(!useBackendData)}
+          >
+            {useBackendData ? 'CSV로 전환' : '백엔드로 전환'}
+          </button>
+        )}
+      </div>
+
+      {/* 에러 메시지 */}
       {error && (
         <div className="alert alert-warning alert-dismissible fade show" role="alert">
           <small><strong>알림:</strong> {error}</small>

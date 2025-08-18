@@ -263,9 +263,15 @@ const realApiService = {
     }
   },
 
-  // Dashboard API
-  getDashboardByDate: async (date) => (await api.get('/by-date', { params: { date } })).data,
-  getDashboardByRegion: async (region) => (await api.get('/by-region', { params: { region } })).data,
+  // Dashboard API - 문서 명세에 맞게 수정
+  getDashboardByDate: async (date) => {
+    const params = date ? { date } : {};
+    return (await api.get('/by-date', { params })).data;
+  },
+  getDashboardByRegion: async (region) => {
+    const params = region ? { region } : {};
+    return (await api.get('/by-region', { params })).data;
+  },
   getPredictCheck: async () => (await api.get('/predict-check')).data,
   requestPrediction: async (data) => (await api.post('/predict-request', data)).data,
   updatePredictionRequest: async (data) => (await api.put('/predict-request-update', data)).data,
