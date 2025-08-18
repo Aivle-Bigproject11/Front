@@ -1,4 +1,4 @@
-# 대시보드 API 명세서 (v3.0) - DeathPrediction Service
+# 대시보드 API 명세서 - DeathPrediction Service
 
 이 API는 AI 모델을 활용한 사망률 예측 서비스입니다. main.py의 AI 모델과 연동되어 사망자 수 예측을 수행합니다.
 
