@@ -206,9 +206,8 @@ const realApiService = {
   updateFamilyMemorialId: async (familyId, memorialId) => (await api.patch(`/families/${familyId}`, { memorialId })).data,
 
   // Login/User-related Service
-  // 참고: API 명세에 없어 추측하여 작성되었습니다. 실제 엔드포인트로 수정이 필요할 수 있습니다.
-  //getUserMemorialHalls: async (userId) => (await api.get(`/users/${userId}/memorials`)).data,
-  getMemorialByCode: async (code) => (await api.get(`/memorials?code=${code}`)).data,
+  // 고유번호(memorialId)로 추모관 직접 접근
+  getMemorialById: async (memorialId) => (await api.get(`/memorials/${memorialId}`)).data,
 
   // Other Services
   getDashboardData: async () => (await api.get('/dashboard')).data,
