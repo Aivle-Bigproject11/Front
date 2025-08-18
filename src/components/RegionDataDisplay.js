@@ -89,11 +89,47 @@ const RegionDataDisplay = ({ region }) => {
           if (region === '전체') {
             console.log('전체 지역 데이터 요청 중...');
             console.log('API 호출:', `GET /deathPredictions/by-date/${currentDate}`);
-            regionData = await apiService.getDashboardByDate(currentDate);
+            
+            try {
+              regionData = await apiService.getDashboardByDate(currentDate);
+              console.log('✅ 전체 지역 데이터 응답:', regionData);
+            } catch (error) {
+              // 데이터가 없으면 먼저 예측 요청을 시도
+              if (error.response?.status === 404) {
+                console.log('📝 데이터가 없어 예측 요청 시도 중...');
+                await apiService.requestPrediction({
+                  date: currentDate,
+                  region: "서울특별시",
+                  previousYearDeaths: 1500
+                });
+                // 다시 데이터 조회 시도
+                regionData = await apiService.getDashboardByDate(currentDate);
+              } else {
+                throw error;
+              }
+            }
           } else {
             console.log(`${region} 지역 데이터 요청 중...`);
             console.log('API 호출:', `GET /deathPredictions/by-region/${region}`);
-            regionData = await apiService.getDashboardByRegion(region);
+            
+            try {
+              regionData = await apiService.getDashboardByRegion(region);
+              console.log('✅ 지역별 데이터 응답:', regionData);
+            } catch (error) {
+              // 데이터가 없으면 먼저 예측 요청을 시도
+              if (error.response?.status === 404) {
+                console.log('📝 데이터가 없어 예측 요청 시도 중...');
+                await apiService.requestPrediction({
+                  date: currentDate,
+                  region: region,
+                  previousYearDeaths: 1500
+                });
+                // 다시 데이터 조회 시도
+                regionData = await apiService.getDashboardByRegion(region);
+              } else {
+                throw error;
+              }
+            }
           }
 
           console.log('백엔드 응답 데이터:', regionData);
@@ -188,23 +224,43 @@ const RegionDataDisplay = ({ region }) => {
 
   // 백엔드 데이터를 UI에 맞게 변환
   const formatBackendData = (data, selectedRegion) => {
-    if (!data || !Array.isArray(data)) {
-      console.warn('백엔드 데이터가 배열이 아닙니다:', data);
+    console.log('🔄 백엔드 데이터 변환 시작:', data);
+    
+    if (!data) {
+      console.warn('백엔드 데이터가 null/undefined입니다');
       return getEmptyData();
     }
 
-    if (data.length === 0) {
+    // 단일 객체인 경우 배열로 변환
+    const dataArray = Array.isArray(data) ? data : [data];
+    
+    if (dataArray.length === 0) {
       console.warn('백엔드에서 빈 데이터를 받았습니다');
       return getEmptyData();
     }
 
+    console.log('🔄 변환할 데이터 배열:', dataArray);
+
+    // 백엔드 응답 구조에 맞게 데이터 처리
+    // DeathPrediction 객체: { id: {date, region}, deaths, growthRate, regionalPercentage, previousYearDeaths, date, region }
+    const processedData = dataArray.map(item => ({
+      date: item.date || item.id?.date,
+      region: item.region || item.id?.region,
+      deaths: item.deaths || 0,
+      growthRate: item.growthRate || 0,
+      regionalPercentage: item.regionalPercentage || 0,
+      previousYearDeaths: item.previousYearDeaths || 0
+    }));
+
     // 날짜순으로 정렬
-    const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedData = processedData.sort((a, b) => new Date(a.date) - new Date(b.date));
     
     // 선택된 지역에 맞게 필터링 (전체가 아닌 경우)
     const filteredData = selectedRegion === '전체' 
       ? sortedData 
       : sortedData.filter(item => item.region === selectedRegion);
+
+    console.log('🔄 필터링된 데이터:', filteredData);
 
     // 전체 지역인 경우 지역별로 그룹화해서 합계 계산
     let chartData;
@@ -224,6 +280,8 @@ const RegionDataDisplay = ({ region }) => {
       chartData = filteredData;
     }
     
+    console.log('🔄 차트 데이터:', chartData);
+
     return {
       regionStatus: nationalRegionStatus,
       charts: {
@@ -234,7 +292,7 @@ const RegionDataDisplay = ({ region }) => {
         predictionTrend: {
           labels: chartData.map(item => item.date),
           actualData: chartData.map(item => item.deaths),
-          predictedData: new Array(chartData.length).fill(null), // 예측 데이터는 별도 API에서 처리
+          predictedData: new Array(chartData.length).fill(null), // 예측 데이터는 별도 로직으로 처리
         },
       },
       monthlyPredictions: chartData.map((item, index) => ({
