@@ -352,7 +352,7 @@ const MemorialConfig = () => {
         return (
             <div className="page-wrapper" style={{
                 '--navbar-height': '62px',
-                height: 'calc(100vh - var(--navbar-height))',
+                height: isUserAccess ? '100vh' : 'calc(100vh - var(--navbar-height))',
                 background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
                 display: 'flex',
                 alignItems: 'center',

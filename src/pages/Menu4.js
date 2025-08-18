@@ -335,7 +335,7 @@ const Menu4 = () => {
       }
 
       try {
-        await apiService.updateFamilyMemorialId(selectedMember.id, selectedMemorial.id);
+        await apiService.approveFamily(selectedMember.id, { memorialId: selectedMemorial.id });
         
         const familyResponse = await apiService.getFamiliesByMemorialId(selectedMemorial.id);
         if (familyResponse._embedded && familyResponse._embedded.families) {
