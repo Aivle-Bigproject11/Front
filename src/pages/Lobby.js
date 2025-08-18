@@ -126,45 +126,44 @@ const Lobby = () => {
   };
 
   // 각 추모관에 대한 고객 정보 및 서류 상태를 가져오는 함수
-  const loadCustomerDocuments = async () => {
+ const loadCustomerDocuments = async () => {
     try {
       setDocumentsLoading(true);
-      const allCustomers = await customerService.getAllCustomers();
-
       const detailsPromises = memorialHalls.map(async (memorial) => {
-        const customer = allCustomers.find(c => c.name === memorial.name);
-        
-        if (!customer) {
-          return [memorial.id, { customer: null, statuses: { obituary: false, schedule: false, deathCertificate: false } }];
+        if (!memorial.customerId) {
+          return [memorial.id, { customer: null, statuses: {} }];
+        }
+
+        let customer = null;
+        try {
+            const response = await customerService.getCustomerById(memorial.customerId);
+            customer = response.data; 
+        } catch (e) {
+            console.error(`Failed to fetch customer ${memorial.customerId}`, e);
         }
 
         const statusPromises = [
-          apiService.getObituaryByCustomerId(customer.id),
-          apiService.getScheduleByCustomerId(customer.id),
-          apiService.getDeathReportByCustomerId(customer.id)
+          apiService.getObituaryByCustomerId(memorial.customerId),
+          apiService.getScheduleByCustomerId(memorial.customerId),
+          apiService.getDeathReportByCustomerId(memorial.customerId)
         ];
-
+        
         const results = await Promise.allSettled(statusPromises);
-
+        
         const statuses = {
-          obituary: results[0].status === 'fulfilled' && results[0].value,
-          schedule: results[1].status === 'fulfilled' && results[1].value,
-          deathCertificate: results[2].status === 'fulfilled' && results[2].value,
+          obituary: results[0].status === 'fulfilled' && results[0].value?.data,
+          schedule: results[1].status === 'fulfilled' && results[1].value?.data,
+          deathCertificate: results[2].status === 'fulfilled' && results[2].value?.data,
         };
-
+        
         return [memorial.id, { customer, statuses }];
       });
-
+      
       const detailsArray = await Promise.all(detailsPromises);
       setMemorialDetails(Object.fromEntries(detailsArray));
-
     } catch (err) {
       console.error('Error loading customer documents status:', err);
-      const resetDetails = memorialHalls.reduce((acc, memorial) => {
-        acc[memorial.id] = { customer: null, statuses: { obituary: false, schedule: false, deathCertificate: false } };
-        return acc;
-      }, {});
-      setMemorialDetails(resetDetails);
+      setError('서류 상태를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setDocumentsLoading(false);
     }
