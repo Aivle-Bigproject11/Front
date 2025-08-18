@@ -116,11 +116,11 @@ const realApiService = {
   // 검색 방식 선택: true = 백엔드 API 직접 검색, false = 프론트엔드 필터링
   USE_BACKEND_SEARCH: true, // 백엔드 API가 올바른 경로로 구현되어 기본값을 true로 변경
   
-  // 백엔드 API 직접 검색 방식 (수정된 경로)
-  // 엔드포인트: /families/search/name, /families/search/email, /families/search/phone
-  searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search/name?name=${name}`)).data,
-  searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search/email?email=${email}`)).data,
-  searchFamiliesByPhoneBackend: async (phone) => (await api.get(`/families/search/phone?phone=${phone}`)).data,
+  // 백엔드 API 직접 검색 방식 (실제 Spring Data REST 메서드 사용)
+  // 엔드포인트: /families/search/findByNameContaining, /families/search/findByEmail, /families/search/findByPhoneContaining
+  searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search/findByNameContaining?name=${name}`)).data,
+  searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search/findByEmail?email=${email}`)).data,
+  searchFamiliesByPhoneBackend: async (phone) => (await api.get(`/families/search/findByPhoneContaining?phone=${phone}`)).data,
   
   // 프론트엔드 필터링 방식 (현재 백엔드 상태에 맞춤 - 안정적)
   // 엔드포인트: /families 전체 조회 후 브라우저에서 필터링

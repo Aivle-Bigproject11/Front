@@ -44,57 +44,82 @@ const Lobby = () => {
       setMemorialHalls([]); 
 
       // 1단계: 로그인한 유저(유가족)의 정보를 조회하여 memorialId를 가져오기
+      console.log('로그인한 사용자 ID:', user.id);
       const familyInfo = await apiService.getFamily(user.id);
+      console.log('유가족 정보:', familyInfo);
       const memorialId = familyInfo.memorialId; 
 
       // 2단계: memorialId가 존재할 경우, 해당 ID로 추모관의 상세 정보 조회
       if (memorialId) {
-        const memorialData = await apiService.getMemorial(memorialId);
+        try {
+          const memorialData = await apiService.getMemorial(memorialId);
+          console.log('추모관 정보:', memorialData);
 
-        let customerStatus = 'active'; 
-        if (memorialData.customerId) {
-          try {
-            // customerId로 고객 정보를 가져오기
-            const customerInfo = await customerService.getCustomerById(memorialData.customerId);
-            
-            // customerInfo.status 값에 따라 진행상태 상태값
-            if (customerInfo && customerInfo.status) {
-              switch (customerInfo.status) {
-                case 'inProgress':
-                  customerStatus = 'active'; 
-                  break;
-                case 'completed':
-                  customerStatus = 'completed'; 
-                  break;
-                case 'pending':
-                default:
-                  customerStatus = 'scheduled'; 
+          let customerStatus = 'active'; 
+          if (memorialData.customerId) {
+            try {
+              // customerId로 고객 정보를 가져오기
+              const customerInfo = await customerService.getCustomerById(memorialData.customerId);
+              
+              // customerInfo.status 값에 따라 진행상태 상태값
+              if (customerInfo && customerInfo.status) {
+                switch (customerInfo.status) {
+                  case 'inProgress':
+                    customerStatus = 'active'; 
+                    break;
+                  case 'completed':
+                    customerStatus = 'completed'; 
+                    break;
+                  case 'pending':
+                  default:
+                    customerStatus = 'scheduled'; 
+                }
               }
+            } catch (e) {
+              console.error("고객 상태 정보를 불러오는데 실패했습니다:", e);
             }
-          } catch (e) {
-            console.error("고객 상태 정보를 불러오는데 실패했습니다:", e);
           }
-        }
-        
-        // 화면에 표시할 데이터 형태로 가공
-        const formattedMemorial = {
-          id: memorialId,
-          name: `故 ${memorialData.name || '고인'} 추모관`, // API 응답에 맞게 필드명 수정
-          period: `${memorialData.birthDate} ~ ${memorialData.deceasedDate}`,
-          joinCode: memorialData.joinCode,
-          status: customerStatus, 
-          customerId: memorialData.customerId 
-        };
+          
+          // 화면에 표시할 데이터 형태로 가공
+          const formattedMemorial = {
+            id: memorialId,
+            name: `故 ${memorialData.name || '고인'} 추모관`, // API 응답에 맞게 필드명 수정
+            period: `${memorialData.birthDate || '미상'} ~ ${memorialData.deceasedDate || '미상'}`,
+            joinCode: memorialId, // 추모관 고유번호는 memorialId를 사용
+            status: customerStatus, 
+            customerId: memorialData.customerId 
+          };
 
-        setMemorialHalls([formattedMemorial]);
+          setMemorialHalls([formattedMemorial]);
+        } catch (memorialError) {
+          console.error('추모관 상세 정보 조회 실패:', memorialError);
+          setError(`추모관 정보를 불러올 수 없습니다 (ID: ${memorialId}). 관리자에게 문의하세요.`);
+        }
       } else {
+        console.log('연결된 추모관이 없습니다.');
+        setError('아직 추모관이 생성되지 않았습니다. 관리자에게 추모관 생성을 요청하세요.');
         setMemorialHalls([]);
       }
 
     } catch (err) {
       console.error('추모관 정보를 불러오는 중 오류 발생:', err);
-      setError('추모관 정보를 불러오는데 실패했습니다.');
-      setMemorialHalls([]); 
+      
+      // 상세한 에러 메시지 제공
+      if (err.response) {
+        if (err.response.status === 404) {
+          setError('유가족 정보를 찾을 수 없습니다. 관리자에게 문의하세요.');
+        } else if (err.response.status === 401) {
+          setError('인증이 만료되었습니다. 다시 로그인해주세요.');
+        } else {
+          setError(`서버 오류가 발생했습니다 (${err.response.status}). 잠시 후 다시 시도해주세요.`);
+        }
+      } else if (err.request) {
+        setError('서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.');
+      } else {
+        setError('알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      }
+      
+      setMemorialHalls([]);
     } finally {
       setLoading(false);
     }
@@ -372,7 +397,7 @@ const Lobby = () => {
             <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6c757d' }}>
               <Heart size={64} style={{ opacity: 0.3, marginBottom: '20px' }} />
               <h4>등록된 추모관이 없습니다</h4>
-              <p>아래 고유번호로 추모관에 참여하시거나, 관리자에게 문의해주세요.</p>
+              <p>아래 추모관 고유번호로 추모관에 참여하시거나, 관리자에게 문의해주세요.</p>
             </div>
           ) : (
             <div style={{
@@ -457,24 +482,50 @@ const Lobby = () => {
                         justifyContent: 'space-between',
                         alignItems: 'center'
                       }}>
-                        <div>
-                          <small className="text-muted" style={{ fontSize: '0.8rem' }}>추모관 고유번호</small>
+                        <div style={{ flex: 1, marginRight: '10px' }}>
+                          <small className="text-muted" style={{ fontSize: '0.75rem' }}>추모관 고유번호</small>
                           <div 
                             className="fw-bold" 
                             style={{ 
                               color: '#B8860B', 
-                              fontSize: '1rem', 
-                              letterSpacing: '0.5px' 
+                              fontSize: '0.75rem', 
+                              letterSpacing: '0.3px',
+                              cursor: 'pointer',
+                              wordBreak: 'break-all',
+                              lineHeight: '1.2',
+                              padding: '2px 4px',
+                              borderRadius: '4px',
+                              backgroundColor: 'rgba(184, 134, 11, 0.1)',
+                              border: '1px dashed rgba(184, 134, 11, 0.3)',
+                              transition: 'all 0.2s ease'
                             }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(memorial.joinCode);
+                              // 복사 완료 표시
+                              const element = e.target;
+                              const originalText = element.textContent;
+                              element.textContent = '복사완료!';
+                              element.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                              element.style.borderColor = 'rgba(40, 167, 69, 0.3)';
+                              element.style.color = '#28a745';
+                              setTimeout(() => {
+                                element.textContent = originalText;
+                                element.style.backgroundColor = 'rgba(184, 134, 11, 0.1)';
+                                element.style.borderColor = 'rgba(184, 134, 11, 0.3)';
+                                element.style.color = '#B8860B';
+                              }, 1500);
+                            }}
+                            title="클릭하여 복사"
                           >
                             {memorial.joinCode}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: '600', marginRight: '5px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B', flexShrink: 0 }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '600', marginRight: '5px' }}>
                             입장하기
                           </span>
-                          <ArrowRight size={16} />
+                          <ArrowRight size={14} />
                         </div>
                       </div>
                     </Card.Body>
@@ -539,7 +590,7 @@ const Lobby = () => {
               fontWeight: '700',
               color: '#333'
             }}>
-              고유번호로 입장
+              추모관 고유번호로 입장
             </h3>
           </div>
 
