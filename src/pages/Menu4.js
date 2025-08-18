@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Button, Modal, Form, Badge, Dropdown, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 // This component will now have the design of Menu2.js but the functionality of the original Menu4.js.
 const Menu4 = () => {
   const navigate = useNavigate();
+  const { user, userType, isAuthenticated } = useAuth();
   const [memorials, setMemorials] = useState([]);
   const [showFamilyModal, setShowFamilyModal] = useState(false);
   const [selectedMemorial, setSelectedMemorial] = useState(null);
@@ -20,10 +22,46 @@ const Menu4 = () => {
   const [animateCard, setAnimateCard] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 Menu4 권한 확인 시작...');
+    console.log('🔍 현재 인증 상태:', { isAuthenticated, user, userType });
+    
+    // 로딩이 완료되지 않았으면 대기
+    if (!user && !isAuthenticated) {
+      console.log('🔄 인증 정보 로딩 중...');
+      return;
+    }
+    
+    // 인증되지 않은 사용자는 로그인 페이지로
+    if (!isAuthenticated || !user) {
+      console.error('❌ 인증되지 않은 사용자입니다.');
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    // 관리자 권한 확인 - Login.js처럼 user.userType을 우선적으로 확인
+    const currentUserType = user.userType || userType;
+    console.log('🔍 사용자 타입 최종 확인:', { 
+      finalUserType: currentUserType,
+      fromUserObject: user.userType, 
+      fromContext: userType,
+      user: user 
+    });
+    
+    if (currentUserType !== 'employee') {
+      console.error('❌ 관리자 권한이 필요합니다. 현재 사용자 타입:', currentUserType);
+      alert('관리자만 접근할 수 있는 페이지입니다.');
+      // Login.js처럼 직원이 아니면 로비로, 로그인 안 됐으면 로그인으로
+      navigate('/lobby');
+      return;
+    }
+    
+    console.log('✅ 관리자 권한 확인 완료. 페이지 로딩 시작...');
     setAnimateCard(true);
     const fetchMemorials = async () => {
       try {
         console.log('🔗 백엔드 API 호출 시작 - URL:', process.env.REACT_APP_API_URL || 'http://localhost:8088');
+        console.log('👤 현재 사용자:', user?.name || 'Unknown', '/ 타입:', userType);
         const response = await apiService.getMemorials();
         console.log('✅ 백엔드 API 응답 성공:', response);
         console.log('✅ response._embedded:', response._embedded);
@@ -34,13 +72,23 @@ const Menu4 = () => {
             // API 명세에 따라 UUID 형태의 ID 추출
             let memorialId = memorial.id;
             
+            console.log(`🔍 처리 중인 추모관:`, memorial.name, `/ 원본 ID:`, memorial.id);
+            
             // _links.self.href에서 UUID 추출 (예: "http://localhost:8085/memorials/1c337344-ad3c-4785-a5f8-0054698c3ebe")
             if (memorial._links && memorial._links.self && memorial._links.self.href) {
               const hrefParts = memorial._links.self.href.split('/');
               const uuidFromHref = hrefParts[hrefParts.length - 1];
+              console.log(`🔗 href에서 추출한 ID:`, uuidFromHref);
               if (uuidFromHref && uuidFromHref.includes('-')) {
                 memorialId = uuidFromHref;
+                console.log(`✅ UUID 형식 ID로 변경:`, memorialId);
               }
+            }
+            
+            // UUID 형식 검증
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(memorialId)) {
+              console.warn(`⚠️ UUID 형식이 아닌 ID 발견:`, memorialId, `추모관:`, memorial.name);
             }
             
             return {
@@ -55,10 +103,13 @@ const Menu4 = () => {
               try {
                 const detailData = await apiService.getMemorialDetails(memorial.id);
                 
+                // 상세 정보(detailData)를 기존 memorial 정보와 합칩니다.
                 return {
                   ...memorial,
+                  ...detailData,
                   hasVideo: detailData.videos && detailData.videos.length > 0,
-                  tribute: detailData.tribute || null
+                  tribute: detailData.tribute || null, 
+
                 };
               } catch (error) {
                 console.error(`❌ ${memorial.id} 상태 조회 실패:`, error);
@@ -91,14 +142,30 @@ const Menu4 = () => {
     };
 
     fetchMemorials();
-  }, []);
+  }, [user, userType, isAuthenticated, navigate]);
 
   // All handler functions from the original Menu4.js
   
 
   const openFamilyModal = async (memorial) => {
     setSelectedMemorial(memorial);
-    console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: ${apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트엔드 필터링'}`);
+    console.log(`[현재 모드: 백엔드 API 검색] 서버의 전용 검색 API를 사용합니다. (/families/search-name, /families/search-email, /families/search-phone)`);
+    console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: 백엔드 API`);
+    
+    // Memorial ID 유효성 검사
+    if (!memorial.id) {
+      console.error('❌ Memorial ID가 없습니다');
+      alert('추모관 ID가 유효하지 않습니다.');
+      return;
+    }
+    
+    // UUID 형식 검사
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memorial.id)) {
+      console.error(`❌ 잘못된 UUID 형식: ${memorial.id}`);
+      alert('추모관 ID 형식이 올바르지 않습니다.');
+      return;
+    }
     
     try {
       // 해당 추모관에 등록된 유가족 목록 조회
@@ -113,19 +180,31 @@ const Menu4 = () => {
     } catch (error) {
       console.error("❌ 유가족 조회 에러:", error);
       
-      // 백엔드 검색 실패시 자동으로 프론트엔드 방식 제안
-      if (apiService.USE_BACKEND_SEARCH && error.response?.status >= 400) {
-        console.log("💡 백엔드 유가족 조회 실패 - 프론트엔드 필터링 방식으로 전환을 고려해보세요");
-        alert("백엔드 유가족 조회가 실패했습니다.\n검색 방식을 '프론트 필터링'으로 변경해보세요.\n\n현재 백엔드에는 findByMemorialId API가 구현되지 않았을 수 있습니다.");
+      if (error.response?.status >= 400) {
+        console.warn("⚠️ 백엔드 API 실패, 프론트엔드 필터링으로 폴백 시도");
+        try {
+          // 프론트엔드 필터링으로 폴백
+          const fallbackResponse = await apiService.getFamiliesByMemorialIdFrontend(memorial.id);
+          if (fallbackResponse._embedded && fallbackResponse._embedded.families) {
+            console.log(`✅ 프론트엔드 필터링으로 유가족 조회 성공 - ${fallbackResponse._embedded.families.length}명`);
+            setFamilyMembers(fallbackResponse._embedded.families);
+          } else {
+            setFamilyMembers([]);
+          }
+        } catch (fallbackError) {
+          console.error("❌ 프론트엔드 필터링도 실패:", fallbackError);
+          alert("유가족 조회에 실패했습니다. 네트워크 연결을 확인해주세요.");
+          setFamilyMembers([]);
+        }
+      } else {
+        alert("유가족 조회에 실패했습니다. 네트워크 연결을 확인해주세요.");
+        setFamilyMembers([]);
       }
-      
-      setFamilyMembers([]);
-      // 에러가 있어도 모달은 열어줌 (빈 목록으로)
     }
     setSearchKeyword('');
     setSearchResults([]);
     setSelectedMember(null);
-    setSearchType('name'); // 검색 타입도 초기화
+    setSearchType('name');
     setShowFamilyModal(true);
   };
 
@@ -135,49 +214,49 @@ const Menu4 = () => {
       return;
     }
     setIsSearching(true);
-    console.log(`🔍 검색 시작 - 방식: ${apiService.USE_BACKEND_SEARCH ? '백엔드 API 검색' : '프론트엔드 필터링'}, 타입: ${searchType}, 키워드: ${keyword}`);
+    console.log(`🔍 검색 시작 - 방식: 백엔드 API 검색, 타입: ${searchType}, 키워드: ${keyword}`);
     
     try {
-      let searchResults = [];
+      let rawResults = [];
       
-      // 선택된 검색 방식에 따라 검색
       switch (searchType) {
         case 'name':
           const nameResponse = await apiService.searchFamiliesByName(keyword.trim());
-          // 백엔드는 직접 List<Family>를 반환, 프론트엔드는 _embedded 구조
           if (Array.isArray(nameResponse)) {
-            searchResults = nameResponse;
+            rawResults = nameResponse;
           } else if (nameResponse._embedded && nameResponse._embedded.families) {
-            searchResults = nameResponse._embedded.families;
+            rawResults = nameResponse._embedded.families;
           }
           break;
         case 'email':
           const emailResponse = await apiService.searchFamiliesByEmail(keyword.trim());
-          // 백엔드는 Optional<Family>를 반환, 프론트엔드는 _embedded 구조
-          if (emailResponse && !Array.isArray(emailResponse)) {
-            searchResults = [emailResponse]; // 단일 객체를 배열로 변환
-          } else if (Array.isArray(emailResponse)) {
-            searchResults = emailResponse;
+          if (emailResponse && !emailResponse._embedded) {
+            rawResults = [emailResponse];
           } else if (emailResponse._embedded && emailResponse._embedded.families) {
-            searchResults = emailResponse._embedded.families;
+            rawResults = emailResponse._embedded.families;
           }
           break;
         case 'phone':
           const phoneResponse = await apiService.searchFamiliesByPhone(keyword.trim());
-          // 백엔드는 직접 List<Family>를 반환, 프론트엔드는 _embedded 구조
           if (Array.isArray(phoneResponse)) {
-            searchResults = phoneResponse;
+            rawResults = phoneResponse;
           } else if (phoneResponse._embedded && phoneResponse._embedded.families) {
-            searchResults = phoneResponse._embedded.families;
+            rawResults = phoneResponse._embedded.families;
           }
           break;
         default:
-          searchResults = [];
+          rawResults = [];
       }
       
-      // 중복 제거 (ID 기준)
-      const uniqueResults = searchResults.filter((family, index, self) => 
-        index === self.findIndex(f => f._links.self.href === family._links.self.href)
+      // [수정] 데이터 정규화: API 응답 형식이 다르더라도 일관된 'id' 속성을 갖도록 보장합니다.
+      const processedResults = rawResults.map(family => {
+        const id = (family._links?.self?.href)?.split('/').pop() || family.id;
+        return { ...family, id };
+      }).filter(family => family.id); // id가 없는 데이터는 필터링
+
+      // [수정] 정규화된 'id'를 사용하여 중복을 제거합니다.
+      const uniqueResults = processedResults.filter((family, index, self) => 
+        index === self.findIndex(f => f.id === family.id)
       );
       
       console.log(`✅ 검색 완료 - 결과: ${uniqueResults.length}개`);
@@ -185,13 +264,40 @@ const Menu4 = () => {
     } catch (error) {
       console.error("❌ 검색 에러:", error);
       
-      // 백엔드 검색 실패시 자동으로 프론트엔드 방식으로 전환 제안
-      if (apiService.USE_BACKEND_SEARCH && error.response?.status >= 400) {
-        console.log("💡 백엔드 API 검색 실패 - 프론트엔드 필터링 방식으로 전환을 고려해보세요");
-        alert("백엔드 API 검색이 실패했습니다.\n검색 방식을 '프론트 필터링'으로 변경해보세요.\n\n현재 백엔드에는 다음 API가 구현되지 않았을 수 있습니다:\n- /families/search-name\n- /families/search-email\n- /families/search-phone");
+      if (error.response?.status >= 400) {
+        console.warn("⚠️ 백엔드 API 검색 실패, 프론트엔드 검색으로 폴백 시도");
+        try {
+          // 프론트엔드 검색으로 폴백
+          let fallbackResults = [];
+          switch (searchType) {
+            case 'name':
+              fallbackResults = await apiService.searchFamiliesByNameFrontend(keyword.trim());
+              break;
+            case 'email':
+              const emailResult = await apiService.searchFamiliesByEmailFrontend(keyword.trim());
+              fallbackResults = emailResult ? [emailResult] : [];
+              break;
+            case 'phone':
+              fallbackResults = await apiService.searchFamiliesByPhoneFrontend(keyword.trim());
+              break;
+          }
+          
+          const processedFallback = fallbackResults.map(family => {
+            const id = (family._links?.self?.href)?.split('/').pop() || family.id;
+            return { ...family, id };
+          }).filter(family => family.id);
+          
+          console.log(`✅ 프론트엔드 검색으로 복구 성공 - 결과: ${processedFallback.length}개`);
+          setSearchResults(processedFallback);
+        } catch (fallbackError) {
+          console.error("❌ 프론트엔드 검색도 실패:", fallbackError);
+          alert("검색에 실패했습니다. 네트워크 연결을 확인해주세요.");
+          setSearchResults([]);
+        }
+      } else {
+        alert("검색에 실패했습니다. 네트워크 연결을 확인해주세요.");
+        setSearchResults([]);
       }
-      
-      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -200,7 +306,6 @@ const Menu4 = () => {
   const handleSearchChange = (e) => {
     const keyword = e.target.value;
     setSearchKeyword(keyword);
-    // 실시간 검색 제거 - 버튼 클릭으로만 검색
   };
 
   const handleKeyPress = (e) => {
@@ -210,21 +315,15 @@ const Menu4 = () => {
   };
 
   const selectMember = (family) => {
-    // HATEOAS 링크에서 ID 추출
-    const familyId = family._links.self.href.split('/').pop();
-    const familyWithId = {
-      ...family,
-      id: familyId
-    };
-    
-    setSelectedMember(familyWithId);
+    // family 객체에는 이미 정규화된 id가 있으므로 바로 사용
+    setSelectedMember(family);
     setSearchKeyword(family.name);
-    setSearchResults([]);
+    // 검색 결과를 유지하여 다른 유가족도 선택할 수 있도록 함
+    // setSearchResults([]);
   };
 
   const addFamilyMember = async () => {
     if (selectedMember) {
-      // 이미 등록된 유가족인지 확인
       const isAlreadyRegistered = familyMembers.some(fm => {
         const familyId = fm._links?.self?.href?.split('/').pop() || fm.id;
         return familyId === selectedMember.id;
@@ -236,18 +335,17 @@ const Menu4 = () => {
       }
 
       try {
-        // 선택된 유가족의 memorialId를 현재 추모관 ID로 업데이트
-        await apiService.updateFamilyMemorialId(selectedMember.id, selectedMemorial.id);
+        await apiService.approveFamily(selectedMember.id, { memorialId: selectedMemorial.id });
         
-        // 유가족 목록 다시 조회
         const familyResponse = await apiService.getFamiliesByMemorialId(selectedMemorial.id);
         if (familyResponse._embedded && familyResponse._embedded.families) {
           setFamilyMembers(familyResponse._embedded.families);
         }
         
         setSelectedMember(null);
-        setSearchKeyword('');
-        setSearchResults([]); // 검색 결과도 초기화
+        // 검색어와 결과는 유지하여 추가 등록이 용이하도록 함
+        // setSearchKeyword('');
+        // setSearchResults([]);
         alert('유가족이 등록되었습니다.');
       } catch (error) {
         console.error("Error adding family member:", error);
@@ -260,11 +358,9 @@ const Menu4 = () => {
 
   const removeFamilyMember = async (familyToRemove) => {
     try {
-      // 해당 유가족의 memorialId를 null로 설정하여 추모관에서 제거
       const familyId = familyToRemove._links?.self?.href?.split('/').pop() || familyToRemove.id;
       await apiService.updateFamilyMemorialId(familyId, null);
       
-      // 유가족 목록 다시 조회
       const familyResponse = await apiService.getFamiliesByMemorialId(selectedMemorial.id);
       if (familyResponse._embedded && familyResponse._embedded.families) {
         setFamilyMembers(familyResponse._embedded.families);
@@ -280,22 +376,24 @@ const Menu4 = () => {
   };
 
   const handleCardClick = (memorial) => {
-    console.log('🔗 Memorial Card 클릭 - 전체 객체:', memorial);
-    console.log('🔗 Memorial ID:', memorial?.id);
-    console.log('🔗 Memorial ID 타입:', typeof memorial?.id);
-    console.log('🔗 Memorial 객체 키들:', Object.keys(memorial || {}));
-    
     const memorialId = memorial?.id;
     if (!memorialId) {
       console.error('❌ Memorial ID가 undefined입니다!');
+      alert('추모관 ID가 유효하지 않습니다.');
       return;
     }
     
-    console.log('🔗 Navigation URL:', `/memorial/${memorialId}`);
+    // UUID 형식 검사
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memorialId)) {
+      console.error(`❌ 잘못된 UUID 형식: ${memorialId}`);
+      alert('추모관 ID 형식이 올바르지 않습니다.');
+      return;
+    }
+    
+    console.log(`🔗 추모관 상세보기로 이동: /memorial/${memorialId}`);
     navigate(`/memorial/${memorialId}`);
   };
-
-  
 
   const deleteMemorial = async (id) => {
     if (window.confirm('정말로 이 추모관을 삭제하시겠습니까?')) {
@@ -310,7 +408,6 @@ const Menu4 = () => {
     }
   };
 
-  // The main return statement uses the structure and styling from Menu2.js
   return (
     <div className="page-wrapper" style={{
       '--navbar-height': '62px',
@@ -327,7 +424,7 @@ const Menu4 = () => {
       <div style={{
         position: 'absolute',
         top: 0, left: 0, right: 0, bottom: 0,
-        background: 'url("data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23B8860B" fill-opacity="0.12"%3E%3Cpath d="M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
+        background: 'url("data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23B8860B" fill-opacity="0.12"%3E%3Cpath d="M40 40L20 20v40h40V20L40 40zm0-20L60 0H20l20 20zm0 20L20 60h40L40 40z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat',
         opacity: 0.7
       }}></div>
 
@@ -339,7 +436,7 @@ const Menu4 = () => {
         height: '100%',
         margin: '0 auto',
         display: 'flex',
-        flexDirection: 'column', // Changed to column for Menu4 layout
+        flexDirection: 'column',
         boxSizing: 'border-box',
         background: 'rgba(255, 251, 235, 0.95)',
         boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)',
@@ -361,7 +458,6 @@ const Menu4 = () => {
             </h4>
         </div>
 
-        {/* Main Content Area */}
         <div className="dashboard-main-content" style={{
           flex: '1',
           overflowY: 'auto',
@@ -375,9 +471,9 @@ const Menu4 = () => {
         }}>
           {loading ? (
              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-              <Spinner animation="border" role="status" className="me-2" />
-              <span>추모관 목록을 불러오는 중...</span>
-            </div>
+               <Spinner animation="border" role="status" className="me-2" />
+               <span>추모관 목록을 불러오는 중...</span>
+             </div>
           ) : memorials.length === 0 ? (
             <div className="text-center p-5">
               <i className="fas fa-heart fa-3x mb-3" style={{color: '#b8860b'}}></i>
@@ -442,7 +538,7 @@ const Menu4 = () => {
                          <Row className="mb-2 g-2">
                             <Col xs={6}>
                                 <small className="text-muted"><i className="fas fa-birthday-cake me-1"></i> 생년월일</small>
-                                <div>{memorial.birthOfDate}</div>
+                                <div>{memorial.birthOfDate || memorial.birthDate}</div>
                             </Col>
                             <Col xs={6}>
                                 <small className="text-muted"><i className="fas fa-cross me-1"></i> 별세일</small>
@@ -453,10 +549,43 @@ const Menu4 = () => {
                       <div className="mt-auto">
                         <hr className="my-2" />
                         <div className="d-flex justify-content-between align-items-center">
-                          <div>
-                            <small className="text-muted" style={{ fontSize: '0.8rem' }}>참여코드</small>
-                            <div className="fw-bold" style={{ color: '#b8860b', letterSpacing: '0.5px' }}>
-                              {memorial.joinCode}
+                          <div style={{ flex: 1, marginRight: '10px' }}>
+                            <small className="text-muted" style={{ fontSize: '0.75rem' }}>추모관 고유번호</small>
+                            <div 
+                              className="fw-bold" 
+                              style={{ 
+                                color: '#b8860b', 
+                                fontSize: '0.75rem',
+                                letterSpacing: '0.3px',
+                                cursor: 'pointer',
+                                wordBreak: 'break-all',
+                                lineHeight: '1.2',
+                                padding: '2px 4px',
+                                borderRadius: '4px',
+                                backgroundColor: 'rgba(184, 134, 11, 0.1)',
+                                border: '1px dashed rgba(184, 134, 11, 0.3)',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(memorial.id);
+                                // 복사 완료 표시
+                                const element = e.target;
+                                const originalText = element.textContent;
+                                element.textContent = '복사완료!';
+                                element.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                                element.style.borderColor = 'rgba(40, 167, 69, 0.3)';
+                                element.style.color = '#28a745';
+                                setTimeout(() => {
+                                  element.textContent = originalText;
+                                  element.style.backgroundColor = 'rgba(184, 134, 11, 0.1)';
+                                  element.style.borderColor = 'rgba(184, 134, 11, 0.3)';
+                                  element.style.color = '#b8860b';
+                                }, 1500);
+                              }}
+                              title="클릭하여 복사"
+                            >
+                              {memorial.id}
                             </div>
                           </div>
                           <Dropdown align="end" onClick={(e) => e.stopPropagation()}>
@@ -484,67 +613,45 @@ const Menu4 = () => {
         </div>
       </div>
 
-      
-
       <Modal show={showFamilyModal} onHide={() => setShowFamilyModal(false)} size="lg">
-        {/* Family modal content remains the same as in original Menu4.js */}
-        <Modal.Header closeButton>
-          <Modal.Title><i className="fas fa-users me-2"></i> 유가족 관리 - {selectedMemorial?.name}</Modal.Title>
+        <Modal.Header 
+          closeButton 
+          style={{
+            background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+            borderBottom: '2px solid rgba(184, 134, 11, 0.2)'
+          }}
+        >
+          <Modal.Title style={{ color: '#2C1F14', fontWeight: '700' }}>
+            <i className="fas fa-users me-2" style={{ color: '#b8860b' }}></i> 
+            유가족 관리 - {selectedMemorial?.name}
+            <br />
+            <small className="text-muted" style={{ fontSize: '0.8rem', fontWeight: '400' }}>
+              <i className="fas fa-id-card me-1"></i>
+              추모관 고유번호: {selectedMemorial?.id}
+            </small>
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {/* Search and Add Section */}
+        <Modal.Body style={{
+          background: 'linear-gradient(135deg, rgba(247, 243, 233, 0.3) 0%, rgba(232, 226, 213, 0.3) 100%)',
+          padding: '24px'
+        }}>
           <div className="row mb-4">
             <div className="col-12">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h6 className="mb-0"><i className="fas fa-search me-2"></i> 회원 검색 및 유가족 등록</h6>
-                {/* 개발용 검색 방식 선택 */}
-                <div className="d-flex align-items-center">
-                  <small className="text-muted me-2">검색 방식:</small>
-                  <div className="d-flex align-items-center">
-                    <span className="badge bg-secondary me-2" style={{ fontSize: '0.75rem' }}>
-                      {apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트 필터링'}
-                    </span>
-                    <Form.Check 
-                      type="switch"
-                      id="search-mode-switch"
-                      label=""
-                      checked={apiService.USE_BACKEND_SEARCH}
-                      onChange={(e) => {
-                        apiService.USE_BACKEND_SEARCH = e.target.checked;
-                        console.log('검색 방식 변경:', e.target.checked ? '백엔드 API 검색' : '프론트엔드 필터링');
-                      }}
-                      className="user-select-none"
-                    />
-                    <small className="text-muted ms-2">
-                      {apiService.USE_BACKEND_SEARCH ? '백엔드 API' : '프론트 필터링'}
-                    </small>
-                  </div>
+              <div 
+                className="search-section p-4 mb-4" 
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(184, 134, 11, 0.2)',
+                  boxShadow: '0 4px 15px rgba(44, 31, 20, 0.1)'
+                }}
+              >
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="mb-0" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                    <i className="fas fa-search me-2" style={{ color: '#b8860b' }}></i> 
+                    회원 검색 및 유가족 등록
+                  </h6>
                 </div>
-              </div>
-              
-              {/* 검색 방식 설명 */}
-              <div className={`alert p-3 mb-3 ${apiService.USE_BACKEND_SEARCH ? 'alert-warning' : 'alert-success'}`} style={{ fontSize: '0.875rem' }}>
-                <div className="d-flex align-items-start">
-                  <i className={`fas ${apiService.USE_BACKEND_SEARCH ? 'fa-exclamation-triangle' : 'fa-check-circle'} me-2 mt-1`}></i>
-                  <div>
-                    <div className="fw-bold mb-1">
-                      현재 모드: {apiService.USE_BACKEND_SEARCH ? '백엔드 API 검색' : '프론트엔드 필터링'}
-                    </div>
-                    <div className="mb-2">
-                      {apiService.USE_BACKEND_SEARCH ? 
-                        '서버의 전용 검색 API를 사용합니다. (/families/search-name, /families/search-email, /families/search-phone)' : 
-                        '전체 유가족 목록을 가져와서 브라우저에서 필터링합니다. (/families 전체 조회)'
-                      }
-                    </div>
-                    <div className="small text-muted">
-                      {apiService.USE_BACKEND_SEARCH ? 
-                        '⚠️ 백엔드에 해당 API가 구현되지 않은 경우 에러가 발생할 수 있습니다.' : 
-                        '✅ 현재 백엔드 상태와 호환되며 안정적으로 작동합니다.'
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
               
               <div className="row g-3 mb-3">
                 <div className="col-md-3">
@@ -590,15 +697,24 @@ const Menu4 = () => {
                 </div>
               </div>
               
-              {/* 검색 결과 리스트 */}
               {searchResults.length > 0 && (
                 <div className="mb-4">
-                  <h6 className="mb-3"><i className="fas fa-list me-2"></i> 검색 결과 ({searchResults.length}명)</h6>
-                  <div className="card">
+                  <h6 className="mb-3" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                    <i className="fas fa-list me-2" style={{ color: '#b8860b' }}></i> 
+                    검색 결과 ({searchResults.length}명)
+                  </h6>
+                  <div className="card" style={{ 
+                    border: '1px solid rgba(184, 134, 11, 0.3)',
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}>
                     <div className="card-body p-0">
                       <div className="table-responsive" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                         <table className="table table-hover mb-0">
-                          <thead className="table-light sticky-top">
+                          <thead className="sticky-top" style={{ 
+                            background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+                            color: '#2C1F14'
+                          }}>
                             <tr>
                               <th>이름</th>
                               <th>전화번호</th>
@@ -608,34 +724,32 @@ const Menu4 = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {searchResults.map(family => {
-                              const familyId = family._links.self.href.split('/').pop();
-                              return (
-                                <tr key={familyId} className={selectedMember?.id === familyId ? 'table-primary' : ''}>
-                                  <td>{family.name}</td>
-                                  <td>{family.phone}</td>
-                                  <td>{family.email}</td>
-                                  <td>
-                                    <Badge bg={family.status === 'APPROVED' ? 'success' : 'warning'}>
-                                      {family.status === 'APPROVED' ? '승인됨' : '대기중'}
-                                    </Badge>
-                                  </td>
-                                  <td>
-                                    <Button 
-                                      size="sm" 
-                                      variant={selectedMember?.id === familyId ? 'success' : 'outline-primary'}
-                                      onClick={() => selectMember(family)}
-                                    >
-                                      {selectedMember?.id === familyId ? (
-                                        <><i className="fas fa-check me-1"></i>선택됨</>
-                                      ) : (
-                                        '선택'
-                                      )}
-                                    </Button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
+                            {searchResults.map(family => (
+                              // 정규화된 family.id를 key로 사용합니다.
+                              <tr key={family.id} className={selectedMember?.id === family.id ? 'table-primary' : ''}>
+                                <td>{family.name}</td>
+                                <td>{family.phone}</td>
+                                <td>{family.email}</td>
+                                <td>
+                                  <Badge bg="success">
+                                    <i className="fas fa-check me-1"></i>활성
+                                  </Badge>
+                                </td>
+                                <td>
+                                  <Button 
+                                    size="sm" 
+                                    variant={selectedMember?.id === family.id ? 'success' : 'outline-primary'}
+                                    onClick={() => selectMember(family)}
+                                  >
+                                    {selectedMember?.id === family.id ? (
+                                      <><i className="fas fa-check me-1"></i>선택됨</>
+                                    ) : (
+                                      '선택'
+                                    )}
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
@@ -650,13 +764,25 @@ const Menu4 = () => {
                   검색 결과가 없습니다. 다른 키워드로 검색해보세요.
                 </div>
               )}
+              </div>
             </div>
           </div>
-          <hr />
-          {/* Registered Family List */}
+          <hr style={{ border: '1px solid rgba(184, 134, 11, 0.2)', margin: '24px 0' }} />
           <div className="row">
             <div className="col-12">
-              <h6 className="mb-3"><i className="fas fa-list me-2"></i> 등록된 유가족 목록 ({familyMembers.length}명)</h6>
+              <div 
+                className="family-list-section p-4" 
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(184, 134, 11, 0.2)',
+                  boxShadow: '0 4px 15px rgba(44, 31, 20, 0.1)'
+                }}
+              >
+                <h6 className="mb-3" style={{ color: '#2C1F14', fontWeight: '600' }}>
+                  <i className="fas fa-list me-2" style={{ color: '#b8860b' }}></i> 
+                  등록된 유가족 목록 ({familyMembers.length}명)
+                </h6>
               {familyMembers.length === 0 ? (
                 <div className="text-center p-4" style={{ background: '#f8f9fa', borderRadius: '8px', border: '2px dashed #dee2e6' }}>
                   <p className="text-muted mb-0">등록된 유가족이 없습니다</p>
@@ -664,7 +790,10 @@ const Menu4 = () => {
               ) : (
                 <div className="table-responsive">
                   <table className="table table-hover">
-                    <thead className="table-light">
+                    <thead style={{ 
+                      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+                      color: '#2C1F14'
+                    }}>
                       <tr>
                         <th>이름</th>
                         <th>전화번호</th>
@@ -682,8 +811,8 @@ const Menu4 = () => {
                             <td>{family.phone}</td>
                             <td>{family.email || '-'}</td>
                             <td>
-                              <Badge bg={family.status === 'APPROVED' ? 'success' : 'warning'}>
-                                {family.status === 'APPROVED' ? '승인됨' : '대기중'}
+                              <Badge bg="success">
+                                <i className="fas fa-check me-1"></i>활성
                               </Badge>
                             </td>
                             <td>
@@ -698,15 +827,28 @@ const Menu4 = () => {
                   </table>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowFamilyModal(false)}>닫기</Button>
+        <Modal.Footer style={{
+          background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+          borderTop: '2px solid rgba(184, 134, 11, 0.2)'
+        }}>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowFamilyModal(false)}
+            style={{
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontWeight: '500'
+            }}
+          >
+            <i className="fas fa-times me-2"></i>닫기
+          </Button>
         </Modal.Footer>
       </Modal>
 
-      {/* Global styles from Menu2.js */}
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; }

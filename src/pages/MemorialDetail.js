@@ -63,20 +63,23 @@ const MemorialDetail = () => {
     setAnimateCard(true);
     const fetchMemorialDetails = async () => {
       try {
-        // ID 검증은 여기서 수행
+        // memorialId 검증
         if (!id) {
-          console.error('❌ Memorial ID가 URL에서 추출되지 않음!');
-          navigate('/menu4');
+          console.error('❌ 추모관 고유번호가 URL에서 추출되지 않음!');
+          navigate('/lobby');
           return;
         }
 
-        // UUID 형태인지 확인 (예: 1c337344-ad3c-4785-a5f8-0054698c3ebe)
-        const isValidUUID = id && id.includes('-') && id.length >= 36;
-        console.log('🔍 Is Valid UUID:', isValidUUID);
+        // UUID 형태 검증 (8-4-4-4-12 패턴)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isValidMemorialId = uuidRegex.test(id);
+        console.log('🔍 추모관 고유번호 검증:', id, '유효성:', isValidMemorialId);
         
-        if (!isValidUUID) {
-          console.error('❌ Memorial ID가 올바른 UUID 형태가 아님:', id);
-          // navigate('/menu4'); // 일단 주석처리해서 계속 진행
+        if (!isValidMemorialId) {
+          console.error('❌ 유효하지 않은 추모관 고유번호 형태:', id);
+          alert('유효하지 않은 추모관 고유번호입니다.');
+          navigate('/lobby');
+          return;
         }
 
         console.log('🔍 Final Memorial ID:', id);
@@ -109,15 +112,24 @@ const MemorialDetail = () => {
           }
         }
       } catch (error) {
-        console.error("❌ MemorialDetail API 호출 실패:", error);
+        console.error("❌ 추모관 정보 로드 실패:", error);
         console.error("에러 상세:", error.response?.data, error.response?.status);
         console.error("요청 URL:", error.config?.url);
         
-        // CORS 에러인지 확인
-        if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
-          console.warn("🔧 CORS 문제 감지: 백엔드 설정 확인 필요");
-          alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
+        // 에러 유형별 처리
+        if (error.response?.status === 404) {
+          console.error("❌ 추모관을 찾을 수 없음 (404)");
+          alert("존재하지 않는 추모관 고유번호입니다.");
+          navigate('/lobby');
+        } else if (error.response?.status === 403) {
+          console.error("❌ 접근 권한 없음 (403)");
+          alert("해당 추모관에 접근할 권한이 없습니다.");
+          navigate('/lobby');
+        } else if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
+          console.warn("🔧 네트워크 연결 문제 감지");
+          alert("네트워크 연결 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
         } else {
+          console.error("❌ 기타 에러:", error.message);
           alert("추모관 정보를 불러오는 데 실패했습니다.");
         }
       } finally {
@@ -258,9 +270,13 @@ const MemorialDetail = () => {
 
       // 전체 memorial 정보 다시 로드 (사진 목록 포함)
       const updatedMemorial = await apiService.getMemorialDetails(id);
+      console.log('🔄 사진 업로드 후 memorial 데이터:', updatedMemorial);
       setMemorial(updatedMemorial);
       if (updatedMemorial.photos) {
+        console.log('🖼️ 업데이트된 사진 목록:', updatedMemorial.photos);
         setPhotos(updatedMemorial.photos);
+      } else {
+        console.log('⚠️ 업데이트된 memorial에 photos가 없음');
       }
       
       // 폼 초기화
@@ -333,23 +349,52 @@ const MemorialDetail = () => {
 
   const handleGuestbookSubmit = async (e) => {
     e.preventDefault();
+    
+    // 입력값 검증
+    if (!guestbookEntry.name.trim()) {
+      alert('작성자 이름을 입력해주세요.');
+      return;
+    }
+    if (!guestbookEntry.content.trim()) {
+      alert('내용을 입력해주세요.');
+      return;
+    }
+    if (!guestbookEntry.relationship.trim()) {
+      alert('관계를 입력해주세요.');
+      return;
+    }
+    
+    console.log('📝 방명록 작성 시작');
+    console.log('💬 작성 데이터:', guestbookEntry);
+    console.log('🆔 추모관 ID:', id);
+    console.log('✏️ 수정 모드:', editingCommentId ? '수정' : '신규 작성');
+    
     try {
       let response;
       if (editingCommentId) {
         // This is an update operation
+        console.log('🔄 댓글 수정 API 호출 - ID:', editingCommentId);
         response = await apiService.updateComment(editingCommentId, guestbookEntry);
         console.log('✅ 댓글 수정 성공:', response);
       } else {
         // This is a create operation
+        console.log('📝 새 댓글 생성 API 호출');
         response = await apiService.createComment(id, guestbookEntry);
         console.log('✅ 댓글 생성 성공:', response);
       }
 
       // 전체 memorial 정보 다시 로드 (댓글 목록 포함)
+      console.log('🔄 추모관 정보 새로고침 중...');
       const updatedMemorial = await apiService.getMemorialDetails(id);
+      console.log('✅ 추모관 정보 새로고침 완료:', updatedMemorial);
+      
       setMemorial(updatedMemorial);
       if (updatedMemorial.comments) {
+        console.log('📋 댓글 목록 업데이트:', updatedMemorial.comments.length, '개');
+        console.log('📋 댓글 상세:', updatedMemorial.comments);
         setGuestbookList(updatedMemorial.comments);
+      } else {
+        console.log('⚠️ 업데이트된 memorial에 comments가 없음');
       }
 
       setGuestbookEntry({ name: '', content: '', relationship: '' });
@@ -357,12 +402,25 @@ const MemorialDetail = () => {
       setShowGuestbookModal(false);
       alert(editingCommentId ? '댓글이 성공적으로 수정되었습니다.' : '소중한 위로의 말씀이 등록되었습니다.');
     } catch (error) {
-      console.error("Error submitting comment:", error); // Changed message
+      console.error("❌ 방명록 작성/수정 에러:", error);
+      console.error("에러 상세:", error.response?.data, error.response?.status);
+      console.error("요청 URL:", error.config?.url);
 
-      // CORS 에러인지 확인
-      if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
-        alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
+      // 에러 유형별 처리
+      if (error.response?.status === 400) {
+        console.error("❌ 잘못된 요청 (400)");
+        alert("입력한 내용에 오류가 있습니다. 다시 확인해주세요.");
+      } else if (error.response?.status === 404) {
+        console.error("❌ 추모관을 찾을 수 없음 (404)");
+        alert("존재하지 않는 추모관입니다.");
+      } else if (error.response?.status >= 500) {
+        console.error("❌ 서버 에러 (500+)");
+        alert("서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      } else if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
+        console.error("❌ 네트워크 에러");
+        alert("네트워크 연결 문제가 발생했습니다. 인터넷 연결을 확인해주세요.");
       } else {
+        console.error("❌ 기타 에러:", error.message);
         alert(editingCommentId ? '댓글 수정에 실패했습니다.' : '방명록 작성에 실패했습니다.');
       }
     }
@@ -450,32 +508,52 @@ const MemorialDetail = () => {
 
   // Function to handle copying invite code to clipboard
   const handleCopyInviteCode = async () => {
-    if (memorial && memorial.memorialId) {
+    // 초대코드는 URL 파라미터의 id (추모관 고유번호)
+    const inviteCode = id || memorial?.id;
+    
+    if (inviteCode) {
       try {
-        await navigator.clipboard.writeText(memorial.memorialId);
+        await navigator.clipboard.writeText(inviteCode);
+        console.log('✅ 초대코드 복사 성공:', inviteCode);
         alert('추모관 초대코드가 복사되었습니다!');
       } catch (err) {
-        console.error('클립보드 복사 실패:', err);
-        alert('클립보드 복사에 실패했습니다.');
+        console.error('❌ 클립보드 복사 실패:', err);
+        // 클립보드 API가 실패하면 다른 방법 시도
+        try {
+          const textArea = document.createElement('textarea');
+          textArea.value = inviteCode;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          console.log('✅ 대체 방법으로 초대코드 복사 성공:', inviteCode);
+          alert('추모관 초대코드가 복사되었습니다!');
+        } catch (fallbackErr) {
+          console.error('❌ 대체 복사 방법도 실패:', fallbackErr);
+          alert(`클립보드 복사에 실패했습니다. 초대코드를 직접 복사해주세요: ${inviteCode}`);
+        }
       }
     } else {
+      console.error('❌ 초대코드를 찾을 수 없음 - id:', id, 'memorial:', memorial);
       alert('초대 코드를 찾을 수 없습니다.');
     }
   };
 
+  const pageWrapperStyle = {
+    '--navbar-height': '62px',
+    height: isUserAccess || isGuestAccess ? '100vh' : 'calc(100vh - var(--navbar-height))',
+    background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    position: 'relative',
+    overflow: 'hidden'
+  };
+
   if (loading) {
     return (
-      <div className="page-wrapper" style={{
-        '--navbar-height': '62px',
-        height: 'calc(100vh - var(--navbar-height))',
-        background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+        <div className="page-wrapper" style={pageWrapperStyle}>
         <div style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
@@ -494,17 +572,7 @@ const MemorialDetail = () => {
 
   if (!memorial) {
     return (
-      <div className="page-wrapper" style={{
-        '--navbar-height': '62px',
-        height: 'calc(100vh - var(--navbar-height))',
-        background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+        <div className="page-wrapper" style={pageWrapperStyle}>
         <div style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
@@ -532,17 +600,7 @@ const MemorialDetail = () => {
   }
 
   return (
-    <div className="page-wrapper" style={{
-      '--navbar-height': '62px',
-      height: 'calc(100vh - var(--navbar-height))',
-      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
+    <div className="page-wrapper" style={pageWrapperStyle}>
 
       <div style={{
         position: 'absolute',
@@ -954,6 +1012,12 @@ const MemorialDetail = () => {
                         </div>
                       )}
 
+                      {(() => {
+                        console.log('🖼️ 사진 렌더링 체크 - photos:', photos);
+                        console.log('🖼️ photos 타입:', typeof photos, 'length:', photos?.length);
+                        return null;
+                      })()}
+                      
                       {photos && photos.length > 0 ? (
                         <Row xs={1} sm={2} md={2} lg={2} className="g-4">
                           {photos.map((photo, index) => (
@@ -1216,6 +1280,12 @@ const MemorialDetail = () => {
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
+                    {(() => {
+                      console.log('🎗️ 방명록 렌더링 체크 - guestbookList:', guestbookList);
+                      console.log('🎗️ guestbookList 타입:', typeof guestbookList, 'length:', guestbookList?.length);
+                      return null;
+                    })()}
+                    
                     {guestbookList.map((entry, index) => (
                       <div
                         key={entry.id}
@@ -1400,6 +1470,10 @@ const MemorialDetail = () => {
                       transform: 'translate(-50%, -50%)',
                       color: '#b8860b'
                     }}>
+                      {(() => {
+                        console.log('🎗️ 빈 방명록 표시 중 - guestbookList.length:', guestbookList.length);
+                        return null;
+                      })()}
                       <i className="fas fa-ribbon fa-3x mb-3 opacity-50"></i>
                       <p>첫 번째 리본을 남겨주세요</p>
                     </div>
@@ -1426,7 +1500,7 @@ const MemorialDetail = () => {
               작성하신 위로의 말씀이 아름다운 리본으로 표시됩니다
             </p>
           </div>
-          <Form onSubmit={handleGuestbookSubmit}>
+          <Form id="guestbook-form" onSubmit={handleGuestbookSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>성명</Form.Label>
               <Form.Control
@@ -1477,7 +1551,8 @@ const MemorialDetail = () => {
             취소
           </Button>
           <Button 
-            onClick={handleGuestbookSubmit}
+            type="submit"
+            form="guestbook-form"
             style={{
               background: 'linear-gradient(135deg, #b8860b, #965a25)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -1486,7 +1561,7 @@ const MemorialDetail = () => {
             }}
           >
             <i className="fas fa-ribbon me-2"></i>
-            등록하기
+            {editingCommentId ? '수정하기' : '등록하기'}
           </Button>
         </Modal.Footer>
       </Modal>

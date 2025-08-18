@@ -60,15 +60,55 @@ const MemorialConfig = () => {
         // 권한 확인 및 데이터 로드
         const loadData = async () => {
             try {
-                // TODO: 실제 API로 유가족 권한 확인 로직 필요
-                const hasAccess = isAdminAccess || isUserAccess; 
-
-                if (!hasAccess) {
-                    alert('유가족 또는 관리자만 접근 가능한 페이지입니다.');
-                    navigate(`/memorial/${id}`);
+                // 로그인 상태 확인
+                if (!user) {
+                    alert('로그인이 필요한 페이지입니다.');
+                    navigate('/login');
                     return;
                 }
-                setIsFamilyMember(true);
+
+                // 관리자는 모든 추모관에 접근 가능
+                if (isAdminAccess) {
+                    setIsFamilyMember(true);
+                } else if (isUserAccess) {
+                    // 유저(유가족)인 경우 해당 추모관 접근 권한 확인
+                    try {
+                        const response = await apiService.getMemorial(id);
+                        const memorialData = response;
+                        
+                        // 현재 로그인한 유저의 customerId와 추모관의 customerId 비교
+                        // 또는 familyList에 포함되어 있는지 확인
+                        console.log('🔍 권한 확인 - 로그인 유저:', user);
+                        console.log('🔍 권한 확인 - 추모관 데이터:', memorialData);
+                        console.log('🔍 권한 확인 - 유저 ID:', user.id, '추모관 고객 ID:', memorialData.customerId);
+                        
+                        const hasAccess = memorialData.customerId === user.id || 
+                                        (memorialData.familyList && 
+                                         memorialData.familyList.some(family => family.userId === user.id));
+                        
+                        console.log('🔍 권한 확인 결과:', hasAccess);
+                        
+                        // 개발 환경에서는 권한 검사를 우회 (임시)
+                        const isDevelopment = process.env.NODE_ENV === 'development';
+                        if (!hasAccess && !isDevelopment) {
+                            alert('해당 추모관에 대한 접근 권한이 없습니다.');
+                            navigate('/menu4');
+                            return;
+                        } else if (!hasAccess && isDevelopment) {
+                            console.warn('⚠️ 개발 환경에서 권한 검사 우회');
+                        }
+                        setIsFamilyMember(true);
+                    } catch (error) {
+                        console.error('권한 확인 중 오류:', error);
+                        alert('권한 확인 중 오류가 발생했습니다.');
+                        navigate('/menu4');
+                        return;
+                    }
+                } else {
+                    alert('유가족 또는 관리자만 접근 가능한 페이지입니다.');
+                    navigate('/login');
+                    return;
+                }
 
                 const response = await apiService.getMemorial(id);
                 console.log('✅ MemorialConfig API 응답:', response);
@@ -288,6 +328,16 @@ const MemorialConfig = () => {
         } else if (activeTab === 'memorial') {
             // 추모사 생성 처리
             setIsEulogyLoading(true);
+            
+            // 토큰 확인
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('인증 토큰이 없습니다. 다시 로그인해주세요.');
+                navigate('/login');
+                setIsEulogyLoading(false);
+                return;
+            }
+            
             try {
                 const eulogyRequest = {
                     keywords: eulogyKeywords.filter(k => k).join(', '), // API 명세에 따라 String으로 변경
@@ -295,7 +345,7 @@ const MemorialConfig = () => {
                 };
                 console.log('🔗 CreateTribute 요청 데이터:', eulogyRequest);
                 console.log('🔗 Memorial ID:', id);
-                console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8088'}/memorials/${id}/tribute`);
+                console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/memorials/${id}/tribute`);
                 console.log('🔗 추모사 생성 시작... (최대 60초 소요)');
                 
                 const response = await apiService.createTribute(id, eulogyRequest);
@@ -313,14 +363,37 @@ const MemorialConfig = () => {
                     console.error('응답 데이터:', error.response.data);
                     
                     if (error.response.status === 500) {
-                        alert('서버 오류로 인해 추모사 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+                        // 백엔드 서버 오류 상세 분석
+                        const errorMessage = error.response.data?.message || '서버 내부 오류';
+                        console.error('서버 오류 상세:', errorMessage);
+                        
+                        if (errorMessage.includes('AI') || errorMessage.includes('LLM') || errorMessage.includes('OpenAI')) {
+                            alert('AI 서비스 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.');
+                        } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+                            alert('네트워크 연결에 문제가 있습니다. 인터넷 연결을 확인해주세요.');
+                        } else {
+                            alert(`서버 오류로 인해 추모사 생성에 실패했습니다.\n오류: ${errorMessage}\n잠시 후 다시 시도해주세요.`);
+                        }
+                    } else if (error.response.status === 401) {
+                        alert('인증 토큰이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.');
+                        navigate('/login');
+                    } else if (error.response.status === 403) {
+                        alert('추모사 생성 권한이 없습니다. 유가족만 이용 가능한 기능입니다.');
+                    } else if (error.response.status === 404) {
+                        alert('추모관을 찾을 수 없습니다.');
+                    } else if (error.response.status === 400) {
+                        const errorMessage = error.response.data?.message || '잘못된 요청';
+                        alert(`요청 정보가 올바르지 않습니다: ${errorMessage}`);
                     } else {
-                        alert(`추모사 생성에 실패했습니다. (오류 코드: ${error.response.status})`);
+                        const errorMessage = error.response.data?.message || '알 수 없는 오류';
+                        alert(`추모사 생성에 실패했습니다.\n오류 코드: ${error.response.status}\n메시지: ${errorMessage}`);
                     }
                 } else if (error.request) {
-                    alert('서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.');
+                    console.error('네트워크 오류:', error.request);
+                    alert('서버에 연결할 수 없습니다.\n1. 백엔드 서버가 실행 중인지 확인해주세요\n2. 네트워크 연결 상태를 확인해주세요');
                 } else {
-                    alert('추모사 생성 중 예상치 못한 오류가 발생했습니다.');
+                    console.error('요청 설정 오류:', error.message);
+                    alert(`추모사 생성 중 예상치 못한 오류가 발생했습니다.\n오류: ${error.message}`);
                 }
             } finally {
                 setIsEulogyLoading(false);
@@ -352,7 +425,7 @@ const MemorialConfig = () => {
         return (
             <div className="page-wrapper" style={{
                 '--navbar-height': '62px',
-                height: 'calc(100vh - var(--navbar-height))',
+                height: isUserAccess ? '100vh' : 'calc(100vh - var(--navbar-height))',
                 background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
                 display: 'flex',
                 alignItems: 'center',
@@ -677,28 +750,6 @@ const MemorialConfig = () => {
 
                                             <Form.Group className="mb-3">
                                                 <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                    <i className="fas fa-id-card me-2" style={{ color: '#B8860B' }}></i>고객ID *
-                                                </Form.Label>
-                                                <Form.Control
-                                                    type="number"
-                                                    name="customerId"
-                                                    value={formData.customerId}
-                                                    onChange={handleInputChange}
-                                                    required
-                                                    style={{ 
-                                                        borderRadius: '12px', 
-                                                        padding: '12px 16px',
-                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                        background: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2C1F14'
-                                                    }}
-                                                />
-                                            </Form.Group>
-                                        </Col>
-
-                                        <Col md={6}>
-                                            <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
                                                     <i className="fas fa-calendar-alt me-2" style={{ color: '#B8860B' }}></i>생년월일 *
                                                 </Form.Label>
                                                 <Form.Control
@@ -736,7 +787,9 @@ const MemorialConfig = () => {
                                                     }}
                                                 />
                                             </Form.Group>
+                                        </Col>
 
+                                        <Col md={6} className="d-flex flex-column justify-content-center">
                                             <div style={{
                                                 border: '2px solid rgba(184, 134, 11, 0.2)',
                                                 borderRadius: '16px',

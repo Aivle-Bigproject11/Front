@@ -5,9 +5,8 @@ import {
     getUserByCredentials, 
     getEmployeeByCredentials,
     getUserByNameAndEmail,
-    getEmployeeByNameAndEmail,
-    updateUserPasswordByLoginId,
-    updateEmployeePasswordByLoginId } 
+    getEmployeeByNameAndEmail
+} 
 from '../services/userService';
 import { apiService } from '../services/api'; // Added for direct API calls
 
@@ -31,12 +30,21 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       const userData = localStorage.getItem('user');
       
+      console.log('🔍 localStorage에서 불러온 데이터:', { token: !!token, userData });
+      
       if (token && userData) {
+        const parsedUser = JSON.parse(userData);
+        console.log('🔍 파싱된 사용자 데이터:', parsedUser);
+        console.log('🔍 사용자 타입:', parsedUser.userType);
+        
         setIsAuthenticated(true);
-        setUser(JSON.parse(userData));
+        setUser(parsedUser);
       }
     } catch (error) {
       console.error("사용자 정보를 불러오는 데 실패했습니다.", error);
+      // localStorage 데이터가 손상된 경우 정리
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
     setLoading(false);
   }, []);
@@ -197,12 +205,14 @@ export const AuthProvider = ({ children }) => {
    */
   const changePasswordByType = async (loginId, newPassword, userType) => {
     try {
-      const updateFunction = userType === 'employee' ? updateEmployeePasswordByLoginId : updateUserPasswordByLoginId;
-      const result = await updateFunction(loginId, newPassword);
-      return result; // { success: true, message: '...' }
+      const updateFunction = userType === 'employee' ? apiService.changeEmployeePassword : apiService.changeUserPassword;
+      await updateFunction(loginId, newPassword);
+      return { success: true, message: '비밀번호가 성공적으로 변경되었습니다.' };
     } catch (error) {
-      console.error(error);
-      return { success: false, message: error.message };
+      console.error("Password change error:", error);
+      // Axios 에러인 경우, 백엔드에서 보낸 커스텀 메시지(error.response.data)를 우선적으로 사용합니다.
+      const message = error.response?.data || error.message;
+      return { success: false, message: message };
     }
   };
 
@@ -211,17 +221,21 @@ export const AuthProvider = ({ children }) => {
    */
   const changePassword = async (loginId, newPassword) => {
     try {
-      const result = await updateUserPasswordByLoginId(loginId, newPassword);
-      return result; // { success: true, message: '...' }
+      // 기본값을 사용자 비밀번호 변경으로 설정
+      await apiService.changeUserPassword(loginId, newPassword);
+      return { success: true, message: '비밀번호가 성공적으로 변경되었습니다.' };
     } catch (error) {
-      console.error(error);
-      return { success: false, message: error.message };
+      console.error("Password change error:", error);
+      // Axios 에러인 경우, 백엔드에서 보낸 커스텀 메시지(error.response.data)를 우선적으로 사용합니다.
+      const message = error.response?.data || error.message;
+      return { success: false, message: message };
     }
   };
 
   const value = {
     isAuthenticated,
     user,
+    userType: user?.userType, // userType 추가
     loading,
     login,
     loginByType,
@@ -231,6 +245,13 @@ export const AuthProvider = ({ children }) => {
     changePassword,
     changePasswordByType
   };
+
+  // 디버깅을 위한 로그
+  console.log('🔍 AuthContext value:', { 
+    isAuthenticated, 
+    user: user ? { ...user, loginPassword: '[HIDDEN]' } : null, 
+    userType: user?.userType 
+  });
 
   return (
     <AuthContext.Provider value={value}>

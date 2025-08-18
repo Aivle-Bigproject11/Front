@@ -121,17 +121,25 @@ const Login = () => {
       setJoinLoading(true);
       setError('');
       
-      // 실제 서비스 사용 - 고유번호로 추모관 검색
-      const memorial = await apiService.getMemorialByCode(joinCode.trim());
+      console.log('🔍 고유번호로 추모관 검색 (게스트):', joinCode.trim());
+      
+      // memorialId로 직접 추모관 조회
+      const memorial = await apiService.getMemorialById(joinCode.trim());
       
       if (memorial) {
+        console.log('✅ 추모관 발견 (게스트 접근):', memorial);
         // 고유번호로 접근한 경우 guest 라우트로 이동
-        navigate(`/memorial/${memorial.id}/guest`);
+        navigate(`/memorial/${joinCode.trim()}/guest`);
       } else {
-        setError('유효하지 않은 고유번호입니다.');
+        setError('유효하지 않은 추모관 고유번호입니다.');
       }
     } catch (err) {
-      setError('추모관을 찾는데 실패했습니다. 고유번호를 확인해주세요.');
+      console.error('❌ 추모관 조회 실패 (게스트):', err);
+      if (err.response?.status === 404) {
+        setError('존재하지 않는 추모관 고유번호입니다.');
+      } else {
+        setError('추모관을 찾는데 실패했습니다. 고유번호를 확인해주세요.');
+      }
     } finally {
       setJoinLoading(false);
     }
@@ -731,7 +739,7 @@ const Login = () => {
                     marginBottom: '20px',
                     justifyContent: 'center'
                     }}>
-                  <button onClick={() => navigate('/FindId', { state: { isEmployee: activeTab === 'employee' } })} className="login-link" style={{ 
+                  <button type="button" onClick={() => navigate('/FindId', { state: { isEmployee: activeTab === 'employee' } })} className="login-link" style={{ 
                     background: 'none',
                     border: 'none',
                     padding: 0,
@@ -741,7 +749,7 @@ const Login = () => {
                     fontSize: '14px', 
                     fontWeight: '600' 
                     }}>아이디 찾기</button>
-                  <button onClick={() => navigate('/FindPassword', { state: { isEmployee: activeTab === 'employee' } })} className="login-link" style={{ 
+                  <button type="button" onClick={() => navigate('/FindPassword', { state: { userType: activeTab } })} className="login-link" style={{ 
                     background: 'none',
                     border: 'none',
                     padding: 0,
@@ -824,7 +832,7 @@ const Login = () => {
                     }}>
                   <input 
                   type="text" 
-                  placeholder="고유번호 입력" 
+                  placeholder="추모관 고유번호 (예: 1c1425e1-8f64-43ea-9798-f747e1a97c0e)" 
                   value={joinCode} 
                   onChange={(e) => setJoinCode(e.target.value)} 
                   onKeyPress={(e) => { 

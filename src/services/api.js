@@ -14,8 +14,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log('🔗 API 요청:', config.method?.toUpperCase(), config.url);
+    console.log('🔗 토큰 존재:', !!token);
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn('⚠️ 토큰이 없습니다. 인증이 필요한 API 호출에서 오류가 발생할 수 있습니다.');
     }
     return config;
   },
@@ -42,21 +47,96 @@ api.interceptors.response.use(
 // --- 실제 API 서비스 정의 (Axios 응답에서 data를 추출하여 반환하도록 수정) ---
 const realApiService = {
   // Memorial Service
-  getMemorials: async () => (await api.get('/memorials')).data,
-  getMemorial: async (id) => (await api.get(`/memorials/${id}`)).data,
-  updateMemorial: async (id, data) => (await api.patch(`/memorials/${id}`, data)).data,
-  getMemorialDetails: async (id) => (await api.get(`/memorials/${id}/detail`)).data, // API 명세에 맞게 수정
-  uploadMemorialProfileImage: async (id, formData) => (await api.patch(`/memorials/${id}/profile-image`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
+  getMemorials: async () => {
+    const token = localStorage.getItem('token');
+    const config = { headers: {} };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.get('/memorials', config)).data;
+  },
+  getMemorial: async (id) => {
+    const token = localStorage.getItem('token');
+    const config = { headers: {} };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.get(`/memorials/${id}`, config)).data;
+  },
+  updateMemorial: async (id, data) => {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.patch(`/memorials/${id}`, data, config)).data;
+  },
+  getMemorialDetails: async (id) => {
+    try {
+      // detail 엔드포인트로 사진과 댓글이 포함된 전체 정보 가져오기
+      const token = localStorage.getItem('token');
+      const config = { headers: {} };
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await api.get(`/memorials/${id}/detail`, config);
+      return response.data;
+    } catch (error) {
+      console.error('getMemorialDetails 에러:', error);
+      throw error;
+    }
+  },
+  uploadMemorialProfileImage: async (id, formData) => {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'multipart/form-data'
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.patch(`/memorials/${id}/profile-image`, formData, { headers })).data;
+  },
   
   createTribute: async (id, data) => {
     // AI 추모사 생성은 시간이 오래 걸릴 수 있으므로 타임아웃을 60초로 설정
+    const token = localStorage.getItem('token');
     const config = { 
-      timeout: 60000
+      timeout: 60000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return (await api.post(`/memorials/${id}/tribute`, data, config)).data;
   },
-  updateTribute: async (id, data) => (await api.patch(`/memorials/${id}/tribute`, data)).data,
-  deleteTribute: async (id) => (await api.delete(`/memorials/${id}/tribute`)).data,
+  updateTribute: async (id, data) => {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.patch(`/memorials/${id}/tribute`, data, config)).data;
+  },
+  deleteTribute: async (id) => {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {}
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.delete(`/memorials/${id}/tribute`, config)).data;
+  },
 
   // 장례서류 관련 API
   getFuneralInfos: async () => (await api.get('/funeralInfos')).data,
@@ -91,14 +171,32 @@ const realApiService = {
 
   createVideo: async (memorialId, formData) => {
     // 영상 생성은 시간이 오래 걸릴 수 있으므로 타임아웃을 30초로 설정
+    const token = localStorage.getItem('token');
     const config = { 
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 30000
     };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return (await api.post(`/memorials/${memorialId}/videos`, formData, config)).data;
   },
-  getVideo: async (videoId) => (await api.get(`/videos/${videoId}`)).data,
-  deleteVideo: async (videoId) => (await api.delete(`/videos/${videoId}`)).data,
+  getVideo: async (videoId) => {
+    const token = localStorage.getItem('token');
+    const config = { headers: {} };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.get(`/videos/${videoId}`, config)).data;
+  },
+  deleteVideo: async (videoId) => {
+    const token = localStorage.getItem('token');
+    const config = { headers: {} };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.delete(`/videos/${videoId}`, config)).data;
+  },
 
   createComment: async (id, data) => (await api.post(`/memorials/${id}/comments`, data)).data,
   getComments: async (id) => (await api.get(`/memorials/${id}/comments`)).data,
@@ -116,11 +214,11 @@ const realApiService = {
   // 검색 방식 선택: true = 백엔드 API 직접 검색, false = 프론트엔드 필터링
   USE_BACKEND_SEARCH: true, // 백엔드 API가 올바른 경로로 구현되어 기본값을 true로 변경
   
-  // 백엔드 API 직접 검색 방식 (수정된 경로)
-  // 엔드포인트: /families/search/name, /families/search/email, /families/search/phone
-  searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search/name?name=${name}`)).data,
-  searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search/email?email=${email}`)).data,
-  searchFamiliesByPhoneBackend: async (phone) => (await api.get(`/families/search/phone?phone=${phone}`)).data,
+  // 백엔드 API 직접 검색 방식 (실제 Spring Data REST 메서드 사용)
+  // 엔드포인트: /families/search/findByNameContaining, /families/search/findByEmail, /families/search/findByPhoneContaining
+  searchFamiliesByNameBackend: async (name) => (await api.get(`/families/search/findByNameContaining?name=${name}`)).data,
+  searchFamiliesByEmailBackend: async (email) => (await api.get(`/families/search/findByEmail?email=${email}`)).data,
+  searchFamiliesByPhoneBackend: async (phone) => (await api.get(`/families/search/findByPhoneContaining?phone=${phone}`)).data,
   
   // 프론트엔드 필터링 방식 (현재 백엔드 상태에 맞춤 - 안정적)
   // 엔드포인트: /families 전체 조회 후 브라우저에서 필터링
@@ -206,9 +304,8 @@ const realApiService = {
   updateFamilyMemorialId: async (familyId, memorialId) => (await api.patch(`/families/${familyId}`, { memorialId })).data,
 
   // Login/User-related Service
-  // 참고: API 명세에 없어 추측하여 작성되었습니다. 실제 엔드포인트로 수정이 필요할 수 있습니다.
-  //getUserMemorialHalls: async (userId) => (await api.get(`/users/${userId}/memorials`)).data,
-  getMemorialByCode: async (code) => (await api.get(`/memorials?code=${code}`)).data,
+  // 고유번호(memorialId)로 추모관 직접 접근
+  getMemorialById: async (memorialId) => (await api.get(`/memorials/${memorialId}`)).data,
 
   // Other Services
   getDashboardData: async () => (await api.get('/dashboard')).data,
@@ -239,6 +336,40 @@ const realApiService = {
   findFamilyId: async (name, email) => (await api.get(`/families/find-id?name=${name}&email=${email}`)).data,
   // User login
   loginUser: (credentials) => api.post('/families/login', credentials, { headers: { 'X-Skip-Auth-Redirect': 'true' } }),
+
+  // 직원 비밀번호 변경
+  changeEmployeePassword: async (loginId, newPassword) => {
+    // 1. loginId로 직원 정보를 GET 요청하여 id 값을 얻습니다.
+    const searchResponse = await api.get(`/managers/search/loginId?loginId=${loginId}`);
+    const manager = searchResponse.data;
+
+    if (!manager || !manager.id) {
+      throw new Error('해당 아이디를 가진 직원을 찾을 수 없습니다.');
+    }
+    const managerId = manager.id;
+
+    // 2. 얻어온 id를 사용하여 비밀번호를 PATCH 요청으로 업데이트합니다.
+    return await api.patch(`/managers/${managerId}`, {
+      loginPassword: newPassword,
+    });
+  },
+
+  // 사용자 비밀번호 변경
+  changeUserPassword: async (loginId, newPassword) => {
+    // 1. loginId로 사용자 정보를 GET 요청하여 id 값을 얻습니다.
+    const searchResponse = await api.get(`/families/search/loginId?loginId=${loginId}`);
+    const user = searchResponse.data;
+
+    if (!user || !user.id) {
+      throw new Error('해당 아이디를 가진 사용자를 찾을 수 없습니다.');
+    }
+    const userId = user.id;
+
+    // 2. 얻어온 id를 사용하여 비밀번호를 PATCH 요청으로 업데이트합니다.
+    return await api.patch(`/families/${userId}`, {
+      loginPassword: newPassword,
+    });
+  },
 
  // Password verification
   verifyPassword: async (loginId, password, userType) => {
