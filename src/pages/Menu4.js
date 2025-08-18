@@ -60,6 +60,8 @@ const Menu4 = () => {
                   ...memorial,
                   ...detailData,
                   hasVideo: detailData.videos && detailData.videos.length > 0,
+                  tribute: detailData.tribute || null, 
+
                 };
               } catch (error) {
                 console.error(`❌ ${memorial.id} 상태 조회 실패:`, error);
@@ -416,7 +418,7 @@ const Menu4 = () => {
                          <Row className="mb-2 g-2">
                             <Col xs={6}>
                                 <small className="text-muted"><i className="fas fa-birthday-cake me-1"></i> 생년월일</small>
-                                <div>{memorial.birthOfDate}</div>
+                                <div>{memorial.birthOfDate || memorial.birthDate}</div>
                             </Col>
                             <Col xs={6}>
                                 <small className="text-muted"><i className="fas fa-cross me-1"></i> 별세일</small>
