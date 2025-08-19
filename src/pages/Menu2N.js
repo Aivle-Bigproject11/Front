@@ -187,32 +187,54 @@ const Menu2N = () => {
     try {
       console.log('🔄 인력 이동 추천 계산 시작...');
       
-      // 현재 인력(2024-01의 staff) 대비 AI 추천 인력의 차이 계산
+      // 현재 날짜 기준 (2025-08)으로 다음 달 데이터 가져오기
+      const currentDate = new Date(2025, 7, 19); // 2025-08-19
+      const nextMonth = new Date(currentDate);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+      
       const recommendations = [];
       
-      regionData.forEach(region => {
-        const currentStaff = region.staff; // 현재 배치 인력 (2024-01)
-        const recommendedStaff = region.staff; // AI 최종 추천 인력 (동일한 값이지만 개념적으로 구분)
-        const difference = 0; // 현재는 같은 값이므로 차이 없음
+      // 현재 배치 인력 (2024-01) vs 미래 필요 인력 (2025-09) 비교
+      const currentStaffByRegion = {};
+      const futureStaffByRegion = {};
+      
+      // 현재 배치 데이터 수집 (2024-01)
+      staffData.filter(item => item.date === '2024-01' && item.regionName !== '전국')
+        .forEach(item => {
+          currentStaffByRegion[item.regionName] = item.staff || 0;
+        });
+      
+      // 미래 필요 인력 데이터 수집 (2025-09)
+      staffData.filter(item => item.date === nextMonthStr && item.regionName !== '전국')
+        .forEach(item => {
+          futureStaffByRegion[item.regionName] = item.staff || 0;
+        });
+      
+      // 각 지역별 인력 증감 계산
+      const regionChanges = [];
+      Object.keys(currentStaffByRegion).forEach(regionName => {
+        const currentStaff = currentStaffByRegion[regionName] || 0;
+        const futureStaff = futureStaffByRegion[regionName] || 0;
+        const difference = futureStaff - currentStaff; // 양수면 인력 추가 필요, 음수면 인력 여유
         
-        // 실제로는 미래 월의 데이터와 비교해야 하지만, 
-        // 현재 데이터에서는 staffChange를 기준으로 부족/여유 판단
-        if (Math.abs(region.staffChange) > 1) { // 장례식장 가중치가 큰 경우
-          if (region.staffChange > 0) {
-            // 장례식장 요구로 인해 추가 인력이 필요한 지역
-            region.needsMore = region.staffChange;
-          } else {
-            // 장례식장 요구가 낮아 여유 인력이 있는 지역
-            region.hasExtra = Math.abs(region.staffChange);
-          }
+        if (Math.abs(difference) > 0) { // 변화가 있는 경우만
+          regionChanges.push({
+            regionName,
+            currentStaff,
+            futureStaff,
+            difference,
+            needsMore: difference > 0 ? difference : 0,
+            hasExtra: difference < 0 ? Math.abs(difference) : 0
+          });
         }
       });
       
       // 인력이 부족한 지역과 여유로운 지역 분류
-      const deficitRegions = regionData.filter(item => item.needsMore > 0)
+      const deficitRegions = regionChanges.filter(item => item.needsMore > 0)
         .sort((a, b) => b.needsMore - a.needsMore); // 부족한 순서대로
       
-      const surplusRegions = regionData.filter(item => item.hasExtra > 0)
+      const surplusRegions = regionChanges.filter(item => item.hasExtra > 0)
         .sort((a, b) => b.hasExtra - a.hasExtra); // 여유 많은 순서대로
       
       // 각 부족 지역에 대해 가까운 여유 지역에서 인력 이동 추천
@@ -239,7 +261,7 @@ const Menu2N = () => {
               amount: transferAmount,
               distance: nearbyRegions.includes(surplusRegion.regionName) ? 'near' : 'far',
               priority: remainingNeed === needStaff ? 'high' : 'medium',
-              reason: `장례식장 수요 증가로 ${transferAmount}명 추가 필요`
+              reason: `${nextMonthStr} 인력 수요 증가로 ${transferAmount}명 추가 필요`
             });
             
             remainingNeed -= transferAmount;
@@ -415,12 +437,12 @@ const Menu2N = () => {
         
         @keyframes transferPulse {
           0%, 100% { 
-            stroke-width: 4; 
-            opacity: 0.8; 
+            opacity: 0.7; 
+            stroke-width: 3;
           }
           50% { 
-            stroke-width: 6; 
             opacity: 1; 
+            stroke-width: 4;
           }
         }
         
@@ -664,7 +686,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
 
 // 인력 이동 화살표 컴포넌트
 const TransferArrow = ({ from, to, transfer }) => {
-  if (!from || !to) return null;
+  if (!from || !to || !transfer || transfer.amount === 0) return null;
 
   // 퍼센트를 실제 픽셀로 변환하기 위해 지도 컨테이너 크기 기준으로 계산
   const fromX = parseFloat(from.left);
@@ -707,18 +729,18 @@ const TransferArrow = ({ from, to, transfer }) => {
           <stop offset="100%" style={{stopColor: '#dc3545', stopOpacity: 1}} />
         </linearGradient>
         <filter id="arrowShadow">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.3)"/>
+          <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="rgba(0,0,0,0.2)"/>
         </filter>
         <marker
           id={`arrowhead-${transfer.from}-${transfer.to}`}
-          markerWidth="10"
-          markerHeight="7"
-          refX="9"
-          refY="3.5"
+          markerWidth="6"
+          markerHeight="5"
+          refX="5.5"
+          refY="2.5"
           orient="auto"
         >
           <polygon
-            points="0 0, 10 3.5, 0 7"
+            points="0 0, 6 2.5, 0 5"
             fill="#dc3545"
             filter="url(#arrowShadow)"
           />
@@ -732,7 +754,7 @@ const TransferArrow = ({ from, to, transfer }) => {
         x2={`${endX}%`}
         y2={`${endY}%`}
         stroke={`url(#arrowGradient-${transfer.from}-${transfer.to})`}
-        strokeWidth="4"
+        strokeWidth="3"
         markerEnd={`url(#arrowhead-${transfer.from}-${transfer.to})`}
         filter="url(#arrowShadow)"
         style={{
@@ -740,49 +762,31 @@ const TransferArrow = ({ from, to, transfer }) => {
         }}
       />
       
-      {/* 이동 정보 텍스트 */}
-      <text
-        x={`${(startX + endX) / 2}%`}
-        y={`${(startY + endY) / 2 - 2}%`}
-        textAnchor="middle"
-        style={{
-          fill: 'white',
-          fontSize: '12px',
-          fontWeight: '600',
-          filter: 'url(#arrowShadow)'
-        }}
-      >
-        <tspan
-          style={{
-            fill: 'black',
-            fontSize: '14px',
-            fontWeight: '700'
-          }}
-        >
-          {transfer.amount}명 이동
-        </tspan>
-      </text>
-      
-      {/* 배경 텍스트 (가독성 향상) */}
+      {/* 이동 정보 배경 박스 */}
       <rect
-        x={`${(startX + endX) / 2 - 3}%`}
-        y={`${(startY + endY) / 2 - 3}%`}
-        width="6%"
-        height="2%"
-        fill="rgba(255, 255, 255, 0.9)"
-        rx="4"
+        x={`${(startX + endX) / 2 - 2.5}%`}
+        y={`${(startY + endY) / 2 - 1.5}%`}
+        width="5%"
+        height="1.5%"
+        fill="rgba(255, 255, 255, 0.95)"
+        stroke="rgba(44, 31, 20, 0.2)"
+        strokeWidth="0.5"
+        rx="3"
         style={{
           filter: 'url(#arrowShadow)'
         }}
       />
+      
+      {/* 이동 정보 텍스트 */}
       <text
         x={`${(startX + endX) / 2}%`}
-        y={`${(startY + endY) / 2 - 1.2}%`}
+        y={`${(startY + endY) / 2 - 0.8}%`}
         textAnchor="middle"
         style={{
           fill: '#2C1F14',
-          fontSize: '11px',
-          fontWeight: '700'
+          fontSize: '10px',
+          fontWeight: '700',
+          dominantBaseline: 'middle'
         }}
       >
         {transfer.amount}명
@@ -806,42 +810,60 @@ const OptimizedDisplayComponent = ({
   const getRegionDeploymentStats = (region) => {
     if (!currentStaffData || !Array.isArray(currentStaffData)) {
       return { 
-        currentStaff: 0, 
-        requiredChange: 0,
+        currentDeployedStaff: 0, 
+        aiRecommendedStaff: 0,
         efficiencyScore: 0,
+        predictedDeaths: 0,
+        funeralHallAdjustment: 0,
         status: '정보 없음'
       };
     }
 
+    // 현재 날짜 기준 (2025-08)으로 다음 달 데이터 가져오기
+    const currentDate = new Date(2025, 7, 19); // 2025-08-19
+    const nextMonth = new Date(currentDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+
     if (region === '전체') {
       // 전체 통계
-      const staffItems = currentStaffData.filter(item => item.staff !== undefined && item.regionName !== '전국');
-      const totalStaff = staffItems.reduce((sum, item) => sum + (item.staff || 0), 0);
-      const totalChange = staffItems.reduce((sum, item) => sum + (item.staffChange || 0), 0);
-      const avgEfficiency = staffItems.length > 0 ? 
-        staffItems.reduce((sum, item) => sum + (item.predictedDeaths > 0 ? (item.staff / item.predictedDeaths * 1000) : 0), 0) / staffItems.length : 0;
+      const currentStaffItems = staffData.filter(item => item.date === '2024-01' && item.regionName !== '전국');
+      const futureStaffItems = staffData.filter(item => item.date === nextMonthStr && item.regionName !== '전국');
+      
+      const totalCurrentStaff = currentStaffItems.reduce((sum, item) => sum + (item.staff || 0), 0);
+      const totalFutureStaff = futureStaffItems.reduce((sum, item) => sum + (item.staff || 0), 0);
+      const totalPredictedDeaths = futureStaffItems.reduce((sum, item) => sum + (item.predictedDeaths || 0), 0);
+      const totalFuneralHallAdjustment = futureStaffItems.reduce((sum, item) => sum + (item.staffChange || 0), 0);
+      const avgEfficiency = futureStaffItems.length > 0 ? 
+        futureStaffItems.reduce((sum, item) => sum + (item.predictedDeaths > 0 ? (item.staff / item.predictedDeaths * 1000) : 0), 0) / futureStaffItems.length : 0;
       
       return {
-        currentStaff: totalStaff,
-        requiredChange: totalChange,
+        currentDeployedStaff: totalCurrentStaff,
+        aiRecommendedStaff: totalFutureStaff,
         efficiencyScore: avgEfficiency.toFixed(1),
-        status: totalChange > 0 ? '인력 부족' : totalChange < 0 ? '인력 여유' : '적정 배치'
+        predictedDeaths: totalPredictedDeaths,
+        funeralHallAdjustment: totalFuneralHallAdjustment,
+        status: totalFuneralHallAdjustment > 0 ? '장례 수요 높음' : totalFuneralHallAdjustment < 0 ? '장례 수요 낮음' : '적정 수준'
       };
     } else {
       // 특정 지역 통계
-      const regionData = currentStaffData.find(item => item.regionName === region && item.date === '2024-01');
-      if (!regionData) {
-        return { currentStaff: 0, requiredChange: 0, efficiencyScore: 0, status: '정보 없음' };
+      const currentRegionData = staffData.find(item => item.regionName === region && item.date === '2024-01');
+      const futureRegionData = staffData.find(item => item.regionName === region && item.date === nextMonthStr);
+      
+      if (!currentRegionData || !futureRegionData) {
+        return { currentDeployedStaff: 0, aiRecommendedStaff: 0, efficiencyScore: 0, predictedDeaths: 0, funeralHallAdjustment: 0, status: '정보 없음' };
       }
       
-      const efficiency = regionData.predictedDeaths > 0 ? 
-        (regionData.staff / regionData.predictedDeaths * 1000) : 0;
+      const efficiency = futureRegionData.predictedDeaths > 0 ? 
+        (futureRegionData.staff / futureRegionData.predictedDeaths * 1000) : 0;
       
       return {
-        currentStaff: regionData.staff || 0,
-        requiredChange: regionData.staffChange || 0,
+        currentDeployedStaff: currentRegionData.staff || 0,
+        aiRecommendedStaff: futureRegionData.staff || 0,
         efficiencyScore: efficiency.toFixed(1),
-        status: regionData.staffChange > 1 ? '인력 부족' : regionData.staffChange < -1 ? '인력 여유' : '적정 배치'
+        predictedDeaths: futureRegionData.predictedDeaths || 0,
+        funeralHallAdjustment: futureRegionData.staffChange || 0,
+        status: futureRegionData.staffChange > 1 ? '장례 수요 높음' : futureRegionData.staffChange < -1 ? '장례 수요 낮음' : '적정 수준'
       };
     }
   };
@@ -898,27 +920,19 @@ const OptimizedDisplayComponent = ({
         </h5>
         <Row className="g-3">
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(54, 162, 235, 0.1)' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#369CE3' }}>
-                {deploymentStats.currentStaff}명
+            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(40, 167, 69, 0.1)' }}>
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#28a745' }}>
+                {deploymentStats.currentDeployedStaff}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>현재 배치 인력</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>현재 실 배치 인력</div>
             </div>
           </Col>
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ 
-              backgroundColor: deploymentStats.requiredChange > 0 ? 'rgba(220, 53, 69, 0.1)' : 
-                             deploymentStats.requiredChange < 0 ? 'rgba(40, 167, 69, 0.1)' : 'rgba(255, 193, 7, 0.1)' 
-            }}>
-              <div style={{ 
-                fontSize: '24px', 
-                fontWeight: '700', 
-                color: deploymentStats.requiredChange > 0 ? '#dc3545' : 
-                       deploymentStats.requiredChange < 0 ? '#28a745' : '#ffc107'
-              }}>
-                {deploymentStats.requiredChange > 0 ? '+' : ''}{deploymentStats.requiredChange}명
+            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(54, 162, 235, 0.1)' }}>
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#369CE3' }}>
+                {deploymentStats.aiRecommendedStaff}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>필요 인력 조정</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>AI 추천 인력</div>
             </div>
           </Col>
           <Col md={3}>
@@ -930,41 +944,39 @@ const OptimizedDisplayComponent = ({
             </div>
           </Col>
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ 
-              backgroundColor: deploymentStats.status === '인력 부족' ? 'rgba(220, 53, 69, 0.1)' :
-                             deploymentStats.status === '인력 여유' ? 'rgba(40, 167, 69, 0.1)' : 'rgba(75, 192, 192, 0.1)'
-            }}>
-              <div style={{ 
-                fontSize: '16px', 
-                fontWeight: '700', 
-                color: deploymentStats.status === '인력 부족' ? '#dc3545' :
-                       deploymentStats.status === '인력 여유' ? '#28a745' : '#4BC0C0'
-              }}>
-                {deploymentStats.status}
+            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(108, 117, 125, 0.1)' }}>
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#6c757d' }}>
+                {deploymentStats.predictedDeaths}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>배치 상태</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>예측 사망자</div>
             </div>
           </Col>
         </Row>
-        
+
         {/* 지역별 상세 정보 */}
         {region !== '전체' && (
           <div className="mt-3 p-3 rounded-3" style={{ backgroundColor: 'rgba(248, 249, 250, 0.8)' }}>
             <Row className="text-center">
               <Col md={4}>
-                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>장례식장 가중치</small>
+                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>인력 증감 필요</small>
                 <span style={{ 
                   fontSize: '14px', 
                   fontWeight: '600',
-                  color: deploymentStats.requiredChange > 0 ? '#dc3545' : deploymentStats.requiredChange < 0 ? '#28a745' : '#666'
+                  color: (deploymentStats.currentDeployedStaff - deploymentStats.aiRecommendedStaff) > 0 ? '#dc3545' : 
+                         (deploymentStats.currentDeployedStaff - deploymentStats.aiRecommendedStaff) < 0 ? '#28a745' : '#666'
                 }}>
-                  {deploymentStats.requiredChange > 0 ? '+' : ''}{deploymentStats.requiredChange}명
+                  {(deploymentStats.currentDeployedStaff - deploymentStats.aiRecommendedStaff) > 0 ? '+' : ''}
+                  {deploymentStats.currentDeployedStaff - deploymentStats.aiRecommendedStaff}명
                 </span>
               </Col>
               <Col md={4}>
-                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>순수 사망자 기반</small>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: '#369CE3' }}>
-                  {deploymentStats.currentStaff - deploymentStats.requiredChange}명
+                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>장례식장 조정</small>
+                <span style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '600',
+                  color: deploymentStats.funeralHallAdjustment > 0 ? '#dc3545' : deploymentStats.funeralHallAdjustment < 0 ? '#28a745' : '#666'
+                }}>
+                  {deploymentStats.funeralHallAdjustment > 0 ? '+' : ''}{deploymentStats.funeralHallAdjustment}명
                 </span>
               </Col>
               <Col md={4}>
@@ -1074,38 +1086,61 @@ const OptimizedDisplayComponent = ({
               <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0 }}>
                 <tr>
                   <th>지역</th>
-                  <th>최종 제안 인력</th>
-                  <th>사망자 기반 인력</th>
+                  <th>현재 실 배치 인력</th>
+                  <th>AI 추천 인력</th>
                   <th>장례식장 조정</th>
                   <th>효율성</th>
                   <th>상태</th>
                 </tr>
               </thead>
               <tbody>
-                {currentStaffData
-                  .filter(item => item.regionName !== '전국' && (region === '전체' || item.regionName === region))
-                  .map((item, index) => {
-                    const pureStaff = (item.staff || 0) - (item.staffChange || 0); // 순수 사망자 기반 인력
-                    const efficiency = item.predictedDeaths > 0 ? ((item.staff || 0) / item.predictedDeaths * 1000).toFixed(1) : '0';
-                    const statusColor = item.staffChange > 1 ? '#dc3545' : item.staffChange < -1 ? '#198754' : '#ffc107';
-                    const statusText = item.staffChange > 1 ? '장례식장 수요 높음' : item.staffChange < -1 ? '장례식장 수요 낮음' : '적정';
+                {(() => {
+                  // 현재 날짜 기준으로 다음 달 데이터 가져오기
+                  const currentDate = new Date(2025, 7, 19);
+                  const nextMonth = new Date(currentDate);
+                  nextMonth.setMonth(nextMonth.getMonth() + 1);
+                  const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+                  
+                  // 현재 배치 데이터 (2024-01)
+                  const currentData = staffData.filter(item => item.date === '2024-01' && item.regionName !== '전국' && (region === '전체' || item.regionName === region));
+                  
+                  // 미래 추천 데이터 (2025-09)
+                  const futureData = staffData.filter(item => item.date === nextMonthStr && item.regionName !== '전국' && (region === '전체' || item.regionName === region));
+                  
+                  // 데이터 매핑
+                  const combinedData = currentData.map(currentItem => {
+                    const futureItem = futureData.find(f => f.regionName === currentItem.regionName) || {};
+                    return {
+                      ...currentItem,
+                      futureStaff: futureItem.staff || 0,
+                      futureStaffChange: futureItem.staffChange || 0,
+                      futurePredictedDeaths: futureItem.predictedDeaths || 0
+                    };
+                  });
+                  
+                  return combinedData.map((item, index) => {
+                    const currentDeployed = item.staff || 0; // 현재 실 배치 인력 (2024-01)
+                    const aiRecommended = item.futureStaff || 0; // AI 추천 인력 (2025-09)
+                    const efficiency = item.futurePredictedDeaths > 0 ? ((item.futureStaff || 0) / item.futurePredictedDeaths * 1000).toFixed(1) : '0';
+                    const statusColor = item.futureStaffChange > 1 ? '#dc3545' : item.futureStaffChange < -1 ? '#198754' : '#ffc107';
+                    const statusText = item.futureStaffChange > 1 ? '장례 수요 높음' : item.futureStaffChange < -1 ? '장례 수요 낮음' : '적정';
                     
                     return (
                       <tr key={index}>
                         <td style={{ fontWeight: '600' }}>
                           {item.regionName.replace(/특별시|광역시|특별자치시|도$/g, '')}
                         </td>
-                        <td style={{ fontWeight: '700', color: '#2C1F14' }}>
-                          {item.staff || 0}명
+                        <td style={{ fontWeight: '700', color: '#28a745' }}>
+                          {currentDeployed}명
                         </td>
-                        <td style={{ fontWeight: '600', color: '#369CE3' }}>
-                          {pureStaff}명
+                        <td style={{ fontWeight: '700', color: '#369CE3' }}>
+                          {aiRecommended}명
                         </td>
                         <td style={{ 
-                          color: item.staffChange > 0 ? '#dc3545' : item.staffChange < 0 ? '#198754' : '#666',
+                          color: item.futureStaffChange > 0 ? '#dc3545' : item.futureStaffChange < 0 ? '#198754' : '#666',
                           fontWeight: '600'
                         }}>
-                          {item.staffChange > 0 ? '+' : ''}{item.staffChange || 0}명
+                          {item.futureStaffChange > 0 ? '+' : ''}{item.futureStaffChange || 0}명
                         </td>
                         <td>
                           <span className={`badge ${parseFloat(efficiency) > 20 ? 'bg-danger' : parseFloat(efficiency) > 15 ? 'bg-warning' : 'bg-success'}`}>
@@ -1119,7 +1154,8 @@ const OptimizedDisplayComponent = ({
                         </td>
                       </tr>
                     );
-                  })}
+                  });
+                })()}
               </tbody>
             </Table>
           </div>
