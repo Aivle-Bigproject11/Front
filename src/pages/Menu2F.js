@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import InteractiveMap from '../components/InteractiveMap';
 import { apiService } from '../services/api';
 import { Row, Col, Table } from 'react-bootstrap';
@@ -9,6 +11,8 @@ import staffData from '../assets/dataset/Predcit_rf_Result_min.json';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const Menu2F = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedRegion, setSelectedRegion] = useState('전체');
   const [animateCard, setAnimateCard] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -353,6 +357,18 @@ const Menu2F = () => {
     }
   };
 
+  // URL 쿼리 파라미터 처리
+  useEffect(() => {
+    if (!isInitialLoading) {
+      const params = new URLSearchParams(location.search);
+      const regionFromQuery = params.get('region');
+      if (regionFromQuery && regionFromQuery !== selectedRegion) {
+        console.log(`쿼리 파라미터로부터 지역 설정: ${regionFromQuery}`);
+        setSelectedRegion(regionFromQuery);
+      }
+    }
+  }, [isInitialLoading, location.search]);
+
   // 지역 선택 핸들러
   useEffect(() => {
     if (!isInitialLoading && selectedRegion) {
@@ -436,14 +452,15 @@ const Menu2F = () => {
       }}>
         {/* 왼쪽 영역 (지도와 버튼) */}
         <div style={{ flex: '0 0 600px', display: 'flex', flexDirection: 'column' }}>
-          <h4 className="mb-3" style={{ 
-            fontSize: '30px', 
-            fontWeight: '700', 
-            color: '#2C1F14',
-            paddingLeft: '10px' 
-          }}>
-            Menu2F 통합 대시보드
-          </h4>
+          <div style={{ paddingBottom: '10px' }}>
+            <button
+              onClick={() => navigate(-1)}
+              className="back-btn"
+            >
+              <ArrowLeft size={16} style={{ marginRight: '6px' }} />
+              뒤로가기
+            </button>
+          </div>
           <div className="dashboard-left" style={{
             background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
             borderRadius: '16px',
@@ -506,6 +523,26 @@ const Menu2F = () => {
       </div>
 
       <style jsx global>{`
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #4A3728, #8B5A2B);
+            border: none;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .back-btn:hover {
+            background: linear-gradient(135deg, #3c2d20, #7a4e24);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
+        }
         @keyframes fadeIn {
           from {
             opacity: 0;
