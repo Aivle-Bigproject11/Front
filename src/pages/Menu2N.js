@@ -14,6 +14,7 @@ const Menu2N = () => {
   const [staffChartData, setStaffChartData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [transferRecommendations, setTransferRecommendations] = useState([]);
+  const [selectedTransfer, setSelectedTransfer] = useState(null);
 
   // 2024-01 현재 배치 데이터 (시스템 기본 400명)
   const totalStaff = 400;
@@ -326,6 +327,7 @@ const Menu2N = () => {
               onRegionSelect={setSelectedRegion}
               staffData={currentStaffData}
               transferRecommendations={transferRecommendations}
+              selectedTransfer={selectedTransfer}
             />
             
             {/* 현재 배치 인력 정보 */}
@@ -399,6 +401,7 @@ const Menu2N = () => {
               staffChartData={staffChartData}
               transferRecommendations={transferRecommendations}
               totalStaff={totalStaff}
+              onTransferSelect={setSelectedTransfer}
             />
           )}
         </div>
@@ -408,6 +411,17 @@ const Menu2N = () => {
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        
+        @keyframes transferPulse {
+          0%, 100% { 
+            stroke-width: 4; 
+            opacity: 0.8; 
+          }
+          50% { 
+            stroke-width: 6; 
+            opacity: 1; 
+          }
         }
         
         .dashboard-container { opacity: 0; }
@@ -435,7 +449,7 @@ const Menu2N = () => {
 };
 
 // 최적화된 인력배치 지도 컴포넌트
-const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transferRecommendations }) => {
+const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transferRecommendations, selectedTransfer }) => {
   const [hoveredRegion, setHoveredRegion] = useState(null);
   
   const themeColors = {
@@ -590,6 +604,15 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
         })}
       </div>
 
+      {/* 선택된 이동에 대한 화살표 표시 */}
+      {selectedTransfer && (
+        <TransferArrow 
+          from={regionPositions[selectedTransfer.from]}
+          to={regionPositions[selectedTransfer.to]}
+          transfer={selectedTransfer}
+        />
+      )}
+
       {/* 범례 */}
       <div className="mt-3 p-2 rounded-3" style={{
         background: 'rgba(255, 255, 255, 0.9)',
@@ -639,6 +662,135 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
   );
 };
 
+// 인력 이동 화살표 컴포넌트
+const TransferArrow = ({ from, to, transfer }) => {
+  if (!from || !to) return null;
+
+  // 퍼센트를 실제 픽셀로 변환하기 위해 지도 컨테이너 크기 기준으로 계산
+  const fromX = parseFloat(from.left);
+  const fromY = parseFloat(from.top);
+  const toX = parseFloat(to.left);
+  const toY = parseFloat(to.top);
+
+  // 화살표 시작점과 끝점 계산 (버튼 중심에서 시작/끝)
+  const deltaX = toX - fromX;
+  const deltaY = toY - fromY;
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+
+  // 버튼 크기를 고려한 오프셋 (버튼 가장자리에서 시작/끝나도록)
+  const buttonRadius = 1.5; // 버튼 반지름 (퍼센트 단위)
+  const offsetRatio = buttonRadius / distance;
+  
+  const startX = fromX + deltaX * offsetRatio;
+  const startY = fromY + deltaY * offsetRatio;
+  const endX = toX - deltaX * offsetRatio;
+  const endY = toY - deltaY * offsetRatio;
+  
+  const adjustedDistance = distance - (2 * buttonRadius);
+
+  return (
+    <svg
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 15
+      }}
+    >
+      <defs>
+        <linearGradient id={`arrowGradient-${transfer.from}-${transfer.to}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style={{stopColor: '#007bff', stopOpacity: 1}} />
+          <stop offset="100%" style={{stopColor: '#dc3545', stopOpacity: 1}} />
+        </linearGradient>
+        <filter id="arrowShadow">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.3)"/>
+        </filter>
+        <marker
+          id={`arrowhead-${transfer.from}-${transfer.to}`}
+          markerWidth="10"
+          markerHeight="7"
+          refX="9"
+          refY="3.5"
+          orient="auto"
+        >
+          <polygon
+            points="0 0, 10 3.5, 0 7"
+            fill="#dc3545"
+            filter="url(#arrowShadow)"
+          />
+        </marker>
+      </defs>
+      
+      {/* 화살표 선 */}
+      <line
+        x1={`${startX}%`}
+        y1={`${startY}%`}
+        x2={`${endX}%`}
+        y2={`${endY}%`}
+        stroke={`url(#arrowGradient-${transfer.from}-${transfer.to})`}
+        strokeWidth="4"
+        markerEnd={`url(#arrowhead-${transfer.from}-${transfer.to})`}
+        filter="url(#arrowShadow)"
+        style={{
+          animation: 'transferPulse 2s infinite'
+        }}
+      />
+      
+      {/* 이동 정보 텍스트 */}
+      <text
+        x={`${(startX + endX) / 2}%`}
+        y={`${(startY + endY) / 2 - 2}%`}
+        textAnchor="middle"
+        style={{
+          fill: 'white',
+          fontSize: '12px',
+          fontWeight: '600',
+          filter: 'url(#arrowShadow)'
+        }}
+      >
+        <tspan
+          style={{
+            fill: 'black',
+            fontSize: '14px',
+            fontWeight: '700'
+          }}
+        >
+          {transfer.amount}명 이동
+        </tspan>
+      </text>
+      
+      {/* 배경 텍스트 (가독성 향상) */}
+      <rect
+        x={`${(startX + endX) / 2 - 3}%`}
+        y={`${(startY + endY) / 2 - 3}%`}
+        width="6%"
+        height="2%"
+        fill="rgba(255, 255, 255, 0.9)"
+        rx="4"
+        style={{
+          filter: 'url(#arrowShadow)'
+        }}
+      />
+      <text
+        x={`${(startX + endX) / 2}%`}
+        y={`${(startY + endY) / 2 - 1.2}%`}
+        textAnchor="middle"
+        style={{
+          fill: '#2C1F14',
+          fontSize: '11px',
+          fontWeight: '700'
+        }}
+      >
+        {transfer.amount}명
+      </text>
+    </svg>
+  );
+};
+
 // 최적화된 데이터 표시 컴포넌트
 const OptimizedDisplayComponent = ({ 
   region, 
@@ -646,40 +798,55 @@ const OptimizedDisplayComponent = ({
   currentStaffData,
   staffChartData,
   transferRecommendations,
-  totalStaff
+  totalStaff,
+  onTransferSelect
 }) => {
   
-  // 인력배치 최적화 요약 통계 계산
-  const getOptimizationStats = () => {
+  // 지역별 배치현황 통계 계산
+  const getRegionDeploymentStats = (region) => {
     if (!currentStaffData || !Array.isArray(currentStaffData)) {
       return { 
-        totalRecommendedStaff: 0, 
-        totalTransfers: 0,
-        efficiencyGain: 0,
-        costSaving: 0
+        currentStaff: 0, 
+        requiredChange: 0,
+        efficiencyScore: 0,
+        status: '정보 없음'
       };
     }
 
-    const staffItems = currentStaffData.filter(item => item.staff !== undefined && item.regionName !== '전국');
-    const totalRecommendedStaff = staffItems.reduce((sum, item) => sum + (item.staff || 0), 0);
-    const totalTransfers = transferRecommendations.length;
-    const transferAmount = transferRecommendations.reduce((sum, transfer) => sum + transfer.amount, 0);
-    
-    // 효율성 개선 계산 (이동 인력 대비 개선도)
-    const efficiencyGain = transferAmount > 0 ? ((transferAmount / totalStaff) * 100) : 0;
-    
-    // 비용 절감 계산 (가상의 계산식)
-    const costSaving = transferAmount * 50000; // 인당 월 50,000원 절감 가정
-
-    return {
-      totalRecommendedStaff,
-      totalTransfers,
-      efficiencyGain: efficiencyGain.toFixed(1),
-      costSaving
-    };
+    if (region === '전체') {
+      // 전체 통계
+      const staffItems = currentStaffData.filter(item => item.staff !== undefined && item.regionName !== '전국');
+      const totalStaff = staffItems.reduce((sum, item) => sum + (item.staff || 0), 0);
+      const totalChange = staffItems.reduce((sum, item) => sum + (item.staffChange || 0), 0);
+      const avgEfficiency = staffItems.length > 0 ? 
+        staffItems.reduce((sum, item) => sum + (item.predictedDeaths > 0 ? (item.staff / item.predictedDeaths * 1000) : 0), 0) / staffItems.length : 0;
+      
+      return {
+        currentStaff: totalStaff,
+        requiredChange: totalChange,
+        efficiencyScore: avgEfficiency.toFixed(1),
+        status: totalChange > 0 ? '인력 부족' : totalChange < 0 ? '인력 여유' : '적정 배치'
+      };
+    } else {
+      // 특정 지역 통계
+      const regionData = currentStaffData.find(item => item.regionName === region && item.date === '2024-01');
+      if (!regionData) {
+        return { currentStaff: 0, requiredChange: 0, efficiencyScore: 0, status: '정보 없음' };
+      }
+      
+      const efficiency = regionData.predictedDeaths > 0 ? 
+        (regionData.staff / regionData.predictedDeaths * 1000) : 0;
+      
+      return {
+        currentStaff: regionData.staff || 0,
+        requiredChange: regionData.staffChange || 0,
+        efficiencyScore: efficiency.toFixed(1),
+        status: regionData.staffChange > 1 ? '인력 부족' : regionData.staffChange < -1 ? '인력 여유' : '적정 배치'
+      };
+    }
   };
 
-  const optimizationStats = getOptimizationStats();
+  const deploymentStats = getRegionDeploymentStats(region);
   const displayRegionName = region === '전체' ? '전국' : region;
 
   const cardStyle = {
@@ -724,87 +891,174 @@ const OptimizedDisplayComponent = ({
         </small>
       </div>
 
-      {/* AI 최적화 요약 통계 */}
+      {/* 지역별 배치현황 카드 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-          🚀 AI 최적화 성과 요약
+          � {displayRegionName} 인력 배치현황
         </h5>
         <Row className="g-3">
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 99, 132, 0.1)' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#FF6384' }}>
-                {optimizationStats.totalRecommendedStaff}명
+            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(54, 162, 235, 0.1)' }}>
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#369CE3' }}>
+                {deploymentStats.currentStaff}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>AI 추천 총 인력</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>현재 배치 인력</div>
             </div>
           </Col>
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(54, 162, 235, 0.1)' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#369CE3' }}>
-                {optimizationStats.totalTransfers}건
+            <div className="text-center p-3 rounded-3" style={{ 
+              backgroundColor: deploymentStats.requiredChange > 0 ? 'rgba(220, 53, 69, 0.1)' : 
+                             deploymentStats.requiredChange < 0 ? 'rgba(40, 167, 69, 0.1)' : 'rgba(255, 193, 7, 0.1)' 
+            }}>
+              <div style={{ 
+                fontSize: '24px', 
+                fontWeight: '700', 
+                color: deploymentStats.requiredChange > 0 ? '#dc3545' : 
+                       deploymentStats.requiredChange < 0 ? '#28a745' : '#ffc107'
+              }}>
+                {deploymentStats.requiredChange > 0 ? '+' : ''}{deploymentStats.requiredChange}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>인력 이동 권장</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>필요 인력 조정</div>
             </div>
           </Col>
           <Col md={3}>
             <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 206, 84, 0.1)' }}>
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#FFCE54' }}>
-                {optimizationStats.efficiencyGain}%
+                {deploymentStats.efficiencyScore}‰
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>효율성 개선</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>효율성 지수</div>
             </div>
           </Col>
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(75, 192, 192, 0.1)' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#4BC0C0' }}>
-                ₩{optimizationStats.costSaving.toLocaleString()}
+            <div className="text-center p-3 rounded-3" style={{ 
+              backgroundColor: deploymentStats.status === '인력 부족' ? 'rgba(220, 53, 69, 0.1)' :
+                             deploymentStats.status === '인력 여유' ? 'rgba(40, 167, 69, 0.1)' : 'rgba(75, 192, 192, 0.1)'
+            }}>
+              <div style={{ 
+                fontSize: '16px', 
+                fontWeight: '700', 
+                color: deploymentStats.status === '인력 부족' ? '#dc3545' :
+                       deploymentStats.status === '인력 여유' ? '#28a745' : '#4BC0C0'
+              }}>
+                {deploymentStats.status}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>월간 절감 예상</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>배치 상태</div>
             </div>
           </Col>
         </Row>
+        
+        {/* 지역별 상세 정보 */}
+        {region !== '전체' && (
+          <div className="mt-3 p-3 rounded-3" style={{ backgroundColor: 'rgba(248, 249, 250, 0.8)' }}>
+            <Row className="text-center">
+              <Col md={4}>
+                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>장례식장 가중치</small>
+                <span style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '600',
+                  color: deploymentStats.requiredChange > 0 ? '#dc3545' : deploymentStats.requiredChange < 0 ? '#28a745' : '#666'
+                }}>
+                  {deploymentStats.requiredChange > 0 ? '+' : ''}{deploymentStats.requiredChange}명
+                </span>
+              </Col>
+              <Col md={4}>
+                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>순수 사망자 기반</small>
+                <span style={{ fontSize: '14px', fontWeight: '600', color: '#369CE3' }}>
+                  {deploymentStats.currentStaff - deploymentStats.requiredChange}명
+                </span>
+              </Col>
+              <Col md={4}>
+                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>효율성 등급</small>
+                <span className={`badge ${parseFloat(deploymentStats.efficiencyScore) > 20 ? 'bg-danger' : 
+                                         parseFloat(deploymentStats.efficiencyScore) > 15 ? 'bg-warning' : 'bg-success'}`}>
+                  {parseFloat(deploymentStats.efficiencyScore) > 20 ? '개선 필요' : 
+                   parseFloat(deploymentStats.efficiencyScore) > 15 ? '보통' : '우수'}
+                </span>
+              </Col>
+            </Row>
+          </div>
+        )}
       </div>
 
       {/* 인력 이동 추천 목록 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-          🔄 AI 인력 이동 추천 계획
+          🔄 AI 인력 이동 추천 계획 {region !== '전체' && `(${region} 관련)`}
         </h5>
-        {transferRecommendations.length > 0 ? (
-          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-            {transferRecommendations.map((transfer, index) => (
-              <div key={index} className="d-flex justify-content-between align-items-center p-3 mb-2 rounded-3" style={{
-                background: transfer.priority === 'high' ? 'rgba(220, 53, 69, 0.05)' : 'rgba(255, 193, 7, 0.05)',
-                border: `1px solid ${transfer.priority === 'high' ? 'rgba(220, 53, 69, 0.2)' : 'rgba(255, 193, 7, 0.2)'}`
-              }}>
-                <div className="flex-grow-1">
-                  <div style={{ fontWeight: '600', color: '#2C1F14' }}>
-                    📤 <strong>{transfer.from.replace(/특별시|광역시|특별자치시|도$/g, '')}</strong> → 
-                    📥 <strong>{transfer.to.replace(/특별시|광역시|특별자치시|도$/g, '')}</strong>
+        {(() => {
+          // 지역별 필터링
+          let filteredRecommendations = transferRecommendations;
+          if (region !== '전체') {
+            filteredRecommendations = transferRecommendations.filter(transfer => 
+              transfer.from === region || transfer.to === region
+            );
+          }
+
+          return filteredRecommendations.length > 0 ? (
+            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              {filteredRecommendations.map((transfer, index) => {
+                // 현재 지역이 보내는 곳인지 받는 곳인지 확인
+                const isSending = region !== '전체' && transfer.from === region;
+                const isReceiving = region !== '전체' && transfer.to === region;
+                
+                return (
+                  <div key={index} className="d-flex justify-content-between align-items-center p-3 mb-2 rounded-3" style={{
+                    background: isSending ? 'rgba(0, 123, 255, 0.05)' : isReceiving ? 'rgba(220, 53, 69, 0.05)' : 
+                               transfer.priority === 'high' ? 'rgba(220, 53, 69, 0.05)' : 'rgba(255, 193, 7, 0.05)',
+                    border: isSending ? '1px solid rgba(0, 123, 255, 0.2)' : isReceiving ? '1px solid rgba(220, 53, 69, 0.2)' :
+                           `1px solid ${transfer.priority === 'high' ? 'rgba(220, 53, 69, 0.2)' : 'rgba(255, 193, 7, 0.2)'}`
+                  }}>
+                    <div className="flex-grow-1">
+                      <div style={{ fontWeight: '600', color: '#2C1F14' }}>
+                        <span style={{ color: '#007bff', fontWeight: '700' }}>
+                          📤 {transfer.from.replace(/특별시|광역시|특별자치시|도$/g, '')}
+                        </span> → 
+                        <span style={{ color: '#dc3545', fontWeight: '700' }}>
+                          📥 {transfer.to.replace(/특별시|광역시|특별자치시|도$/g, '')}
+                        </span>
+                        {region !== '전체' && (
+                          <span style={{ 
+                            marginLeft: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            color: 'white',
+                            backgroundColor: isSending ? '#007bff' : '#dc3545'
+                          }}>
+                            {isSending ? '보내기' : '받기'}
+                          </span>
+                        )}
+                      </div>
+                      <small style={{ color: '#666' }}>
+                        {transfer.amount}명 이동 • {transfer.distance === 'near' ? '🔸 인근 지역' : '🔹 원거리'} • 
+                        우선순위: {transfer.priority === 'high' ? '높음' : '보통'}
+                        {transfer.reason && <><br/>💡 {transfer.reason}</>}
+                      </small>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline-primary"
+                      style={{ fontSize: '12px', padding: '4px 12px' }}
+                      onClick={() => onTransferSelect(transfer)}
+                    >
+                      상세보기
+                    </Button>
                   </div>
-                  <small style={{ color: '#666' }}>
-                    {transfer.amount}명 이동 • {transfer.distance === 'near' ? '🔸 인근 지역' : '🔹 원거리'} • 
-                    우선순위: {transfer.priority === 'high' ? '높음' : '보통'}
-                    {transfer.reason && <><br/>💡 {transfer.reason}</>}
-                  </small>
-                </div>
-                <Button 
-                  size="sm" 
-                  variant={transfer.priority === 'high' ? 'danger' : 'warning'}
-                  style={{ fontSize: '12px', padding: '4px 8px' }}
-                >
-                  {transfer.priority === 'high' ? '즉시 시행' : '검토 필요'}
-                </Button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center p-4" style={{ color: '#666' }}>
-            <div style={{ fontSize: '48px', marginBottom: '10px' }}>✅</div>
-            <h6>현재 인력배치가 최적 상태입니다</h6>
-            <small>추가적인 인력 이동이 필요하지 않습니다.</small>
-          </div>
-        )}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center p-4" style={{ color: '#666' }}>
+              <div style={{ fontSize: '48px', marginBottom: '10px' }}>✅</div>
+              <h6>
+                {region === '전체' ? '현재 인력배치가 최적 상태입니다' : `${region}는 인력 이동이 필요하지 않습니다`}
+              </h6>
+              <small>
+                {region === '전체' ? '추가적인 인력 이동이 필요하지 않습니다.' : '해당 지역과 관련된 인력 이동 계획이 없습니다.'}
+              </small>
+            </div>
+          );
+        })()}
       </div>
 
       
