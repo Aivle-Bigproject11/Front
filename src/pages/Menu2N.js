@@ -610,6 +610,56 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
         전국
       </button>
 
+      {/* 지도 우측 상단 범례 */}
+      <div style={{
+        position: 'absolute',
+        top: '50px',
+        right: '20px',
+        zIndex: 10,
+        background: 'rgba(255, 255, 255, 0.95)',
+        border: '1px solid rgba(184, 134, 11, 0.3)',
+        borderRadius: '12px',
+        padding: '12px',
+        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <h6 style={{ fontSize: '12px', fontWeight: '700', color: '#2C1F14', marginBottom: '10px', textAlign: 'center' }}>
+          지역 배치 상태
+        </h6>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ 
+              width: '16px', 
+              height: '16px', 
+              background: 'rgba(40, 167, 69, 0.7)',
+              borderRadius: '50%',
+              flexShrink: 0
+            }}></div>
+            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>적정 배치</small>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ 
+              width: '16px', 
+              height: '16px', 
+              background: 'rgba(220, 53, 69, 0.7)',
+              borderRadius: '50%',
+              flexShrink: 0
+            }}></div>
+            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>인력 부족</small>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ 
+              width: '16px', 
+              height: '16px', 
+              background: 'rgba(255, 193, 7, 0.7)',
+              borderRadius: '50%',
+              flexShrink: 0
+            }}></div>
+            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>인력 과잉</small>
+          </div>
+        </div>
+      </div>
+
       <div style={{ position: 'relative', flex: 1 }}>
         <img 
           src="/SouthKoreaGreyMap.png" 
@@ -907,13 +957,86 @@ const OptimizedDisplayComponent = ({
 }) => {
   
   // 지역별 배치현황 통계 계산
+  // 배치 적합도 계산 함수
+  const calculateDeploymentFitness = (currentStaff, aiRecommendedStaff) => {
+    if (aiRecommendedStaff === 0) return 100;
+    const difference = Math.abs(currentStaff - aiRecommendedStaff);
+    const maxStaff = Math.max(currentStaff, aiRecommendedStaff);
+    const fitness = Math.max(0, 100 - (difference / maxStaff * 100));
+    return fitness;
+  };
+
+  // 이동 제안 인력 수 계산 함수
+  const calculateTransferStaff = (region) => {
+    if (region === '전체') {
+      // 전체 지역의 총 이동 인력 수
+      return transferRecommendations.reduce((sum, transfer) => sum + transfer.amount, 0);
+    } else {
+      // 특정 지역과 관련된 이동 인력 수 (보내거나 받는 인력)
+      return transferRecommendations
+        .filter(transfer => transfer.from === region || transfer.to === region)
+        .reduce((sum, transfer) => sum + transfer.amount, 0);
+    }
+  };
+
+  // 현재 월 데이터 조회 함수
+  const getCurrentStaffData = (regionName) => {
+    const currentDate = new Date();
+    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    return staffData.find(item => item.regionName === regionName && item.date === currentMonthStr);
+  };
+
+  // 다음 월 데이터 조회 함수
+  const getFutureStaffData = (regionName) => {
+    const currentDate = new Date();
+    const nextMonth = new Date(currentDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+    return staffData.find(item => item.regionName === regionName && item.date === nextMonthStr);
+  };
+
+  // 이동 후 배치 적합도 상승률 계산 (받는 지역 기준)
+  const calculateFitnessImprovement = (transfer) => {
+    const toCurrentData = getCurrentStaffData(transfer.to);
+    const toFutureData = getFutureStaffData(transfer.to);
+
+    if (!toCurrentData || !toFutureData) {
+      console.log(`데이터 없음: ${transfer.to}`, { toCurrentData, toFutureData });
+      return 0;
+    }
+
+    // 이동 전 받는 지역의 적합도
+    const beforeFitness = calculateDeploymentFitness(
+      toCurrentData.staff || 0,
+      toFutureData.staff || 0
+    );
+
+    // 이동 후 받는 지역의 적합도
+    const afterFitness = calculateDeploymentFitness(
+      (toCurrentData.staff || 0) + transfer.amount,
+      toFutureData.staff || 0
+    );
+
+    const improvement = afterFitness - beforeFitness;
+    console.log(`${transfer.to} 적합도 계산:`, {
+      currentStaff: toCurrentData.staff,
+      aiRecommended: toFutureData.staff,
+      transferAmount: transfer.amount,
+      beforeFitness,
+      afterFitness,
+      improvement
+    });
+
+    return improvement;
+  };
+
   const getRegionDeploymentStats = (region) => {
     if (!currentStaffData || !Array.isArray(currentStaffData)) {
       return { 
         currentDeployedStaff: 0, 
         aiRecommendedStaff: 0,
-        efficiencyScore: 0,
-        predictedDeaths: 0,
+        deploymentFitness: 0,
+        transferStaff: 0,
         funeralHallAdjustment: 0,
         status: '정보 없음'
       };
@@ -935,14 +1058,22 @@ const OptimizedDisplayComponent = ({
       const totalFutureStaff = futureStaffItems.reduce((sum, item) => sum + (item.staff || 0), 0);
       const totalPredictedDeaths = futureStaffItems.reduce((sum, item) => sum + (item.predictedDeaths || 0), 0);
       const totalFuneralHallAdjustment = futureStaffItems.reduce((sum, item) => sum + (item.staffChange || 0), 0);
-      const avgEfficiency = futureStaffItems.length > 0 ? 
-        futureStaffItems.reduce((sum, item) => sum + (item.predictedDeaths > 0 ? (item.staff / item.predictedDeaths * 1000) : 0), 0) / futureStaffItems.length : 0;
+      
+      // 전국 평균 배치 적합도 계산
+      const avgDeploymentFitness = futureStaffItems.length > 0 ? 
+        futureStaffItems.reduce((sum, item) => {
+          const currentData = currentStaffItems.find(current => current.regionName === item.regionName);
+          if (currentData) {
+            return sum + calculateDeploymentFitness(currentData.staff || 0, item.staff || 0);
+          }
+          return sum;
+        }, 0) / futureStaffItems.length : 0;
       
       return {
         currentDeployedStaff: totalCurrentStaff,
         aiRecommendedStaff: totalFutureStaff,
-        efficiencyScore: avgEfficiency.toFixed(1),
-        predictedDeaths: totalPredictedDeaths,
+        deploymentFitness: avgDeploymentFitness.toFixed(1),
+        transferStaff: calculateTransferStaff('전체'),
         funeralHallAdjustment: totalFuneralHallAdjustment,
         status: totalFuneralHallAdjustment > 0 ? '장례 수요 높음' : totalFuneralHallAdjustment < 0 ? '장례 수요 낮음' : '적정 수준'
       };
@@ -952,17 +1083,19 @@ const OptimizedDisplayComponent = ({
       const futureRegionData = staffData.find(item => item.regionName === region && item.date === nextMonthStr);
       
       if (!currentRegionData || !futureRegionData) {
-        return { currentDeployedStaff: 0, aiRecommendedStaff: 0, efficiencyScore: 0, predictedDeaths: 0, funeralHallAdjustment: 0, status: '정보 없음' };
+        return { currentDeployedStaff: 0, aiRecommendedStaff: 0, deploymentFitness: 0, transferStaff: 0, funeralHallAdjustment: 0, status: '정보 없음' };
       }
       
-      const efficiency = futureRegionData.predictedDeaths > 0 ? 
-        (futureRegionData.staff / futureRegionData.predictedDeaths * 1000) : 0;
+      const deploymentFitness = calculateDeploymentFitness(
+        currentRegionData.staff || 0, 
+        futureRegionData.staff || 0
+      );
       
       return {
         currentDeployedStaff: currentRegionData.staff || 0,
         aiRecommendedStaff: futureRegionData.staff || 0,
-        efficiencyScore: efficiency.toFixed(1),
-        predictedDeaths: futureRegionData.predictedDeaths || 0,
+        deploymentFitness: deploymentFitness.toFixed(1),
+        transferStaff: calculateTransferStaff(region),
         funeralHallAdjustment: futureRegionData.staffChange || 0,
         status: futureRegionData.staffChange > 1 ? '장례 수요 높음' : futureRegionData.staffChange < -1 ? '장례 수요 낮음' : '적정 수준'
       };
@@ -1017,7 +1150,7 @@ const OptimizedDisplayComponent = ({
       {/* 지역별 배치현황 카드 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-            {displayRegionName} 인력 배치현황
+            {String(new Date().getMonth() + 1).padStart(2, '0')}월 {displayRegionName} 인력 배치현황
         </h5>
         <Row className="g-3">
           <Col md={3}>
@@ -1025,7 +1158,27 @@ const OptimizedDisplayComponent = ({
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#28a745' }}>
                 {deploymentStats.currentDeployedStaff}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>현재 실 배치 인력</div>
+              <div style={{ fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                현재 실 배치 인력
+                <span 
+                  style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '14px',
+                    height: '14px',
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    borderRadius: '50%',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    cursor: 'help'
+                  }}
+                  title="현재 해당 지역에 실제로 배치된 인력 수를 나타냅니다."
+                >
+                  i
+                </span>
+              </div>
             </div>
           </Col>
           <Col md={3}>
@@ -1033,23 +1186,83 @@ const OptimizedDisplayComponent = ({
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#369CE3' }}>
                 {deploymentStats.aiRecommendedStaff}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>AI 추천 인력</div>
+              <div style={{ fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                AI 추천 인력
+                <span 
+                  style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '14px',
+                    height: '14px',
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    borderRadius: '50%',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    cursor: 'help'
+                  }}
+                  title="AI가 제안하는 적정 배치 인력 수입니다. 사망자 예측과 전국 장례식장의 숫자가 학습되었습니다."
+                >
+                  i
+                </span>
+              </div>
             </div>
           </Col>
           <Col md={3}>
             <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 206, 84, 0.1)' }}>
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#FFCE54' }}>
-                {deploymentStats.efficiencyScore}‰
+                {deploymentStats.deploymentFitness}%
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>효율성 지수</div>
+              <div style={{ fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                배치 적합도
+                <span 
+                  style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '14px',
+                    height: '14px',
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    borderRadius: '50%',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    cursor: 'help'
+                  }}
+                  title="현재 배치 인력이 AI 추천 인력에 얼마나 가까운지를 나타내는 지수입니다. 계산식: 100 - (|현재인력 - AI추천인력| / max(현재인력, AI추천인력) × 100)"
+                >
+                  i
+                </span>
+              </div>
             </div>
           </Col>
           <Col md={3}>
             <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(108, 117, 125, 0.1)' }}>
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#6c757d' }}>
-                {deploymentStats.predictedDeaths}명
+                {deploymentStats.transferStaff}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>예측 사망자</div>
+              <div style={{ fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                이동 제안 인력
+                <span 
+                  style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '14px',
+                    height: '14px',
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    borderRadius: '50%',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    cursor: 'help'
+                  }}
+                  title="AI가 제안하는 인력 이동 계획에 따라 근무지를 변경해야 하는 총 인력 수입니다."
+                >
+                  i
+                </span>
+              </div>
             </div>
           </Col>
         </Row>
@@ -1059,19 +1272,27 @@ const OptimizedDisplayComponent = ({
           <div className="mt-3 p-3 rounded-3" style={{ backgroundColor: 'rgba(248, 249, 250, 0.8)' }}>
             <Row className="text-center">
               <Col md={4}>
-                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>인력 증감 필요</small>
-                <span style={{ 
-                  fontSize: '14px', 
-                  fontWeight: '600',
-                  color: (deploymentStats.currentDeployedStaff - deploymentStats.aiRecommendedStaff) > 0 ? '#dc3545' : 
-                         (deploymentStats.currentDeployedStaff - deploymentStats.aiRecommendedStaff) < 0 ? '#28a745' : '#666'
-                }}>
-                  {(deploymentStats.currentDeployedStaff - deploymentStats.aiRecommendedStaff) > 0 ? '+' : ''}
-                  {deploymentStats.currentDeployedStaff - deploymentStats.aiRecommendedStaff}명
-                </span>
-              </Col>
-              <Col md={4}>
-                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>장례식장 조정</small>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '4px' }}>
+                  <small style={{ color: '#666', fontSize: '11px' }}>장례식장 조정</small>
+                  <span 
+                    style={{ 
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '12px',
+                      height: '12px',
+                      backgroundColor: '#6c757d',
+                      color: 'white',
+                      borderRadius: '50%',
+                      fontSize: '8px',
+                      fontWeight: 'bold',
+                      cursor: 'help'
+                    }}
+                    title="AI 추천 인력 계산에 이미 포함되어있는 장례식장 변수입니다. 변수가 클수록 해당 지역 장례식장 상황으로 인해 배치인력이 추가로 더 필요하게 됩니다."
+                  >
+                    i
+                  </span>
+                </div>
                 <span style={{ 
                   fontSize: '14px', 
                   fontWeight: '600',
@@ -1081,11 +1302,31 @@ const OptimizedDisplayComponent = ({
                 </span>
               </Col>
               <Col md={4}>
-                <small style={{ color: '#666', fontSize: '11px', display: 'block' }}>효율성 등급</small>
-                <span className={`badge ${parseFloat(deploymentStats.efficiencyScore) > 20 ? 'bg-danger' : 
-                                         parseFloat(deploymentStats.efficiencyScore) > 15 ? 'bg-warning' : 'bg-success'}`}>
-                  {parseFloat(deploymentStats.efficiencyScore) > 20 ? '개선 필요' : 
-                   parseFloat(deploymentStats.efficiencyScore) > 15 ? '보통' : '우수'}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '4px' }}>
+                  <small style={{ color: '#666', fontSize: '11px' }}>적합도 등급</small>
+                  <span 
+                    style={{ 
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '12px',
+                      height: '12px',
+                      backgroundColor: '#6c757d',
+                      color: 'white',
+                      borderRadius: '50%',
+                      fontSize: '8px',
+                      fontWeight: 'bold',
+                      cursor: 'help'
+                    }}
+                    title="배치 적합도 등급 (95% 이상: 우수, 90% 이상: 보통, 90% 미만: 개선 필요)"
+                  >
+                    i
+                  </span>
+                </div>
+                <span className={`badge ${parseFloat(deploymentStats.deploymentFitness) >= 95 ? 'bg-success' : 
+                                         parseFloat(deploymentStats.deploymentFitness) >= 90 ? 'bg-warning' : 'bg-danger'}`}>
+                  {parseFloat(deploymentStats.deploymentFitness) >= 95 ? '우수' : 
+                   parseFloat(deploymentStats.deploymentFitness) >= 90 ? '보통' : '개선 필요'}
                 </span>
               </Col>
             </Row>
@@ -1146,6 +1387,7 @@ const OptimizedDisplayComponent = ({
                         {transfer.amount}명 이동 • {transfer.distance === 'near' ? '🔸 인근 지역' : '🔹 원거리'} • 
                         우선순위: {transfer.priority === 'high' ? '높음' : '보통'}
                         {transfer.reason && <><br/>💡 {transfer.reason}</>}
+                        <br/>📈 {transfer.to} 지역 배치 적합도: +{calculateFitnessImprovement(transfer).toFixed(1)}%
                       </small>
                     </div>
                   </div>
@@ -1221,8 +1463,8 @@ const OptimizedDisplayComponent = ({
                   <th>9월 예측</th>
                   <th>10월 예측</th>
                   <th>11월 예측</th>
-                  <th>평균 효율성</th>
-                  <th>상태</th>
+                  <th>평균 적합도</th>
+                  <th>3개월 예측 평균</th>
                 </tr>
               </thead>
               <tbody>
@@ -1250,8 +1492,9 @@ const OptimizedDisplayComponent = ({
                       monthData.find(f => f.regionName === currentItem.regionName) || { staff: 0, staffChange: 0, predictedDeaths: 0 }
                     );
                     
-                    const avgEfficiency = futureMonthsData.reduce((sum, monthData) => {
-                      return sum + (monthData.predictedDeaths > 0 ? (monthData.staff / monthData.predictedDeaths * 1000) : 0);
+                    const avgFitness = futureMonthsData.reduce((sum, monthData) => {
+                      const fitness = calculateDeploymentFitness(currentItem.staff || 0, monthData.staff || 0);
+                      return sum + fitness;
                     }, 0) / futureMonthsData.length;
                     
                     const avgStaffChange = futureMonthsData.reduce((sum, monthData) => sum + (monthData.staffChange || 0), 0) / futureMonthsData.length;
@@ -1259,7 +1502,7 @@ const OptimizedDisplayComponent = ({
                     return {
                       ...currentItem,
                       futureMonths: futureMonthsData,
-                      avgEfficiency: avgEfficiency.toFixed(1),
+                      avgFitness: avgFitness.toFixed(1),
                       avgStaffChange
                     };
                   });
@@ -1291,8 +1534,8 @@ const OptimizedDisplayComponent = ({
                           </td>
                         ))}
                         <td>
-                          <span className={`badge ${parseFloat(item.avgEfficiency) > 20 ? 'bg-danger' : parseFloat(item.avgEfficiency) > 15 ? 'bg-warning' : 'bg-success'}`}>
-                            {item.avgEfficiency}‰
+                          <span className={`badge ${parseFloat(item.avgFitness) >= 99 ? 'bg-success' : parseFloat(item.avgFitness) >= 95 ? 'bg-warning' : 'bg-danger'}`}>
+                            {item.avgFitness}%
                           </span>
                         </td>
                         <td>

@@ -1257,6 +1257,56 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
         전국
       </button>
 
+      {/* 지도 우측 상단 범례 */}
+      <div style={{
+        position: 'absolute',
+        top: '50px',
+        right: '20px',
+        zIndex: 10,
+        background: 'rgba(255, 255, 255, 0.95)',
+        border: '1px solid rgba(184, 134, 11, 0.3)',
+        borderRadius: '12px',
+        padding: '12px',
+        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <h6 style={{ fontSize: '12px', fontWeight: '700', color: '#2C1F14', marginBottom: '10px', textAlign: 'center' }}>
+          범례
+        </h6>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ 
+              width: '16px', 
+              height: '16px', 
+              background: 'rgba(40, 167, 69, 0.7)',
+              borderRadius: '50%',
+              flexShrink: 0
+            }}></div>
+            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>1</small>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ 
+              width: '16px', 
+              height: '16px', 
+              background: 'rgba(220, 53, 69, 0.7)',
+              borderRadius: '50%',
+              flexShrink: 0
+            }}></div>
+            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>2</small>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ 
+              width: '16px', 
+              height: '16px', 
+              background: 'rgba(255, 193, 7, 0.7)',
+              borderRadius: '50%',
+              flexShrink: 0
+            }}></div>
+            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>3</small>
+          </div>
+        </div>
+      </div>
+
       <img 
         src="/SouthKoreaGreyMap.png" 
         alt="대한민국 지도" 
