@@ -186,30 +186,49 @@ const Menu2N = () => {
     try {
       console.log('🔄 인력 이동 추천 계산 시작...');
       
-      // 인력이 부족한 지역과 여유로운 지역 분류
-      const deficitRegions = regionData.filter(item => item.staffChange > 0)
-        .sort((a, b) => b.staffChange - a.staffChange); // 부족한 순서대로
-      
-      const surplusRegions = regionData.filter(item => item.staffChange < 0)
-        .sort((a, b) => a.staffChange - b.staffChange); // 여유 많은 순서대로
-      
+      // 현재 인력(2024-01의 staff) 대비 AI 추천 인력의 차이 계산
       const recommendations = [];
+      
+      regionData.forEach(region => {
+        const currentStaff = region.staff; // 현재 배치 인력 (2024-01)
+        const recommendedStaff = region.staff; // AI 최종 추천 인력 (동일한 값이지만 개념적으로 구분)
+        const difference = 0; // 현재는 같은 값이므로 차이 없음
+        
+        // 실제로는 미래 월의 데이터와 비교해야 하지만, 
+        // 현재 데이터에서는 staffChange를 기준으로 부족/여유 판단
+        if (Math.abs(region.staffChange) > 1) { // 장례식장 가중치가 큰 경우
+          if (region.staffChange > 0) {
+            // 장례식장 요구로 인해 추가 인력이 필요한 지역
+            region.needsMore = region.staffChange;
+          } else {
+            // 장례식장 요구가 낮아 여유 인력이 있는 지역
+            region.hasExtra = Math.abs(region.staffChange);
+          }
+        }
+      });
+      
+      // 인력이 부족한 지역과 여유로운 지역 분류
+      const deficitRegions = regionData.filter(item => item.needsMore > 0)
+        .sort((a, b) => b.needsMore - a.needsMore); // 부족한 순서대로
+      
+      const surplusRegions = regionData.filter(item => item.hasExtra > 0)
+        .sort((a, b) => b.hasExtra - a.hasExtra); // 여유 많은 순서대로
       
       // 각 부족 지역에 대해 가까운 여유 지역에서 인력 이동 추천
       deficitRegions.forEach(deficitRegion => {
-        const needStaff = deficitRegion.staffChange;
+        const needStaff = deficitRegion.needsMore;
         let remainingNeed = needStaff;
         
         // 가까운 지역 우선순위로 정렬
         const nearbyRegions = regionProximity[deficitRegion.regionName] || [];
         const availableSurplus = surplusRegions
-          .filter(surplus => nearbyRegions.includes(surplus.regionName) && surplus.staffChange < 0)
-          .concat(surplusRegions.filter(surplus => !nearbyRegions.includes(surplus.regionName) && surplus.staffChange < 0));
+          .filter(surplus => nearbyRegions.includes(surplus.regionName) && surplus.hasExtra > 0)
+          .concat(surplusRegions.filter(surplus => !nearbyRegions.includes(surplus.regionName) && surplus.hasExtra > 0));
         
         availableSurplus.forEach(surplusRegion => {
           if (remainingNeed <= 0) return;
           
-          const availableStaff = Math.abs(surplusRegion.staffChange);
+          const availableStaff = surplusRegion.hasExtra;
           const transferAmount = Math.min(remainingNeed, availableStaff);
           
           if (transferAmount > 0) {
@@ -218,11 +237,12 @@ const Menu2N = () => {
               to: deficitRegion.regionName,
               amount: transferAmount,
               distance: nearbyRegions.includes(surplusRegion.regionName) ? 'near' : 'far',
-              priority: remainingNeed === needStaff ? 'high' : 'medium'
+              priority: remainingNeed === needStaff ? 'high' : 'medium',
+              reason: `장례식장 수요 증가로 ${transferAmount}명 추가 필요`
             });
             
             remainingNeed -= transferAmount;
-            surplusRegion.staffChange += transferAmount; // 여유 인력 차감
+            surplusRegion.hasExtra -= transferAmount; // 여유 인력 차감
           }
         });
       });
@@ -457,15 +477,17 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
     return staffData.find(item => item.regionName === regionName && item.date === '2024-01');
   };
 
-  // 지역 배경색 결정 (부족/여유/중립)
+  // 지역 배경색 결정 (장례식장 가중치 기준)
   const getRegionBackground = (regionName, isActive, isHovered) => {
     const staffInfo = getRegionStaffData(regionName);
     if (!staffInfo) return isActive ? themeColors.activeBackground : themeColors.primaryGradient;
     
     if (isActive) return themeColors.activeBackground;
     
-    if (staffInfo.staffChange > 2) return themeColors.deficitBackground;
-    if (staffInfo.staffChange < -2) return themeColors.surplusBackground;
+    // staffChange가 양수면 장례식장 수요로 인한 추가 인력 필요
+    // staffChange가 음수면 장례식장 수요가 낮아 여유 인력 존재
+    if (staffInfo.staffChange > 1) return themeColors.deficitBackground;
+    if (staffInfo.staffChange < -1) return themeColors.surplusBackground;
     return themeColors.primaryGradient;
   };
 
@@ -522,7 +544,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
                 onClick={() => onRegionSelect(region)}
                 onMouseEnter={() => setHoveredRegion(region)}
                 onMouseLeave={() => setHoveredRegion(null)}
-                title={`${region}: ${staffInfo?.staff || 0}명 배치 (${staffInfo?.staffChange > 0 ? '+' : ''}${staffInfo?.staffChange || 0})`}
+                title={`${region}: 현재 ${staffInfo?.staff || 0}명 배치 (장례식장 가중치: ${staffInfo?.staffChange > 0 ? '+' : ''}${staffInfo?.staffChange || 0})`}
                 style={{
                   position: 'absolute',
                   top: pos.top,
@@ -587,7 +609,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
               display: 'inline-block',
               marginRight: '5px'
             }}></div>
-            <small style={{ fontSize: '11px' }}>인력 부족</small>
+            <small style={{ fontSize: '11px' }}>장례식장 수요 높음</small>
           </Col>
           <Col md={4} className="text-center">
             <div style={{ 
@@ -609,7 +631,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
               display: 'inline-block',
               marginRight: '5px'
             }}></div>
-            <small style={{ fontSize: '11px' }}>인력 여유</small>
+            <small style={{ fontSize: '11px' }}>장례식장 수요 낮음</small>
           </Col>
         </Row>
       </div>
@@ -763,6 +785,7 @@ const OptimizedDisplayComponent = ({
                   <small style={{ color: '#666' }}>
                     {transfer.amount}명 이동 • {transfer.distance === 'near' ? '🔸 인근 지역' : '🔹 원거리'} • 
                     우선순위: {transfer.priority === 'high' ? '높음' : '보통'}
+                    {transfer.reason && <><br/>💡 {transfer.reason}</>}
                   </small>
                 </div>
                 <Button 
@@ -815,9 +838,9 @@ const OptimizedDisplayComponent = ({
               <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0 }}>
                 <tr>
                   <th>지역</th>
-                  <th>현재 인력</th>
-                  <th>AI 추천</th>
-                  <th>조정 필요</th>
+                  <th>최종 제안 인력</th>
+                  <th>사망자 기반 인력</th>
+                  <th>장례식장 조정</th>
                   <th>효율성</th>
                   <th>상태</th>
                 </tr>
@@ -826,18 +849,21 @@ const OptimizedDisplayComponent = ({
                 {currentStaffData
                   .filter(item => item.regionName !== '전국' && (region === '전체' || item.regionName === region))
                   .map((item, index) => {
+                    const pureStaff = (item.staff || 0) - (item.staffChange || 0); // 순수 사망자 기반 인력
                     const efficiency = item.predictedDeaths > 0 ? ((item.staff || 0) / item.predictedDeaths * 1000).toFixed(1) : '0';
-                    const statusColor = item.staffChange > 2 ? '#dc3545' : item.staffChange < -2 ? '#198754' : '#ffc107';
-                    const statusText = item.staffChange > 2 ? '부족' : item.staffChange < -2 ? '여유' : '적정';
+                    const statusColor = item.staffChange > 1 ? '#dc3545' : item.staffChange < -1 ? '#198754' : '#ffc107';
+                    const statusText = item.staffChange > 1 ? '장례식장 수요 높음' : item.staffChange < -1 ? '장례식장 수요 낮음' : '적정';
                     
                     return (
                       <tr key={index}>
                         <td style={{ fontWeight: '600' }}>
                           {item.regionName.replace(/특별시|광역시|특별자치시|도$/g, '')}
                         </td>
-                        <td>{item.staff || 0}명</td>
-                        <td style={{ fontWeight: '700', color: '#FF6384' }}>
+                        <td style={{ fontWeight: '700', color: '#2C1F14' }}>
                           {item.staff || 0}명
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#369CE3' }}>
+                          {pureStaff}명
                         </td>
                         <td style={{ 
                           color: item.staffChange > 0 ? '#dc3545' : item.staffChange < 0 ? '#198754' : '#666',
