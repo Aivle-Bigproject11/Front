@@ -14,7 +14,7 @@ const Menu2N = () => {
   const [staffChartData, setStaffChartData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [transferRecommendations, setTransferRecommendations] = useState([]);
-  const [selectedTransfer, setSelectedTransfer] = useState(null);
+  const [selectedTransfers, setSelectedTransfers] = useState([]);
 
   // 2024-01 현재 배치 데이터 (시스템 기본 400명)
   const totalStaff = 400;
@@ -25,10 +25,10 @@ const Menu2N = () => {
     '경기도': ['서울특별시', '인천광역시', '강원도', '충청남도', '충청북도'],
     '인천광역시': ['서울특별시', '경기도', '충청남도'],
     '부산광역시': ['경상남도', '울산광역시', '경상북도'],
-    '대구광역시': ['경상북도', '경상남도', '충청북도'],
+    '대구광역시': ['경상북도', '경상남도', '충청북도', '울산광역시','부산광역시'],
     '광주광역시': ['전라남도', '전라북도', '충청남도'],
     '대전광역시': ['충청남도', '충청북도', '세종특별자치시'],
-    '울산광역시': ['부산광역시', '경상남도', '경상북도'],
+    '울산광역시': ['부산광역시', '경상남도', '경상북도' , '대구광역시','부산광역시'],
     '세종특별자치시': ['충청남도', '충청북도', '대전광역시'],
     '강원도': ['경기도', '서울특별시', '충청북도', '경상북도'],
     '충청북도': ['충청남도', '경기도', '강원도', '대전광역시', '경상북도'],
@@ -66,6 +66,8 @@ const Menu2N = () => {
         
         // 인력 이동 추천 계산
         calculateTransferRecommendations(regionData);
+        
+        console.log('📊 전체 데이터 초기화 완료. 현재 staffData 길이:', staffData.length);
         
         console.log('✅ Menu2N 데이터 초기화 완료');
         
@@ -187,29 +189,33 @@ const Menu2N = () => {
     try {
       console.log('🔄 인력 이동 추천 계산 시작...');
       
-      // 현재 날짜 기준으로 다음 달 데이터 가져오기
+      // 현재 날짜 기준으로 현재 달과 다음 달 데이터 가져오기
       const currentDate = new Date();
+      const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
       const nextMonth = new Date(currentDate);
       nextMonth.setMonth(nextMonth.getMonth() + 1);
       const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
       
       const recommendations = [];
       
-      // 현재 배치 인력 (2024-01) vs 미래 필요 인력 (2025-09) 비교
+      // 현재 배치 인력 (현재 달) vs 미래 필요 인력 (다음 달) 비교
       const currentStaffByRegion = {};
       const futureStaffByRegion = {};
       
-      // 현재 배치 데이터 수집 (2024-01)
-      staffData.filter(item => item.date === '2024-01' && item.regionName !== '전국')
+      // 현재 배치 데이터 수집 (현재 달)
+      staffData.filter(item => item.date === currentMonthStr && item.regionName !== '전국')
         .forEach(item => {
           currentStaffByRegion[item.regionName] = item.staff || 0;
         });
       
-      // 미래 필요 인력 데이터 수집 (2025-09)
+      // 미래 필요 인력 데이터 수집 (다음 달)
       staffData.filter(item => item.date === nextMonthStr && item.regionName !== '전국')
         .forEach(item => {
           futureStaffByRegion[item.regionName] = item.staff || 0;
         });
+      
+      console.log('현재 배치 인력:', currentStaffByRegion);
+      console.log('AI 추천 인력:', futureStaffByRegion);
       
       // 각 지역별 인력 증감 계산
       const regionChanges = [];
@@ -217,6 +223,8 @@ const Menu2N = () => {
         const currentStaff = currentStaffByRegion[regionName] || 0;
         const futureStaff = futureStaffByRegion[regionName] || 0;
         const difference = futureStaff - currentStaff; // 양수면 인력 추가 필요, 음수면 인력 여유
+        
+        console.log(`${regionName}: 현재 ${currentStaff}명, AI 추천 ${futureStaff}명, 차이 ${difference}명`);
         
         if (Math.abs(difference) > 0) { // 변화가 있는 경우만
           regionChanges.push({
@@ -237,10 +245,15 @@ const Menu2N = () => {
       const surplusRegions = regionChanges.filter(item => item.hasExtra > 0)
         .sort((a, b) => b.hasExtra - a.hasExtra); // 여유 많은 순서대로
       
+      console.log('인력 부족 지역:', deficitRegions);
+      console.log('인력 여유 지역:', surplusRegions);
+      
       // 각 부족 지역에 대해 가까운 여유 지역에서 인력 이동 추천
       deficitRegions.forEach(deficitRegion => {
         const needStaff = deficitRegion.needsMore;
         let remainingNeed = needStaff;
+        
+        console.log(`${deficitRegion.regionName}에 ${needStaff}명 추가 필요`);
         
         // 가까운 지역 우선순위로 정렬
         const nearbyRegions = regionProximity[deficitRegion.regionName] || [];
@@ -255,6 +268,8 @@ const Menu2N = () => {
           const transferAmount = Math.min(remainingNeed, availableStaff);
           
           if (transferAmount > 0) {
+            console.log(`이동 추천: ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
+            
             recommendations.push({
               from: surplusRegion.regionName,
               to: deficitRegion.regionName,
@@ -332,7 +347,7 @@ const Menu2N = () => {
             paddingLeft: '10px',
             textAlign: 'center'
           }}>
-            🎯 AI 인력배치 최적화
+            AI 인력배치 최적화
           </h4>
           <div className="dashboard-left" style={{
             background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
@@ -349,7 +364,8 @@ const Menu2N = () => {
               onRegionSelect={setSelectedRegion}
               staffData={staffData}
               transferRecommendations={transferRecommendations}
-              selectedTransfer={selectedTransfer}
+              selectedTransfers={selectedTransfers}
+              setSelectedTransfers={setSelectedTransfers}
             />
             
             {/* 현재 배치 인력 정보 */}
@@ -423,7 +439,7 @@ const Menu2N = () => {
               staffChartData={staffChartData}
               transferRecommendations={transferRecommendations}
               totalStaff={totalStaff}
-              onTransferSelect={setSelectedTransfer}
+              onTransferSelect={() => {}} // 더 이상 사용하지 않음
             />
           )}
         </div>
@@ -471,7 +487,7 @@ const Menu2N = () => {
 };
 
 // 최적화된 인력배치 지도 컴포넌트
-const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transferRecommendations, selectedTransfer }) => {
+const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transferRecommendations, selectedTransfers, setSelectedTransfers }) => {
   const [hoveredRegion, setHoveredRegion] = useState(null);
   
   const themeColors = {
@@ -550,8 +566,6 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
     const currentDeployedStaff = currentRegionData.staff || 0; // 현재 실 배치 인력
     const aiRecommendedStaff = futureRegionData.staff || 0; // AI 추천 인력
     
-    console.log(`${regionName}: 현재 실 배치 ${currentDeployedStaff}명, AI 추천 ${aiRecommendedStaff}명`);
-    
     // 오른쪽 카드와 동일한 비교 로직
     if (currentDeployedStaff === aiRecommendedStaff) {
       return 'rgba(40, 167, 69, 0.7)'; // 동일하면 초록
@@ -620,7 +634,17 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
           return (
             <div key={region}>
               <button
-                onClick={() => onRegionSelect(region)}
+                onClick={() => {
+                  onRegionSelect(region);
+                  // 해당 지역과 관련된 이동 추천이 있으면 자동으로 표시
+                  const regionTransfers = getRegionTransfers(region);
+                  if (regionTransfers.length > 0) {
+                    // 첫 번째 이동 추천을 선택하거나, 모든 이동 추천을 표시
+                    setSelectedTransfers(regionTransfers);
+                  } else {
+                    setSelectedTransfers([]);
+                  }
+                }}
                 onMouseEnter={() => setHoveredRegion(region)}
                 onMouseLeave={() => setHoveredRegion(null)}
                 title={(() => {
@@ -701,14 +725,15 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
         })}
       </div>
 
-      {/* 선택된 이동에 대한 화살표 표시 */}
-      {selectedTransfer && (
+      {/* 선택된 이동들에 대한 화살표 표시 */}
+      {selectedTransfers.length > 0 && selectedTransfers.map((transfer, index) => (
         <TransferArrow 
-          from={regionPositions[selectedTransfer.from]}
-          to={regionPositions[selectedTransfer.to]}
-          transfer={selectedTransfer}
+          key={`${transfer.from}-${transfer.to}-${index}`}
+          from={regionPositions[transfer.from]}
+          to={regionPositions[transfer.to]}
+          transfer={transfer}
         />
-      )}
+      ))}
 
       {/* 범례 */}
       <div className="mt-3 p-2 rounded-3" style={{
@@ -992,7 +1017,7 @@ const OptimizedDisplayComponent = ({
       {/* 지역별 배치현황 카드 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-          � {displayRegionName} 인력 배치현황
+            {displayRegionName} 인력 배치현황
         </h5>
         <Row className="g-3">
           <Col md={3}>
@@ -1123,14 +1148,6 @@ const OptimizedDisplayComponent = ({
                         {transfer.reason && <><br/>💡 {transfer.reason}</>}
                       </small>
                     </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline-primary"
-                      style={{ fontSize: '12px', padding: '4px 12px' }}
-                      onClick={() => onTransferSelect(transfer)}
-                    >
-                      상세보기
-                    </Button>
                   </div>
                 );
               })}
@@ -1151,25 +1168,49 @@ const OptimizedDisplayComponent = ({
 
       
 
+      {/* 상세 예측 데이터 및 시계열 데이터 조회 카드 */}
+      <div className="p-4 mb-4" style={{
+        ...cardStyle,
+        background: 'linear-gradient(135deg, rgba(54, 162, 235, 0.1) 0%, rgba(75, 192, 192, 0.1) 100%)',
+        border: '2px solid rgba(54, 162, 235, 0.3)'
+      }}>
+        <div className="text-center">
+          <div style={{ fontSize: '48px', marginBottom: '15px' }}>📊</div>
+          <h4 className="mb-3" style={{ fontWeight: '700', color: '#369CE3' }}>
+            상세 예측 데이터 및 시계열 분석
+          </h4>
+          <p style={{ fontSize: '16px', color: '#666', marginBottom: '25px' }}>
+            {region === '전체' ? '전국' : region}의 상세한 사망자 예측 데이터와 시계열 차트를 확인하세요
+          </p>
+          <Button 
+            variant="primary" 
+            size="lg"
+            style={{
+              padding: '12px 30px',
+              fontSize: '16px',
+              fontWeight: '600',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #369CE3, #4BC0C0)',
+              border: 'none',
+              boxShadow: '0 4px 15px rgba(54, 162, 235, 0.3)'
+            }}
+            onClick={() => {
+              // Menu2F로 이동하면서 선택된 지역 정보 전달
+              window.location.href = `/menu2f?region=${encodeURIComponent(region)}`;
+            }}
+          >
+            🔍 상세 분석 페이지로 이동
+          </Button>
+        </div>
+      </div>
+
       {/* 3개월 예측 데이터 테이블 */}
       {currentStaffData && Array.isArray(currentStaffData) && (
         <div className="p-4" style={cardStyle}>
-          <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="mb-3">
             <h5 style={{ fontWeight: '600', color: '#2C1F14', marginBottom: 0 }}>
               📋 {displayRegionName} 3개월 예측 배치 계획
             </h5>
-            {region !== '전체' && (
-              <Button 
-                variant="outline-primary" 
-                size="sm"
-                onClick={() => {
-                  // Menu2F로 이동하면서 선택된 지역 정보 전달
-                  window.location.href = `/menu2f?region=${encodeURIComponent(region)}`;
-                }}
-              >
-                📊 상세보기
-              </Button>
-            )}
           </div>
           <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
             <Table striped bordered hover size="sm">
