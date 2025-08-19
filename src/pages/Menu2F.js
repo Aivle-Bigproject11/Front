@@ -1065,14 +1065,14 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
     '경기도': { top: '12%', left: '40%', shortName: '경기' },
     '인천광역시': { top: '24%', left: '20%', shortName: '인천' },
     '충청남도': { top: '45%', left: '27%', shortName: '충남' },
-    '충청북도': { top: '38%', left: '42%', shortName: '충북' },
-    '세종특별자치시': { top: '38%', left: '33%', shortName: '세종' },
+    '충청북도': { top: '35%', left: '48%', shortName: '충북' },
+    '세종특별자치시': { top: '38%', left: '30%', shortName: '세종' },
     '부산광역시': { top: '65%', left: '80%', shortName: '부산' },
     '대구광역시': { top: '53%', left: '68%', shortName: '대구' },
     '광주광역시': { top: '65%', left: '33%', shortName: '광주' },
     '울산광역시': { top: '57%', left: '86%', shortName: '울산' },
-    '대전광역시': { top: '40%', left: '38%', shortName: '대전' },
-    '강원도': { top: '25%', left: '60%', shortName: '강원' },
+    '대전광역시': { top: '43%', left: '36%', shortName: '대전' },
+    '강원도': { top: '22%', left: '63%', shortName: '강원' },
     '전라북도': { top: '55%', left: '35%', shortName: '전북' },
     '전라남도': { top: '68%', left: '38%', shortName: '전남' },
     '경상북도': { top: '45%', left: '65%', shortName: '경북' },
@@ -1086,6 +1086,21 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
     return staffData.find(item => item.regionName === regionName);
   };
 
+  // 지역 배경색 결정 (인력 배치 현황 기준)
+  const getRegionBackground = (regionName, isActive, isHovered) => {
+    const staffInfo = getRegionStaffData(regionName);
+    if (!staffInfo) return isActive ? themeColors.activeBackground : themeColors.primaryGradient;
+    
+    if (isActive) return themeColors.activeBackground;
+    
+    // staffChange가 양수면 AI 추천 인력이 더 많음 (현재 부족) -> 빨강
+    // staffChange가 음수면 AI 추천 인력이 더 적음 (현재 과잉) -> 노랑
+    // staffChange가 0이면 최적 -> 초록
+    if (staffInfo.staffChange > 0) return 'rgba(220, 53, 69, 0.7)'; // Red
+    if (staffInfo.staffChange < 0) return 'rgba(255, 193, 7, 0.7)'; // Yellow
+    return 'rgba(40, 167, 69, 0.7)'; // Green (optimal)
+  };
+
   return (
     <div style={{ position: 'relative', width: '100%', margin: '20px auto 0' }}>
       <button
@@ -1094,8 +1109,8 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
         onMouseLeave={() => setHoveredRegion(null)}
         style={{
           position: 'absolute',
-          top: '-10px',
-          left: '-15px',
+          top: '10px',
+          left: '10px',
           zIndex: 10,
           padding: '8px 16px',
           border: `1px solid ${themeColors.borderColor}`,
@@ -1110,7 +1125,7 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
           transform: selectedRegion === '전체' || hoveredRegion === '전체' ? 'translateY(-2px)' : 'translateY(0)',
         }}
       >
-        전체 보기
+        전국
       </button>
 
       <img 
@@ -1147,7 +1162,7 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
                 fontWeight: 'bold',
                 fontSize: '14px',
                 transition: 'all 0.2s ease',
-                background: isActive ? themeColors.activeBackground : themeColors.primaryGradient,
+                background: getRegionBackground(region, isActive, isHovered),
                 color: isActive ? themeColors.activeColor : '#2C1F14',
                 whiteSpace: 'nowrap'
               }}

@@ -492,14 +492,14 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
     '경기도': { top: '12%', left: '40%', shortName: '경기' },
     '인천광역시': { top: '24%', left: '20%', shortName: '인천' },
     '충청남도': { top: '45%', left: '27%', shortName: '충남' },
-    '충청북도': { top: '38%', left: '42%', shortName: '충북' },
-    '세종특별자치시': { top: '38%', left: '33%', shortName: '세종' },
+    '충청북도': { top: '35%', left: '48%', shortName: '충북' },
+    '세종특별자치시': { top: '38%', left: '30%', shortName: '세종' },
     '부산광역시': { top: '65%', left: '80%', shortName: '부산' },
     '대구광역시': { top: '53%', left: '68%', shortName: '대구' },
     '광주광역시': { top: '65%', left: '33%', shortName: '광주' },
     '울산광역시': { top: '57%', left: '86%', shortName: '울산' },
-    '대전광역시': { top: '40%', left: '38%', shortName: '대전' },
-    '강원도': { top: '25%', left: '60%', shortName: '강원' },
+    '대전광역시': { top: '43%', left: '36%', shortName: '대전' },
+    '강원도': { top: '22%', left: '63%', shortName: '강원' },
     '전라북도': { top: '55%', left: '35%', shortName: '전북' },
     '전라남도': { top: '68%', left: '38%', shortName: '전남' },
     '경상북도': { top: '45%', left: '65%', shortName: '경북' },
@@ -513,18 +513,18 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
     return staffData.find(item => item.regionName === regionName && item.date === '2024-01');
   };
 
-  // 지역 배경색 결정 (장례식장 가중치 기준)
   const getRegionBackground = (regionName, isActive, isHovered) => {
     const staffInfo = getRegionStaffData(regionName);
     if (!staffInfo) return isActive ? themeColors.activeBackground : themeColors.primaryGradient;
     
     if (isActive) return themeColors.activeBackground;
     
-    // staffChange가 양수면 장례식장 수요로 인한 추가 인력 필요
-    // staffChange가 음수면 장례식장 수요가 낮아 여유 인력 존재
-    if (staffInfo.staffChange > 1) return themeColors.deficitBackground;
-    if (staffInfo.staffChange < -1) return themeColors.surplusBackground;
-    return themeColors.primaryGradient;
+    // staffChange가 양수면 AI 추천 인력이 더 많음 (현재 부족) -> 빨강
+    // staffChange가 음수면 AI 추천 인력이 더 적음 (현재 과잉) -> 노랑
+    // staffChange가 0이면 최적 -> 초록
+    if (staffInfo.staffChange > 0) return 'rgba(220, 53, 69, 0.7)'; // Red
+    if (staffInfo.staffChange < 0) return 'rgba(255, 193, 7, 0.7)'; // Yellow
+    return 'rgba(40, 167, 69, 0.7)'; // Green (optimal)
   };
 
   // 해당 지역과 관련된 이동 추천 가져오기
@@ -542,8 +542,8 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
         onMouseLeave={() => setHoveredRegion(null)}
         style={{
           position: 'absolute',
-          top: '10px',
-          left: '10px',
+          top: '50px',
+          left: '50px',
           zIndex: 10,
           padding: '8px 16px',
           border: `1px solid ${themeColors.borderColor}`,
@@ -558,7 +558,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
           transform: selectedRegion === '전체' || hoveredRegion === '전체' ? 'translateY(-2px)' : 'translateY(0)',
         }}
       >
-        전체 보기
+        전국
       </button>
 
       <div style={{ position: 'relative', flex: 1 }}>
@@ -598,7 +598,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
                   fontSize: '13px',
                   transition: 'all 0.2s ease',
                   background: getRegionBackground(region, isActive, isHovered),
-                  color: '#FFFFFF',
+                  color: '#2C1F14',
                   whiteSpace: 'nowrap',
                   flexDirection: 'column',
                   display: 'flex',
