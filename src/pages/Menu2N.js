@@ -187,8 +187,8 @@ const Menu2N = () => {
     try {
       console.log('🔄 인력 이동 추천 계산 시작...');
       
-      // 현재 날짜 기준 (2025-08)으로 다음 달 데이터 가져오기
-      const currentDate = new Date(2025, 7, 19); // 2025-08-19
+      // 현재 날짜 기준으로 다음 달 데이터 가져오기
+      const currentDate = new Date();
       const nextMonth = new Date(currentDate);
       nextMonth.setMonth(nextMonth.getMonth() + 1);
       const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
@@ -819,8 +819,8 @@ const OptimizedDisplayComponent = ({
       };
     }
 
-    // 현재 날짜 기준 (2025-08)으로 다음 달 데이터 가져오기
-    const currentDate = new Date(2025, 7, 19); // 2025-08-19
+    // 현재 날짜 기준으로 다음 달 데이터 가져오기
+    const currentDate = new Date();
     const nextMonth = new Date(currentDate);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
@@ -1111,7 +1111,7 @@ const OptimizedDisplayComponent = ({
               <tbody>
                 {(() => {
                   // 현재 날짜 기준으로 3개월 데이터 가져오기
-                  const currentDate = new Date(2025, 7, 19);
+                  const currentDate = new Date();
                   const months = [];
                   for (let i = 1; i <= 3; i++) {
                     const futureMonth = new Date(currentDate);

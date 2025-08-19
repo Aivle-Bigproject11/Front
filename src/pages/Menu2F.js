@@ -22,6 +22,7 @@ const Menu2F = () => {
   const [chartData, setChartData] = useState(null); // 차트 데이터
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentDate, setCurrentDate] = useState({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
 
   // 표시용 지역명 계산 (전체 -> 전국)
   const getDisplayRegionName = (regionName) => {
@@ -107,9 +108,10 @@ const Menu2F = () => {
   const loadNationalData = async () => {
     try {
       console.log('🇰🇷 전국 데이터 로딩 중...');
+      const dateString = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
       
-      // 2025-01 전국 데이터로 지역별 증가율 계산
-      const nationalDataResponse = await apiService.getDashboardByDate('2025-01');
+      // 현재 날짜 기준 전국 데이터로 지역별 증가율 계산
+      const nationalDataResponse = await apiService.getDashboardByDate(dateString);
       setNationalData(nationalDataResponse);
       
       console.log('✅ 전국 데이터 로딩 완료:', nationalDataResponse);
@@ -517,6 +519,7 @@ const Menu2F = () => {
               loading={loading}
               error={error}
               refreshKey={refreshKey}
+              currentDate={currentDate}
             />
           )}
         </div>
@@ -672,7 +675,8 @@ const DataDisplayComponent = ({
   chartData, 
   loading, 
   error,
-  refreshKey 
+  refreshKey,
+  currentDate
 }) => {
   // 전국 데이터 기준 지역 상태 계산
   const getRegionStatus = () => {
@@ -780,6 +784,37 @@ const DataDisplayComponent = ({
         text: `${displayRegionName} 사망자 수 추이 (이전 vs 예측)`,
         font: { size: 16, weight: 'bold' }
       },
+      // 현재 날짜에 수직선을 그리는 커스텀 플러그인
+      verticalLinePlugin: {
+        id: 'verticalLine',
+        afterDraw: (chart) => {
+          const currentMonthLabel = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+          const ctx = chart.ctx;
+          const xAxis = chart.scales.x;
+          const yAxis = chart.scales.y;
+          const index = chart.data.labels.indexOf(currentMonthLabel);
+
+          if (index !== -1) {
+            const x = xAxis.getPixelForValue(index);
+
+            // 수직선 그리기
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, yAxis.top);
+            ctx.lineTo(x, yAxis.bottom);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#B8860B';
+            ctx.stroke();
+
+            // 텍스트 라벨 그리기
+            ctx.fillStyle = '#B8860B';
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText('현재', x, yAxis.top - 5);
+            ctx.restore();
+          }
+        }
+      }
     },
     scales: {
       y: {
@@ -854,7 +889,7 @@ const DataDisplayComponent = ({
       {/* 주요지역 현황 요약 (전국 데이터 기준, 지역 선택으로 변하지 않음) */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-          📊 주요지역 현황 요약 (2025년 예측 기준)
+          📊 주요지역 현황 요약 ({currentDate.year}년 {currentDate.month}월 예측 기준)
         </h5>
         <Row className="g-3">
           {regionStatus.map((status, index) => (
@@ -980,9 +1015,11 @@ const DataDisplayComponent = ({
                 </tr>
               </thead>
               <tbody>
-                {currentRegionData.map((item, index) => (
-                  <tr key={index}>
-                    <td>{item.date}</td>
+                {currentRegionData.map((item, index) => {
+                  const isCurrentMonth = item.date === `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+                  return (
+                  <tr key={index} style={{ backgroundColor: isCurrentMonth ? 'rgba(184, 134, 11, 0.1)' : 'transparent' }}>
+                    <td>{item.date} {isCurrentMonth && <span className="badge bg-primary">현재</span>}</td>
                     <td style={{ fontWeight: '600' }}>
                       {(item.deaths || 0).toLocaleString()}명
                     </td>
@@ -998,7 +1035,7 @@ const DataDisplayComponent = ({
                       </span>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </Table>
           </div>
