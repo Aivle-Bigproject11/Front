@@ -509,17 +509,17 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
     '인천광역시': { top: '24%', left: '20%', shortName: '인천' },
     '충청남도': { top: '45%', left: '27%', shortName: '충남' },
     '충청북도': { top: '35%', left: '48%', shortName: '충북' },
-    '세종특별자치시': { top: '38%', left: '30%', shortName: '세종' },
+    '세종특별자치시': { top: '38%', left: '34%', shortName: '세종' },
     '부산광역시': { top: '65%', left: '80%', shortName: '부산' },
     '대구광역시': { top: '53%', left: '68%', shortName: '대구' },
-    '광주광역시': { top: '65%', left: '33%', shortName: '광주' },
+    '광주광역시': { top: '65%', left: '30%', shortName: '광주' },
     '울산광역시': { top: '57%', left: '86%', shortName: '울산' },
-    '대전광역시': { top: '43%', left: '36%', shortName: '대전' },
+    '대전광역시': { top: '43%', left: '40%', shortName: '대전' },
     '강원도': { top: '22%', left: '63%', shortName: '강원' },
     '전라북도': { top: '55%', left: '35%', shortName: '전북' },
-    '전라남도': { top: '68%', left: '38%', shortName: '전남' },
-    '경상북도': { top: '45%', left: '65%', shortName: '경북' },
-    '경상남도': { top: '60%', left: '68%', shortName: '경남' },
+    '전라남도': { top: '72%', left: '38%', shortName: '전남' },
+    '경상북도': { top: '40%', left: '68%', shortName: '경북' },
+    '경상남도': { top: '60%', left: '58%', shortName: '경남' },
     '제주도': { top: '85%', left: '25%', shortName: '제주' }
   };
 

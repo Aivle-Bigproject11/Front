@@ -123,15 +123,15 @@ const Home = () => {
 
           <Card style={cardStyle} className="menu-card">
             <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
-              <img src={menu02} alt="대시보드" style={{ width: '90px', height: '90px' }} />
+              <img src={menu02} alt="AI 인력배치" style={{ width: '90px', height: '90px' }} />
               <div>
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>대시보드</Card.Title>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI 인력배치</Card.Title>
                 <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
-                  - 추모관 현황 대시보드<br />
-                  - 실시간 통계 및 분석
+                  - 실시간 통계 및 분석<br />
+                  - 사망자 현황 및 예측 대시보드
                 </Card.Text>
               </div>
-              <Button as={Link} to="/menu2" style={orangeButtonStyle} className="w-75 service-button">
+              <Button as={Link} to="/menu2N" style={orangeButtonStyle} className="w-75 service-button">
                 바로가기
               </Button>
             </Card.Body>
