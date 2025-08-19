@@ -52,40 +52,20 @@ const Lobby = () => {
           const memorialData = await apiService.getMemorial(memorialId);
           console.log('추모관 정보:', memorialData);
 
-          let customerStatus = 'active'; 
-          if (memorialData.customerId) {
-            try {
-              // customerId로 고객 정보를 가져오기
-              const customerInfo = await customerService.getCustomerById(memorialData.customerId);
-              
-              // customerInfo.status 값에 따라 진행상태 상태값
-              if (customerInfo && customerInfo.status) {
-                switch (customerInfo.status) {
-                  case 'inProgress':
-                    customerStatus = 'active'; 
-                    break;
-                  case 'completed':
-                    customerStatus = 'completed'; 
-                    break;
-                  case 'pending':
-                  default:
-                    customerStatus = 'scheduled'; 
-                }
-              }
-            } catch (e) {
-              console.error("고객 상태 정보를 불러오는데 실패했습니다:", e);
-            }
-          }
-          
+          // 상세 정보 추가 조회(영상, 추모사- 뱃지상태표시 위함)
+          const detailData = await apiService.getMemorialDetails(memorialId);
+
           // 화면에 표시할 데이터 형태로 가공
           const formattedMemorial = {
             id: memorialId,
             name: `故 ${memorialData.name || '고인'} 추모관`, // API 응답에 맞게 필드명 수정
-            description: memorialData.tribute || '',
+            description: detailData.tribute || '',
             period: `${memorialData.birthDate || '미상'} ~ ${memorialData.deceasedDate || '미상'}`,
             joinCode: memorialId, // 추모관 고유번호는 memorialId를 사용
-            status: customerStatus, 
-            customerId: memorialData.customerId 
+            customerId: memorialData.customerId,
+            // Menu4.js와 동일한 상태 로직 적용
+            hasVideo: detailData.videos && detailData.videos.length > 0,
+            tribute: detailData.tribute || null,
           };
 
           setMemorialHalls([formattedMemorial]);
@@ -256,16 +236,6 @@ const Lobby = () => {
     }
   };
 
-
-  const getStatusBadge = (status) => {
-    if (status === 'active') {
-      return <Badge bg="success">진행중</Badge>;
-    } else if (status === 'completed') {
-      return <Badge bg="secondary">완료</Badge>;
-    }
-    return <Badge bg="warning">예정</Badge>;
-  };
-
   const maskName = (name) => {
     if (!name || name.length < 2) {
       return name;
@@ -424,11 +394,7 @@ const Lobby = () => {
                       onClick={() => handleMemorialClick(memorial)}
                       style={{
                         cursor: 'pointer',
-                        background: memorial.status === 'active' 
-                          ? 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)'
-                          : memorial.status === 'completed'
-                          ? 'linear-gradient(135deg, #6c757d 0%, #495057 100%)'
-                          : 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)',
+                        background: 'linear-gradient(135deg, #b8860b, #965a25)',
                         padding: '20px',
                         color: 'white'
                       }}>
@@ -442,11 +408,16 @@ const Lobby = () => {
                           <h5 style={{ margin: '0 0 5px 0', fontSize: '1.3rem', fontWeight: '700' }}>
                             {memorial.name}
                           </h5>
-                          <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>
-                            {memorial.description}
-                          </p>
+                          
                         </div>
-                        {getStatusBadge(memorial.status)}
+                        <div>
+                          <Badge bg={memorial.hasVideo ? 'success' : 'danger'} className="px-2 py-1 me-1">
+                            <i className={`fas ${memorial.hasVideo ? 'fa-check' : 'fa-times'} me-1`}></i> AI 영상
+                          </Badge>
+                          <Badge bg={memorial.tribute ? 'success' : 'danger'} className="px-2 py-1">
+                            <i className={`fas ${memorial.tribute ? 'fa-check' : 'fa-times'} me-1`}></i> 추모사
+                          </Badge>
+                        </div>
                       </div>
                       
                       <div style={{

@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, Table } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
-import Papa from 'papaparse';
+import { apiService } from '../services/api';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
-
-
 
 // 데이터 처리 로직 시작
 const nationalRegionStatus = [
@@ -15,137 +13,353 @@ const nationalRegionStatus = [
   { level: '안정 지역', color: 'rgba(51, 105, 30, 0.2)', regions: ['광주', '울산', '세종'] },
 ];
 
-const generateRegionalData = (baseData, multiplier, regionName) => {
-  const formatNumber = (num) => Math.round(num).toLocaleString('ko-KR') + '명';
-  const formatNumberOnly = (num) => Math.round(num * multiplier);
-
-  return {
-    regionStatus: nationalRegionStatus,
-    charts: {
-      longTermTrend: {
-        labels: baseData.longTermTrend.labels,
-        data: baseData.longTermTrend.data.map(d => Math.round(d * multiplier)),
-      },
-      predictionTrend: {
-        labels: baseData.predictionTrend.labels,
-        actualData: baseData.predictionTrend.actualData.map(d => d && formatNumberOnly(d)),
-        predictedData: baseData.predictionTrend.predictedData.map(d => d && formatNumberOnly(d)),
-      },
-    },
-    monthlyPredictions: baseData.monthlyPredictions.map(p => ({
-      ...p,
-      count: formatNumber(p.raw_count * multiplier),
-    })),
-    predictionSummary: {
-        avg: formatNumber(baseData.predictionSummary.avg * multiplier),
-        max: formatNumber(baseData.predictionSummary.max * multiplier),
-        min: formatNumber(baseData.predictionSummary.min * multiplier),
-        totalNext12: formatNumber(baseData.predictionSummary.totalNext12 * multiplier),
-    },
-  };
-};
-
 const RegionDataDisplay = ({ region }) => {
-  const [processedData, setProcessedData] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [useBackendData, setUseBackendData] = useState(false); // 기본값을 false로 변경
+  const [backendAvailable, setBackendAvailable] = useState(false);
 
   useEffect(() => {
-    const loadAndProcessData = async () => {
+    // 백엔드 가용성 체크
+    const checkBackendAvailability = async () => {
       try {
+        // Spring Boot Actuator health 엔드포인트로 서버 상태 확인
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/actuator/health`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
+        });
+        
+        if (response.ok) {
+          const healthData = await response.text();
+          console.log('백엔드 서버 헬스체크 성공:', healthData);
+          
+          // 실제 API 엔드포인트도 테스트해보기
+          try {
+            const testResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/deathPredictions/by-date/2025-01`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(localStorage.getItem('token') && {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                })
+              },
+              timeout: 3000
+            });
+            
+            if (testResponse.ok) {
+              setBackendAvailable(true);
+              console.log('백엔드 API 엔드포인트 정상 작동');
+            } else if (testResponse.status === 500) {
+              console.log('백엔드 서버 내부 오류 (500) - 서버는 실행 중이지만 API에 문제가 있음');
+              setBackendAvailable(false);
+            } else {
+              console.log('백엔드 API 응답:', testResponse.status);
+              setBackendAvailable(true); // 인증 에러 등은 서버가 살아있음을 의미
+            }
+          } catch (apiError) {
+            console.log('백엔드 API 테스트 실패:', apiError.message);
+            setBackendAvailable(false);
+          }
+        } else {
+          console.log('백엔드 헬스체크 실패:', response.status);
+          setBackendAvailable(false);
+        }
+      } catch (error) {
+        console.log('백엔드 서버 연결 불가:', error.message);
+        setBackendAvailable(false);
+      }
+    };
+
+    checkBackendAvailability();
+
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        if (useBackendData && backendAvailable) {
+          // 백엔드 API 사용
+          const currentDate = new Date().toISOString().slice(0, 7); // YYYY-MM
+          
+          let regionData;
+          if (region === '전체') {
+            console.log('전체 지역 데이터 요청 중...');
+            console.log('API 호출:', `GET /deathPredictions/by-date/${currentDate}`);
+            regionData = await apiService.getDashboardByDate(currentDate);
+          } else {
+            console.log(`${region} 지역 데이터 요청 중...`);
+            console.log('API 호출:', `GET /deathPredictions/by-region/${region}`);
+            regionData = await apiService.getDashboardByRegion(region);
+          }
+
+          console.log('백엔드 응답 데이터:', regionData);
+
+          // 백엔드 데이터를 기존 형식으로 변환
+          const processedData = formatBackendData(regionData, region);
+          setDashboardData(processedData);
+        } else {
+          // CSV 데이터 사용
+          loadCsvData();
+        }
+      } catch (error) {
+        console.error('백엔드 데이터 로딩 실패:', error);
+        
+        // 에러 유형별 상세한 메시지 제공
+        let errorMessage;
+        if (error.response) {
+          // 서버가 응답했지만 에러 상태 코드
+          const status = error.response.status;
+          if (status === 404) {
+            errorMessage = `API 엔드포인트를 찾을 수 없습니다 (${status}). 백엔드 서버의 API 경로를 확인해주세요.`;
+          } else if (status === 401) {
+            errorMessage = `인증이 필요합니다 (${status}). 로그인 후 다시 시도해주세요.`;
+          } else if (status === 403) {
+            errorMessage = `접근 권한이 없습니다 (${status}).`;
+          } else if (status === 500) {
+            errorMessage = `백엔드 서버 내부 오류 (${status}). 서버에서 데이터베이스 연결 등에 문제가 있을 수 있습니다.`;
+          } else if (status >= 500) {
+            errorMessage = `서버 내부 오류 (${status}). 잠시 후 다시 시도해주세요.`;
+          } else {
+            errorMessage = `API 오류 (${status}): ${error.response.data?.message || '알 수 없는 오류'}`;
+          }
+        } else if (error.request) {
+          // 요청이 전송되었지만 응답을 받지 못함
+          errorMessage = '백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.';
+        } else {
+          // 요청 설정 중 에러
+          errorMessage = `요청 설정 오류: ${error.message}`;
+        }
+        
+        setError(`${errorMessage} CSV 데이터를 사용합니다.`);
+        setUseBackendData(false);
+        setBackendAvailable(false); // 실패 시 백엔드를 사용 불가로 표시
+        
+        // 폴백: CSV 데이터 사용
+        loadCsvData();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const loadCsvData = async () => {
+      // 기존 CSV 로딩 로직 (폴백용)
+      try {
+        console.log('CSV 데이터 로딩 중...');
         const [csvResponse, jsonResponse] = await Promise.all([
           fetch('/15년치_월별.csv'),
           fetch('/monthly_predictions.json')
         ]);
+        
+        if (!csvResponse.ok || !jsonResponse.ok) {
+          throw new Error('CSV 또는 JSON 파일을 불러올 수 없습니다.');
+        }
+
         const csvText = await csvResponse.text();
         const predictionJson = await jsonResponse.json();
-        const parsedCsv = await new Promise((resolve) => {
-          Papa.parse(csvText, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => resolve(results.data),
+
+        // CSV 파싱은 간단한 방법으로 변경
+        const lines = csvText.split('\n');
+        const data = lines.slice(1)
+          .filter(line => line.trim())
+          .map(line => {
+            const values = line.split(',');
+            return {
+              '연월': values[0]?.trim(),
+              '사망자수': parseInt(values[1]?.replace(/[,'"]/g, '')) || 0
+            };
           });
-        });
-        const formattedCsvData = parsedCsv.map(row => ({
-          '연월': row['연월'],
-          '사망자수': Number(String(row['사망자수']).replace(/,/g, '')) || 0
-        }));
-        const historicalDataMap = new Map(formattedCsvData.map(item => [item['연월'], item['사망자수']]));
-        const lastActualDataPoint = formattedCsvData[formattedCsvData.length - 1];
-        const calculatedPredictions = predictionJson.predictions.map((item, index, arr) => {
-          const currentYear = new Date(item.date).getFullYear();
-          const currentMonth = new Date(item.date).getMonth() + 1;
-          const lastYearMonthKey = `${currentYear - 1}-${String(currentMonth).padStart(2, '0')}`;
-          const lastYearData = historicalDataMap.get(lastYearMonthKey);
-          const lastMonthPrediction = index > 0 ? arr[index - 1].predicted_deaths : lastActualDataPoint['사망자수'];
-          const calculateChange = (current, previous) => {
-            if (previous && current && previous > 0) {
-              return parseFloat((((current - previous) / previous) * 100).toFixed(1));
-            }
-            return 'N/A';
-          };
-          return {
-            month: item.date,
-            count: item.formatted_deaths,
-            raw_count: item.predicted_deaths,
-            vsLastYear: calculateChange(item.predicted_deaths, lastYearData),
-            vsLastMonth: calculateChange(item.predicted_deaths, lastMonthPrediction),
-          };
-        });
-        const predictionArray = predictionJson.predictions;
-        const newPredictedLabels = predictionArray.map(item => item.date);
-        const newPredictedData = predictionArray.map(item => item.predicted_deaths);
-        const recentActualData = formattedCsvData.slice(-24);
-        const recentActualLabels = recentActualData.map(item => item['연월']);
-        const recentActualValues = recentActualData.map(item => item['사망자수']);
-        const nationalBaseData = {
-          longTermTrend: {
-            labels: formattedCsvData.map(row => row['연월']),
-            data: formattedCsvData.map(row => row['사망자수']),
-          },
-          predictionTrend: {
-            labels: [...recentActualLabels, ...newPredictedLabels],
-            actualData: [...recentActualValues, ...Array(newPredictedLabels.length).fill(null)],
-            predictedData: [...Array(recentActualValues.length - 1).fill(null), recentActualValues[recentActualValues.length - 1], ...newPredictedData],
-          },
-          monthlyPredictions: calculatedPredictions,
-          predictionSummary: {
-            avg: predictionJson.summary.average_monthly,
-            max: predictionJson.summary.max_month,
-            min: predictionJson.summary.min_month,
-            totalNext12: predictionJson.summary.total_12months,
-          },
-        };
-        const regionalData = {};
-        const multipliers = { '전체': 1, '서울': 0.21, '경기': 0.26, '부산': 0.07, '대구': 0.05, '인천': 0.06, '충남': 0.04, '광주': 0.03, '울산': 0.02, '세종': 0.01 };
-        for (const regionName in multipliers) {
-          regionalData[regionName] = generateRegionalData(nationalBaseData, multipliers[regionName], regionName);
-        }
-        setProcessedData(regionalData);
-        setLoading(false);
-      } catch (error) {
-        console.error("데이터를 불러오거나 처리하는 중 에러 발생:", error);
-        setLoading(false);
+
+        const processedData = formatCsvData(data, predictionJson, region);
+        setDashboardData(processedData);
+        
+      } catch (fallbackError) {
+        console.error('CSV 데이터 로딩도 실패:', fallbackError);
+        setError('모든 데이터 소스를 불러올 수 없습니다.');
       }
     };
-    loadAndProcessData();
-  }, []);
 
-// 기존 데이터 처리 로직 끝
-  if (loading || !processedData) {
-    return <div className="p-5 text-center"><h5>데이터를 불러오는 중입니다...</h5></div>;
+    // 초기 로딩 시에는 항상 CSV부터 시작
+    loadDashboardData();
+  }, [region, useBackendData, backendAvailable]);
+
+  // 백엔드 데이터를 UI에 맞게 변환
+  const formatBackendData = (data, selectedRegion) => {
+    if (!data || !Array.isArray(data)) {
+      console.warn('백엔드 데이터가 배열이 아닙니다:', data);
+      return getEmptyData();
+    }
+
+    if (data.length === 0) {
+      console.warn('백엔드에서 빈 데이터를 받았습니다');
+      return getEmptyData();
+    }
+
+    // 날짜순으로 정렬
+    const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // 선택된 지역에 맞게 필터링 (전체가 아닌 경우)
+    const filteredData = selectedRegion === '전체' 
+      ? sortedData 
+      : sortedData.filter(item => item.region === selectedRegion);
+
+    // 전체 지역인 경우 지역별로 그룹화해서 합계 계산
+    let chartData;
+    if (selectedRegion === '전체') {
+      const groupedByDate = {};
+      sortedData.forEach(item => {
+        if (!groupedByDate[item.date]) {
+          groupedByDate[item.date] = 0;
+        }
+        groupedByDate[item.date] += item.deaths;
+      });
+      
+      chartData = Object.entries(groupedByDate)
+        .sort(([a], [b]) => new Date(a) - new Date(b))
+        .map(([date, deaths]) => ({ date, deaths }));
+    } else {
+      chartData = filteredData;
+    }
+    
+    return {
+      regionStatus: nationalRegionStatus,
+      charts: {
+        longTermTrend: {
+          labels: chartData.map(item => item.date),
+          data: chartData.map(item => item.deaths),
+        },
+        predictionTrend: {
+          labels: chartData.map(item => item.date),
+          actualData: chartData.map(item => item.deaths),
+          predictedData: new Array(chartData.length).fill(null), // 예측 데이터는 별도 API에서 처리
+        },
+      },
+      monthlyPredictions: chartData.map((item, index) => ({
+        month: item.date,
+        count: item.deaths.toLocaleString('ko-KR') + '명',
+        vsLastYear: index >= 12 ? calculateChange(item.deaths, chartData[index - 12]?.deaths) : 'N/A',
+        vsLastMonth: index > 0 ? calculateChange(item.deaths, chartData[index - 1]?.deaths) : 'N/A',
+      })),
+      predictionSummary: {
+        avg: chartData.length > 0 ? Math.round(chartData.reduce((sum, item) => sum + item.deaths, 0) / chartData.length).toLocaleString('ko-KR') + '명' : '0명',
+        max: chartData.length > 0 ? Math.max(...chartData.map(item => item.deaths)).toLocaleString('ko-KR') + '명' : '0명',
+        min: chartData.length > 0 ? Math.min(...chartData.map(item => item.deaths)).toLocaleString('ko-KR') + '명' : '0명',
+        totalNext12: chartData.reduce((sum, item) => sum + item.deaths, 0).toLocaleString('ko-KR') + '명',
+      },
+    };
+  };
+
+  // CSV 데이터를 UI에 맞게 변환 (기존 로직 유지)
+  const formatCsvData = (csvData, predictionJson, selectedRegion) => {
+    const multipliers = { 
+      '전체': 1, '서울': 0.21, '경기': 0.26, '부산': 0.07, 
+      '대구': 0.05, '인천': 0.06, '충남': 0.04, '광주': 0.03, 
+      '울산': 0.02, '세종': 0.01 
+    };
+    
+    const multiplier = multipliers[selectedRegion] || 1;
+    
+    return {
+      regionStatus: nationalRegionStatus,
+      charts: {
+        longTermTrend: {
+          labels: csvData.map(row => row['연월']),
+          data: csvData.map(row => Math.round(row['사망자수'] * multiplier)),
+        },
+        predictionTrend: {
+          labels: [...csvData.slice(-12).map(row => row['연월']), ...predictionJson.predictions.map(p => p.date)],
+          actualData: [...csvData.slice(-12).map(row => Math.round(row['사망자수'] * multiplier)), ...new Array(predictionJson.predictions.length).fill(null)],
+          predictedData: [...new Array(csvData.slice(-12).length - 1).fill(null), csvData[csvData.length - 1]['사망자수'] * multiplier, ...predictionJson.predictions.map(p => Math.round(p.predicted_deaths * multiplier))],
+        },
+      },
+      monthlyPredictions: predictionJson.predictions.map((item, index) => ({
+        month: item.date,
+        count: Math.round(item.predicted_deaths * multiplier).toLocaleString('ko-KR') + '명',
+        vsLastYear: 'N/A',
+        vsLastMonth: 'N/A',
+      })),
+      predictionSummary: {
+        avg: Math.round(predictionJson.summary.average_monthly * multiplier).toLocaleString('ko-KR') + '명',
+        max: Math.round(predictionJson.summary.max_month * multiplier).toLocaleString('ko-KR') + '명',
+        min: Math.round(predictionJson.summary.min_month * multiplier).toLocaleString('ko-KR') + '명',
+        totalNext12: Math.round(predictionJson.summary.total_12months * multiplier).toLocaleString('ko-KR') + '명',
+      },
+    };
+  };
+
+  const calculateChange = (current, previous) => {
+    if (previous && current && previous > 0) {
+      return parseFloat((((current - previous) / previous) * 100).toFixed(1));
+    }
+    return 'N/A';
+  };
+
+  const getEmptyData = () => ({
+    regionStatus: nationalRegionStatus,
+    charts: {
+      longTermTrend: { labels: [], data: [] },
+      predictionTrend: { labels: [], actualData: [], predictedData: [] },
+    },
+    monthlyPredictions: [],
+    predictionSummary: {
+      avg: '0명',
+      max: '0명', 
+      min: '0명',
+      totalNext12: '0명',
+    },
+  });
+
+  // 로딩 중일 때
+  if (loading) {
+    return (
+      <div className="p-5 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <h5 className="mt-3">데이터를 불러오는 중입니다...</h5>
+      </div>
+    );
   }
 
-  const data = processedData[region] || processedData['전체'];
-  
-  if (!data) {
-    return <div className="p-5 text-center"><h5>{region} 지역의 데이터가 없습니다.</h5></div>;
+  // 에러가 있지만 데이터가 있을 때 경고 표시
+  if (error && dashboardData) {
+    console.warn('백엔드 연결 실패, CSV 데이터 사용 중:', error);
   }
+
+  // 에러가 있을 때 (하지만 데이터가 있으면 표시)
+  if (error && !dashboardData) {
+    return (
+      <div className="p-5 text-center">
+        <div className="alert alert-warning" role="alert">
+          <h5>데이터 로딩 오류</h5>
+          <p>{error}</p>
+          <div className="mt-3">
+            <button 
+              className="btn btn-primary" 
+              onClick={() => {
+                setUseBackendData(!useBackendData);
+                setError(null);
+              }}
+            >
+              {useBackendData ? 'CSV 데이터로 전환' : '백엔드 API로 전환'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const data = dashboardData || getEmptyData();
 
   const chartOptions = { 
     responsive: true, 
     maintainAspectRatio: true, 
     plugins: { legend: { position: 'top' } },
   };
+
   const longTermChartData = {
     labels: data.charts.longTermTrend.labels,
     datasets: [{ 
@@ -159,20 +373,38 @@ const RegionDataDisplay = ({ region }) => {
       fill: true 
     }],
   };
+
   const predictionChartData = {
     labels: data.charts.predictionTrend.labels,
     datasets: [
-      { label: '실제 데이터', data: data.charts.predictionTrend.actualData, backgroundColor: 'rgba(75, 192, 192, 0.2)', borderColor: 'rgb(75, 192, 192)', borderWidth: 2, pointBackgroundColor: 'rgb(75, 192, 192)', tension: 0.4 },
-      { label: '예측 데이터', data: data.charts.predictionTrend.predictedData, borderDash: [5, 5], backgroundColor: 'rgba(255, 99, 132, 0.2)', borderColor: 'rgb(255, 99, 132)', borderWidth: 2, pointBackgroundColor: 'rgb(255, 99, 132)', tension: 0.4 },
+      { 
+        label: '실제 데이터', 
+        data: data.charts.predictionTrend.actualData, 
+        backgroundColor: 'rgba(75, 192, 192, 0.2)', 
+        borderColor: 'rgb(75, 192, 192)', 
+        borderWidth: 2, 
+        pointBackgroundColor: 'rgb(75, 192, 192)', 
+        tension: 0.4 
+      },
+      { 
+        label: '예측 데이터', 
+        data: data.charts.predictionTrend.predictedData, 
+        borderDash: [5, 5], 
+        backgroundColor: 'rgba(255, 99, 132, 0.2)', 
+        borderColor: 'rgb(255, 99, 132)', 
+        borderWidth: 2, 
+        pointBackgroundColor: 'rgb(255, 99, 132)', 
+        tension: 0.4 
+      },
     ],
   };
+
   const renderChange = (value) => {
     if (value === 'N/A' || value === null) return <td className="text-muted">{value}</td>;
     const color = value > 0 ? '#d32f2f' : '#1976d2'; 
     const sign = value > 0 ? '▲' : '▼';
     return <td style={{ color, fontWeight: '600' }}>{sign} {Math.abs(value)}%</td>;
   };
-
 
   // 요약 카드 컴포넌트 
   const SummaryCard = ({ title, value }) => (
@@ -191,11 +423,43 @@ const RegionDataDisplay = ({ region }) => {
 
   return (
     <div>
-      {/* 제목  */}
-      <h2 className="mb-4" style={{ fontWeight: '700', color: '#343a40' }}>
-        <i className="fas fa-map-marker-alt me-2" style={{ color: '#D4AF37' }}></i>
-        {region} 예측 결과 분석
-      </h2>
+      {/* 데이터 소스 상태 및 토글 */}
+      <div className="mb-3 d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center">
+          <span className={`badge ${backendAvailable ? 'bg-success' : 'bg-warning'} me-2`}>
+            {backendAvailable ? '백엔드 연결됨' : '백엔드 연결 안됨'}
+          </span>
+          <span className={`badge ${useBackendData ? 'bg-primary' : 'bg-secondary'}`}>
+            {useBackendData ? '백엔드 데이터' : 'CSV 데이터'} 사용 중
+          </span>
+        </div>
+        <button
+          className={`btn btn-sm ${useBackendData ? 'btn-outline-secondary' : 'btn-outline-primary'}`}
+          onClick={() => setUseBackendData(!useBackendData)}
+          disabled={!backendAvailable && !useBackendData}
+        >
+          {useBackendData ? 'CSV 모드로 전환' : '백엔드 모드로 전환'}
+        </button>
+      </div>
+
+      {/* 에러 메시지 */}
+      {error && (
+        <div className="alert alert-warning alert-dismissible fade show" role="alert">
+          <small><strong>알림:</strong> {error}</small>
+          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        </div>
+      )}
+
+      {/* 제목 */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 style={{ fontWeight: '700', color: '#343a40' }}>
+          <i className="fas fa-map-marker-alt me-2" style={{ color: '#D4AF37' }}></i>
+          {region} 예측 결과 분석
+        </h2>
+        <small className="text-muted">
+          데이터 소스: {useBackendData ? '백엔드 API' : 'CSV 파일'}
+        </small>
+      </div>
 
       {/* 주요지역 현황 요약 */}
       <div className="p-4 mb-4" style={cardStyle}>
@@ -212,7 +476,7 @@ const RegionDataDisplay = ({ region }) => {
         </Row>
       </div>
 
-    {/* 예측 요약 통계 */}
+      {/* 예측 요약 통계 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600' }}>예측 요약 통계</h5>
         <Row>
@@ -255,7 +519,7 @@ const RegionDataDisplay = ({ region }) => {
         </Table>
       </div>
 
-        {/* 차트 영역 */}
+      {/* 전체 시계열 차트 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <Row>
           <Col md={12} className="mb-5">
@@ -264,8 +528,6 @@ const RegionDataDisplay = ({ region }) => {
           </Col>
         </Row>
       </div>
-
-
     </div>
   );
 };
