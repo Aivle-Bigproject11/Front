@@ -15,6 +15,7 @@ import Menu1_3 from './pages/Menu1-3';
 import Menu1_4 from './pages/Menu1-4';
 import Menu1_5 from './pages/Menu1-5';
 import Menu2 from './pages/Menu2';
+import Menu2F from './pages/Menu2F';
 import Menu3 from './pages/Menu3';
 import Menu4 from './pages/Menu4';
 import Menu5 from './pages/Menu5';
@@ -60,6 +61,7 @@ function App() {
                             <Route path="/menu1-5" element={<NavbarWrapper><Menu1_5 /></NavbarWrapper>} />
                             <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
                             <Route path="/menu2" element={<NavbarWrapper><Menu2 /></NavbarWrapper>} />
+                            <Route path="/menu2f" element={<NavbarWrapper><Menu2F /></NavbarWrapper>} />
                             <Route path="/menu3" element={<NavbarWrapper><Menu3 /></NavbarWrapper>} />
                             <Route path="/menu4" element={<NavbarWrapper><Menu4 /></NavbarWrapper>} />
                             <Route path="/menu5" element={<NavbarWrapper><Menu5 /></NavbarWrapper>} />
