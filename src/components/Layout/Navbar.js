@@ -81,6 +81,7 @@ const Navbar = () => {
             {/* 각 메뉴 링크에 현재 경로와 비교하여 활성 스타일을 동적으로 적용합니다. */}
             <Nav.Link as={Link} to="/menu1-1" style={location.pathname.startsWith("/menu1") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>장례서류작성</Nav.Link>
             <Nav.Link as={Link} to="/menu2" style={location.pathname === "/menu2" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>대시보드</Nav.Link>
+            <Nav.Link as={Link} to="/menu2f" style={location.pathname === "/menu2f" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>대시보드F</Nav.Link>
             <Nav.Link as={Link} to="/menu3" style={location.pathname === "/menu3" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>전환서비스추천</Nav.Link>
             <Nav.Link as={Link} to="/menu4" style={location.pathname === "/menu4" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>디지털 추모관</Nav.Link>
             <Nav.Link as={Link} to="/menu5" style={location.pathname.startsWith("/menu5") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>고객 관리</Nav.Link>

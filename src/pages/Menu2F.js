@@ -11,17 +11,217 @@ const Menu2F = () => {
   const [selectedRegion, setSelectedRegion] = useState('전체');
   const [animateCard, setAnimateCard] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isInitialLoading, setIsInitialLoading] = useState(false); // 초기 로딩 비활성화
+  const [isInitialLoading, setIsInitialLoading] = useState(true); // 초기 로딩 활성화
+  const [nationalData, setNationalData] = useState(null); // 전국 데이터 (주요지역 현황용)
+  const [currentRegionData, setCurrentRegionData] = useState(null); // 현재 선택된 지역 데이터
+  const [chartData, setChartData] = useState(null); // 차트 데이터
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // 표시용 지역명 계산 (전체 -> 전국)
+  const getDisplayRegionName = (regionName) => {
+    return regionName === '전체' ? '전국' : regionName;
+  };
+
+  // 초기 데이터 로딩
   useEffect(() => {
-    setAnimateCard(true);
+    const initializeData = async () => {
+      console.log('📊 Menu2F 초기 데이터 로딩 시작...');
+      
+      try {
+        // 1. 2025-01 데이터 생성 요청
+        console.log('📅 2025-01 예측 데이터 요청 중...');
+        const predictionRequest = {
+          date: "2025-01"
+        };
+        
+        await apiService.requestPrediction(predictionRequest);
+        console.log('✅ 초기 예측 데이터 생성 성공');
+        
+        // 데이터 처리 시간 대기
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // 2. 전국 데이터 조회 (2024-01, 2025-01)
+        await loadNationalData();
+        
+        // 3. 초기 지역 데이터 로딩
+        await loadRegionData('전체');
+        
+        console.log('✅ Menu2F 초기 데이터 로딩 완료');
+        
+      } catch (error) {
+        console.log('⚠️ 초기 데이터 로딩 실패:', error.message);
+        setError('초기 데이터 로딩에 실패했습니다.');
+      } finally {
+        setIsInitialLoading(false);
+        setAnimateCard(true);
+      }
+    };
+
+    initializeData();
   }, []);
 
+  // 전국 데이터 로딩 (주요지역 현황용)
+  const loadNationalData = async () => {
+    try {
+      console.log('🇰🇷 전국 데이터 로딩 중...');
+      
+      // 2025-01 전국 데이터로 지역별 증가율 계산
+      const nationalDataResponse = await apiService.getDashboardByDate('2025-01');
+      setNationalData(nationalDataResponse);
+      
+      console.log('✅ 전국 데이터 로딩 완료:', nationalDataResponse);
+    } catch (error) {
+      console.error('전국 데이터 로딩 실패:', error);
+    }
+  };
+
+  // 지역 데이터 로딩
+  const loadRegionData = async (region) => {
+    try {
+      setLoading(true);
+      console.log(`📍 ${region} 지역 데이터 로딩 중...`);
+      
+      let regionData;
+      
+      if (region === '전체') {
+        // 전체 선택 시 날짜별 데이터로 전국 조회
+        regionData = await apiService.getDashboardByDate('2025-01');
+      } else {
+        // 특정 지역 선택 시 지역별 데이터 조회
+        regionData = await apiService.getDashboardByRegion(region);
+      }
+      
+      setCurrentRegionData(regionData);
+      
+      // 차트 데이터 생성
+      await generateChartData(region);
+      
+      console.log(`✅ ${region} 지역 데이터 로딩 완료:`, regionData);
+      
+    } catch (error) {
+      console.error(`${region} 지역 데이터 로딩 실패:`, error);
+      setError(`${region} 지역 데이터를 불러올 수 없습니다.`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 차트 데이터 생성 (2024 이전 데이터 + 2025 예측 데이터)
+  const generateChartData = async (region) => {
+    try {
+      console.log(`📈 ${region} 차트 데이터 생성 중...`);
+      
+      // 2024년과 2025년 데이터를 각각 조회
+      const data2024 = region === '전체' 
+        ? await apiService.getDashboardByDate('2024-01')
+        : await apiService.getDashboardByRegion(region);
+        
+      const data2025 = region === '전체'
+        ? await apiService.getDashboardByDate('2025-01') 
+        : await apiService.getDashboardByRegion(region);
+      
+      // 차트 데이터 구성
+      const chartLabels = [];
+      const historicalData = [];
+      const predictedData = [];
+      
+      // 2024년 데이터 (이전 데이터)
+      if (Array.isArray(data2024)) {
+        data2024.forEach(item => {
+          if (item.date && item.deaths) {
+            chartLabels.push(item.date);
+            historicalData.push(item.deaths);
+            predictedData.push(null); // 예측 데이터는 null
+          }
+        });
+      }
+      
+      // 2025년 데이터 (예측 데이터)
+      if (Array.isArray(data2025)) {
+        data2025.forEach(item => {
+          if (item.date && item.deaths) {
+            chartLabels.push(item.date);
+            historicalData.push(null); // 이전 데이터는 null
+            predictedData.push(item.deaths);
+          }
+        });
+      }
+      
+      const chartConfig = {
+        labels: chartLabels,
+        datasets: [
+          {
+            label: '이전 데이터 (2024)',
+            data: historicalData,
+            borderColor: 'rgba(54, 162, 235, 0.8)',
+            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          },
+          {
+            label: '예측 데이터 (2025)',
+            data: predictedData,
+            borderColor: 'rgba(255, 99, 132, 0.8)',
+            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+            borderDash: [5, 5], // 점선으로 표시
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }
+        ]
+      };
+      
+      setChartData(chartConfig);
+      console.log('✅ 차트 데이터 생성 완료');
+      
+    } catch (error) {
+      console.error('차트 데이터 생성 실패:', error);
+    }
+  };
+
+  // 지역 선택 핸들러
+  useEffect(() => {
+    if (!isInitialLoading && selectedRegion) {
+      loadRegionData(selectedRegion);
+    }
+  }, [selectedRegion, isInitialLoading]);
+
   const handleRefresh = async () => {
-    console.log(`'${selectedRegion}' 지역 새로고침 버튼 클릭됨`);
-    // 새로고침 로직은 껍데기만 - 실제 API 호출 없음
-    setRefreshKey(prev => prev + 1);
-    alert('🔄 새로고침 버튼이 클릭되었습니다.\n(데이터 처리 로직은 아직 구현되지 않음)');
+    console.log(`'${selectedRegion}' 지역 새로고침 시작`);
+    
+    try {
+      setLoading(true);
+      
+      // 2024-01, 2025-01 데이터 재생성
+      const targetDates = ['2024-01', '2025-01'];
+      
+      for (const date of targetDates) {
+        try {
+          await apiService.requestPrediction({ date });
+          console.log(`✅ ${date} 데이터 재생성 완료`);
+        } catch (error) {
+          console.log(`⚠️ ${date} 데이터 재생성 실패:`, error.message);
+        }
+      }
+      
+      // 데이터 처리 대기
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // 전국 데이터 및 현재 지역 데이터 재로딩
+      await loadNationalData();
+      await loadRegionData(selectedRegion);
+      
+      setRefreshKey(prev => prev + 1);
+      alert('🎉 데이터 새로고침 완료!');
+      
+    } catch (error) {
+      console.error('새로고침 실패:', error);
+      alert('⚠️ 새로고침 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,7 +270,7 @@ const Menu2F = () => {
             color: '#2C1F14',
             paddingLeft: '10px' 
           }}>
-            Menu2F 대시보드
+            Menu2F 통합 대시보드
           </h4>
           <div className="dashboard-left" style={{
             background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
@@ -86,8 +286,8 @@ const Menu2F = () => {
               onRegionSelect={setSelectedRegion}
             />
           </div>
-          <button className="refresh-btn" onClick={handleRefresh}>
-            🔄 새로고침 (껍데기)
+          <button className="refresh-btn" onClick={handleRefresh} disabled={loading}>
+            {loading ? '🔄 처리 중...' : '🚀 데이터 새로고침'}
           </button>
         </div>
 
@@ -112,46 +312,22 @@ const Menu2F = () => {
               color: '#2C1F14'
             }}>
               <div style={{ fontSize: '18px', marginBottom: '10px' }}>
-                📊 데이터 로딩 중...
+                📊 2025년 예측 데이터 생성 중...
               </div>
               <div style={{ fontSize: '14px', opacity: 0.7 }}>
                 잠시만 기다려주세요
               </div>
             </div>
           ) : (
-            // RegionDataDisplay 컴포넌트 대신 플레이스홀더 컨텐츠
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: '#2C1F14',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '24px', marginBottom: '20px' }}>
-                📍 {selectedRegion === '전체' ? '전국' : selectedRegion}
-              </div>
-              <div style={{ fontSize: '48px', marginBottom: '20px' }}>
-                📊
-              </div>
-              <div style={{ fontSize: '18px', marginBottom: '10px', fontWeight: '600' }}>
-                Menu2F 대시보드 껍데기
-              </div>
-              <div style={{ fontSize: '14px', opacity: 0.7, marginBottom: '20px' }}>
-                현재 선택된 지역: {selectedRegion}
-              </div>
-              <div style={{ 
-                fontSize: '12px', 
-                opacity: 0.5,
-                maxWidth: '300px',
-                lineHeight: '1.5'
-              }}>
-                이 화면은 UI 요소만 복제한 껍데기 버전입니다.<br/>
-                실제 데이터 처리 로직은 구현되지 않았습니다.<br/>
-                지도를 클릭하거나 새로고침 버튼을 눌러보세요.
-              </div>
-            </div>
+            <DataDisplayComponent 
+              region={selectedRegion}
+              nationalData={nationalData}
+              currentRegionData={currentRegionData}
+              chartData={chartData}
+              loading={loading}
+              error={error}
+              refreshKey={refreshKey}
+            />
           )}
         </div>
       </div>
@@ -199,6 +375,12 @@ const Menu2F = () => {
         .refresh-btn:active {
           transform: translateY(0);
           box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+        }
+
+        .refresh-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none !important;
         }
 
         .dashboard-right::-webkit-scrollbar {
@@ -268,6 +450,350 @@ const Menu2F = () => {
                     }
                 }
       `}</style>
+    </div>
+  );
+};
+
+// 데이터 표시 컴포넌트
+const DataDisplayComponent = ({ 
+  region, 
+  nationalData, 
+  currentRegionData, 
+  chartData, 
+  loading, 
+  error,
+  refreshKey 
+}) => {
+  // 전국 데이터 기준 지역 상태 계산
+  const getRegionStatus = () => {
+    if (!nationalData || !Array.isArray(nationalData)) {
+      return [];
+    }
+
+    // 지역별 증가율 계산
+    const regionGrowthRates = nationalData
+      .filter(item => item.region && item.growthRate !== undefined)
+      .map(item => ({
+        region: item.region,
+        growthRate: item.growthRate || 0
+      }))
+      .sort((a, b) => b.growthRate - a.growthRate);
+
+    if (regionGrowthRates.length === 0) return [];
+
+    // 3등분으로 나누기
+    const totalRegions = regionGrowthRates.length;
+    const highThreshold = Math.ceil(totalRegions / 3);
+    const mediumThreshold = Math.ceil((totalRegions * 2) / 3);
+
+    const regionStatus = [
+      { 
+        level: '우선 지역', 
+        description: '전원 대비 증가율이 가장 높은 지역들',
+        color: 'rgba(220, 53, 69, 0.15)', 
+        borderColor: 'rgba(220, 53, 69, 0.8)',
+        textColor: '#dc3545',
+        regions: [] 
+      },
+      { 
+        level: '관심 지역', 
+        description: '평상 수준 이상의 증가율을 보이는 주의 필요한 지역',
+        color: 'rgba(255, 193, 7, 0.15)', 
+        borderColor: 'rgba(255, 193, 7, 0.8)',
+        textColor: '#ffc107',
+        regions: [] 
+      },
+      { 
+        level: '안정 지역', 
+        description: '증가율이 낮거나 감소세를 보이는 지역',
+        color: 'rgba(25, 135, 84, 0.15)', 
+        borderColor: 'rgba(25, 135, 84, 0.8)',
+        textColor: '#198754',
+        regions: [] 
+      }
+    ];
+
+    regionGrowthRates.forEach((item, index) => {
+      if (index < highThreshold) {
+        regionStatus[0].regions.push(`${item.region} (${item.growthRate.toFixed(1)}%)`);
+      } else if (index < mediumThreshold) {
+        regionStatus[1].regions.push(`${item.region} (${item.growthRate.toFixed(1)}%)`);
+      } else {
+        regionStatus[2].regions.push(`${item.region} (${item.growthRate.toFixed(1)}%)`);
+      }
+    });
+
+    return regionStatus;
+  };
+
+  // 예측 요약 통계 계산
+  const getSummaryStats = () => {
+    if (!currentRegionData || !Array.isArray(currentRegionData)) {
+      return { totalDeaths: 0, avgGrowthRate: 0, maxMonth: '', minMonth: '' };
+    }
+
+    const totalDeaths = currentRegionData.reduce((sum, item) => sum + (item.deaths || 0), 0);
+    const avgGrowthRate = currentRegionData.reduce((sum, item) => sum + (item.growthRate || 0), 0) / currentRegionData.length;
+    
+    const sortedByDeaths = [...currentRegionData].sort((a, b) => (b.deaths || 0) - (a.deaths || 0));
+    const maxMonth = sortedByDeaths[0]?.date || '';
+    const minMonth = sortedByDeaths[sortedByDeaths.length - 1]?.date || '';
+
+    return {
+      totalDeaths: Math.round(totalDeaths),
+      avgGrowthRate: avgGrowthRate.toFixed(1),
+      maxMonth,
+      minMonth
+    };
+  };
+
+  const regionStatus = getRegionStatus();
+  const summaryStats = getSummaryStats();
+  const displayRegionName = region === '전체' ? '전국' : region;
+
+  const cardStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: '16px',
+    border: '1px solid rgba(184, 134, 11, 0.2)',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: `${displayRegionName} 사망자 수 추이 (이전 vs 예측)`,
+        font: { size: 16, weight: 'bold' }
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: '사망자 수'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: '월'
+        }
+      }
+    },
+  };
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100%',
+        flexDirection: 'column',
+        color: '#2C1F14'
+      }}>
+        <div style={{ fontSize: '18px', marginBottom: '10px' }}>
+          📊 {displayRegionName} 데이터 로딩 중...
+        </div>
+        <div style={{ fontSize: '14px', opacity: 0.7 }}>
+          잠시만 기다려주세요
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100%',
+        flexDirection: 'column',
+        color: '#dc3545'
+      }}>
+        <div style={{ fontSize: '18px', marginBottom: '10px' }}>
+          ⚠️ 오류 발생
+        </div>
+        <div style={{ fontSize: '14px', opacity: 0.7 }}>
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* 제목 */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 style={{ fontWeight: '700', color: '#343a40' }}>
+          <i className="fas fa-map-marker-alt me-2" style={{ color: '#D4AF37' }}></i>
+          {displayRegionName} 예측 결과 분석
+        </h2>
+        <small className="text-muted">
+          데이터 소스: 백엔드 API
+        </small>
+      </div>
+
+      {/* 주요지역 현황 요약 (전국 데이터 기준, 지역 선택으로 변하지 않음) */}
+      <div className="p-4 mb-4" style={cardStyle}>
+        <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
+          📊 주요지역 현황 요약 (2025년 예측 기준)
+        </h5>
+        <Row className="g-3">
+          {regionStatus.map((status, index) => (
+            <Col md={4} key={index}>
+              <div 
+                className="h-100 p-3 rounded-3 border-start border-4"
+                style={{ 
+                  backgroundColor: status.color,
+                  borderLeftColor: status.borderColor + ' !important',
+                  minHeight: '120px',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              >
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h6 className="mb-0" style={{ color: status.textColor, fontWeight: '600' }}>
+                    {status.level}
+                  </h6>
+                  <span className="badge rounded-pill" style={{ backgroundColor: status.textColor, color: 'white' }}>
+                    {status.regions.length}개
+                  </span>
+                </div>
+                <small className="text-muted mb-2" style={{ fontSize: '11px' }}>
+                  {status.description}
+                </small>
+                <div className="mt-auto">
+                  <div className="d-flex flex-wrap gap-1">
+                    {status.regions.slice(0, 3).map((region, regionIndex) => (
+                      <span 
+                        key={regionIndex}
+                        className="badge rounded-pill px-2 py-1"
+                        style={{ 
+                          backgroundColor: status.textColor,
+                          color: 'white',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        {region}
+                      </span>
+                    ))}
+                    {status.regions.length > 3 && (
+                      <span className="text-muted small">+{status.regions.length - 3}개</span>
+                    )}
+                  </div>
+                  {status.regions.length === 0 && (
+                    <p className="text-muted small mb-0">데이터가 없습니다</p>
+                  )}
+                </div>
+              </div>
+            </Col>
+          ))}
+        </Row>
+      </div>
+
+      {/* 예측 요약 통계 */}
+      <div className="p-4 mb-4" style={cardStyle}>
+        <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
+          📈 {displayRegionName} 예측 요약 통계
+        </h5>
+        <Row className="g-3">
+          <Col md={3}>
+            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(54, 162, 235, 0.1)' }}>
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#369CE3' }}>
+                {summaryStats.totalDeaths.toLocaleString()}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>예상 총 사망자 수</div>
+            </div>
+          </Col>
+          <Col md={3}>
+            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 99, 132, 0.1)' }}>
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#FF6384' }}>
+                {summaryStats.avgGrowthRate}%
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>평균 증가율</div>
+            </div>
+          </Col>
+          <Col md={3}>
+            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 206, 84, 0.1)' }}>
+              <div style={{ fontSize: '18px', fontWeight: '600', color: '#FFCE54' }}>
+                {summaryStats.maxMonth}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>최대 예상 월</div>
+            </div>
+          </Col>
+          <Col md={3}>
+            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(75, 192, 192, 0.1)' }}>
+              <div style={{ fontSize: '18px', fontWeight: '600', color: '#4BC0C0' }}>
+                {summaryStats.minMonth}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>최소 예상 월</div>
+            </div>
+          </Col>
+        </Row>
+      </div>
+
+      {/* 시계열 차트 */}
+      {chartData && (
+        <div className="p-4 mb-4" style={cardStyle}>
+          <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
+            📈 {displayRegionName} 시계열 예측 차트
+          </h5>
+          <div style={{ height: '400px' }}>
+            <Line data={chartData} options={chartOptions} />
+          </div>
+        </div>
+      )}
+
+      {/* 월별 데이터 테이블 */}
+      {currentRegionData && Array.isArray(currentRegionData) && (
+        <div className="p-4" style={cardStyle}>
+          <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
+            📋 {displayRegionName} 월별 상세 데이터
+          </h5>
+          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <Table striped bordered hover size="sm">
+              <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0 }}>
+                <tr>
+                  <th>월</th>
+                  <th>예상 사망자 수</th>
+                  <th>증가율</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentRegionData.map((item, index) => (
+                  <tr key={index}>
+                    <td>{item.date}</td>
+                    <td style={{ fontWeight: '600' }}>
+                      {(item.deaths || 0).toLocaleString()}명
+                    </td>
+                    <td style={{ 
+                      color: (item.growthRate || 0) >= 0 ? '#dc3545' : '#198754',
+                      fontWeight: '600'
+                    }}>
+                      {(item.growthRate || 0) >= 0 ? '+' : ''}{(item.growthRate || 0).toFixed(1)}%
+                    </td>
+                    <td>
+                      <span className={`badge ${(item.growthRate || 0) >= 5 ? 'bg-danger' : (item.growthRate || 0) >= 2 ? 'bg-warning' : 'bg-success'}`}>
+                        {(item.growthRate || 0) >= 5 ? '주의' : (item.growthRate || 0) >= 2 ? '관심' : '안정'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
