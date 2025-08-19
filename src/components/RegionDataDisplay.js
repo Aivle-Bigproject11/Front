@@ -80,7 +80,7 @@ const RegionDataDisplay = ({ region }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [useBackendData, setUseBackendData] = useState(false); // 기본값을 false로 변경
+  const [useBackendData, setUseBackendData] = useState(true); // 백엔드 데이터를 기본값으로 변경
   const [backendAvailable, setBackendAvailable] = useState(false);
 
   useEffect(() => {
@@ -152,10 +152,12 @@ const RegionDataDisplay = ({ region }) => {
         // 모든 시도 실패
         console.log('❌ 모든 백엔드 연결 시도 실패');
         setBackendAvailable(false);
+        setUseBackendData(false); // 백엔드 연결 실패 시 CSV로 폴백
         
       } catch (error) {
         console.log('💥 백엔드 서버 연결 불가:', error.message);
         setBackendAvailable(false);
+        setUseBackendData(false); // 백엔드 연결 실패 시 CSV로 폴백
       }
     };
 
@@ -166,101 +168,93 @@ const RegionDataDisplay = ({ region }) => {
         setLoading(true);
         setError(null);
 
-        if (useBackendData && backendAvailable) {
-          // 백엔드 API 사용
-          const currentDate = new Date().toISOString().slice(0, 7); // YYYY-MM
+        // 백엔드가 사용 가능하면 우선적으로 백엔드 데이터 사용
+        if (backendAvailable) {
+          console.log('🚀 백엔드 데이터 로딩 시작...');
           
-          let regionData;
-          if (region === '전체') {
-            console.log('전체 지역 데이터 요청 중...');
-            console.log('API 호출:', `GET /deathPredictions/by-date/${currentDate}`);
+          try {
+            // 백엔드 API 사용
+            const currentDate = new Date().toISOString().slice(0, 7); // YYYY-MM
             
-            try {
-              regionData = await apiService.getDashboardByDate(currentDate);
-              console.log('✅ 전체 지역 데이터 응답:', regionData);
-            } catch (error) {
-              // 데이터가 없으면 먼저 예측 요청을 시도
-              if (error.response?.status === 404) {
-                console.log('📝 데이터가 없어 예측 요청 시도 중...');
-                await apiService.requestPrediction({
-                  date: currentDate,
-                  region: "서울특별시",
-                  previousYearDeaths: 1500
-                });
-                // 다시 데이터 조회 시도
+            let regionData;
+            if (region === '전체') {
+              console.log('전체 지역 데이터 요청 중...');
+              console.log('API 호출:', `GET /deathPredictions/by-date/${currentDate}`);
+              
+              try {
                 regionData = await apiService.getDashboardByDate(currentDate);
-              } else {
-                throw error;
+                console.log('✅ 전체 지역 데이터 응답:', regionData);
+              } catch (error) {
+                // 데이터가 없으면 먼저 예측 요청을 시도
+                if (error.response?.status === 404) {
+                  console.log('📝 데이터가 없어 예측 요청 시도 중...');
+                  try {
+                    await apiService.requestPrediction({
+                      date: currentDate,
+                      region: "서울특별시",
+                      previousYearDeaths: 1500
+                    });
+                    // 다시 데이터 조회 시도
+                    regionData = await apiService.getDashboardByDate(currentDate);
+                  } catch (predError) {
+                    console.log('📝 예측 요청 실패, 폴백 모드로 전환:', predError.message);
+                    throw error; // 원래 404 에러를 다시 던짐
+                  }
+                } else {
+                  throw error;
+                }
               }
-            }
-          } else {
-            console.log(`${region} 지역 데이터 요청 중...`);
-            console.log('API 호출:', `GET /deathPredictions/by-region/${region}`);
-            
-            try {
-              regionData = await apiService.getDashboardByRegion(region);
-              console.log('✅ 지역별 데이터 응답:', regionData);
-            } catch (error) {
-              // 데이터가 없으면 먼저 예측 요청을 시도
-              if (error.response?.status === 404) {
-                console.log('📝 데이터가 없어 예측 요청 시도 중...');
-                await apiService.requestPrediction({
-                  date: currentDate,
-                  region: region,
-                  previousYearDeaths: 1500
-                });
-                // 다시 데이터 조회 시도
+            } else {
+              console.log(`${region} 지역 데이터 요청 중...`);
+              console.log('API 호출:', `GET /deathPredictions/by-region/${region}`);
+              
+              try {
                 regionData = await apiService.getDashboardByRegion(region);
-              } else {
-                throw error;
+                console.log('✅ 지역별 데이터 응답:', regionData);
+              } catch (error) {
+                // 데이터가 없으면 먼저 예측 요청을 시도
+                if (error.response?.status === 404) {
+                  console.log('📝 데이터가 없어 예측 요청 시도 중...');
+                  try {
+                    await apiService.requestPrediction({
+                      date: currentDate,
+                      region: region,
+                      previousYearDeaths: 1500
+                    });
+                    // 다시 데이터 조회 시도
+                    regionData = await apiService.getDashboardByRegion(region);
+                  } catch (predError) {
+                    console.log('📝 예측 요청 실패, 폴백 모드로 전환:', predError.message);
+                    throw error; // 원래 404 에러를 다시 던짐
+                  }
+                } else {
+                  throw error;
+                }
               }
             }
+
+            console.log('백엔드 응답 데이터:', regionData);
+
+            // 백엔드 데이터를 기존 형식으로 변환
+            const processedData = formatBackendData(regionData, region);
+            setDashboardData(processedData);
+            setUseBackendData(true);
+            
+          } catch (backendError) {
+            console.error('백엔드 데이터 로딩 실패, CSV로 폴백:', backendError);
+            setError('백엔드 연결 실패, CSV 데이터로 표시합니다.');
+            setUseBackendData(false);
+            loadCsvData(); // 백엔드 실패 시 CSV로 폴백
           }
-
-          console.log('백엔드 응답 데이터:', regionData);
-
-          // 백엔드 데이터를 기존 형식으로 변환
-          const processedData = formatBackendData(regionData, region);
-          setDashboardData(processedData);
         } else {
+          console.log('📄 백엔드 연결 불가, CSV 데이터 사용');
+          setUseBackendData(false);
           // CSV 데이터 사용
           loadCsvData();
         }
       } catch (error) {
-        console.error('백엔드 데이터 로딩 실패:', error);
-        
-        // 에러 유형별 상세한 메시지 제공
-        let errorMessage;
-        if (error.response) {
-          // 서버가 응답했지만 에러 상태 코드
-          const status = error.response.status;
-          if (status === 404) {
-            errorMessage = `API 엔드포인트를 찾을 수 없습니다 (${status}). 백엔드 서버의 API 경로를 확인해주세요.`;
-          } else if (status === 401) {
-            errorMessage = `인증이 필요합니다 (${status}). 로그인 후 다시 시도해주세요.`;
-          } else if (status === 403) {
-            errorMessage = `접근 권한이 없습니다 (${status}).`;
-          } else if (status === 500) {
-            errorMessage = `백엔드 서버 내부 오류 (${status}). 서버에서 데이터베이스 연결 등에 문제가 있을 수 있습니다.`;
-          } else if (status >= 500) {
-            errorMessage = `서버 내부 오류 (${status}). 잠시 후 다시 시도해주세요.`;
-          } else {
-            errorMessage = `API 오류 (${status}): ${error.response.data?.message || '알 수 없는 오류'}`;
-          }
-        } else if (error.request) {
-          // 요청이 전송되었지만 응답을 받지 못함
-          errorMessage = '백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.';
-        } else {
-          // 요청 설정 중 에러
-          errorMessage = `요청 설정 오류: ${error.message}`;
-        }
-        
-        setError(`${errorMessage} CSV 데이터를 사용합니다.`);
-        setUseBackendData(false);
-        setBackendAvailable(false); // 실패 시 백엔드를 사용 불가로 표시
-        
-        // 폴백: CSV 데이터 사용
-        loadCsvData();
+        console.error('전체 데이터 로딩 실패:', error);
+        setError('데이터를 불러올 수 없습니다.');
       } finally {
         setLoading(false);
       }
@@ -303,9 +297,11 @@ const RegionDataDisplay = ({ region }) => {
       }
     };
 
-    // 초기 로딩 시에는 항상 CSV부터 시작
-    loadDashboardData();
-  }, [region, useBackendData, backendAvailable]);
+    // 백엔드 가용성 체크 완료 후 데이터 로딩
+    checkBackendAvailability().then(() => {
+      loadDashboardData();
+    });
+  }, [region]); // region 변경 시에만 새로 로딩
 
   // 백엔드 데이터를 UI에 맞게 변환
   const formatBackendData = (data, selectedRegion) => {
