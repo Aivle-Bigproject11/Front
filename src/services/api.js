@@ -44,6 +44,37 @@ api.interceptors.response.use(
   }
 );
 
+// 지역명 매핑 함수 (백엔드 실제 DB 데이터에 맞춤)
+const mapRegionName = (region) => {
+  const regionMapping = {
+    // 백엔드 실제 지역 데이터 기준 매핑
+    '서울': '서울특별시',
+    '부산': '부산광역시', 
+    '대구': '대구광역시',
+    '인천': '인천광역시',
+    '광주': '광주광역시',
+    '대전': '대전광역시',
+    '울산': '울산광역시',
+    '세종': '세종특별자치시',
+    '경기': '경기도',
+    '강원': '강원특별자치도',
+    '충북': '충청북도',
+    '충남': '충청남도',
+    '전북': '전북특별자치도',
+    '전남': '전라남도',
+    '경북': '경상북도',
+    '경남': '경상남도',
+    '제주': '제주특별자치도',
+    
+    // 기존 UI에서 사용하는 축약형들도 지원
+    '강원특별자치도': '강원특별자치도',
+    '전북특별자치도': '전북특별자치도',
+    '세종특별자치시': '세종특별자치시'
+  };
+  
+  return regionMapping[region] || region;
+};
+
 // --- 실제 API 서비스 정의 (Axios 응답에서 data를 추출하여 반환하도록 수정) ---
 const realApiService = {
   // Memorial Service
@@ -394,22 +425,31 @@ const realApiService = {
     }
   },
 
-  // Dashboard API - 백엔드팀 코드에 맞게 수정
+  // Dashboard API - 백엔드 실제 엔드포인트에 맞게 수정
   getDashboardByDate: async (date) => {
     // 백엔드: GET /deathPredictions/by-date/{date}
+    console.log(`🔗 API 호출: GET /deathPredictions/by-date/${date}`);
     return (await api.get(`/deathPredictions/by-date/${date}`)).data;
   },
   getDashboardByRegion: async (region) => {
     // 백엔드: GET /deathPredictions/by-region/{region}
-    return (await api.get(`/deathPredictions/by-region/${region}`)).data;
+    const mappedRegion = mapRegionName(region);
+    console.log(`🔗 API 호출: GET /deathPredictions/by-region/${mappedRegion} (원본: ${region})`);
+    return (await api.get(`/deathPredictions/by-region/${encodeURIComponent(mappedRegion)}`)).data;
   },
   getDeathPrediction: async (date, region) => {
     // 백엔드: GET /deathPredictions/{date}/{region}
+    console.log(`🔗 API 호출: GET /deathPredictions/${date}/${region}`);
     return (await api.get(`/deathPredictions/${date}/${region}`)).data;
   },
   requestPrediction: async (data) => {
     // 백엔드: POST /deathPredictions/request-prediction
-    return (await api.post('/deathPredictions/request-prediction', data)).data;
+    const mappedData = {
+      ...data,
+      region: mapRegionName(data.region)
+    };
+    console.log('🔗 API 호출: POST /deathPredictions/request-prediction', mappedData);
+    return (await api.post('/deathPredictions/request-prediction', mappedData)).data;
   },
   // 기존 API들은 다른 서비스용이므로 유지
   getPredictCheck: async () => (await api.get('/predict-check')).data,
