@@ -746,10 +746,17 @@ const DataDisplayComponent = ({
       return { totalDeaths: 0, avgGrowthRate: 0, maxMonth: '', minMonth: '' };
     }
 
-    const totalDeaths = currentRegionData.reduce((sum, item) => sum + (item.deaths || 0), 0);
-    const avgGrowthRate = currentRegionData.reduce((sum, item) => sum + (item.growthRate || 0), 0) / currentRegionData.length;
+    // 현재 날짜 기준으로 이후 데이터만 필터링
+    const currentDate = new Date();
+    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
     
-    const sortedByDeaths = [...currentRegionData].sort((a, b) => (b.deaths || 0) - (a.deaths || 0));
+    const futureData = currentRegionData.filter(item => item.date > currentMonthStr);
+
+    const totalDeaths = futureData.reduce((sum, item) => sum + (item.deaths || 0), 0);
+    const avgGrowthRate = futureData.length > 0 ? 
+      futureData.reduce((sum, item) => sum + (item.growthRate || 0), 0) / futureData.length : 0;
+    
+    const sortedByDeaths = [...futureData].sort((a, b) => (b.deaths || 0) - (a.deaths || 0));
     const maxMonth = sortedByDeaths[0]?.date || '';
     const minMonth = sortedByDeaths[sortedByDeaths.length - 1]?.date || '';
 
@@ -761,8 +768,82 @@ const DataDisplayComponent = ({
     };
   };
 
+  // 현재 달과 다음 달 비교 분석
+  const getCurrentVsNextMonthAnalysis = () => {
+    if (!currentRegionData || !Array.isArray(currentRegionData)) {
+      return { 
+        currentMonthDeaths: 0, 
+        nextMonthDeaths: 0, 
+        difference: 0, 
+        trend: 'unknown',
+        trendIcon: '❓',
+        trendColor: '#666',
+        trendMessage: '데이터를 분석 중입니다...'
+      };
+    }
+
+    const currentDate = new Date();
+    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    const nextMonth = new Date(currentDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+
+    const currentMonthData = currentRegionData.find(item => item.date === currentMonthStr);
+    const nextMonthData = currentRegionData.find(item => item.date === nextMonthStr);
+
+    if (!currentMonthData || !nextMonthData) {
+      return { 
+        currentMonthDeaths: 0, 
+        nextMonthDeaths: 0, 
+        difference: 0, 
+        trend: 'unknown',
+        trendIcon: '❓',
+        trendColor: '#666',
+        trendMessage: '해당 기간의 데이터가 없습니다.'
+      };
+    }
+
+    const currentDeaths = currentMonthData.deaths || 0;
+    const nextDeaths = nextMonthData.deaths || 0;
+    const difference = nextDeaths - currentDeaths;
+    const percentChange = currentDeaths > 0 ? ((difference / currentDeaths) * 100) : 0;
+
+    let trend, trendIcon, trendColor, trendMessage;
+
+    if (Math.abs(difference) <= Math.max(currentDeaths * 0.05, 5)) { // 5% 이하 변화 또는 5명 이하 차이
+      trend = 'stable';
+      trendIcon = '➡️';
+      trendColor = '#28a745';
+      trendMessage = `다음 달 사망자 수가 현재와 유사할 것으로 예상됩니다 (${difference > 0 ? '+' : ''}${difference}명)`;
+    } else if (difference > 0) {
+      trend = 'increase';
+      trendIcon = '📈';
+      trendColor = '#dc3545';
+      trendMessage = `다음 달 사망자 수가 ${difference}명 증가할 것으로 예상됩니다 (+${percentChange.toFixed(1)}%)`;
+    } else {
+      trend = 'decrease';
+      trendIcon = '📉';
+      trendColor = '#369CE3';
+      trendMessage = `다음 달 사망자 수가 ${Math.abs(difference)}명 감소할 것으로 예상됩니다 (${percentChange.toFixed(1)}%)`;
+    }
+
+    return {
+      currentMonthDeaths: currentDeaths,
+      nextMonthDeaths: nextDeaths,
+      difference,
+      trend,
+      trendIcon,
+      trendColor,
+      trendMessage,
+      currentMonthStr,
+      nextMonthStr
+    };
+  };
+
   const regionStatus = getRegionStatus();
   const summaryStats = getSummaryStats();
+  const monthAnalysis = getCurrentVsNextMonthAnalysis();
   const displayRegionName = region === '전체' ? '전국' : region;
 
   const cardStyle = {
@@ -943,6 +1024,54 @@ const DataDisplayComponent = ({
             </Col>
           ))}
         </Row>
+      </div>
+
+      {/* 현재 vs 다음 달 안내 메시지 카드 */}
+      <div className="p-4 mb-4" style={cardStyle}>
+        <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
+          📊 {displayRegionName} 월간 변화 예측
+        </h5>
+        <div className="text-center p-4 rounded-3" style={{ 
+          backgroundColor: `${monthAnalysis.trendColor}15`,
+          border: `2px solid ${monthAnalysis.trendColor}30`
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '10px' }}>
+            {monthAnalysis.trendIcon}
+          </div>
+          <h6 style={{ color: monthAnalysis.trendColor, fontWeight: '600', marginBottom: '15px' }}>
+            {monthAnalysis.trendMessage}
+          </h6>
+          <Row className="g-3">
+            <Col md={6}>
+              <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#666' }}>
+                  {monthAnalysis.currentMonthDeaths.toLocaleString()}명
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  현재 ({monthAnalysis.currentMonthStr?.slice(-2)}월)
+                </div>
+              </div>
+            </Col>
+            <Col md={6}>
+              <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: monthAnalysis.trendColor }}>
+                  {monthAnalysis.nextMonthDeaths.toLocaleString()}명
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  예상 ({monthAnalysis.nextMonthStr?.slice(-2)}월)
+                </div>
+              </div>
+            </Col>
+          </Row>
+          {monthAnalysis.difference !== 0 && (
+            <div className="mt-3">
+              <span className={`badge ${monthAnalysis.difference > 0 ? 'bg-danger' : 'bg-primary'} fs-6`}>
+                {monthAnalysis.difference > 0 ? '+' : ''}{monthAnalysis.difference}명 
+                ({monthAnalysis.difference > 0 ? '증가' : '감소'})
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 예측 요약 통계 */}
