@@ -182,10 +182,31 @@ const MemorialConfig = () => {
 
     const handleSlideshowPhotoChange = (e) => {
         const newFiles = Array.from(e.target.files);
+        const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+        const MAX_INDIVIDUAL_SIZE = 5 * 1024 * 1024; // 5MB
+
+        // 개별 파일 크기 확인
+        for (const file of newFiles) {
+            if (file.size > MAX_INDIVIDUAL_SIZE) {
+                alert(`개별 사진의 용량은 5MB를 초과할 수 없습니다. (${file.name})`);
+                return;
+            }
+        }
+
+        // 새로 추가될 사진 포함 전체 개수 확인
         if (slideshowPhotos.length + newFiles.length > 15) {
             alert('슬라이드쇼 사진은 최대 15개까지 선택 가능합니다.');
             return;
         }
+
+        // 새로 추가될 사진 포함 전체 용량 확인
+        const currentTotalSize = slideshowPhotos.reduce((acc, photo) => acc + photo.size, 0);
+        const newFilesSize = newFiles.reduce((acc, file) => acc + file.size, 0);
+        if (currentTotalSize + newFilesSize > MAX_TOTAL_SIZE) {
+            alert('업로드하는 모든 사진의 총 용량은 50MB를 초과할 수 없습니다.');
+            return;
+        }
+
         setSlideshowPhotos(prevPhotos => [...prevPhotos, ...newFiles]);
     };
 
@@ -194,6 +215,23 @@ const MemorialConfig = () => {
     };
 
     const handleChangeSlideshowPhoto = (index, file) => {
+        const MAX_INDIVIDUAL_SIZE = 5 * 1024 * 1024; // 5MB
+        if (file.size > MAX_INDIVIDUAL_SIZE) {
+            alert(`개별 사진의 용량은 5MB를 초과할 수 없습니다. (${file.name})`);
+            return;
+        }
+
+        const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+        const currentTotalSize = slideshowPhotos.reduce((acc, photo, i) => {
+            if (i === index) return acc; // 교체될 파일은 용량 계산에서 제외
+            return acc + photo.size;
+        }, 0);
+
+        if (currentTotalSize + file.size > MAX_TOTAL_SIZE) {
+            alert('업로드하는 모든 사진의 총 용량은 50MB를 초과할 수 없습니다.');
+            return;
+        }
+
         setSlideshowPhotos(prevPhotos => {
             const newPhotos = [...prevPhotos];
             newPhotos[index] = file;
@@ -246,6 +284,13 @@ const MemorialConfig = () => {
                 return;
             }
             
+            const totalSize = slideshowPhotos.reduce((acc, photo) => acc + photo.size, 0);
+            const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+            if (totalSize > MAX_TOTAL_SIZE) {
+                alert('업로드하는 모든 사진의 총 용량은 50MB를 초과할 수 없습니다.');
+                return;
+            }
+
             if (!animatedPhoto) {
                 alert("움직이는 효과를 적용할 사진을 선택해주세요.");
                 return;
@@ -955,7 +1000,13 @@ const MemorialConfig = () => {
                                                                     accept="image/*"
                                                                     onChange={(e) => {
                                                                         if (e.target.files[0]) {
-                                                                            setAnimatedPhoto(e.target.files[0]);
+                                                                            const file = e.target.files[0];
+                                                                            const MAX_INDIVIDUAL_SIZE = 5 * 1024 * 1024; // 5MB
+                                                                            if (file.size > MAX_INDIVIDUAL_SIZE) {
+                                                                                alert(`개별 사진의 용량은 5MB를 초과할 수 없습니다. (${file.name})`);
+                                                                                return;
+                                                                            }
+                                                                            setAnimatedPhoto(file);
                                                                         }
                                                                     }}
                                                                     style={{ display: 'none' }}
@@ -985,8 +1036,14 @@ const MemorialConfig = () => {
                                                                 type="file"
                                                                 accept="image/*"
                                                                 onChange={(e) => {
-                                                                    if (e.target.files[0]) {
-                                                                        setAnimatedPhoto(e.target.files[0]);
+                                                                    const file = e.target.files[0];
+                                                                    if (file) {
+                                                                        const MAX_INDIVIDUAL_SIZE = 5 * 1024 * 1024; // 5MB
+                                                                        if (file.size > MAX_INDIVIDUAL_SIZE) {
+                                                                            alert(`개별 사진의 용량은 5MB를 초과할 수 없습니다. (${file.name})`);
+                                                                            return;
+                                                                        }
+                                                                        setAnimatedPhoto(file);
                                                                     }
                                                                 }}
                                                                 style={{ 
