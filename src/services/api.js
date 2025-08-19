@@ -432,18 +432,45 @@ const realApiService = {
   getDashboardByDate: async (date) => {
     // 백엔드: GET /deathPredictions/by-date/{date}
     console.log(`🔗 API 호출: GET /deathPredictions/by-date/${date}`);
-    return (await api.get(`/deathPredictions/by-date/${date}`)).data;
+    try {
+      const response = await api.get(`/deathPredictions/by-date/${date}`);
+      console.log(`✅ API 응답 성공 (${date}):`, response.data);
+      console.log(`   응답 타입: ${typeof response.data}, 배열 여부: ${Array.isArray(response.data)}, 길이: ${Array.isArray(response.data) ? response.data.length : 'N/A'}`);
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        console.log(`   첫 번째 항목:`, response.data[0]);
+        console.log(`   마지막 항목:`, response.data[response.data.length - 1]);
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`❌ API 호출 실패 (${date}):`, error.response?.status, error.response?.data || error.message);
+      throw error;
+    }
   },
   getDashboardByRegion: async (region) => {
     // 백엔드: GET /deathPredictions/by-region/{region}
     const mappedRegion = mapRegionName(region);
     console.log(`🔗 API 호출: GET /deathPredictions/by-region/${mappedRegion} (원본: ${region})`);
-    return (await api.get(`/deathPredictions/by-region/${encodeURIComponent(mappedRegion)}`)).data;
+    try {
+      const response = await api.get(`/deathPredictions/by-region/${encodeURIComponent(mappedRegion)}`);
+      console.log(`✅ API 응답 성공 (${mappedRegion}):`, response.data);
+      console.log(`   응답 타입: ${typeof response.data}, 배열 여부: ${Array.isArray(response.data)}, 길이: ${Array.isArray(response.data) ? response.data.length : 'N/A'}`);
+      return response.data;
+    } catch (error) {
+      console.error(`❌ API 호출 실패 (${mappedRegion}):`, error.response?.status, error.response?.data || error.message);
+      throw error;
+    }
   },
   getDeathPrediction: async (date, region) => {
     // 백엔드: GET /deathPredictions/{date}/{region}
     console.log(`🔗 API 호출: GET /deathPredictions/${date}/${region}`);
-    return (await api.get(`/deathPredictions/${date}/${region}`)).data;
+    try {
+      const response = await api.get(`/deathPredictions/${date}/${region}`);
+      console.log(`✅ API 응답 성공 (${date}/${region}):`, response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`❌ API 호출 실패 (${date}/${region}):`, error.response?.status, error.response?.data || error.message);
+      throw error;
+    }
   },
   requestPrediction: async (data) => {
     // 백엔드: POST /deathPredictions/request-prediction
