@@ -807,25 +807,7 @@ const OptimizedDisplayComponent = ({
         )}
       </div>
 
-      {/* 인력배치 차트 */}
-      {staffChartData && (
-        <div className="p-4 mb-4" style={cardStyle}>
-          <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-            📊 {displayRegionName} 월별 인력배치 추이
-          </h5>
-          <div style={{ height: '350px' }}>
-            <Bar data={staffChartData} options={staffChartOptions} />
-          </div>
-          <div className="mt-3 p-3 rounded-3" style={{ backgroundColor: 'rgba(184, 134, 11, 0.05)' }}>
-            <small style={{ color: '#666' }}>
-              <strong>📖 차트 해석:</strong><br/>
-              • <span style={{ color: '#ff6384' }}>■</span> <strong>AI 추천 총 인력</strong>: 최종적으로 배치해야 할 전체 인력 수<br/>
-              • <span style={{ color: '#36a2eb' }}>■</span> <strong>순수 사망자 기반 인력</strong>: 사망자 예측만을 고려한 기본 인력 수<br/>
-              • <span style={{ color: '#ffce56' }}>■</span> <strong>장례식장 가중치</strong>: 지역 장례식장 배치를 고려한 조정 인력 수
-            </small>
-          </div>
-        </div>
-      )}
+      
 
       {/* 월별 상세 데이터 테이블 */}
       {currentStaffData && Array.isArray(currentStaffData) && (
