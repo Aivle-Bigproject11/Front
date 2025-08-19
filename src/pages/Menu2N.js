@@ -1075,55 +1075,82 @@ const OptimizedDisplayComponent = ({
 
       
 
-      {/* 월별 상세 데이터 테이블 */}
+      {/* 3개월 예측 데이터 테이블 */}
       {currentStaffData && Array.isArray(currentStaffData) && (
         <div className="p-4" style={cardStyle}>
-          <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-            📋 {displayRegionName} 상세 최적화 데이터
-          </h5>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 style={{ fontWeight: '600', color: '#2C1F14', marginBottom: 0 }}>
+              📋 {displayRegionName} 3개월 예측 배치 계획
+            </h5>
+            {region !== '전체' && (
+              <Button 
+                variant="outline-primary" 
+                size="sm"
+                onClick={() => {
+                  // Menu2F로 이동하면서 선택된 지역 정보 전달
+                  window.location.href = `/menu2f?region=${encodeURIComponent(region)}`;
+                }}
+              >
+                📊 상세보기
+              </Button>
+            )}
+          </div>
           <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
             <Table striped bordered hover size="sm">
               <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0 }}>
                 <tr>
                   <th>지역</th>
-                  <th>현재 실 배치 인력</th>
-                  <th>AI 추천 인력</th>
-                  <th>장례식장 조정</th>
-                  <th>효율성</th>
+                  <th>현재 배치</th>
+                  <th>9월 예측</th>
+                  <th>10월 예측</th>
+                  <th>11월 예측</th>
+                  <th>평균 효율성</th>
                   <th>상태</th>
                 </tr>
               </thead>
               <tbody>
                 {(() => {
-                  // 현재 날짜 기준으로 다음 달 데이터 가져오기
+                  // 현재 날짜 기준으로 3개월 데이터 가져오기
                   const currentDate = new Date(2025, 7, 19);
-                  const nextMonth = new Date(currentDate);
-                  nextMonth.setMonth(nextMonth.getMonth() + 1);
-                  const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+                  const months = [];
+                  for (let i = 1; i <= 3; i++) {
+                    const futureMonth = new Date(currentDate);
+                    futureMonth.setMonth(futureMonth.getMonth() + i);
+                    months.push(`${futureMonth.getFullYear()}-${String(futureMonth.getMonth() + 1).padStart(2, '0')}`);
+                  }
                   
                   // 현재 배치 데이터 (2024-01)
                   const currentData = staffData.filter(item => item.date === '2024-01' && item.regionName !== '전국' && (region === '전체' || item.regionName === region));
                   
-                  // 미래 추천 데이터 (2025-09)
-                  const futureData = staffData.filter(item => item.date === nextMonthStr && item.regionName !== '전국' && (region === '전체' || item.regionName === region));
+                  // 3개월 미래 데이터
+                  const futureDataByMonth = months.map(monthStr => 
+                    staffData.filter(item => item.date === monthStr && item.regionName !== '전국' && (region === '전체' || item.regionName === region))
+                  );
                   
                   // 데이터 매핑
                   const combinedData = currentData.map(currentItem => {
-                    const futureItem = futureData.find(f => f.regionName === currentItem.regionName) || {};
+                    const futureMonthsData = futureDataByMonth.map(monthData => 
+                      monthData.find(f => f.regionName === currentItem.regionName) || { staff: 0, staffChange: 0, predictedDeaths: 0 }
+                    );
+                    
+                    const avgEfficiency = futureMonthsData.reduce((sum, monthData) => {
+                      return sum + (monthData.predictedDeaths > 0 ? (monthData.staff / monthData.predictedDeaths * 1000) : 0);
+                    }, 0) / futureMonthsData.length;
+                    
+                    const avgStaffChange = futureMonthsData.reduce((sum, monthData) => sum + (monthData.staffChange || 0), 0) / futureMonthsData.length;
+                    
                     return {
                       ...currentItem,
-                      futureStaff: futureItem.staff || 0,
-                      futureStaffChange: futureItem.staffChange || 0,
-                      futurePredictedDeaths: futureItem.predictedDeaths || 0
+                      futureMonths: futureMonthsData,
+                      avgEfficiency: avgEfficiency.toFixed(1),
+                      avgStaffChange
                     };
                   });
                   
                   return combinedData.map((item, index) => {
-                    const currentDeployed = item.staff || 0; // 현재 실 배치 인력 (2024-01)
-                    const aiRecommended = item.futureStaff || 0; // AI 추천 인력 (2025-09)
-                    const efficiency = item.futurePredictedDeaths > 0 ? ((item.futureStaff || 0) / item.futurePredictedDeaths * 1000).toFixed(1) : '0';
-                    const statusColor = item.futureStaffChange > 1 ? '#dc3545' : item.futureStaffChange < -1 ? '#198754' : '#ffc107';
-                    const statusText = item.futureStaffChange > 1 ? '장례 수요 높음' : item.futureStaffChange < -1 ? '장례 수요 낮음' : '적정';
+                    const currentDeployed = item.staff || 0;
+                    const statusColor = item.avgStaffChange > 1 ? '#dc3545' : item.avgStaffChange < -1 ? '#198754' : '#ffc107';
+                    const statusText = item.avgStaffChange > 1 ? '증가 추세' : item.avgStaffChange < -1 ? '감소 추세' : '안정';
                     
                     return (
                       <tr key={index}>
@@ -1133,18 +1160,22 @@ const OptimizedDisplayComponent = ({
                         <td style={{ fontWeight: '700', color: '#28a745' }}>
                           {currentDeployed}명
                         </td>
-                        <td style={{ fontWeight: '700', color: '#369CE3' }}>
-                          {aiRecommended}명
-                        </td>
-                        <td style={{ 
-                          color: item.futureStaffChange > 0 ? '#dc3545' : item.futureStaffChange < 0 ? '#198754' : '#666',
-                          fontWeight: '600'
-                        }}>
-                          {item.futureStaffChange > 0 ? '+' : ''}{item.futureStaffChange || 0}명
-                        </td>
+                        {item.futureMonths.map((monthData, monthIndex) => (
+                          <td key={monthIndex} style={{ 
+                            fontWeight: '600', 
+                            color: monthData.staff > currentDeployed ? '#dc3545' : monthData.staff < currentDeployed ? '#198754' : '#369CE3'
+                          }}>
+                            {monthData.staff || 0}명
+                            {monthData.staffChange !== 0 && (
+                              <small style={{ display: 'block', fontSize: '10px', color: '#666' }}>
+                                장례:{monthData.staffChange > 0 ? '+' : ''}{monthData.staffChange}
+                              </small>
+                            )}
+                          </td>
+                        ))}
                         <td>
-                          <span className={`badge ${parseFloat(efficiency) > 20 ? 'bg-danger' : parseFloat(efficiency) > 15 ? 'bg-warning' : 'bg-success'}`}>
-                            {efficiency}‰
+                          <span className={`badge ${parseFloat(item.avgEfficiency) > 20 ? 'bg-danger' : parseFloat(item.avgEfficiency) > 15 ? 'bg-warning' : 'bg-success'}`}>
+                            {item.avgEfficiency}‰
                           </span>
                         </td>
                         <td>
