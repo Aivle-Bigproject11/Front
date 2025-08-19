@@ -1124,10 +1124,10 @@ const OptimizedDisplayComponent = ({
                     <div className="flex-grow-1">
                       <div style={{ fontWeight: '600', color: '#2C1F14' }}>
                         <span style={{ color: '#007bff', fontWeight: '700' }}>
-                          📤 {transfer.from.replace(/특별시|광역시|특별자치시|도$/g, '')}
+                          📤 {transfer.from}
                         </span> → 
                         <span style={{ color: '#dc3545', fontWeight: '700' }}>
-                          📥 {transfer.to.replace(/특별시|광역시|특별자치시|도$/g, '')}
+                          📥 {transfer.to}
                         </span>
                         {region !== '전체' && (
                           <span style={{ 
@@ -1177,7 +1177,7 @@ const OptimizedDisplayComponent = ({
         <div className="text-center">
           <div style={{ fontSize: '48px', marginBottom: '15px' }}>📊</div>
           <h4 className="mb-3" style={{ fontWeight: '700', color: '#369CE3' }}>
-            상세 예측 데이터 및 시계열 분석
+            사망자 상세 예측 데이터 및 시계열 분석 조회
           </h4>
           <p style={{ fontSize: '16px', color: '#666', marginBottom: '25px' }}>
             {region === '전체' ? '전국' : region}의 상세한 사망자 예측 데이터와 시계열 차트를 확인하세요
@@ -1272,7 +1272,7 @@ const OptimizedDisplayComponent = ({
                     return (
                       <tr key={index}>
                         <td style={{ fontWeight: '600' }}>
-                          {item.regionName.replace(/특별시|광역시|특별자치시|도$/g, '')}
+                          {item.regionName}
                         </td>
                         <td style={{ fontWeight: '700', color: '#28a745' }}>
                           {currentDeployed}명
