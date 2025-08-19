@@ -7,9 +7,48 @@ const Menu2 = () => {
   const [selectedRegion, setSelectedRegion] = useState('전체');
   const [animateCard, setAnimateCard] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [globalData, setGlobalData] = useState(null); // 전체 데이터 저장
 
+  // 초기 데이터 로딩
   useEffect(() => {
-    setAnimateCard(true);
+    const initializeData = async () => {
+      console.log('📊 Menu2 초기 데이터 로딩 시작...');
+      
+      try {
+        // 2025-01 데이터 요청 (1년간 데이터 생성)
+        console.log('📅 2025-01 예측 데이터 요청 중...');
+        
+        const predictionRequest = {
+          date: "2025-01"
+        };
+        
+        const response = await apiService.requestPrediction(predictionRequest);
+        console.log('✅ 초기 예측 데이터 생성 성공:', response);
+        
+        // 데이터 처리 시간 대기
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // 전체 데이터 조회하여 저장 (우선/관심/안정 지역 판정용)
+        try {
+          const globalDataResponse = await apiService.getDashboardByDate('2025-01');
+          setGlobalData(globalDataResponse);
+          console.log('✅ 전체 데이터 조회 성공:', globalDataResponse);
+        } catch (dataError) {
+          console.log('⚠️ 전체 데이터 조회 실패:', dataError.message);
+        }
+        
+        console.log('✅ Menu2 초기 데이터 로딩 완료');
+        
+      } catch (error) {
+        console.log('⚠️ 초기 예측 데이터 생성 실패 (기존 데이터 사용):', error.message);
+      } finally {
+        setIsInitialLoading(false);
+        setAnimateCard(true);
+      }
+    };
+
+    initializeData();
   }, []);
 
   const handleRefresh = async () => {
@@ -85,41 +124,74 @@ const Menu2 = () => {
         throw new Error('백엔드 서버 응답 없음');
       }
 
-      // 2. 예측 요청 API 호출 먼저 (데이터 생성)
-      const currentDate = new Date().toISOString().slice(0, 7); // YYYY-MM
-      console.log('2. 예측 요청 API 호출...');
+      // 2. 예측 데이터 생성을 위한 초기 로딩 (2024-01, 2025-01)
+      console.log('2. 예측 데이터 초기 로딩 시작...');
       
-      const predictionRequest = {
-        date: currentDate,
-        region: selectedRegion === '전체' ? '서울특별시' : selectedRegion, // 전체인 경우 서울특별시로 테스트
-        previousYearDeaths: 1500 // 테스트용 더미 데이터
-      };
+      const targetDates = ['2024-01', '2025-01'];
+      let successCount = 0;
       
-      console.log('예측 요청 데이터:', predictionRequest);
-      
-      try {
-        const predictionResponse = await apiService.requestPrediction(predictionRequest);
-        console.log('✅ 예측 요청 성공:', predictionResponse);
-      } catch (predError) {
-        console.log('⚠️ 예측 요청 실패 (기존 데이터가 있을 수 있음):', predError.message);
+      for (const date of targetDates) {
+        try {
+          console.log(`📅 ${date} 데이터 생성 요청...`);
+          
+          // 단순한 요청으로 수정 (date만 전송)
+          const predictionRequest = {
+            date: date
+          };
+          
+          console.log('예측 요청 데이터:', predictionRequest);
+          const predictionResponse = await apiService.requestPrediction(predictionRequest);
+          console.log(`✅ ${date} 예측 데이터 생성 성공:`, predictionResponse);
+          successCount++;
+          
+          // 각 요청 사이에 잠시 대기 (서버 부하 방지)
+          if (date !== targetDates[targetDates.length - 1]) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          
+        } catch (predError) {
+          console.log(`⚠️ ${date} 예측 요청 실패 (기존 데이터가 있을 수 있음):`, predError.message);
+          // 실패해도 계속 진행 (기존 데이터가 있을 수 있음)
+        }
       }
 
-      // 3. 날짜별 데이터 테스트
-      console.log(`3. 날짜별 데이터 요청: ${currentDate}`);
-      const dateData = await apiService.getDashboardByDate(currentDate);
-      console.log('✅ 날짜별 데이터 응답:', dateData);
+      // 3. 데이터 생성 후 잠시 대기 (파이썬 모델 처리 시간 고려)
+      console.log('3. 데이터 처리 완료 대기 중...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 4. 생성된 데이터 확인 및 지역별 데이터 조회
+      console.log('4. 생성된 데이터 확인...');
       
-      // 4. 지역별 데이터 테스트 (전체가 아닌 경우)
+      try {
+        // 2025-01 데이터로 확인
+        const dateData = await apiService.getDashboardByDate('2025-01');
+        console.log('✅ 날짜별 데이터 응답 (2025-01):', dateData);
+        
+        // 전체 데이터 업데이트 (우선/관심/안정 지역 판정용)
+        setGlobalData(dateData);
+      } catch (dateError) {
+        console.log('⚠️ 날짜별 데이터 조회 실패:', dateError.message);
+      }
+      
+      // 5. 지역별 데이터 테스트 (전체가 아닌 경우)
       if (selectedRegion !== '전체') {
-        console.log(`4. 지역별 데이터 요청: ${selectedRegion}`);
-        const regionData = await apiService.getDashboardByRegion(selectedRegion);
-        console.log('✅ 지역별 데이터 응답:', regionData);
+        try {
+          console.log(`5. 지역별 데이터 요청: ${selectedRegion}`);
+          const regionData = await apiService.getDashboardByRegion(selectedRegion);
+          console.log('✅ 지역별 데이터 응답:', regionData);
+        } catch (regionError) {
+          console.log('⚠️ 지역별 데이터 조회 실패:', regionError.message);
+        }
       }
       
       // RegionDataDisplay 컴포넌트를 다시 렌더링하기 위해 key 변경
       setRefreshKey(prev => prev + 1);
       
-      alert('🎉 실시간 백엔드 데이터 로딩 성공!\n\n모든 API가 정상 작동하여 최신 데이터를 표시합니다.\n콘솔에서 상세 응답 데이터를 확인하세요.');
+      const successMessage = successCount > 0 
+        ? `🎉 예측 데이터 생성 완료! (${successCount}/${targetDates.length}개 성공)\n\n2024-01, 2025-01 데이터로 그래프를 그릴 수 있습니다.\n콘솔에서 상세 응답 데이터를 확인하세요.`
+        : '⚠️ 새로운 예측 데이터 생성은 실패했지만\n기존 데이터로 대시보드를 표시합니다.\n콘솔에서 상세 내용을 확인하세요.';
+      
+      alert(successMessage);
       
     } catch (error) {
       console.error('API 테스트 실패:', error);
@@ -224,7 +296,7 @@ const Menu2 = () => {
             />
           </div>
           <button className="refresh-btn" onClick={handleRefresh}>
-            🔄 실시간 백엔드 데이터 새로고침
+            � 예측 데이터 생성 & 새로고침
           </button>
         </div>
 
@@ -239,7 +311,29 @@ const Menu2 = () => {
           boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
           border: '1px solid rgba(184, 134, 11, 0.2)'
         }}>
-          <RegionDataDisplay key={refreshKey} region={selectedRegion} />
+          {isInitialLoading ? (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: '100%',
+              flexDirection: 'column',
+              color: '#2C1F14'
+            }}>
+              <div style={{ fontSize: '18px', marginBottom: '10px' }}>
+                📊 2025년 예측 데이터 생성 중...
+              </div>
+              <div style={{ fontSize: '14px', opacity: 0.7 }}>
+                잠시만 기다려주세요
+              </div>
+            </div>
+          ) : (
+            <RegionDataDisplay 
+              key={refreshKey} 
+              region={selectedRegion}
+              globalData={globalData}
+            />
+          )}
         </div>
       </div>
 

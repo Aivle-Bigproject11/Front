@@ -47,6 +47,9 @@ api.interceptors.response.use(
 // 지역명 매핑 함수 (백엔드 실제 DB 데이터에 맞춤)
 const mapRegionName = (region) => {
   const regionMapping = {
+    // 전체 선택 시 전국으로 매핑
+    '전체': '전국',
+    
     // 백엔드 실제 지역 데이터 기준 매핑
     '서울': '서울특별시',
     '부산': '부산광역시', 

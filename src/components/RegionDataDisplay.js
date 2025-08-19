@@ -76,12 +76,27 @@ const classifyRegionsByGrowthRate = (dataArray) => {
   return regionStatus;
 };
 
-const RegionDataDisplay = ({ region }) => {
+const RegionDataDisplay = ({ region, globalData }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [useBackendData, setUseBackendData] = useState(true); // 백엔드 데이터를 기본값으로 변경
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [regionStatus, setRegionStatus] = useState(getRegionStatusTemplate()); // 지역 상태를 state로 관리
+
+  // 표시용 지역명 계산 (전체 -> 전국)
+  const getDisplayRegionName = (regionName) => {
+    return regionName === '전체' ? '전국' : regionName;
+  };
+
+  // globalData가 변경될 때 지역 상태 업데이트 (전체 데이터 기준으로 우선/관심/안정 지역 판정)
+  useEffect(() => {
+    if (globalData && Array.isArray(globalData)) {
+      console.log('🏷️ 전체 데이터 기준으로 지역 상태 업데이트:', globalData);
+      const newRegionStatus = classifyRegionsByGrowthRate(globalData);
+      setRegionStatus(newRegionStatus);
+    }
+  }, [globalData]);
 
   useEffect(() => {
     // 백엔드 가용성 체크
@@ -363,9 +378,8 @@ const RegionDataDisplay = ({ region }) => {
     
     console.log('🔄 차트 데이터:', chartData);
 
-    // 실제 API 데이터로 지역 분류
-    const regionStatus = classifyRegionsByGrowthRate(processedData);
-    console.log('🔄 지역 분류 결과:', regionStatus);
+    // 지역 분류는 전체 데이터 기준으로 이미 계산됨 (globalData 기준)
+    console.log('🔄 지역 분류 결과 (전체 데이터 기준):', regionStatus);
 
     return {
       regionStatus: regionStatus,
@@ -397,7 +411,7 @@ const RegionDataDisplay = ({ region }) => {
 
   const formatCsvData = (csvData, predictionJson, selectedRegion) => {
     const multipliers = { 
-      '전체': 1, '서울': 0.21, '경기': 0.26, '부산': 0.07, 
+      '전체': 1, '전국': 1, '서울': 0.21, '경기': 0.26, '부산': 0.07, 
       '대구': 0.05, '인천': 0.06, '충남': 0.04, '광주': 0.03, 
       '울산': 0.02, '세종': 0.01 
     };
@@ -425,7 +439,8 @@ const RegionDataDisplay = ({ region }) => {
       { region: '제주특별자치도', growthRate: 4.6 }
     ];
     
-    const regionStatus = classifyRegionsByGrowthRate(dummyRegionData);
+    // CSV 폴백 시에도 전체 데이터 기준 지역 분류 사용
+    console.log('🔄 CSV 폴백 - 지역 분류 결과 (전체 데이터 기준):', regionStatus);
     
     return {
       regionStatus: regionStatus,
@@ -619,7 +634,7 @@ const RegionDataDisplay = ({ region }) => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 style={{ fontWeight: '700', color: '#343a40' }}>
           <i className="fas fa-map-marker-alt me-2" style={{ color: '#D4AF37' }}></i>
-          {region} 예측 결과 분석
+          {getDisplayRegionName(region)} 예측 결과 분석
         </h2>
         <small className="text-muted">
           데이터 소스: {useBackendData ? '백엔드 API' : 'CSV 파일'}
