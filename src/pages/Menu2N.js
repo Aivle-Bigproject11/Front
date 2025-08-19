@@ -347,7 +347,7 @@ const Menu2N = () => {
             <OptimizedStaffMap
               selectedRegion={selectedRegion}
               onRegionSelect={setSelectedRegion}
-              staffData={currentStaffData}
+              staffData={staffData}
               transferRecommendations={transferRecommendations}
               selectedTransfer={selectedTransfer}
             />
@@ -507,24 +507,59 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
     '제주도': { top: '85%', left: '25%', shortName: '제주' }
   };
 
-  // 지역별 인력 데이터 가져오기
+  // 지역별 인력 데이터 가져오기 (현재 달 기준)
   const getRegionStaffData = (regionName) => {
     if (!staffData || !Array.isArray(staffData)) return null;
-    return staffData.find(item => item.regionName === regionName && item.date === '2024-01');
+    
+    // 현재 날짜 기준으로 현재 달 계산
+    const currentDate = new Date();
+    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    return staffData.find(item => item.regionName === regionName && item.date === currentMonthStr);
   };
 
   const getRegionBackground = (regionName, isActive, isHovered) => {
-    const staffInfo = getRegionStaffData(regionName);
-    if (!staffInfo) return isActive ? themeColors.activeBackground : themeColors.primaryGradient;
-    
     if (isActive) return themeColors.activeBackground;
     
-    // staffChange가 양수면 AI 추천 인력이 더 많음 (현재 부족) -> 빨강
-    // staffChange가 음수면 AI 추천 인력이 더 적음 (현재 과잉) -> 노랑
-    // staffChange가 0이면 최적 -> 초록
-    if (staffInfo.staffChange > 0) return 'rgba(220, 53, 69, 0.7)'; // Red
-    if (staffInfo.staffChange < 0) return 'rgba(255, 193, 7, 0.7)'; // Yellow
-    return 'rgba(40, 167, 69, 0.7)'; // Green (optimal)
+    // staffData가 null이거나 배열이 아니면 기본 색상 반환
+    if (!staffData || !Array.isArray(staffData)) {
+      return themeColors.primaryGradient;
+    }
+    
+    // 오른쪽 카드와 동일한 로직으로 현재 실 배치 인력과 AI 추천 인력 계산
+    const currentDate = new Date();
+    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    const nextMonth = new Date(currentDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+    
+    // 현재 달 데이터 (현재 실 배치 인력)
+    const currentRegionData = staffData.find(item => 
+      item.regionName === regionName && item.date === currentMonthStr
+    );
+    
+    // 다음 달 데이터 (AI 추천 인력)
+    const futureRegionData = staffData.find(item => 
+      item.regionName === regionName && item.date === nextMonthStr
+    );
+    
+    if (!currentRegionData || !futureRegionData) {
+      return themeColors.primaryGradient;
+    }
+    
+    const currentDeployedStaff = currentRegionData.staff || 0; // 현재 실 배치 인력
+    const aiRecommendedStaff = futureRegionData.staff || 0; // AI 추천 인력
+    
+    console.log(`${regionName}: 현재 실 배치 ${currentDeployedStaff}명, AI 추천 ${aiRecommendedStaff}명`);
+    
+    // 오른쪽 카드와 동일한 비교 로직
+    if (currentDeployedStaff === aiRecommendedStaff) {
+      return 'rgba(40, 167, 69, 0.7)'; // 동일하면 초록
+    } else if (currentDeployedStaff > aiRecommendedStaff) {
+      return 'rgba(255, 193, 7, 0.7)'; // 넘치면 노랑
+    } else {
+      return 'rgba(220, 53, 69, 0.7)'; // 부족하면 빨강
+    }
   };
 
   // 해당 지역과 관련된 이동 추천 가져오기
@@ -571,7 +606,15 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
         {Object.entries(regionPositions).map(([region, pos]) => {
           const isActive = selectedRegion === region;
           const isHovered = hoveredRegion === region;
-          const staffInfo = getRegionStaffData(region);
+          
+          // 현재 달 데이터 가져오기
+          let staffInfo = null;
+          if (staffData && Array.isArray(staffData)) {
+            const currentDate = new Date();
+            const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+            staffInfo = staffData.find(item => item.regionName === region && item.date === currentMonthStr);
+          }
+          
           const transfers = getRegionTransfers(region);
           
           return (
@@ -580,7 +623,39 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
                 onClick={() => onRegionSelect(region)}
                 onMouseEnter={() => setHoveredRegion(region)}
                 onMouseLeave={() => setHoveredRegion(null)}
-                title={`${region}: 현재 ${staffInfo?.staff || 0}명 배치 (장례식장 가중치: ${staffInfo?.staffChange > 0 ? '+' : ''}${staffInfo?.staffChange || 0})`}
+                title={(() => {
+                  if (!staffData || !Array.isArray(staffData)) {
+                    return `${region}: 데이터 로딩 중...`;
+                  }
+                  
+                  const currentDate = new Date();
+                  const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+                  
+                  const nextMonth = new Date(currentDate);
+                  nextMonth.setMonth(nextMonth.getMonth() + 1);
+                  const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+                  
+                  const currentStaffInfo = staffData.find(item => 
+                    item.regionName === region && item.date === currentMonthStr
+                  );
+                  const futureStaffInfo = staffData.find(item => 
+                    item.regionName === region && item.date === nextMonthStr
+                  );
+                  
+                  const currentDeployedStaff = currentStaffInfo?.staff || 0;
+                  const aiRecommendedStaff = futureStaffInfo?.staff || 0;
+                  
+                  let status = '';
+                  if (currentDeployedStaff === aiRecommendedStaff) {
+                    status = '최적 배치';
+                  } else if (currentDeployedStaff > aiRecommendedStaff) {
+                    status = `과잉 배치 (+${currentDeployedStaff - aiRecommendedStaff}명)`;
+                  } else {
+                    status = `부족 배치 (-${aiRecommendedStaff - currentDeployedStaff}명)`;
+                  }
+                  
+                  return `${region}: 현재 실 배치 ${currentDeployedStaff}명 / AI 추천 ${aiRecommendedStaff}명 (${status})`;
+                })()}
                 style={{
                   position: 'absolute',
                   top: pos.top,
@@ -649,34 +724,34 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
             <div style={{ 
               width: '20px', 
               height: '12px', 
-              background: themeColors.deficitBackground,
+              background: 'rgba(220, 53, 69, 0.7)',
               borderRadius: '4px',
               display: 'inline-block',
               marginRight: '5px'
             }}></div>
-            <small style={{ fontSize: '11px' }}>장례식장 수요 높음</small>
+            <small style={{ fontSize: '11px' }}>AI 추천보다 부족</small>
           </Col>
           <Col md={4} className="text-center">
             <div style={{ 
               width: '20px', 
               height: '12px', 
-              background: themeColors.primaryGradient,
+              background: 'rgba(40, 167, 69, 0.7)',
               borderRadius: '4px',
               display: 'inline-block',
               marginRight: '5px'
             }}></div>
-            <small style={{ fontSize: '11px' }}>적정 수준</small>
+            <small style={{ fontSize: '11px' }}>AI 추천과 동일</small>
           </Col>
           <Col md={4} className="text-center">
             <div style={{ 
               width: '20px', 
               height: '12px', 
-              background: themeColors.surplusBackground,
+              background: 'rgba(255, 193, 7, 0.7)',
               borderRadius: '4px',
               display: 'inline-block',
               marginRight: '5px'
             }}></div>
-            <small style={{ fontSize: '11px' }}>장례식장 수요 낮음</small>
+            <small style={{ fontSize: '11px' }}>AI 추천보다 과잉</small>
           </Col>
         </Row>
       </div>
@@ -819,15 +894,16 @@ const OptimizedDisplayComponent = ({
       };
     }
 
-    // 현재 날짜 기준으로 다음 달 데이터 가져오기
+    // 현재 날짜 기준으로 현재 달과 다음 달 데이터 가져오기
     const currentDate = new Date();
+    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
     const nextMonth = new Date(currentDate);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
 
     if (region === '전체') {
-      // 전체 통계
-      const currentStaffItems = staffData.filter(item => item.date === '2024-01' && item.regionName !== '전국');
+      // 전체 통계 - 현재 달 데이터 사용
+      const currentStaffItems = staffData.filter(item => item.date === currentMonthStr && item.regionName !== '전국');
       const futureStaffItems = staffData.filter(item => item.date === nextMonthStr && item.regionName !== '전국');
       
       const totalCurrentStaff = currentStaffItems.reduce((sum, item) => sum + (item.staff || 0), 0);
@@ -846,8 +922,8 @@ const OptimizedDisplayComponent = ({
         status: totalFuneralHallAdjustment > 0 ? '장례 수요 높음' : totalFuneralHallAdjustment < 0 ? '장례 수요 낮음' : '적정 수준'
       };
     } else {
-      // 특정 지역 통계
-      const currentRegionData = staffData.find(item => item.regionName === region && item.date === '2024-01');
+      // 특정 지역 통계 - 현재 달 데이터 사용
+      const currentRegionData = staffData.find(item => item.regionName === region && item.date === currentMonthStr);
       const futureRegionData = staffData.find(item => item.regionName === region && item.date === nextMonthStr);
       
       if (!currentRegionData || !futureRegionData) {
