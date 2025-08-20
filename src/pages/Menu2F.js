@@ -87,19 +87,20 @@ const Menu2F = () => {
       }
       
       try {
-        // 1. 2025-01 데이터 생성 요청
-        console.log('📅 2025-01 예측 데이터 요청 중...');
-        const predictionRequest = {
-          date: "2025-01"
-        };
+        // 1. 2025-01, 2026-01 데이터 병렬 생성 요청
+        console.log('📅 2025-01, 2026-01 예측 데이터 동시 요청 중...');
+        const predictionRequests = [
+          apiService.requestPrediction({ date: "2025-01" }),
+          // apiService.requestPrediction({ date: "2026-01" })
+        ];
         
-        await apiService.requestPrediction(predictionRequest);
+        await Promise.all(predictionRequests);
         console.log('✅ 초기 예측 데이터 생성 성공');
         
         // 데이터 처리 시간 대기
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // 2. 전국 데이터 조회 (2024-01, 2025-01)
+        // 2. 전국 데이터 조회 (2024-01, 2025-01, 2026-01)
         await loadNationalData();
         
         // 3. 초기 지역 데이터 로딩
@@ -172,7 +173,7 @@ const Menu2F = () => {
     try {
       console.log(`📈 ${region} 차트 데이터 생성 중...`);
       
-      let data2024, data2025;
+      let data2024, data2025, data2026;
       
       if (region === '전체') {
         // 전체 선택 시 지역별 API로 전국의 모든 월 데이터 조회
@@ -180,24 +181,28 @@ const Menu2F = () => {
         const allData = await apiService.getDashboardByRegion('전국');
         console.log('📊 전국 지역별 API 응답:', allData);
         
-        // 2024년과 2025년 데이터 분리
+        // 2024년, 2025년, 2026년 데이터 분리
         data2024 = allData.filter(item => item.date && item.date.startsWith('2024'));
         data2025 = allData.filter(item => item.date && item.date.startsWith('2025'));
+        data2026 = allData.filter(item => item.date && item.date.startsWith('2026'));
         
-        console.log('� 분리된 2024년 데이터:', data2024);
-        console.log('📊 분리된 2025년 데이터:', data2025);
+        console.log('📊 전국 분리된 2024년 데이터:', data2024);
+        console.log('📊 전국 분리된 2025년 데이터:', data2025);
+        console.log('📊 전국 분리된 2026년 데이터:', data2026);
       } else {
         // 특정 지역 선택 시 지역별 API로 해당 지역의 모든 기간 데이터 조회
         console.log(`🔍 ${region} 지역 차트 데이터 조회 - 지역별 API 사용`);
         const allData = await apiService.getDashboardByRegion(region);
         console.log(`📊 ${region} 지역별 API 응답:`, allData);
         
-        // 2024년과 2025년 데이터 분리
+        // 2024년, 2025년, 2026년 데이터 분리
         data2024 = allData.filter(item => item.date && item.date.startsWith('2024'));
         data2025 = allData.filter(item => item.date && item.date.startsWith('2025'));
+        const data2026 = allData.filter(item => item.date && item.date.startsWith('2026'));
         
         console.log(`📊 ${region} 분리된 2024년 데이터:`, data2024);
         console.log(`📊 ${region} 분리된 2025년 데이터:`, data2025);
+        console.log(`📊 ${region} 분리된 2026년 데이터:`, data2026);
       }
       console.log('📊 차트 데이터 매핑 시작:');
       console.log('   최종 2024년 데이터:', data2024);
@@ -207,6 +212,7 @@ const Menu2F = () => {
       const allLabels = new Set();
       const dataMap2024 = new Map();
       const dataMap2025 = new Map();
+      const dataMap2026 = new Map();
       
       // 2024년 데이터 매핑
       console.log('🔍 2024년 데이터 매핑 중...');
@@ -274,12 +280,46 @@ const Menu2F = () => {
         console.log('   ⚠️ 2025 데이터가 유효하지 않거나 비어있음:', data2025);
       }
       
+      // 2026년 데이터 매핑
+      console.log('🔍 2026년 데이터 매핑 중...');
+      if (Array.isArray(data2026) && data2026.length > 0) {
+        console.log('   2026 데이터는 배열 형태, 길이:', data2026.length);
+        data2026.forEach((item, index) => {
+          console.log(`   [${index}] 항목:`, item);
+          if (item && item.date && item.deaths !== undefined) {
+            // 2026년 데이터만 필터링 (날짜가 2026로 시작하는 것만)
+            if (item.date.startsWith('2026')) {
+              console.log(`   ✅ 2026 데이터 추가: ${item.date} -> ${item.deaths}`);
+              allLabels.add(item.date);
+              dataMap2026.set(item.date, item.deaths);
+            } else {
+              console.log(`   ⏭️ 2026이 아닌 데이터 스킵: ${item.date}`);
+            }
+          } else {
+            console.log(`   ⚠️ 유효하지 않은 항목:`, item);
+          }
+        });
+      } else if (data2026 && data2026.date && data2026.deaths !== undefined) {
+        console.log('   2026 데이터는 단일 객체 형태:', data2026);
+        // 단일 객체인 경우
+        if (data2026.date.startsWith('2026')) {
+          console.log(`   ✅ 2026 단일 데이터 추가: ${data2026.date} -> ${data2026.deaths}`);
+          allLabels.add(data2026.date);
+          dataMap2026.set(data2026.date, data2026.deaths);
+        } else {
+          console.log(`   ⏭️ 2026이 아닌 단일 데이터 스킵: ${data2026.date}`);
+        }
+      } else {
+        console.log('   ⚠️ 2026 데이터가 유효하지 않거나 비어있음:', data2026);
+      }
+      
       // 날짜순으로 정렬
       const sortedLabels = Array.from(allLabels).sort();
       console.log('📈 모든 수집된 레이블:', Array.from(allLabels));
       console.log('📈 정렬된 레이블:', sortedLabels);
       console.log('📈 2024 데이터 맵:', Object.fromEntries(dataMap2024));
       console.log('📈 2025 데이터 맵:', Object.fromEntries(dataMap2025));
+      console.log('📈 2026 데이터 맵:', Object.fromEntries(dataMap2026));
       
       // 차트 데이터 배열 생성
       const historicalData = [];
@@ -298,7 +338,13 @@ const Menu2F = () => {
           console.log(`   ✅ 2025 데이터 추가: ${value}`);
           historicalData.push(null);
           predictedData.push(value);
-        } else {
+        } else if (date.startsWith('2026') && dataMap2026.has(date)) {
+          const value = dataMap2026.get(date);
+          console.log(`   ✅ 2026 데이터 추가: ${value}`);
+          historicalData.push(null);
+          predictedData.push(value);
+        }
+        else {
           console.log(`   ⚠️ 해당 날짜의 데이터 없음`);
           historicalData.push(null);
           predictedData.push(null);
@@ -399,8 +445,8 @@ const Menu2F = () => {
     try {
       setLoading(true);
       
-      // 2024-01, 2025-01 데이터 재생성
-      const targetDates = ['2024-01', '2025-01'];
+      // 2024-01, 2025-01, 2026-01 데이터 재생성
+      const targetDates = ['2024-01', '2025-01', '2026-01'];
       
       for (const date of targetDates) {
         try {
