@@ -1463,7 +1463,7 @@ const OptimizedDisplayComponent = ({
                   <th>9월 예측</th>
                   <th>10월 예측</th>
                   <th>11월 예측</th>
-                  <th>예측 평균 적합도</th>
+                  <th>3개월 예측 평균</th>
                 </tr>
               </thead>
               <tbody>
@@ -1528,9 +1528,10 @@ const OptimizedDisplayComponent = ({
                           </td>
                         ))}
                         <td>
-                          <span className={`badge ${parseFloat(item.avgFitness) >= 99 ? 'bg-success' : parseFloat(item.avgFitness) >= 95 ? 'bg-warning' : 'bg-danger'}`}>
-                            {item.avgFitness}%
-                          </span>
+                          {(() => {
+                            const avgFutureStaff = item.futureMonths.reduce((sum, monthData) => sum + (monthData.staff || 0), 0) / item.futureMonths.length;
+                            return `${avgFutureStaff.toFixed(1)}명`;
+                          })()}
                         </td>
                       </tr>
                     );
@@ -1541,7 +1542,7 @@ const OptimizedDisplayComponent = ({
           </div>
           <div className="mt-3 text-center">
             <small className="text-muted">
-              * 효율성: 예측 사망자 1000명당 배치 인력 수 (‰: 퍼밀, 낮을수록 효율적)
+              * )
             </small>
           </div>
         </div>
