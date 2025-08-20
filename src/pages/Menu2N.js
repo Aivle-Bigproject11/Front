@@ -1288,7 +1288,7 @@ const OptimizedDisplayComponent = ({
                       fontWeight: 'bold',
                       cursor: 'help'
                     }}
-                    title="AI 추천 인력 계산에 이미 포함되어있는 장례식장 변수입니다. 변수가 클수록 해당 지역 장례식장 상황으로 인해 배치인력이 추가로 더 필요하게 됩니다."
+                    title="AI 추천 인력 계산에 이미 포함되어있는 장례식장 조정 변수입니다. 변수가 클수록 지역 내 장례식장이 많다는 의미이며. 해당 지역 장례식장 상황으로 인해 배치인력이 추가로 더 필요하게 됩니다."
                   >
                     i
                   </span>
@@ -1387,7 +1387,7 @@ const OptimizedDisplayComponent = ({
                         {transfer.amount}명 이동 • {transfer.distance === 'near' ? '🔸 인근 지역' : '🔹 원거리'} • 
                         우선순위: {transfer.priority === 'high' ? '높음' : '보통'}
                         {transfer.reason && <><br/>💡 {transfer.reason}</>}
-                        <br/>📈 {transfer.to} 지역 배치 적합도: +{calculateFitnessImprovement(transfer).toFixed(1)}%
+                        <br/>인력 이동 수행시 {transfer.to} 지역 배치 적합도: +{calculateFitnessImprovement(transfer).toFixed(1)}%
                       </small>
                     </div>
                   </div>
@@ -1463,8 +1463,7 @@ const OptimizedDisplayComponent = ({
                   <th>9월 예측</th>
                   <th>10월 예측</th>
                   <th>11월 예측</th>
-                  <th>평균 적합도</th>
-                  <th>3개월 예측 평균</th>
+                  <th>예측 평균 적합도</th>
                 </tr>
               </thead>
               <tbody>
@@ -1497,20 +1496,15 @@ const OptimizedDisplayComponent = ({
                       return sum + fitness;
                     }, 0) / futureMonthsData.length;
                     
-                    const avgStaffChange = futureMonthsData.reduce((sum, monthData) => sum + (monthData.staffChange || 0), 0) / futureMonthsData.length;
-                    
                     return {
                       ...currentItem,
                       futureMonths: futureMonthsData,
-                      avgFitness: avgFitness.toFixed(1),
-                      avgStaffChange
+                      avgFitness: avgFitness.toFixed(1)
                     };
                   });
                   
                   return combinedData.map((item, index) => {
                     const currentDeployed = item.staff || 0;
-                    const statusColor = item.avgStaffChange > 1 ? '#dc3545' : item.avgStaffChange < -1 ? '#198754' : '#ffc107';
-                    const statusText = item.avgStaffChange > 1 ? '증가 추세' : item.avgStaffChange < -1 ? '감소 추세' : '안정';
                     
                     return (
                       <tr key={index}>
@@ -1536,11 +1530,6 @@ const OptimizedDisplayComponent = ({
                         <td>
                           <span className={`badge ${parseFloat(item.avgFitness) >= 99 ? 'bg-success' : parseFloat(item.avgFitness) >= 95 ? 'bg-warning' : 'bg-danger'}`}>
                             {item.avgFitness}%
-                          </span>
-                        </td>
-                        <td>
-                          <span className="badge" style={{ backgroundColor: statusColor, color: 'white' }}>
-                            {statusText}
                           </span>
                         </td>
                       </tr>
