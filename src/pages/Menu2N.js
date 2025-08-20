@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, Table, Card, Button } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { useNavigate } from 'react-router-dom';
 import staffData from '../assets/dataset/Predcit_rf_Result_min.json';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Menu2N = () => {
+  const navigate = useNavigate();
   const [selectedRegion, setSelectedRegion] = useState('전체');
   const [animateCard, setAnimateCard] = useState(false);
   const [currentStaffData, setCurrentStaffData] = useState(null);
@@ -21,20 +23,20 @@ const Menu2N = () => {
 
   // 지역 간 거리 매트릭스 (인접 지역 우선순위)
   const regionProximity = {
-    '서울특별시': ['경기도', '인천광역시', '충청남도', '강원도'],
+    '부산광역시': ['경상남도', '울산광역시', '경상북도', '대구광역시'],
+    '울산광역시': ['부산광역시', '경상남도', '경상북도' , '대구광역시','부산광역시'],
+    '전라남도': ['광주광역시', '전라북도', '제주도'],
+    '서울특별시': ['경기도', '인천광역시', '충청남도', '충청북도', '강원도'],
     '경기도': ['서울특별시', '인천광역시', '강원도', '충청남도', '충청북도'],
     '인천광역시': ['서울특별시', '경기도', '충청남도'],
-    '부산광역시': ['경상남도', '울산광역시', '경상북도'],
     '대구광역시': ['경상북도', '경상남도', '충청북도', '울산광역시','부산광역시'],
     '광주광역시': ['전라남도', '전라북도', '충청남도'],
     '대전광역시': ['충청남도', '충청북도', '세종특별자치시'],
-    '울산광역시': ['부산광역시', '경상남도', '경상북도' , '대구광역시','부산광역시'],
     '세종특별자치시': ['충청남도', '충청북도', '대전광역시'],
     '강원도': ['경기도', '서울특별시', '충청북도', '경상북도'],
     '충청북도': ['충청남도', '경기도', '강원도', '대전광역시', '경상북도'],
     '충청남도': ['세종특별자치시', '대전광역시', '충청북도', '경기도', '전라북도'],
     '전라북도': ['전라남도', '충청남도', '광주광역시', '경상남도'],
-    '전라남도': ['광주광역시', '전라북도', '제주도'],
     '경상북도': ['대구광역시', '경상남도', '강원도', '충청북도', '울산광역시'],
     '경상남도': ['부산광역시', '울산광역시', '대구광역시', '경상북도', '전라북도'],
     '제주도': ['전라남도']
@@ -43,6 +45,52 @@ const Menu2N = () => {
   // 표시용 지역명 계산 (전체 -> 전국)
   const getDisplayRegionName = (regionName) => {
     return regionName === '전체' ? '전국' : regionName;
+  };
+
+  // 지역별 배치 상태 계산 (2F로 전달할 간소화된 데이터)
+  const calculateRegionDeploymentStatus = () => {
+    if (!staffData || !Array.isArray(staffData)) return {};
+    
+    const currentDate = new Date();
+    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    const nextMonth = new Date(currentDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+    
+    const deploymentData = {};
+    
+    // 모든 지역에 대해 핵심 데이터만 수집
+    const allRegions = [...new Set(staffData.map(item => item.regionName))];
+    
+    allRegions.forEach(regionName => {
+      const currentData = staffData.find(item => 
+        item.regionName === regionName && item.date === currentMonthStr
+      );
+      const futureData = staffData.find(item => 
+        item.regionName === regionName && item.date === nextMonthStr
+      );
+      
+      if (currentData && futureData) {
+        const currentStaff = currentData.staff || 0;
+        const recommendedStaff = futureData.staff || 0;
+        
+        // 적정여부: 0=적정, 1=부족, 2=과잉
+        let status = 0;
+        if (currentStaff < recommendedStaff) {
+          status = 1; // 부족
+        } else if (currentStaff > recommendedStaff) {
+          status = 2; // 과잉
+        }
+        
+        deploymentData[regionName] = {
+          current: currentStaff,
+          recommended: recommendedStaff,
+          status: status
+        };
+      }
+    });
+    
+    return deploymentData;
   };
 
   // 초기 데이터 로딩
@@ -440,6 +488,7 @@ const Menu2N = () => {
               transferRecommendations={transferRecommendations}
               totalStaff={totalStaff}
               onTransferSelect={() => {}} // 더 이상 사용하지 않음
+              calculateRegionDeploymentStatus={calculateRegionDeploymentStatus}
             />
           )}
         </div>
@@ -953,7 +1002,8 @@ const OptimizedDisplayComponent = ({
   staffChartData,
   transferRecommendations,
   totalStaff,
-  onTransferSelect
+  onTransferSelect,
+  calculateRegionDeploymentStatus
 }) => {
   
   // 지역별 배치현황 통계 계산
@@ -1437,11 +1487,13 @@ const OptimizedDisplayComponent = ({
               boxShadow: '0 4px 15px rgba(54, 162, 235, 0.3)'
             }}
             onClick={() => {
-              // Menu2F로 이동하면서 선택된 지역 정보 전달
-              window.location.href = `/menu2f?region=${encodeURIComponent(region)}`;
+              // Menu2F로 이동하면서 선택된 지역 정보와 배치 상태 정보 전달
+              const deploymentData = calculateRegionDeploymentStatus();
+              const encodedData = encodeURIComponent(JSON.stringify(deploymentData));
+              window.location.href = `/menu2f?region=${encodeURIComponent(region)}&deploymentData=${encodedData}`;
             }}
           >
-            🔍 상세 분석 페이지로 이동
+            🔍 예측 데이터 분석
           </Button>
         </div>
       </div>

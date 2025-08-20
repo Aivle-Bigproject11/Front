@@ -23,6 +23,7 @@ const Menu2F = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentDate, setCurrentDate] = useState({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
+  const [deploymentData, setDeploymentData] = useState(null); // 2N에서 전달받은 간소화된 배치 데이터
 
   // 표시용 지역명 계산 (전체 -> 전국)
   const getDisplayRegionName = (regionName) => {
@@ -71,6 +72,20 @@ const Menu2F = () => {
     const initializeData = async () => {
       console.log('📊 Menu2F 초기 데이터 로딩 시작...');
       
+      // URL 쿼리 파라미터에서 배치 데이터 가져오기
+      const urlParams = new URLSearchParams(location.search);
+      const deploymentDataParam = urlParams.get('deploymentData');
+      
+      if (deploymentDataParam) {
+        try {
+          const parsedDeploymentData = JSON.parse(decodeURIComponent(deploymentDataParam));
+          setDeploymentData(parsedDeploymentData);
+          console.log('✅ 배치 데이터 수신:', parsedDeploymentData);
+        } catch (error) {
+          console.error('⚠️ 배치 데이터 파싱 실패:', error);
+        }
+      }
+      
       try {
         // 1. 2025-01 데이터 생성 요청
         console.log('📅 2025-01 예측 데이터 요청 중...');
@@ -102,7 +117,7 @@ const Menu2F = () => {
     };
 
     initializeData();
-  }, []);
+  }, [location.search]);
 
   // 전국 데이터 로딩 (주요지역 현황용)
   const loadNationalData = async () => {
@@ -476,6 +491,7 @@ const Menu2F = () => {
               selectedRegion={selectedRegion}
               onRegionSelect={setSelectedRegion}
               staffData={staffData.filter(item => item.date === '2024-01')}
+              deploymentData={deploymentData}
             />
           </div>
           <button className="refresh-btn" onClick={handleRefresh} disabled={loading}>
@@ -520,6 +536,7 @@ const Menu2F = () => {
               error={error}
               refreshKey={refreshKey}
               currentDate={currentDate}
+              deploymentData={deploymentData}
             />
           )}
         </div>
@@ -676,19 +693,98 @@ const DataDisplayComponent = ({
   loading, 
   error,
   refreshKey,
-  currentDate
+  currentDate,
+  deploymentData
 }) => {
-  // 전국 데이터 기준 지역 상태 계산
+  // 2N에서 받은 배치 상태 또는 전국 데이터 기준 지역 상태 계산
   const getRegionStatus = () => {
+    // 지역명 축약 함수
+    const getShortRegionName = (regionName) => {
+      const regionMap = {
+        '경상남도': '경남',
+        '경상북도': '경북',
+        '전라남도': '전남',
+        '전라북도': '전북',
+        '충청남도': '충남',
+        '충청북도': '충북',
+        '서울특별시': '서울',
+        '부산광역시': '부산',
+        '대구광역시': '대구',
+        '인천광역시': '인천',
+        '광주광역시': '광주',
+        '대전광역시': '대전',
+        '울산광역시': '울산',
+        '세종특별자치시': '세종',
+        '강원도': '강원',
+        '제주도': '제주'
+      };
+      return regionMap[regionName] || regionName.replace(/특별시|광역시|특별자치시|도$/g, '');
+    };
+
+    // 2N에서 배치 데이터를 받은 경우 우선 사용
+    if (deploymentData && Object.keys(deploymentData).length > 0) {
+      const regionStatus = [
+        { 
+          level: '적정 배치', 
+          description: '현재 인력이 AI 추천과 일치',
+          color: 'rgba(25, 135, 84, 0.15)', 
+          borderColor: 'rgba(25, 135, 84, 0.8)',
+          textColor: '#198754',
+          regions: [] 
+        },
+        { 
+          level: '인력 부족', 
+          description: 'AI 추천보다 인력이 부족',
+          color: 'rgba(220, 53, 69, 0.15)', 
+          borderColor: 'rgba(220, 53, 69, 0.8)',
+          textColor: '#dc3545',
+          regions: [] 
+        },
+        { 
+          level: '인력 과잉', 
+          description: 'AI 추천보다 인력이 과잉',
+          color: 'rgba(255, 193, 7, 0.15)', 
+          borderColor: 'rgba(255, 193, 7, 0.8)',
+          textColor: '#ffc107',
+          regions: [] 
+        }
+      ];
+
+      // deploymentData 객체를 순회하면서 지역별 상태 분류
+      Object.entries(deploymentData).forEach(([regionName, data]) => {
+        const shortRegionName = getShortRegionName(regionName);
+        let statusText;
+        
+        if (data.status === 0) {
+          // 적정 배치
+          statusText = `${shortRegionName} (0)`;
+          regionStatus[0].regions.push(statusText);
+        } else if (data.status === 1) {
+          // 인력 부족: AI 추천보다 적음을 음수로 표시
+          const shortage = data.recommended - data.current;
+          statusText = `${shortRegionName} (-${shortage})`;
+          regionStatus[1].regions.push(statusText);
+        } else if (data.status === 2) {
+          // 인력 과잉: AI 추천보다 많음을 양수로 표시
+          const surplus = data.current - data.recommended;
+          statusText = `${shortRegionName} (+${surplus})`;
+          regionStatus[2].regions.push(statusText);
+        }
+      });
+
+      return regionStatus;
+    }
+
+    // deploymentData가 없으면 기존 로직 사용 (nationalData 기반)
     if (!nationalData || !Array.isArray(nationalData)) {
       return [];
     }
 
     // 지역별 증가율 계산
     const regionGrowthRates = nationalData
-      .filter(item => item.region && item.growthRate !== undefined)
+      .filter(item => item.region && item.growthRate !== undefined && item.region !== '전국') // 전국 데이터 제외
       .map(item => ({
-        region: item.region,
+        region: getShortRegionName(item.region),
         growthRate: item.growthRate || 0
       }))
       .sort((a, b) => b.growthRate - a.growthRate);
@@ -702,24 +798,24 @@ const DataDisplayComponent = ({
 
     const regionStatus = [
       { 
-        level: '우선 지역', 
-        description: '전원 대비 증가율이 가장 높은 지역들',
+        level: '인력 부족', 
+        description: '증가율 높음',
         color: 'rgba(220, 53, 69, 0.15)', 
         borderColor: 'rgba(220, 53, 69, 0.8)',
         textColor: '#dc3545',
         regions: [] 
       },
       { 
-        level: '관심 지역', 
-        description: '평상 수준 이상의 증가율을 보이는 주의 필요한 지역',
+        level: '인력 과잉', 
+        description: '증가율 중간',
         color: 'rgba(255, 193, 7, 0.15)', 
         borderColor: 'rgba(255, 193, 7, 0.8)',
         textColor: '#ffc107',
         regions: [] 
       },
       { 
-        level: '안정 지역', 
-        description: '증가율이 낮거나 감소세를 보이는 지역',
+        level: '적정 배치', 
+        description: '증가율 낮음',
         color: 'rgba(25, 135, 84, 0.15)', 
         borderColor: 'rgba(25, 135, 84, 0.8)',
         textColor: '#198754',
@@ -742,8 +838,35 @@ const DataDisplayComponent = ({
 
   // 예측 요약 통계 계산
   const getSummaryStats = () => {
+    // 2N에서 받은 배치 데이터가 있을 때
+    if (deploymentData && Object.keys(deploymentData).length > 0) {
+      if (region === '전체') {
+        // 전체 선택 시 모든 지역의 합계 계산
+        const totalCurrent = Object.values(deploymentData).reduce((sum, data) => sum + data.current, 0);
+        const totalRecommended = Object.values(deploymentData).reduce((sum, data) => sum + data.recommended, 0);
+        
+        return {
+          totalDeaths: 0, // 기존 데이터 없을 때 기본값
+          avgGrowthRate: 0, // 기존 데이터 없을 때 기본값
+          currentStaff: totalCurrent,
+          recommendedStaff: totalRecommended
+        };
+      } else if (deploymentData[region]) {
+        // 특정 지역 선택 시 해당 지역 데이터
+        const data = deploymentData[region];
+        
+        return {
+          totalDeaths: 0, // 기존 데이터 없을 때 기본값
+          avgGrowthRate: 0, // 기존 데이터 없을 때 기본값
+          currentStaff: data.current,
+          recommendedStaff: data.recommended
+        };
+      }
+    }
+    
+    // 기존 로직 (예측 데이터 기반)
     if (!currentRegionData || !Array.isArray(currentRegionData)) {
-      return { totalDeaths: 0, avgGrowthRate: 0, maxMonth: '', minMonth: '' };
+      return { totalDeaths: 0, avgGrowthRate: 0, currentStaff: 0, recommendedStaff: 0 };
     }
 
     // 현재 날짜 기준으로 이후 데이터만 필터링
@@ -755,16 +878,12 @@ const DataDisplayComponent = ({
     const totalDeaths = futureData.reduce((sum, item) => sum + (item.deaths || 0), 0);
     const avgGrowthRate = futureData.length > 0 ? 
       futureData.reduce((sum, item) => sum + (item.growthRate || 0), 0) / futureData.length : 0;
-    
-    const sortedByDeaths = [...futureData].sort((a, b) => (b.deaths || 0) - (a.deaths || 0));
-    const maxMonth = sortedByDeaths[0]?.date || '';
-    const minMonth = sortedByDeaths[sortedByDeaths.length - 1]?.date || '';
 
     return {
       totalDeaths: Math.round(totalDeaths),
       avgGrowthRate: avgGrowthRate.toFixed(1),
-      maxMonth,
-      minMonth
+      currentStaff: 0, // 기존 데이터에서는 제공되지 않음
+      recommendedStaff: 0 // 기존 데이터에서는 제공되지 않음
     };
   };
 
@@ -967,11 +1086,22 @@ const DataDisplayComponent = ({
         </small>
       </div>
 
-      {/* 주요지역 현황 요약 (전국 데이터 기준, 지역 선택으로 변하지 않음) */}
+      {/* 주요지역 현황 요약 (2N에서 배치 상태 정보가 있으면 그것을 우선 사용, 없으면 예측 데이터 기준) */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-          📊 주요지역 현황 요약 ({currentDate.year}년 {currentDate.month}월 예측 기준)
+          📊 주요지역 현황 요약 
+          {deploymentData ? 
+            '(2025년 8월 AI 배치 분석 기준)' : 
+            `(${currentDate.year}년 ${currentDate.month}월 예측 기준)`
+          }
         </h5>
+        {deploymentData && (
+          <div className="mb-3 p-2 rounded-3" style={{ backgroundColor: 'rgba(40, 167, 69, 0.1)', border: '1px solid rgba(40, 167, 69, 0.3)' }}>
+            <small style={{ color: '#198754', fontSize: '12px', fontWeight: '600' }}>
+              🔗 AI 최적화 페이지에서 연동된 실시간 배치 분석 데이터입니다.
+            </small>
+          </div>
+        )}
         <Row className="g-3">
           {regionStatus.map((status, index) => (
             <Col md={4} key={index}>
@@ -980,7 +1110,7 @@ const DataDisplayComponent = ({
                 style={{ 
                   backgroundColor: status.color,
                   borderLeftColor: status.borderColor + ' !important',
-                  minHeight: '120px',
+                  minHeight: '150px',
                   display: 'flex',
                   flexDirection: 'column'
                 }}
@@ -998,23 +1128,20 @@ const DataDisplayComponent = ({
                 </small>
                 <div className="mt-auto">
                   <div className="d-flex flex-wrap gap-1">
-                    {status.regions.slice(0, 3).map((region, regionIndex) => (
+                    {status.regions.map((region, regionIndex) => (
                       <span 
                         key={regionIndex}
                         className="badge rounded-pill px-2 py-1"
                         style={{ 
                           backgroundColor: status.textColor,
                           color: 'white',
-                          fontSize: '12px',
+                          fontSize: '11px',
                           fontWeight: '500'
                         }}
                       >
                         {region}
                       </span>
                     ))}
-                    {status.regions.length > 3 && (
-                      <span className="text-muted small">+{status.regions.length - 3}개</span>
-                    )}
                   </div>
                   {status.regions.length === 0 && (
                     <p className="text-muted small mb-0">데이터가 없습니다</p>
@@ -1098,18 +1225,18 @@ const DataDisplayComponent = ({
           </Col>
           <Col md={3}>
             <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 206, 84, 0.1)' }}>
-              <div style={{ fontSize: '18px', fontWeight: '600', color: '#FFCE54' }}>
-                {summaryStats.maxMonth}
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#FFCE54' }}>
+                {summaryStats.currentStaff.toLocaleString()}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>최대 예상 월</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>현재 배치 인력</div>
             </div>
           </Col>
           <Col md={3}>
             <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(75, 192, 192, 0.1)' }}>
-              <div style={{ fontSize: '18px', fontWeight: '600', color: '#4BC0C0' }}>
-                {summaryStats.minMonth}
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#4BC0C0' }}>
+                {summaryStats.recommendedStaff.toLocaleString()}명
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>최소 예상 월</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>AI 추천 인력</div>
             </div>
           </Col>
         </Row>
@@ -1175,7 +1302,7 @@ const DataDisplayComponent = ({
 };
 
 // 인력배치 지도 컴포넌트
-const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
+const StaffMap = ({ selectedRegion, onRegionSelect, staffData, deploymentData }) => {
   const [hoveredRegion, setHoveredRegion] = useState(null);
   
   const themeColors = {
@@ -1195,17 +1322,17 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
     '인천광역시': { top: '24%', left: '20%', shortName: '인천' },
     '충청남도': { top: '45%', left: '27%', shortName: '충남' },
     '충청북도': { top: '35%', left: '48%', shortName: '충북' },
-    '세종특별자치시': { top: '38%', left: '30%', shortName: '세종' },
+    '세종특별자치시': { top: '38%', left: '34%', shortName: '세종' },
     '부산광역시': { top: '65%', left: '80%', shortName: '부산' },
     '대구광역시': { top: '53%', left: '68%', shortName: '대구' },
-    '광주광역시': { top: '65%', left: '33%', shortName: '광주' },
+    '광주광역시': { top: '65%', left: '30%', shortName: '광주' },
     '울산광역시': { top: '57%', left: '86%', shortName: '울산' },
-    '대전광역시': { top: '43%', left: '36%', shortName: '대전' },
+    '대전광역시': { top: '43%', left: '40%', shortName: '대전' },
     '강원도': { top: '22%', left: '63%', shortName: '강원' },
     '전라북도': { top: '55%', left: '35%', shortName: '전북' },
-    '전라남도': { top: '68%', left: '38%', shortName: '전남' },
-    '경상북도': { top: '45%', left: '65%', shortName: '경북' },
-    '경상남도': { top: '60%', left: '68%', shortName: '경남' },
+    '전라남도': { top: '72%', left: '38%', shortName: '전남' },
+    '경상북도': { top: '40%', left: '68%', shortName: '경북' },
+    '경상남도': { top: '60%', left: '58%', shortName: '경남' },
     '제주도': { top: '85%', left: '25%', shortName: '제주' }
   };
 
@@ -1217,10 +1344,25 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
 
   // 지역 배경색 결정 (인력 배치 현황 기준)
   const getRegionBackground = (regionName, isActive, isHovered) => {
-    const staffInfo = getRegionStaffData(regionName);
-    if (!staffInfo) return isActive ? themeColors.activeBackground : themeColors.primaryGradient;
-    
     if (isActive) return themeColors.activeBackground;
+    
+    // 2N에서 전달받은 배치 데이터가 있으면 우선 사용
+    if (deploymentData && deploymentData[regionName]) {
+      const data = deploymentData[regionName];
+      
+      // status: 0=적정, 1=부족, 2=과잉
+      if (data.status === 0) {
+        return 'rgba(40, 167, 69, 0.7)'; // 초록색 - 적정
+      } else if (data.status === 1) {
+        return 'rgba(220, 53, 69, 0.7)'; // 빨간색 - 부족
+      } else if (data.status === 2) {
+        return 'rgba(255, 193, 7, 0.7)'; // 노란색 - 과잉
+      }
+    }
+    
+    // 배치 데이터가 없으면 기존 로직 사용
+    const staffInfo = getRegionStaffData(regionName);
+    if (!staffInfo) return themeColors.primaryGradient;
     
     // staffChange가 양수면 AI 추천 인력이 더 많음 (현재 부족) -> 빨강
     // staffChange가 음수면 AI 추천 인력이 더 적음 (현재 과잉) -> 노랑
@@ -1271,7 +1413,7 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
         backdropFilter: 'blur(10px)'
       }}>
         <h6 style={{ fontSize: '12px', fontWeight: '700', color: '#2C1F14', marginBottom: '10px', textAlign: 'center' }}>
-          범례
+          {deploymentData ? '지역 배치 상태' : '범례'}
         </h6>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1282,7 +1424,9 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
               borderRadius: '50%',
               flexShrink: 0
             }}></div>
-            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>1</small>
+            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>
+              {deploymentData ? '적정 배치' : '1'}
+            </small>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ 
@@ -1292,7 +1436,9 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
               borderRadius: '50%',
               flexShrink: 0
             }}></div>
-            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>2</small>
+            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>
+              {deploymentData ? '인력 부족' : '2'}
+            </small>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ 
@@ -1302,9 +1448,17 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData }) => {
               borderRadius: '50%',
               flexShrink: 0
             }}></div>
-            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>3</small>
+            <small style={{ fontSize: '11px', color: '#2C1F14', whiteSpace: 'nowrap' }}>
+              {deploymentData ? '인력 과잉' : '3'}
+            </small>
           </div>
         </div>
+        {deploymentData && (
+          <div className="mt-2 text-center">
+            <small style={{ fontSize: '10px', color: '#666', fontStyle: 'italic' }}>
+            </small>
+          </div>
+        )}
       </div>
 
       <img 
