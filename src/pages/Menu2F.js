@@ -168,48 +168,69 @@ const Menu2F = () => {
     }
   };
 
-  // 차트 데이터 생성 (2024 이전 데이터 + 2025 예측 데이터)
+  // 현재 월을 기준으로 24개월 범위(앞 12개월, 뒤 12개월) 계산
+  const get24MonthRange = () => {
+    const currentYear = currentDate.year;
+    const currentMonth = currentDate.month;
+    const months = [];
+    
+    // 현재 월을 기준으로 앞 12개월부터 뒤 12개월까지 생성
+    for (let i = -12; i <= 12; i++) {
+      const targetDate = new Date(currentYear, currentMonth - 1 + i, 1);
+      const year = targetDate.getFullYear();
+      const month = targetDate.getMonth() + 1;
+      const dateString = `${year}-${String(month).padStart(2, '0')}`;
+      months.push(dateString);
+    }
+    
+    console.log('📅 24개월 범위 계산:', months);
+    console.log(`📅 현재 월: ${currentYear}-${String(currentMonth).padStart(2, '0')}`);
+    return months;
+  };
+
+  // 차트 데이터 생성 (현재 월 중심 24개월 범위)
   const generateChartData = async (region) => {
     try {
       console.log(`📈 ${region} 차트 데이터 생성 중...`);
       
-      let data2024, data2025, data2026;
+      // 24개월 범위 계산
+      const monthRange = get24MonthRange();
+      
+      let allData;
       
       if (region === '전체') {
         // 전체 선택 시 지역별 API로 전국의 모든 월 데이터 조회
         console.log('🔍 전국 차트 데이터 조회 - 지역별 API 사용');
-        const allData = await apiService.getDashboardByRegion('전국');
+        allData = await apiService.getDashboardByRegion('전국');
         console.log('📊 전국 지역별 API 응답:', allData);
-        
-        // 2024년, 2025년, 2026년 데이터 분리
-        data2024 = allData.filter(item => item.date && item.date.startsWith('2024'));
-        data2025 = allData.filter(item => item.date && item.date.startsWith('2025'));
-        data2026 = allData.filter(item => item.date && item.date.startsWith('2026'));
-        
-        console.log('📊 전국 분리된 2024년 데이터:', data2024);
-        console.log('📊 전국 분리된 2025년 데이터:', data2025);
-        console.log('📊 전국 분리된 2026년 데이터:', data2026);
       } else {
         // 특정 지역 선택 시 지역별 API로 해당 지역의 모든 기간 데이터 조회
         console.log(`🔍 ${region} 지역 차트 데이터 조회 - 지역별 API 사용`);
-        const allData = await apiService.getDashboardByRegion(region);
+        allData = await apiService.getDashboardByRegion(region);
         console.log(`📊 ${region} 지역별 API 응답:`, allData);
-        
-        // 2024년, 2025년, 2026년 데이터 분리
-        data2024 = allData.filter(item => item.date && item.date.startsWith('2024'));
-        data2025 = allData.filter(item => item.date && item.date.startsWith('2025'));
-        const data2026 = allData.filter(item => item.date && item.date.startsWith('2026'));
-        
-        console.log(`📊 ${region} 분리된 2024년 데이터:`, data2024);
-        console.log(`📊 ${region} 분리된 2025년 데이터:`, data2025);
-        console.log(`📊 ${region} 분리된 2026년 데이터:`, data2026);
       }
+      
+      // 24개월 범위 내의 데이터만 필터링
+      const filteredData = allData.filter(item => 
+        item.date && monthRange.includes(item.date)
+      );
+      
+      console.log('📊 24개월 범위 필터링된 데이터:', filteredData);
+      
+      // 2024년, 2025년, 2026년 데이터 분리 (24개월 범위 내에서)
+      const data2024 = filteredData.filter(item => item.date && item.date.startsWith('2024'));
+      const data2025 = filteredData.filter(item => item.date && item.date.startsWith('2025'));
+      const data2026 = filteredData.filter(item => item.date && item.date.startsWith('2026'));
+      
+      console.log('📊 24개월 범위 내 2024년 데이터:', data2024);
+      console.log('📊 24개월 범위 내 2025년 데이터:', data2025);
+      console.log('📊 24개월 범위 내 2026년 데이터:', data2026);
       console.log('📊 차트 데이터 매핑 시작:');
       console.log('   최종 2024년 데이터:', data2024);
       console.log('   최종 2025년 데이터:', data2025);
       
-      // 모든 월을 포함하는 통합 레이블 생성
-      const allLabels = new Set();
+      // 24개월 범위를 레이블로 사용 (순서 보장)
+      const allLabels = monthRange;
       const dataMap2024 = new Map();
       const dataMap2025 = new Map();
       const dataMap2026 = new Map();
@@ -224,7 +245,6 @@ const Menu2F = () => {
             // 2024년 데이터만 필터링 (날짜가 2024로 시작하는 것만)
             if (item.date.startsWith('2024')) {
               console.log(`   ✅ 2024 데이터 추가: ${item.date} -> ${item.deaths}`);
-              allLabels.add(item.date);
               dataMap2024.set(item.date, item.deaths);
             } else {
               console.log(`   ⏭️ 2024가 아닌 데이터 스킵: ${item.date}`);
@@ -238,7 +258,6 @@ const Menu2F = () => {
         // 단일 객체인 경우
         if (data2024.date.startsWith('2024')) {
           console.log(`   ✅ 2024 단일 데이터 추가: ${data2024.date} -> ${data2024.deaths}`);
-          allLabels.add(data2024.date);
           dataMap2024.set(data2024.date, data2024.deaths);
         } else {
           console.log(`   ⏭️ 2024가 아닌 단일 데이터 스킵: ${data2024.date}`);
@@ -257,7 +276,6 @@ const Menu2F = () => {
             // 2025년 데이터만 필터링 (날짜가 2025로 시작하는 것만)
             if (item.date.startsWith('2025')) {
               console.log(`   ✅ 2025 데이터 추가: ${item.date} -> ${item.deaths}`);
-              allLabels.add(item.date);
               dataMap2025.set(item.date, item.deaths);
             } else {
               console.log(`   ⏭️ 2025가 아닌 데이터 스킵: ${item.date}`);
@@ -271,7 +289,6 @@ const Menu2F = () => {
         // 단일 객체인 경우
         if (data2025.date.startsWith('2025')) {
           console.log(`   ✅ 2025 단일 데이터 추가: ${data2025.date} -> ${data2025.deaths}`);
-          allLabels.add(data2025.date);
           dataMap2025.set(data2025.date, data2025.deaths);
         } else {
           console.log(`   ⏭️ 2025가 아닌 단일 데이터 스킵: ${data2025.date}`);
@@ -290,7 +307,6 @@ const Menu2F = () => {
             // 2026년 데이터만 필터링 (날짜가 2026로 시작하는 것만)
             if (item.date.startsWith('2026')) {
               console.log(`   ✅ 2026 데이터 추가: ${item.date} -> ${item.deaths}`);
-              allLabels.add(item.date);
               dataMap2026.set(item.date, item.deaths);
             } else {
               console.log(`   ⏭️ 2026이 아닌 데이터 스킵: ${item.date}`);
@@ -304,7 +320,6 @@ const Menu2F = () => {
         // 단일 객체인 경우
         if (data2026.date.startsWith('2026')) {
           console.log(`   ✅ 2026 단일 데이터 추가: ${data2026.date} -> ${data2026.deaths}`);
-          allLabels.add(data2026.date);
           dataMap2026.set(data2026.date, data2026.deaths);
         } else {
           console.log(`   ⏭️ 2026이 아닌 단일 데이터 스킵: ${data2026.date}`);
@@ -313,10 +328,9 @@ const Menu2F = () => {
         console.log('   ⚠️ 2026 데이터가 유효하지 않거나 비어있음:', data2026);
       }
       
-      // 날짜순으로 정렬
-      const sortedLabels = Array.from(allLabels).sort();
-      console.log('📈 모든 수집된 레이블:', Array.from(allLabels));
-      console.log('📈 정렬된 레이블:', sortedLabels);
+      // 24개월 범위 레이블 사용 (이미 정렬됨)
+      const sortedLabels = allLabels;
+      console.log('📈 24개월 범위 레이블:', sortedLabels);
       console.log('📈 2024 데이터 맵:', Object.fromEntries(dataMap2024));
       console.log('📈 2025 데이터 맵:', Object.fromEntries(dataMap2025));
       console.log('📈 2026 데이터 맵:', Object.fromEntries(dataMap2026));
@@ -380,7 +394,7 @@ const Menu2F = () => {
             spanGaps: false // null 값 사이를 연결하지 않음
           },
           {
-            label: '예측 데이터 (2025)',
+            label: '예측 데이터 (2025-2026)',
             data: predictedData,
             borderColor: 'rgba(255, 99, 132, 0.8)',
             backgroundColor: 'rgba(255, 99, 132, 0.1)',
@@ -409,7 +423,7 @@ const Menu2F = () => {
             backgroundColor: 'rgba(54, 162, 235, 0.1)',
           },
           {
-            label: '예측 데이터 (2025)',
+            label: '예측 데이터 (2025-2026)',
             data: [],
             borderColor: 'rgba(255, 99, 132, 0.8)',
             backgroundColor: 'rgba(255, 99, 132, 0.1)',
@@ -1027,7 +1041,7 @@ const DataDisplayComponent = ({
       },
       title: {
         display: true,
-        text: `${displayRegionName} 사망자 수 추이 (이전 vs 예측)`,
+        text: `${displayRegionName} 사망자 수 추이 (현재 월 중심 24개월)`,
         font: { size: 16, weight: 'bold' }
       },
       // 현재 날짜에 수직선을 그리는 커스텀 플러그인
@@ -1292,8 +1306,11 @@ const DataDisplayComponent = ({
       {chartData && (
         <div className="p-4 mb-4" style={cardStyle}>
           <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-            📈 {displayRegionName} 시계열 예측 차트
+            📈 {displayRegionName} 시계열 예측 차트 (현재 월 중심 24개월)
           </h5>
+          <div className="mb-2" style={{ fontSize: '12px', color: '#666' }}>
+            💡 현재 월을 중심으로 앞 12개월, 뒤 12개월의 데이터를 표시합니다
+          </div>
           <div style={{ height: '400px' }}>
             <Line data={chartData} options={chartOptions} />
           </div>
