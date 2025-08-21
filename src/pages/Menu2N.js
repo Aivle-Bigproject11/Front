@@ -414,6 +414,7 @@ const Menu2N = () => {
               transferRecommendations={transferRecommendations}
               selectedTransfers={selectedTransfers}
               setSelectedTransfers={setSelectedTransfers}
+              calculateRegionDeploymentStatus={calculateRegionDeploymentStatus}
             />
             
           </div>
@@ -503,7 +504,7 @@ const Menu2N = () => {
 };
 
 // 최적화된 인력배치 지도 컴포넌트
-const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transferRecommendations, selectedTransfers, setSelectedTransfers }) => {
+const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transferRecommendations, selectedTransfers, setSelectedTransfers, calculateRegionDeploymentStatus }) => {
   const [hoveredRegion, setHoveredRegion] = useState(null);
   
   const themeColors = {
@@ -801,58 +802,50 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
         />
       ))}
 
-      {/* 범례 */}
+      {/* 상세 예측 데이터 및 시계열 데이터 조회 카드 */}
       <div style={{
         position: 'absolute',
         bottom: '20px',
         right: '20px',
         zIndex: 10,
-        width: '50%',
+        width: '45%',
         background: 'rgba(255, 255, 255, 0.95)',
         border: '1px solid rgba(184, 134, 11, 0.3)',
         borderRadius: '12px',
-        padding: '12px',
+        padding: '15px',
         boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
         backdropFilter: 'blur(10px)'
       }}>
-        <h6 style={{ fontSize: '12px', fontWeight: '600', color: '#2C1F14', marginBottom: '8px' }}>
-          임시 조정 카드
-        </h6>
-        <Row>
-          <Col md={4} className="text-center">
-            <div style={{ 
-              width: '20px', 
-              height: '12px', 
-              background: 'rgba(220, 53, 69, 0.7)',
-              borderRadius: '4px',
-              display: 'inline-block',
-              marginRight: '5px'
-            }}></div>
-            <small style={{ fontSize: '11px' }}>1번</small>
-          </Col>
-          <Col md={4} className="text-center">
-            <div style={{ 
-              width: '20px', 
-              height: '12px', 
-              background: 'rgba(40, 167, 69, 0.7)',
-              borderRadius: '4px',
-              display: 'inline-block',
-              marginRight: '5px'
-            }}></div>
-            <small style={{ fontSize: '11px' }}>2번</small>
-          </Col>
-          <Col md={4} className="text-center">
-            <div style={{ 
-              width: '20px', 
-              height: '12px', 
-              background: 'rgba(255, 193, 7, 0.7)',
-              borderRadius: '4px',
-              display: 'inline-block',
-              marginRight: '5px'
-            }}></div>
-            <small style={{ fontSize: '11px' }}>3번</small>
-          </Col>
-        </Row>
+        <div className="text-center">
+          <div style={{ fontSize: '28px', marginBottom: '10px' }}>📊</div>
+          <h6 className="mb-2" style={{ fontWeight: '700', color: '#369CE3' }}>
+            사망자 상세 예측 데이터 및 시계열 분석 조회
+          </h6>
+          <p style={{ fontSize: '12px', color: '#666', marginBottom: '15px' }}>
+            {selectedRegion === '전체' ? '전국' : selectedRegion}의 상세한 사망자 예측 데이터와 시계열 차트를 확인하세요
+          </p>
+          <Button 
+            variant="primary" 
+            size="sm"
+            style={{
+              padding: '8px 20px',
+              fontSize: '12px',
+              fontWeight: '600',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #369CE3, #4BC0C0)',
+              border: 'none',
+              boxShadow: '0 4px 15px rgba(54, 162, 235, 0.3)'
+            }}
+            onClick={() => {
+              // Menu2F로 이동하면서 선택된 지역 정보와 배치 상태 정보 전달
+              const deploymentData = calculateRegionDeploymentStatus();
+              const encodedData = encodeURIComponent(JSON.stringify(deploymentData));
+              window.location.href = `/menu2f?region=${encodeURIComponent(selectedRegion)}&deploymentData=${encodedData}`;
+            }}
+          >
+            🔍 예측 데이터 분석
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -1560,44 +1553,6 @@ const OptimizedDisplayComponent = ({
       </div>
 
       
-
-      {/* 상세 예측 데이터 및 시계열 데이터 조회 카드 */}
-      <div className="p-4 mb-4" style={{
-        ...cardStyle,
-        background: 'linear-gradient(135deg, rgba(54, 162, 235, 0.1) 0%, rgba(75, 192, 192, 0.1) 100%)',
-        border: '2px solid rgba(54, 162, 235, 0.3)'
-      }}>
-        <div className="text-center">
-          <div style={{ fontSize: '48px', marginBottom: '15px' }}>📊</div>
-          <h4 className="mb-3" style={{ fontWeight: '700', color: '#369CE3' }}>
-            사망자 상세 예측 데이터 및 시계열 분석 조회
-          </h4>
-          <p style={{ fontSize: '16px', color: '#666', marginBottom: '25px' }}>
-            {region === '전체' ? '전국' : region}의 상세한 사망자 예측 데이터와 시계열 차트를 확인하세요
-          </p>
-          <Button 
-            variant="primary" 
-            size="lg"
-            style={{
-              padding: '12px 30px',
-              fontSize: '16px',
-              fontWeight: '600',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #369CE3, #4BC0C0)',
-              border: 'none',
-              boxShadow: '0 4px 15px rgba(54, 162, 235, 0.3)'
-            }}
-            onClick={() => {
-              // Menu2F로 이동하면서 선택된 지역 정보와 배치 상태 정보 전달
-              const deploymentData = calculateRegionDeploymentStatus();
-              const encodedData = encodeURIComponent(JSON.stringify(deploymentData));
-              window.location.href = `/menu2f?region=${encodeURIComponent(region)}&deploymentData=${encodedData}`;
-            }}
-          >
-            🔍 예측 데이터 분석
-          </Button>
-        </div>
-      </div>
 
       {/* 3개월 예측 데이터 테이블 */}
       {currentStaffData && Array.isArray(currentStaffData) && (
