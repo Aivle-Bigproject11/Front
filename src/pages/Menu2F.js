@@ -786,7 +786,7 @@ const DataDisplayComponent = ({
   currentDate,
   deploymentData
 }) => {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(currentDate.year);
 
   // 2N에서 받은 배치 상태 또는 전국 데이터 기준 지역 상태 계산
   const getRegionStatus = () => {
@@ -1417,10 +1417,10 @@ const DataDisplayComponent = ({
       {chartData && (
         <div className="p-4 mb-4" style={cardStyle}>
           <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-            📈 {displayRegionName} 시계열 예측 차트 (2024년 1월~2026년 12월)
+            📈 {displayRegionName} 시계열 예측 차트
           </h5>
           <div className="mb-2" style={{ fontSize: '12px', color: '#666' }}>
-            💡 2024년 1월부터 2026년 12월까지 순차적으로 표시하며, 현재 위치한 월을 강조합니다
+            💡 2024년 1월부터 2026년 12월까지 순차적으로 표시
           </div>
           <div style={{ height: '400px' }}>
             <Line
