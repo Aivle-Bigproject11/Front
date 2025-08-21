@@ -775,17 +775,19 @@ const Menu2F = () => {
 };
 
 // 데이터 표시 컴포넌트
-const DataDisplayComponent = ({ 
-  region, 
-  nationalData, 
-  currentRegionData, 
-  chartData, 
-  loading, 
+const DataDisplayComponent = ({
+  region,
+  nationalData,
+  currentRegionData,
+  chartData,
+  loading,
   error,
   refreshKey,
   currentDate,
   deploymentData
 }) => {
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
   // 2N에서 받은 배치 상태 또는 전국 데이터 기준 지역 상태 계산
   const getRegionStatus = () => {
     // 지역명 축약 함수
@@ -814,29 +816,29 @@ const DataDisplayComponent = ({
     // 2N에서 배치 데이터를 받은 경우 우선 사용
     if (deploymentData && Object.keys(deploymentData).length > 0) {
       const regionStatus = [
-        { 
-          level: '적정 배치', 
+        {
+          level: '적정 배치',
           description: '현재 인력이 AI 추천과 일치',
-          color: 'rgba(25, 135, 84, 0.15)', 
+          color: 'rgba(25, 135, 84, 0.15)',
           borderColor: 'rgba(25, 135, 84, 0.8)',
           textColor: '#198754',
-          regions: [] 
+          regions: []
         },
-        { 
-          level: '인력 부족', 
+        {
+          level: '인력 부족',
           description: 'AI 추천보다 인력이 부족',
-          color: 'rgba(220, 53, 69, 0.15)', 
+          color: 'rgba(220, 53, 69, 0.15)',
           borderColor: 'rgba(220, 53, 69, 0.8)',
           textColor: '#dc3545',
-          regions: [] 
+          regions: []
         },
-        { 
-          level: '인력 과잉', 
+        {
+          level: '인력 과잉',
           description: 'AI 추천보다 인력이 과잉',
-          color: 'rgba(255, 193, 7, 0.15)', 
+          color: 'rgba(255, 193, 7, 0.15)',
           borderColor: 'rgba(255, 193, 7, 0.8)',
           textColor: '#ffc107',
-          regions: [] 
+          regions: []
         }
       ];
 
@@ -887,29 +889,29 @@ const DataDisplayComponent = ({
     const mediumThreshold = Math.ceil((totalRegions * 2) / 3);
 
     const regionStatus = [
-      { 
-        level: '인력 부족', 
+      {
+        level: '인력 부족',
         description: '증가율 높음',
-        color: 'rgba(220, 53, 69, 0.15)', 
+        color: 'rgba(220, 53, 69, 0.15)',
         borderColor: 'rgba(220, 53, 69, 0.8)',
         textColor: '#dc3545',
-        regions: [] 
+        regions: []
       },
-      { 
-        level: '인력 과잉', 
+      {
+        level: '인력 과잉',
         description: '증가율 중간',
-        color: 'rgba(255, 193, 7, 0.15)', 
+        color: 'rgba(255, 193, 7, 0.15)',
         borderColor: 'rgba(255, 193, 7, 0.8)',
         textColor: '#ffc107',
-        regions: [] 
+        regions: []
       },
-      { 
-        level: '적정 배치', 
+      {
+        level: '적정 배치',
         description: '증가율 낮음',
-        color: 'rgba(25, 135, 84, 0.15)', 
+        color: 'rgba(25, 135, 84, 0.15)',
         borderColor: 'rgba(25, 135, 84, 0.8)',
         textColor: '#198754',
-        regions: [] 
+        regions: []
       }
     ];
 
@@ -929,13 +931,13 @@ const DataDisplayComponent = ({
   // 예측 요약 통계 계산 (지난달 대비, 다음달 예상 변화)
   const getSummaryStats = () => {
     if (!currentRegionData || !Array.isArray(currentRegionData)) {
-      return { 
-        lastMonthChange: 0, 
+      return {
+        lastMonthChange: 0,
         lastMonthChangePercent: 0,
-        nextMonthChange: 0, 
+        nextMonthChange: 0,
         nextMonthChangePercent: 0,
-        currentStaff: 0, 
-        recommendedStaff: 0 
+        currentStaff: 0,
+        recommendedStaff: 0
       };
     }
 
@@ -997,10 +999,10 @@ const DataDisplayComponent = ({
   // 현재 달과 다음 달 비교 분석
   const getCurrentVsNextMonthAnalysis = () => {
     if (!currentRegionData || !Array.isArray(currentRegionData)) {
-      return { 
-        currentMonthDeaths: 0, 
-        nextMonthDeaths: 0, 
-        difference: 0, 
+      return {
+        currentMonthDeaths: 0,
+        nextMonthDeaths: 0,
+        difference: 0,
         trend: 'unknown',
         trendIcon: '❓',
         trendColor: '#666',
@@ -1019,10 +1021,10 @@ const DataDisplayComponent = ({
     const nextMonthData = currentRegionData.find(item => item.date === nextMonthStr);
 
     if (!currentMonthData || !nextMonthData) {
-      return { 
-        currentMonthDeaths: 0, 
-        nextMonthDeaths: 0, 
-        difference: 0, 
+      return {
+        currentMonthDeaths: 0,
+        nextMonthDeaths: 0,
+        difference: 0,
         trend: 'unknown',
         trendIcon: '❓',
         trendColor: '#666',
@@ -1178,10 +1180,10 @@ const DataDisplayComponent = ({
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100%',
         flexDirection: 'column',
         color: '#2C1F14'
@@ -1198,10 +1200,10 @@ const DataDisplayComponent = ({
 
   if (error) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100%',
         flexDirection: 'column',
         color: '#dc3545'
@@ -1232,9 +1234,9 @@ const DataDisplayComponent = ({
       {/* 주요지역 현황 요약 (2N에서 배치 상태 정보가 있으면 그것을 우선 사용, 없으면 예측 데이터 기준) */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-          📊 주요지역 현황 요약 
-          {deploymentData ? 
-            '(2025년 8월 AI 배치 분석 기준)' : 
+          📊 주요지역 현황 요약
+          {deploymentData ?
+            '(2025년 8월 AI 배치 분석 기준)' :
             `(${currentDate.year}년 ${currentDate.month}월 예측 기준)`
           }
         </h5>
@@ -1248,9 +1250,9 @@ const DataDisplayComponent = ({
         <Row className="g-3">
           {regionStatus.map((status, index) => (
             <Col md={4} key={index}>
-              <div 
+              <div
                 className="h-100 p-3 rounded-3 border-start border-4"
-                style={{ 
+                style={{
                   backgroundColor: status.color,
                   borderLeftColor: status.borderColor + ' !important',
                   minHeight: '150px',
@@ -1272,10 +1274,10 @@ const DataDisplayComponent = ({
                 <div className="mt-auto">
                   <div className="d-flex flex-wrap gap-1">
                     {status.regions.map((region, regionIndex) => (
-                      <span 
+                      <span
                         key={regionIndex}
                         className="badge rounded-pill px-2 py-1"
-                        style={{ 
+                        style={{
                           backgroundColor: status.textColor,
                           color: 'white',
                           fontSize: '11px',
@@ -1301,7 +1303,7 @@ const DataDisplayComponent = ({
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
           📊 {displayRegionName} 월간 변화 예측
         </h5>
-        <div className="text-center p-4 rounded-3" style={{ 
+        <div className="text-center p-4 rounded-3" style={{
           backgroundColor: `${monthAnalysis.trendColor}15`,
           border: `2px solid ${monthAnalysis.trendColor}30`
         }}>
@@ -1336,7 +1338,7 @@ const DataDisplayComponent = ({
           {monthAnalysis.difference !== 0 && (
             <div className="mt-3">
               <span className={`badge ${monthAnalysis.difference > 0 ? 'bg-danger' : 'bg-primary'} fs-6`}>
-                {monthAnalysis.difference > 0 ? '+' : ''}{monthAnalysis.difference}명 
+                {monthAnalysis.difference > 0 ? '+' : ''}{monthAnalysis.difference}명
                 ({monthAnalysis.difference > 0 ? '증가' : '감소'})
               </span>
             </div>
@@ -1351,42 +1353,42 @@ const DataDisplayComponent = ({
         </h5>
         <Row className="g-3">
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ 
-              backgroundColor: summaryStats.lastMonthChange >= 0 ? 'rgba(220, 53, 69, 0.1)' : 'rgba(25, 135, 84, 0.1)' 
+            <div className="text-center p-3 rounded-3" style={{
+              backgroundColor: summaryStats.lastMonthChange >= 0 ? 'rgba(220, 53, 69, 0.1)' : 'rgba(25, 135, 84, 0.1)'
             }}>
-              <div style={{ 
-                fontSize: '24px', 
-                fontWeight: '700', 
-                color: summaryStats.lastMonthChange >= 0 ? '#dc3545' : '#198754' 
+              <div style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: summaryStats.lastMonthChange >= 0 ? '#dc3545' : '#198754'
               }}>
                 {summaryStats.lastMonthChange >= 0 ? '+' : ''}{summaryStats.lastMonthChange.toLocaleString()}
               </div>
               <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>지난달 대비 변화</div>
-              <div style={{ 
-                fontSize: '11px', 
+              <div style={{
+                fontSize: '11px',
                 fontWeight: '600',
-                color: summaryStats.lastMonthChange >= 0 ? '#dc3545' : '#198754' 
+                color: summaryStats.lastMonthChange >= 0 ? '#dc3545' : '#198754'
               }}>
                 ({summaryStats.lastMonthChangePercent >= 0 ? '+' : ''}{summaryStats.lastMonthChangePercent}%)
               </div>
             </div>
           </Col>
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ 
-              backgroundColor: summaryStats.nextMonthChange >= 0 ? 'rgba(255, 193, 7, 0.1)' : 'rgba(54, 162, 235, 0.1)' 
+            <div className="text-center p-3 rounded-3" style={{
+              backgroundColor: summaryStats.nextMonthChange >= 0 ? 'rgba(255, 193, 7, 0.1)' : 'rgba(54, 162, 235, 0.1)'
             }}>
-              <div style={{ 
-                fontSize: '24px', 
-                fontWeight: '700', 
-                color: summaryStats.nextMonthChange >= 0 ? '#ffc107' : '#369CE3' 
+              <div style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: summaryStats.nextMonthChange >= 0 ? '#ffc107' : '#369CE3'
               }}>
                 {summaryStats.nextMonthChange >= 0 ? '+' : ''}{summaryStats.nextMonthChange.toLocaleString()}
               </div>
               <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>다음달 예상 변화</div>
-              <div style={{ 
-                fontSize: '11px', 
+              <div style={{
+                fontSize: '11px',
                 fontWeight: '600',
-                color: summaryStats.nextMonthChange >= 0 ? '#ffc107' : '#369CE3' 
+                color: summaryStats.nextMonthChange >= 0 ? '#ffc107' : '#369CE3'
               }}>
                 ({summaryStats.nextMonthChangePercent >= 0 ? '+' : ''}{summaryStats.nextMonthChangePercent}%)
               </div>
@@ -1421,8 +1423,8 @@ const DataDisplayComponent = ({
             💡 2024년 1월부터 2026년 12월까지 순차적으로 표시하며, 현재 위치한 월을 강조합니다
           </div>
           <div style={{ height: '400px' }}>
-            <Line 
-              data={chartData} 
+            <Line
+              data={chartData}
               options={chartOptions}
               plugins={[{
                 id: 'currentMonthHighlight',
@@ -1460,7 +1462,7 @@ const DataDisplayComponent = ({
                     ctx.fillText('현재', x, yAxis.bottom - 15);
                     
                     // 현재 월의 데이터 포인트 강조
-                    const currentData = chart.data.datasets.find(dataset => 
+                    const currentData = chart.data.datasets.find(dataset =>
                       dataset.data[index] !== null && dataset.data[index] !== undefined
                     );
                     
@@ -1488,227 +1490,139 @@ const DataDisplayComponent = ({
       {currentRegionData && Array.isArray(currentRegionData) && (
         <div className="p-4" style={cardStyle}>
           <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-            📋 {displayRegionName} 월별 상세 데이터 타임라인 (2024.01 ~ 2026.12)
+            📋 {displayRegionName} 월별 상세 데이터
           </h5>
-          <div className="mb-3" style={{ fontSize: '12px', color: '#666' }}>
-            💡 시간 순서대로 배열된 월별 데이터 - 현재 위치(8월)가 강조 표시됩니다
+          
+          {/* Year Tabs */}
+          <div className="d-flex justify-content-center mb-3" style={{ gap: '10px' }}>
+            {[2024, 2025, 2026].map(year => (
+              <button
+                key={year}
+                onClick={() => setSelectedYear(year)}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  border: '2px solid',
+                  borderRadius: '12px',
+                  transition: 'all 0.3s ease',
+                  borderColor: selectedYear === year ? '#B8860B' : '#ddd',
+                  backgroundColor: selectedYear === year ? '#B8860B' : 'white',
+                  color: selectedYear === year ? 'white' : '#333',
+                  boxShadow: selectedYear === year ? '0 4px 15px rgba(184, 134, 11, 0.4)' : 'none'
+                }}
+              >
+                {year}년
+              </button>
+            ))}
           </div>
           
-          {/* 연속적인 타임라인 스타일 */}
-          <div style={{ 
-            maxHeight: '600px',
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            padding: '16px 8px'
-          }}>
-            {/* 연도별 구분 헤더 */}
-            {['2024', '2025', '2026'].map(year => {
-              const yearData = currentRegionData
-                .filter(item => item.date.startsWith(year))
-                .sort((a, b) => a.date.localeCompare(b.date));
-              
-              if (yearData.length === 0) return null;
-              
-              return (
-                <div key={year} style={{ marginBottom: '32px' }}>
-                  {/* 연도 헤더 */}
-                  <div style={{
-                    background: year === '2024' 
-                      ? 'linear-gradient(135deg, #4BC0C0, #36A2EB)' 
-                      : year === '2025' 
-                        ? 'linear-gradient(135deg, #FF6384, #FF9F40)'
-                        : 'linear-gradient(135deg, #FFCE56, #4BC0C0)',
-                    color: 'white',
-                    padding: '12px 20px',
-                    borderRadius: '12px 12px 0 0',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    textAlign: 'center',
-                    marginBottom: '0',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-                  }}>
-                    {year}년
-                  </div>
-                  
-                  {/* 월별 카드들을 가로로 연속 배치 */}
-                  <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '8px',
-                    padding: '16px',
-                    background: 'rgba(248, 249, 250, 0.5)',
-                    borderRadius: '0 0 12px 12px',
-                    border: '1px solid rgba(0, 0, 0, 0.1)',
-                    borderTop: 'none'
-                  }}>
-                    {yearData.map((item, index) => {
-                      const isCurrentMonth = item.date === `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
-                      const [itemYear, month] = item.date.split('-');
-                      const monthNum = parseInt(month);
-                      const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-                      
-                      return (
-                        <div 
-                          key={index}
-                          style={{
-                            flex: '1 1 calc(16.666% - 8px)', // 6개씩 한 줄에 배치
-                            minWidth: '140px',
-                            background: isCurrentMonth 
-                              ? 'linear-gradient(135deg, rgba(184, 134, 11, 0.2), rgba(184, 134, 11, 0.35))'
-                              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.95))',
-                            border: isCurrentMonth 
-                              ? '3px solid #B8860B' 
-                              : '1px solid rgba(0, 0, 0, 0.1)',
-                            borderRadius: '12px',
-                            padding: '16px 12px',
-                            position: 'relative',
-                            transition: 'all 0.3s ease',
-                            cursor: 'pointer',
-                            transform: isCurrentMonth ? 'scale(1.05)' : 'scale(1)',
-                            boxShadow: isCurrentMonth 
-                              ? '0 8px 25px rgba(184, 134, 11, 0.4)' 
-                              : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                            zIndex: isCurrentMonth ? 10 : 1
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isCurrentMonth) {
-                              e.target.style.transform = 'scale(1.02)';
-                              e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isCurrentMonth) {
-                              e.target.style.transform = 'scale(1)';
-                              e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-                            }
-                          }}
-                        >
-                          {/* 현재 월 플래그 */}
-                          {isCurrentMonth && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '-10px',
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              background: 'linear-gradient(135deg, #B8860B, #D4AF37)',
-                              color: 'white',
-                              padding: '4px 8px',
-                              borderRadius: '8px',
-                              fontSize: '10px',
-                              fontWeight: '700',
-                              boxShadow: '0 2px 8px rgba(184, 134, 11, 0.4)',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              📍 현재
-                            </div>
-                          )}
-                          
-                          {/* 월 제목 */}
-                          <div style={{ 
-                            fontSize: '14px', 
-                            fontWeight: '700', 
-                            color: isCurrentMonth ? '#B8860B' : '#2C1F14',
-                            marginBottom: '8px',
-                            textAlign: 'center'
+          {(() => {
+            const yearData = currentRegionData
+              .filter(item => item.date.startsWith(selectedYear))
+              .sort((a, b) => a.date.localeCompare(b.date));
+            
+            if (yearData.length === 0) {
+              return <p style={{textAlign: 'center', color: '#666'}}>해당 연도의 데이터가 없습니다.</p>;
+            }
+
+            const firstHalf = yearData.filter(item => {
+                const month = parseInt(item.date.split('-')[1], 10);
+                return month >= 1 && month <= 6;
+            });
+            const secondHalf = yearData.filter(item => {
+                const month = parseInt(item.date.split('-')[1], 10);
+                return month >= 7 && month <= 12;
+            });
+
+            const renderMonthRow = (data, isSecondRow = false) => (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(6, 1fr)',
+                  gap: '16px',
+                  padding: '16px',
+                  background: 'rgba(248, 249, 250, 0.5)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  marginBottom: isSecondRow ? 0 : '16px'
+                }}>
+                  {data.map((item, index) => {
+                    const isCurrentMonth = item.date === `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+                    const [, month] = item.date.split('-');
+                    const monthNum = parseInt(month, 10);
+                    const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+                    
+                    return (
+                      <div 
+                        key={index}
+                        style={{
+                          background: isCurrentMonth 
+                            ? 'linear-gradient(135deg, rgba(184, 134, 11, 0.2), rgba(184, 134, 11, 0.35))'
+                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.95))',
+                          border: isCurrentMonth 
+                            ? '3px solid #B8860B' 
+                            : '1px solid rgba(0, 0, 0, 0.1)',
+                          borderRadius: '12px',
+                          padding: '16px 12px',
+                          position: 'relative',
+                          transition: 'all 0.3s ease',
+                          cursor: 'pointer',
+                          transform: isCurrentMonth ? 'scale(1.05)' : 'scale(1)',
+                          boxShadow: isCurrentMonth 
+                            ? '0 8px 25px rgba(184, 134, 11, 0.4)' 
+                            : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                          zIndex: isCurrentMonth ? 10 : 1
+                        }}
+                      >
+                        {isCurrentMonth && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-10px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: 'linear-gradient(135deg, #B8860B, #D4AF37)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            boxShadow: '0 2px 8px rgba(184, 134, 11, 0.4)',
+                            whiteSpace: 'nowrap'
                           }}>
-                            {monthNames[monthNum - 1]}
+                            📍 현재
                           </div>
-                          
-                          {/* 사망자 수 */}
-                          <div style={{ 
-                            fontSize: '18px', 
-                            fontWeight: '800',
-                            color: isCurrentMonth ? '#B8860B' : '#2C1F14',
-                            textAlign: 'center',
-                            marginBottom: '8px',
-                            lineHeight: '1'
-                          }}>
-                            {(item.deaths || 0).toLocaleString()}
-                          </div>
-                          
-                          {/* 증가율 */}
-                          <div style={{ 
-                            fontSize: '12px', 
-                            fontWeight: '600',
-                            color: (item.growthRate || 0) >= 0 ? '#dc3545' : '#198754',
-                            textAlign: 'center',
-                            marginBottom: '6px'
-                          }}>
-                            {(item.growthRate || 0) >= 0 ? '+' : ''}{(item.growthRate || 0).toFixed(1)}%
-                          </div>
-                          
-                          {/* 상태 배지 */}
-                          <div style={{ textAlign: 'center' }}>
-                            <span 
-                              className={`badge ${(item.growthRate || 0) >= 5 ? 'bg-danger' : (item.growthRate || 0) >= 2 ? 'bg-warning' : 'bg-success'}`}
-                              style={{ 
-                                fontSize: '9px',
-                                padding: '3px 6px',
-                                borderRadius: '12px'
-                              }}
-                            >
-                              {(item.growthRate || 0) >= 5 ? '🚨' : (item.growthRate || 0) >= 2 ? '⚠️' : '✅'}
-                            </span>
-                          </div>
-                          
-                          {/* 연결선 (마지막 월 제외) */}
-                          {index < yearData.length - 1 && (
-                            <div style={{
-                              position: 'absolute',
-                              right: '-12px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              width: '16px',
-                              height: '2px',
-                              background: year === '2024' 
-                                ? 'linear-gradient(to right, #4BC0C0, #36A2EB)' 
-                                : year === '2025' 
-                                  ? 'linear-gradient(to right, #FF6384, #FF9F40)'
-                                  : 'linear-gradient(to right, #FFCE56, #4BC0C0)',
-                              zIndex: -1
-                            }} />
-                          )}
+                        )}
+                        <div style={{ fontSize: '14px', fontWeight: '700', color: isCurrentMonth ? '#B8860B' : '#2C1F14', marginBottom: '8px', textAlign: 'center' }}>
+                          {monthNames[monthNum - 1]}
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div style={{ fontSize: '18px', fontWeight: '800', color: isCurrentMonth ? '#B8860B' : '#2C1F14', textAlign: 'center', marginBottom: '8px', lineHeight: '1' }}>
+                          {(item.deaths || 0).toLocaleString()}
+                        </div>
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: (item.growthRate || 0) >= 0 ? '#dc3545' : '#198754', textAlign: 'center', marginBottom: '6px' }}>
+                          {(item.growthRate || 0) >= 0 ? '+' : ''}{(item.growthRate || 0).toFixed(1)}%
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <span 
+                            className={`badge ${(item.growthRate || 0) >= 5 ? 'bg-danger' : (item.growthRate || 0) >= 2 ? 'bg-warning' : 'bg-success'}`}
+                            style={{ fontSize: '9px', padding: '3px 6px', borderRadius: '12px' }}
+                          >
+                            {(item.growthRate || 0) >= 5 ? '🚨' : (item.growthRate || 0) >= 2 ? '⚠️' : '✅'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-          
-          {/* 범례 */}
-          <div style={{ 
-            marginTop: '20px', 
-            padding: '16px',
-            background: 'rgba(248, 249, 250, 0.8)',
-            borderRadius: '12px',
-            border: '1px solid rgba(0, 0, 0, 0.1)'
-          }}>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px', fontWeight: '600' }}>범례</div>
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.3), rgba(184, 134, 11, 0.5))', border: '2px solid #B8860B', borderRadius: '4px' }} />
-                <span style={{ fontSize: '11px', color: '#666' }}>현재 월 (8월)</span>
+            );
+            
+            return (
+              <div>
+                {renderMonthRow(firstHalf)}
+                {renderMonthRow(secondHalf, true)}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '20px', height: '3px', background: 'linear-gradient(to right, #4BC0C0, #36A2EB)', borderRadius: '2px' }} />
-                <span style={{ fontSize: '11px', color: '#666' }}>2024년</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '20px', height: '3px', background: 'linear-gradient(to right, #FF6384, #FF9F40)', borderRadius: '2px' }} />
-                <span style={{ fontSize: '11px', color: '#666' }}>2025년</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '20px', height: '3px', background: 'linear-gradient(to right, #FFCE56, #4BC0C0)', borderRadius: '2px' }} />
-                <span style={{ fontSize: '11px', color: '#666' }}>2026년</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '16px' }}>🚨⚠️✅</span>
-                <span style={{ fontSize: '11px', color: '#666' }}>주의/관심/안정</span>
-              </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       )}
     </div>
