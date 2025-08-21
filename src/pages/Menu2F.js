@@ -893,54 +893,71 @@ const DataDisplayComponent = ({
     return regionStatus;
   };
 
-  // 예측 요약 통계 계산
+  // 예측 요약 통계 계산 (지난달 대비, 다음달 예상 변화)
   const getSummaryStats = () => {
-    // 2N에서 받은 배치 데이터가 있을 때
+    if (!currentRegionData || !Array.isArray(currentRegionData)) {
+      return { 
+        lastMonthChange: 0, 
+        lastMonthChangePercent: 0,
+        nextMonthChange: 0, 
+        nextMonthChangePercent: 0,
+        currentStaff: 0, 
+        recommendedStaff: 0 
+      };
+    }
+
+    const currentYear = currentDate.year;
+    const currentMonth = currentDate.month;
+    
+    const currentMonthStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+    const lastMonth = new Date(currentYear, currentMonth - 2, 1); // 지난달
+    const nextMonth = new Date(currentYear, currentMonth, 1); // 다음달
+    const lastMonthStr = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+    const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+
+    const currentMonthData = currentRegionData.find(item => item.date === currentMonthStr);
+    const lastMonthData = currentRegionData.find(item => item.date === lastMonthStr);
+    const nextMonthData = currentRegionData.find(item => item.date === nextMonthStr);
+
+    let lastMonthChange = 0;
+    let lastMonthChangePercent = 0;
+    let nextMonthChange = 0;
+    let nextMonthChangePercent = 0;
+
+    // 지난달 대비 현재달 변화
+    if (currentMonthData && lastMonthData) {
+      lastMonthChange = (currentMonthData.deaths || 0) - (lastMonthData.deaths || 0);
+      lastMonthChangePercent = lastMonthData.deaths ? ((lastMonthChange / lastMonthData.deaths) * 100) : 0;
+    }
+
+    // 현재달 대비 다음달 변화
+    if (currentMonthData && nextMonthData) {
+      nextMonthChange = (nextMonthData.deaths || 0) - (currentMonthData.deaths || 0);
+      nextMonthChangePercent = currentMonthData.deaths ? ((nextMonthChange / currentMonthData.deaths) * 100) : 0;
+    }
+
+    // 배치 데이터 처리
+    let currentStaff = 0;
+    let recommendedStaff = 0;
+    
     if (deploymentData && Object.keys(deploymentData).length > 0) {
       if (region === '전체') {
-        // 전체 선택 시 모든 지역의 합계 계산
-        const totalCurrent = Object.values(deploymentData).reduce((sum, data) => sum + data.current, 0);
-        const totalRecommended = Object.values(deploymentData).reduce((sum, data) => sum + data.recommended, 0);
-        
-        return {
-          totalDeaths: 0, // 기존 데이터 없을 때 기본값
-          avgGrowthRate: 0, // 기존 데이터 없을 때 기본값
-          currentStaff: totalCurrent,
-          recommendedStaff: totalRecommended
-        };
+        currentStaff = Object.values(deploymentData).reduce((sum, data) => sum + data.current, 0);
+        recommendedStaff = Object.values(deploymentData).reduce((sum, data) => sum + data.recommended, 0);
       } else if (deploymentData[region]) {
-        // 특정 지역 선택 시 해당 지역 데이터
         const data = deploymentData[region];
-        
-        return {
-          totalDeaths: 0, // 기존 데이터 없을 때 기본값
-          avgGrowthRate: 0, // 기존 데이터 없을 때 기본값
-          currentStaff: data.current,
-          recommendedStaff: data.recommended
-        };
+        currentStaff = data.current;
+        recommendedStaff = data.recommended;
       }
     }
-    
-    // 기존 로직 (예측 데이터 기반)
-    if (!currentRegionData || !Array.isArray(currentRegionData)) {
-      return { totalDeaths: 0, avgGrowthRate: 0, currentStaff: 0, recommendedStaff: 0 };
-    }
-
-    // 현재 날짜 기준으로 이후 데이터만 필터링
-    const currentDate = new Date();
-    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-    
-    const futureData = currentRegionData.filter(item => item.date > currentMonthStr);
-
-    const totalDeaths = futureData.reduce((sum, item) => sum + (item.deaths || 0), 0);
-    const avgGrowthRate = futureData.length > 0 ? 
-      futureData.reduce((sum, item) => sum + (item.growthRate || 0), 0) / futureData.length : 0;
 
     return {
-      totalDeaths: Math.round(totalDeaths),
-      avgGrowthRate: avgGrowthRate.toFixed(1),
-      currentStaff: 0, // 기존 데이터에서는 제공되지 않음
-      recommendedStaff: 0 // 기존 데이터에서는 제공되지 않음
+      lastMonthChange: Math.round(lastMonthChange),
+      lastMonthChangePercent: lastMonthChangePercent.toFixed(1),
+      nextMonthChange: Math.round(nextMonthChange),
+      nextMonthChangePercent: nextMonthChangePercent.toFixed(1),
+      currentStaff,
+      recommendedStaff
     };
   };
 
@@ -1280,23 +1297,49 @@ const DataDisplayComponent = ({
       {/* 예측 요약 통계 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-          📈 {displayRegionName} 예측 요약 통계
+          📈 {displayRegionName} 월간 변화 분석
         </h5>
         <Row className="g-3">
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(54, 162, 235, 0.1)' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#369CE3' }}>
-                {summaryStats.totalDeaths.toLocaleString()}
+            <div className="text-center p-3 rounded-3" style={{ 
+              backgroundColor: summaryStats.lastMonthChange >= 0 ? 'rgba(220, 53, 69, 0.1)' : 'rgba(25, 135, 84, 0.1)' 
+            }}>
+              <div style={{ 
+                fontSize: '24px', 
+                fontWeight: '700', 
+                color: summaryStats.lastMonthChange >= 0 ? '#dc3545' : '#198754' 
+              }}>
+                {summaryStats.lastMonthChange >= 0 ? '+' : ''}{summaryStats.lastMonthChange.toLocaleString()}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>예상 총 사망자 수</div>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>지난달 대비 변화</div>
+              <div style={{ 
+                fontSize: '11px', 
+                fontWeight: '600',
+                color: summaryStats.lastMonthChange >= 0 ? '#dc3545' : '#198754' 
+              }}>
+                ({summaryStats.lastMonthChangePercent >= 0 ? '+' : ''}{summaryStats.lastMonthChangePercent}%)
+              </div>
             </div>
           </Col>
           <Col md={3}>
-            <div className="text-center p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 99, 132, 0.1)' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#FF6384' }}>
-                {summaryStats.avgGrowthRate}%
+            <div className="text-center p-3 rounded-3" style={{ 
+              backgroundColor: summaryStats.nextMonthChange >= 0 ? 'rgba(255, 193, 7, 0.1)' : 'rgba(54, 162, 235, 0.1)' 
+            }}>
+              <div style={{ 
+                fontSize: '24px', 
+                fontWeight: '700', 
+                color: summaryStats.nextMonthChange >= 0 ? '#ffc107' : '#369CE3' 
+              }}>
+                {summaryStats.nextMonthChange >= 0 ? '+' : ''}{summaryStats.nextMonthChange.toLocaleString()}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>평균 증가율</div>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>다음달 예상 변화</div>
+              <div style={{ 
+                fontSize: '11px', 
+                fontWeight: '600',
+                color: summaryStats.nextMonthChange >= 0 ? '#ffc107' : '#369CE3' 
+              }}>
+                ({summaryStats.nextMonthChangePercent >= 0 ? '+' : ''}{summaryStats.nextMonthChangePercent}%)
+              </div>
             </div>
           </Col>
           <Col md={3}>
@@ -1391,67 +1434,230 @@ const DataDisplayComponent = ({
         </div>
       )}
 
-      {/* 월별 데이터 테이블 */}
+      {/* 월별 데이터 테이블 - 새로운 디자인 */}
       {currentRegionData && Array.isArray(currentRegionData) && (
         <div className="p-4" style={cardStyle}>
           <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-            📋 {displayRegionName} 월별 상세 데이터
+            📋 {displayRegionName} 월별 상세 데이터 (2024.01 ~ 2026.12)
           </h5>
-          <div className="mb-2" style={{ fontSize: '12px', color: '#666' }}>
-            💡 현재 위치한 월을 기준으로 정렬되어 표시됩니다
+          <div className="mb-3" style={{ fontSize: '12px', color: '#666' }}>
+            💡 현재 위치(8월)를 중심으로 정렬되어 표시됩니다
           </div>
-          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-            <Table striped bordered hover size="sm">
-              <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0 }}>
-                <tr>
-                  <th>월</th>
-                  <th>예상 사망자 수</th>
-                  <th>증가율</th>
-                  <th>상태</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentRegionData
-                  .sort((a, b) => {
-                    // 현재 월을 기준으로 정렬
-                    const currentMonthStr = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
-                    
-                    // 현재 월이 있으면 최상단으로
-                    if (a.date === currentMonthStr) return -1;
-                    if (b.date === currentMonthStr) return 1;
-                    
-                    // 나머지는 날짜 순으로 정렬 (2024-01부터 2026-12까지)
-                    return a.date.localeCompare(b.date);
-                  })
-                  .map((item, index) => {
-                    const isCurrentMonth = item.date === `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
-                    return (
-                    <tr key={index} style={{ 
-                      backgroundColor: isCurrentMonth ? 'rgba(184, 134, 11, 0.2)' : 'transparent',
-                      fontWeight: isCurrentMonth ? '600' : 'normal'
-                    }}>
-                      <td>
-                        {item.date} 
-                        {isCurrentMonth && <span className="badge bg-primary ms-2">현재 위치</span>}
-                      </td>
-                      <td style={{ fontWeight: '600' }}>
-                        {(item.deaths || 0).toLocaleString()}명
-                      </td>
-                      <td style={{ 
-                        color: (item.growthRate || 0) >= 0 ? '#dc3545' : '#198754',
-                        fontWeight: '600'
+          
+          {/* 새로운 카드 스타일 월별 데이터 */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+            gap: '16px',
+            maxHeight: '500px',
+            overflowY: 'auto',
+            padding: '8px'
+          }}>
+            {currentRegionData
+              .sort((a, b) => {
+                const currentMonthStr = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+                
+                // 현재 월이 있으면 최상단으로
+                if (a.date === currentMonthStr) return -1;
+                if (b.date === currentMonthStr) return 1;
+                
+                // 현재 월 기준으로 거리 계산하여 정렬 (가까운 월이 앞에)
+                const getCurrentDistance = (date) => {
+                  const [year, month] = date.split('-').map(Number);
+                  const currentYear = currentDate.year;
+                  const currentMonth = currentDate.month;
+                  return Math.abs((year - currentYear) * 12 + (month - currentMonth));
+                };
+                
+                const distanceA = getCurrentDistance(a.date);
+                const distanceB = getCurrentDistance(b.date);
+                
+                if (distanceA !== distanceB) {
+                  return distanceA - distanceB;
+                }
+                
+                // 거리가 같으면 날짜 순으로
+                return a.date.localeCompare(b.date);
+              })
+              .map((item, index) => {
+                const isCurrentMonth = item.date === `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+                const [year, month] = item.date.split('-');
+                const monthName = new Date(year, month - 1).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+                
+                // 현재 월과의 거리 계산
+                const distance = Math.abs((parseInt(year) - currentDate.year) * 12 + (parseInt(month) - currentDate.month));
+                
+                return (
+                  <div 
+                    key={index}
+                    style={{
+                      background: isCurrentMonth 
+                        ? 'linear-gradient(135deg, rgba(184, 134, 11, 0.15), rgba(184, 134, 11, 0.25))'
+                        : distance <= 2 
+                          ? 'linear-gradient(135deg, rgba(54, 162, 235, 0.08), rgba(54, 162, 235, 0.12))'
+                          : 'linear-gradient(135deg, rgba(248, 249, 250, 0.8), rgba(248, 249, 250, 0.95))',
+                      border: isCurrentMonth 
+                        ? '2px solid #B8860B' 
+                        : distance <= 2 
+                          ? '1px solid rgba(54, 162, 235, 0.3)'
+                          : '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '16px',
+                      padding: '20px',
+                      position: 'relative',
+                      transition: 'all 0.3s ease',
+                      cursor: 'pointer',
+                      transform: isCurrentMonth ? 'scale(1.02)' : 'scale(1)',
+                      boxShadow: isCurrentMonth 
+                        ? '0 8px 25px rgba(184, 134, 11, 0.3)' 
+                        : '0 4px 12px rgba(0, 0, 0, 0.08)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isCurrentMonth) {
+                        e.target.style.transform = 'scale(1.01)';
+                        e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isCurrentMonth) {
+                        e.target.style.transform = 'scale(1)';
+                        e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+                      }
+                    }}
+                  >
+                    {/* 현재 월 표시 배지 */}
+                    {isCurrentMonth && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        right: '16px',
+                        background: 'linear-gradient(135deg, #B8860B, #D4AF37)',
+                        color: 'white',
+                        padding: '4px 12px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        boxShadow: '0 4px 8px rgba(184, 134, 11, 0.4)'
                       }}>
-                        {(item.growthRate || 0) >= 0 ? '+' : ''}{(item.growthRate || 0).toFixed(1)}%
-                      </td>
-                      <td>
-                        <span className={`badge ${(item.growthRate || 0) >= 5 ? 'bg-danger' : (item.growthRate || 0) >= 2 ? 'bg-warning' : 'bg-success'}`}>
-                          {(item.growthRate || 0) >= 5 ? '주의' : (item.growthRate || 0) >= 2 ? '관심' : '안정'}
+                        현재 위치
+                      </div>
+                    )}
+                    
+                    {/* 월 제목 */}
+                    <div style={{ 
+                      fontSize: '18px', 
+                      fontWeight: '700', 
+                      color: isCurrentMonth ? '#B8860B' : '#2C1F14',
+                      marginBottom: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <span>{monthName}</span>
+                      {isCurrentMonth && <span style={{ fontSize: '16px' }}>📍</span>}
+                    </div>
+                    
+                    {/* 사망자 수 */}
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ 
+                        fontSize: '28px', 
+                        fontWeight: '800',
+                        color: isCurrentMonth ? '#B8860B' : '#2C1F14',
+                        lineHeight: '1'
+                      }}>
+                        {(item.deaths || 0).toLocaleString()}
+                      </div>
+                      <div style={{ 
+                        fontSize: '12px', 
+                        color: '#666',
+                        marginTop: '2px'
+                      }}>
+                        예상 사망자 수
+                      </div>
+                    </div>
+                    
+                    {/* 증가율과 상태 */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      marginTop: '16px'
+                    }}>
+                      <div>
+                        <div style={{ 
+                          fontSize: '16px', 
+                          fontWeight: '700',
+                          color: (item.growthRate || 0) >= 0 ? '#dc3545' : '#198754'
+                        }}>
+                          {(item.growthRate || 0) >= 0 ? '+' : ''}{(item.growthRate || 0).toFixed(1)}%
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#666' }}>증가율</div>
+                      </div>
+                      <div>
+                        <span 
+                          className={`badge ${(item.growthRate || 0) >= 5 ? 'bg-danger' : (item.growthRate || 0) >= 2 ? 'bg-warning' : 'bg-success'}`}
+                          style={{ 
+                            fontSize: '12px',
+                            padding: '6px 12px',
+                            borderRadius: '20px'
+                          }}
+                        >
+                          {(item.growthRate || 0) >= 5 ? '🚨 주의' : (item.growthRate || 0) >= 2 ? '⚠️ 관심' : '✅ 안정'}
                         </span>
-                      </td>
-                    </tr>
-                  )})}
-              </tbody>
-            </Table>
+                      </div>
+                    </div>
+                    
+                    {/* 년도 구분선 */}
+                    {distance <= 6 && (
+                      <div style={{
+                        position: 'absolute',
+                        left: '0',
+                        top: '0',
+                        width: '4px',
+                        height: '100%',
+                        background: year === '2024' 
+                          ? 'linear-gradient(to bottom, #4BC0C0, #36A2EB)' 
+                          : year === '2025' 
+                            ? 'linear-gradient(to bottom, #FF6384, #FF9F40)'
+                            : 'linear-gradient(to bottom, #FFCE56, #4BC0C0)',
+                        borderRadius: '0 16px 16px 0'
+                      }} />
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+          
+          {/* 범례 */}
+          <div style={{ 
+            marginTop: '20px', 
+            padding: '16px',
+            background: 'rgba(248, 249, 250, 0.8)',
+            borderRadius: '12px',
+            border: '1px solid rgba(0, 0, 0, 0.1)'
+          }}>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px', fontWeight: '600' }}>범례</div>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', background: '#B8860B', borderRadius: '2px' }} />
+                <span style={{ fontSize: '11px', color: '#666' }}>현재 월 (8월)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', background: 'rgba(54, 162, 235, 0.6)', borderRadius: '2px' }} />
+                <span style={{ fontSize: '11px', color: '#666' }}>인접 월 (±2개월)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '4px', background: 'linear-gradient(to right, #4BC0C0, #36A2EB)', borderRadius: '2px' }} />
+                <span style={{ fontSize: '11px', color: '#666' }}>2024년</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '4px', background: 'linear-gradient(to right, #FF6384, #FF9F40)', borderRadius: '2px' }} />
+                <span style={{ fontSize: '11px', color: '#666' }}>2025년</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '4px', background: 'linear-gradient(to right, #FFCE56, #4BC0C0)', borderRadius: '2px' }} />
+                <span style={{ fontSize: '11px', color: '#666' }}>2026년</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
