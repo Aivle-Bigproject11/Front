@@ -168,33 +168,30 @@ const Menu2F = () => {
     }
   };
 
-  // 현재 월을 기준으로 24개월 범위(앞 12개월, 뒤 12개월) 계산
-  const get24MonthRange = () => {
-    const currentYear = currentDate.year;
-    const currentMonth = currentDate.month;
+  // 24년 1월부터 26년 12월까지 순차적으로 36개월 범위 계산
+  const get36MonthRange = () => {
     const months = [];
     
-    // 현재 월을 기준으로 앞 12개월부터 뒤 12개월까지 생성
-    for (let i = -12; i <= 12; i++) {
-      const targetDate = new Date(currentYear, currentMonth - 1 + i, 1);
-      const year = targetDate.getFullYear();
-      const month = targetDate.getMonth() + 1;
-      const dateString = `${year}-${String(month).padStart(2, '0')}`;
-      months.push(dateString);
+    // 2024년 1월부터 2026년 12월까지 순차적으로 생성
+    for (let year = 2024; year <= 2026; year++) {
+      for (let month = 1; month <= 12; month++) {
+        const dateString = `${year}-${String(month).padStart(2, '0')}`;
+        months.push(dateString);
+      }
     }
     
-    console.log('📅 24개월 범위 계산:', months);
-    console.log(`📅 현재 월: ${currentYear}-${String(currentMonth).padStart(2, '0')}`);
+    console.log('📅 36개월 범위 계산 (2024-01 ~ 2026-12):', months);
+    console.log(`📅 현재 월: ${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`);
     return months;
   };
 
-  // 차트 데이터 생성 (현재 월 중심 24개월 범위)
+  // 차트 데이터 생성 (2024년 1월부터 2026년 12월까지 순차적으로 36개월 범위)
   const generateChartData = async (region) => {
     try {
       console.log(`📈 ${region} 차트 데이터 생성 중...`);
       
-      // 24개월 범위 계산
-      const monthRange = get24MonthRange();
+      // 36개월 범위 계산 (2024-01 ~ 2026-12)
+      const monthRange = get36MonthRange();
       
       let allData;
       
@@ -210,21 +207,21 @@ const Menu2F = () => {
         console.log(`📊 ${region} 지역별 API 응답:`, allData);
       }
       
-      // 24개월 범위 내의 데이터만 필터링
+      // 36개월 범위 내의 데이터만 필터링
       const filteredData = allData.filter(item => 
         item.date && monthRange.includes(item.date)
       );
       
-      console.log('📊 24개월 범위 필터링된 데이터:', filteredData);
+      console.log('📊 36개월 범위 필터링된 데이터:', filteredData);
       
-      // 2024년, 2025년, 2026년 데이터 분리 (24개월 범위 내에서)
+      // 2024년, 2025년, 2026년 데이터 분리 (36개월 범위 내에서)
       const data2024 = filteredData.filter(item => item.date && item.date.startsWith('2024'));
       const data2025 = filteredData.filter(item => item.date && item.date.startsWith('2025'));
       const data2026 = filteredData.filter(item => item.date && item.date.startsWith('2026'));
       
-      console.log('📊 24개월 범위 내 2024년 데이터:', data2024);
-      console.log('📊 24개월 범위 내 2025년 데이터:', data2025);
-      console.log('📊 24개월 범위 내 2026년 데이터:', data2026);
+      console.log('📊 36개월 범위 내 2024년 데이터:', data2024);
+      console.log('📊 36개월 범위 내 2025년 데이터:', data2025);
+      console.log('📊 36개월 범위 내 2026년 데이터:', data2026);
       console.log('📊 차트 데이터 매핑 시작:');
       console.log('   최종 2024년 데이터:', data2024);
       console.log('   최종 2025년 데이터:', data2025);
@@ -328,9 +325,9 @@ const Menu2F = () => {
         console.log('   ⚠️ 2026 데이터가 유효하지 않거나 비어있음:', data2026);
       }
       
-      // 24개월 범위 레이블 사용 (이미 정렬됨)
+      // 36개월 범위 레이블 사용 (이미 정렬됨)
       const sortedLabels = allLabels;
-      console.log('📈 24개월 범위 레이블:', sortedLabels);
+      console.log('📈 36개월 범위 레이블:', sortedLabels);
       console.log('📈 2024 데이터 맵:', Object.fromEntries(dataMap2024));
       console.log('📈 2025 데이터 맵:', Object.fromEntries(dataMap2025));
       console.log('📈 2026 데이터 맵:', Object.fromEntries(dataMap2026));
@@ -1041,39 +1038,8 @@ const DataDisplayComponent = ({
       },
       title: {
         display: true,
-        text: `${displayRegionName} 사망자 수 추이 (현재 월 중심 24개월)`,
+        text: `${displayRegionName} 사망자 수 추이 (2024년 1월~2026년 12월)`,
         font: { size: 16, weight: 'bold' }
-      },
-      // 현재 날짜에 수직선을 그리는 커스텀 플러그인
-      verticalLinePlugin: {
-        id: 'verticalLine',
-        afterDraw: (chart) => {
-          const currentMonthLabel = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
-          const ctx = chart.ctx;
-          const xAxis = chart.scales.x;
-          const yAxis = chart.scales.y;
-          const index = chart.data.labels.indexOf(currentMonthLabel);
-
-          if (index !== -1) {
-            const x = xAxis.getPixelForValue(index);
-
-            // 수직선 그리기
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(x, yAxis.top);
-            ctx.lineTo(x, yAxis.bottom);
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#B8860B';
-            ctx.stroke();
-
-            // 텍스트 라벨 그리기
-            ctx.fillStyle = '#B8860B';
-            ctx.textAlign = 'center';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('현재', x, yAxis.top - 5);
-            ctx.restore();
-          }
-        }
       }
     },
     scales: {
@@ -1088,9 +1054,59 @@ const DataDisplayComponent = ({
         title: {
           display: true,
           text: '월'
+        },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+          // 레이블을 적절히 표시
+          callback: function(value, index) {
+            const label = this.getLabelForValue(value);
+            const currentMonthLabel = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+            
+            // 현재 월은 항상 표시
+            if (label === currentMonthLabel) {
+              return '★ ' + label;
+            }
+            
+            // 1월과 7월만 표시하여 가독성 향상
+            if (label.endsWith('-01') || label.endsWith('-07')) {
+              return label;
+            }
+            
+            return '';
+          }
         }
       }
     },
+    // 차트 호버 시 현재 월 표시
+    interaction: {
+      intersect: false,
+      mode: 'index'
+    },
+    elements: {
+      point: {
+        radius: function(context) {
+          const currentMonthLabel = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+          const label = context.chart.data.labels[context.dataIndex];
+          return label === currentMonthLabel ? 8 : 4;
+        },
+        backgroundColor: function(context) {
+          const currentMonthLabel = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+          const label = context.chart.data.labels[context.dataIndex];
+          return label === currentMonthLabel ? '#B8860B' : context.dataset.borderColor;
+        },
+        borderColor: function(context) {
+          const currentMonthLabel = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+          const label = context.chart.data.labels[context.dataIndex];
+          return label === currentMonthLabel ? '#fff' : context.dataset.borderColor;
+        },
+        borderWidth: function(context) {
+          const currentMonthLabel = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+          const label = context.chart.data.labels[context.dataIndex];
+          return label === currentMonthLabel ? 3 : 1;
+        }
+      }
+    }
   };
 
   if (loading) {
@@ -1306,13 +1322,71 @@ const DataDisplayComponent = ({
       {chartData && (
         <div className="p-4 mb-4" style={cardStyle}>
           <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
-            📈 {displayRegionName} 시계열 예측 차트 (현재 월 중심 24개월)
+            📈 {displayRegionName} 시계열 예측 차트 (2024년 1월~2026년 12월)
           </h5>
           <div className="mb-2" style={{ fontSize: '12px', color: '#666' }}>
-            💡 현재 월을 중심으로 앞 12개월, 뒤 12개월의 데이터를 표시합니다
+            💡 2024년 1월부터 2026년 12월까지 순차적으로 표시하며, 현재 위치한 월을 강조합니다
           </div>
           <div style={{ height: '400px' }}>
-            <Line data={chartData} options={chartOptions} />
+            <Line 
+              data={chartData} 
+              options={chartOptions}
+              plugins={[{
+                id: 'currentMonthHighlight',
+                afterDraw: (chart) => {
+                  const currentMonthLabel = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+                  const ctx = chart.ctx;
+                  const xAxis = chart.scales.x;
+                  const yAxis = chart.scales.y;
+                  const labels = chart.data.labels;
+                  const index = labels.indexOf(currentMonthLabel);
+
+                  if (index !== -1) {
+                    const x = xAxis.getPixelForValue(index);
+
+                    // 반투명 배경 영역 그리기
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(184, 134, 11, 0.1)';
+                    const areaWidth = 30;
+                    ctx.fillRect(x - areaWidth/2, yAxis.top, areaWidth, yAxis.height);
+                    
+                    // 수직선 그리기
+                    ctx.beginPath();
+                    ctx.moveTo(x, yAxis.top);
+                    ctx.lineTo(x, yAxis.bottom);
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = '#B8860B';
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // 텍스트 라벨 그리기
+                    ctx.fillStyle = '#B8860B';
+                    ctx.textAlign = 'center';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillText('현재 위치', x, yAxis.top - 10);
+                    
+                    // 현재 월의 데이터 포인트 강조
+                    const currentData = chart.data.datasets.find(dataset => 
+                      dataset.data[index] !== null && dataset.data[index] !== undefined
+                    );
+                    
+                    if (currentData && currentData.data[index]) {
+                      const y = yAxis.getPixelForValue(currentData.data[index]);
+                      ctx.beginPath();
+                      ctx.arc(x, y, 8, 0, 2 * Math.PI);
+                      ctx.fillStyle = '#B8860B';
+                      ctx.fill();
+                      ctx.strokeStyle = '#fff';
+                      ctx.lineWidth = 3;
+                      ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                  }
+                }
+              }]}
+            />
           </div>
         </div>
       )}
@@ -1323,6 +1397,9 @@ const DataDisplayComponent = ({
           <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
             📋 {displayRegionName} 월별 상세 데이터
           </h5>
+          <div className="mb-2" style={{ fontSize: '12px', color: '#666' }}>
+            💡 현재 위치한 월을 기준으로 정렬되어 표시됩니다
+          </div>
           <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
             <Table striped bordered hover size="sm">
               <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0 }}>
@@ -1334,27 +1411,45 @@ const DataDisplayComponent = ({
                 </tr>
               </thead>
               <tbody>
-                {currentRegionData.map((item, index) => {
-                  const isCurrentMonth = item.date === `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
-                  return (
-                  <tr key={index} style={{ backgroundColor: isCurrentMonth ? 'rgba(184, 134, 11, 0.1)' : 'transparent' }}>
-                    <td>{item.date} {isCurrentMonth && <span className="badge bg-primary">현재</span>}</td>
-                    <td style={{ fontWeight: '600' }}>
-                      {(item.deaths || 0).toLocaleString()}명
-                    </td>
-                    <td style={{ 
-                      color: (item.growthRate || 0) >= 0 ? '#dc3545' : '#198754',
-                      fontWeight: '600'
+                {currentRegionData
+                  .sort((a, b) => {
+                    // 현재 월을 기준으로 정렬
+                    const currentMonthStr = `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+                    
+                    // 현재 월이 있으면 최상단으로
+                    if (a.date === currentMonthStr) return -1;
+                    if (b.date === currentMonthStr) return 1;
+                    
+                    // 나머지는 날짜 순으로 정렬 (2024-01부터 2026-12까지)
+                    return a.date.localeCompare(b.date);
+                  })
+                  .map((item, index) => {
+                    const isCurrentMonth = item.date === `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}`;
+                    return (
+                    <tr key={index} style={{ 
+                      backgroundColor: isCurrentMonth ? 'rgba(184, 134, 11, 0.2)' : 'transparent',
+                      fontWeight: isCurrentMonth ? '600' : 'normal'
                     }}>
-                      {(item.growthRate || 0) >= 0 ? '+' : ''}{(item.growthRate || 0).toFixed(1)}%
-                    </td>
-                    <td>
-                      <span className={`badge ${(item.growthRate || 0) >= 5 ? 'bg-danger' : (item.growthRate || 0) >= 2 ? 'bg-warning' : 'bg-success'}`}>
-                        {(item.growthRate || 0) >= 5 ? '주의' : (item.growthRate || 0) >= 2 ? '관심' : '안정'}
-                      </span>
-                    </td>
-                  </tr>
-                )})}
+                      <td>
+                        {item.date} 
+                        {isCurrentMonth && <span className="badge bg-primary ms-2">현재 위치</span>}
+                      </td>
+                      <td style={{ fontWeight: '600' }}>
+                        {(item.deaths || 0).toLocaleString()}명
+                      </td>
+                      <td style={{ 
+                        color: (item.growthRate || 0) >= 0 ? '#dc3545' : '#198754',
+                        fontWeight: '600'
+                      }}>
+                        {(item.growthRate || 0) >= 0 ? '+' : ''}{(item.growthRate || 0).toFixed(1)}%
+                      </td>
+                      <td>
+                        <span className={`badge ${(item.growthRate || 0) >= 5 ? 'bg-danger' : (item.growthRate || 0) >= 2 ? 'bg-warning' : 'bg-success'}`}>
+                          {(item.growthRate || 0) >= 5 ? '주의' : (item.growthRate || 0) >= 2 ? '관심' : '안정'}
+                        </span>
+                      </td>
+                    </tr>
+                  )})}
               </tbody>
             </Table>
           </div>
