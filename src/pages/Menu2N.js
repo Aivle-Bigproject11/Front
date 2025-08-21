@@ -388,7 +388,7 @@ const Menu2N = () => {
       }}>
         {/* 왼쪽 영역 (지도) */}
         <div style={{ flex: '0 0 50%', display: 'flex', flexDirection: 'column' }}>
-          <h4 className="mb-3" style={{ 
+          {/* <h4 className="mb-3" style={{ 
             fontSize: '32px', 
             fontWeight: '700', 
             color: '#2C1F14',
@@ -396,7 +396,7 @@ const Menu2N = () => {
             textAlign: 'center'
           }}>
             AI 인력배치 최적화
-          </h4>
+          </h4> */}
           <div className="dashboard-left" style={{
             background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
             borderRadius: '16px',
@@ -1197,6 +1197,132 @@ const OptimizedDisplayComponent = ({
         </small>
       </div>
 
+      {/* 주요지역 현황 요약 (AI 배치 분석 기준) */}
+      <div className="p-4 mb-4" style={cardStyle}>
+        <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
+          📊 주요지역 현황 요약 (2025년 8월 AI 배치 분석 기준)
+        </h5>
+        <div className="mb-3 p-2 rounded-3" style={{ backgroundColor: 'rgba(40, 167, 69, 0.1)', border: '1px solid rgba(40, 167, 69, 0.3)' }}>
+          <small style={{ color: '#198754', fontSize: '12px', fontWeight: '600' }}>
+            🔗 실시간 AI 인력 배치 분석 데이터를 기반으로 합니다.
+          </small>
+        </div>
+        <Row className="g-3">
+          {(() => {
+            // 배치 상태 데이터 계산
+            const deploymentData = calculateRegionDeploymentStatus();
+            
+            // 지역명 축약 함수
+            const getShortRegionName = (regionName) => {
+              const regionMap = {
+                '경상남도': '경남', '경상북도': '경북', '전라남도': '전남', '전라북도': '전북',
+                '충청남도': '충남', '충청북도': '충북', '서울특별시': '서울', '부산광역시': '부산',
+                '대구광역시': '대구', '인천광역시': '인천', '광주광역시': '광주', '대전광역시': '대전',
+                '울산광역시': '울산', '세종특별자치시': '세종', '강원도': '강원', '제주도': '제주'
+              };
+              return regionMap[regionName] || regionName.replace(/특별시|광역시|특별자치시|도$/g, '');
+            };
+
+            const regionStatus = [
+              { 
+                level: '적정 배치', 
+                description: '현재 인력이 AI 추천과 일치',
+                color: 'rgba(25, 135, 84, 0.15)', 
+                borderColor: 'rgba(25, 135, 84, 0.8)',
+                textColor: '#198754',
+                regions: [] 
+              },
+              { 
+                level: '인력 부족', 
+                description: 'AI 추천보다 인력이 부족',
+                color: 'rgba(220, 53, 69, 0.15)', 
+                borderColor: 'rgba(220, 53, 69, 0.8)',
+                textColor: '#dc3545',
+                regions: [] 
+              },
+              { 
+                level: '인력 과잉', 
+                description: 'AI 추천보다 인력이 과잉',
+                color: 'rgba(255, 193, 7, 0.15)', 
+                borderColor: 'rgba(255, 193, 7, 0.8)',
+                textColor: '#ffc107',
+                regions: [] 
+              }
+            ];
+
+            // deploymentData 객체를 순회하면서 지역별 상태 분류
+            Object.entries(deploymentData).forEach(([regionName, data]) => {
+              const shortRegionName = getShortRegionName(regionName);
+              let statusText;
+              
+              if (data.status === 0) {
+                // 적정 배치
+                statusText = `${shortRegionName} (0)`;
+                regionStatus[0].regions.push(statusText);
+              } else if (data.status === 1) {
+                // 인력 부족: AI 추천보다 적음을 음수로 표시
+                const shortage = data.recommended - data.current;
+                statusText = `${shortRegionName} (-${shortage})`;
+                regionStatus[1].regions.push(statusText);
+              } else if (data.status === 2) {
+                // 인력 과잉: AI 추천보다 많음을 양수로 표시
+                const surplus = data.current - data.recommended;
+                statusText = `${shortRegionName} (+${surplus})`;
+                regionStatus[2].regions.push(statusText);
+              }
+            });
+
+            return regionStatus.map((status, index) => (
+              <Col md={4} key={index}>
+                <div
+                  className="h-100 p-3 rounded-3 border-start border-4"
+                  style={{
+                    backgroundColor: status.color,
+                    borderLeftColor: status.borderColor + ' !important',
+                    minHeight: '150px',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                >
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h6 className="mb-0" style={{ color: status.textColor, fontWeight: '600' }}>
+                      {status.level}
+                    </h6>
+                    <span className="badge rounded-pill" style={{ backgroundColor: status.textColor, color: 'white' }}>
+                      {status.regions.length}개
+                    </span>
+                  </div>
+                  <small className="text-muted mb-2" style={{ fontSize: '11px' }}>
+                    {status.description}
+                  </small>
+                  <div className="mt-auto">
+                    <div className="d-flex flex-wrap gap-1">
+                      {status.regions.map((region, regionIndex) => (
+                        <span
+                          key={regionIndex}
+                          className="badge rounded-pill px-2 py-1"
+                          style={{
+                            backgroundColor: status.textColor,
+                            color: 'white',
+                            fontSize: '11px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          {region}
+                        </span>
+                      ))}
+                    </div>
+                    {status.regions.length === 0 && (
+                      <p className="text-muted small mb-0">데이터가 없습니다</p>
+                    )}
+                  </div>
+                </div>
+              </Col>
+            ));
+          })()}
+        </Row>
+      </div>
+      
       {/* 지역별 배치현황 카드 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
