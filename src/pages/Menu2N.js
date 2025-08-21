@@ -808,7 +808,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
         bottom: '20px',
         right: '20px',
         zIndex: 10,
-        width: '45%',
+        width: '50%',
         background: 'rgba(255, 255, 255, 0.95)',
         border: '1px solid rgba(184, 134, 11, 0.3)',
         borderRadius: '12px',
@@ -817,19 +817,16 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
         backdropFilter: 'blur(10px)'
       }}>
         <div className="text-center">
-          <div style={{ fontSize: '28px', marginBottom: '10px' }}>📊</div>
+          <div style={{ fontSize: '28px', marginBottom: '10px' }}></div>
           <h6 className="mb-2" style={{ fontWeight: '700', color: '#369CE3' }}>
-            사망자 상세 예측 데이터 및 시계열 분석 조회
+            📊사망자 상세 예측 데이터 및 시계열 분석 조회
           </h6>
-          <p style={{ fontSize: '12px', color: '#666', marginBottom: '15px' }}>
-            {selectedRegion === '전체' ? '전국' : selectedRegion}의 상세한 사망자 예측 데이터와 시계열 차트를 확인하세요
-          </p>
           <Button 
             variant="primary" 
             size="sm"
             style={{
               padding: '8px 20px',
-              fontSize: '12px',
+              fontSize: '17px',
               fontWeight: '600',
               borderRadius: '8px',
               background: 'linear-gradient(135deg, #369CE3, #4BC0C0)',
@@ -843,7 +840,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
               window.location.href = `/menu2f?region=${encodeURIComponent(selectedRegion)}&deploymentData=${encodedData}`;
             }}
           >
-            🔍 예측 데이터 분석
+            🔍 예측 데이터 조회하기
           </Button>
         </div>
       </div>
@@ -1224,8 +1221,8 @@ const OptimizedDisplayComponent = ({
               let statusText;
               
               if (data.status === 0) {
-                // 적정 배치
-                statusText = `${shortRegionName} (0)`;
+                // 적정 배치 - (0) 표시 없이 지역명만
+                statusText = shortRegionName;
                 regionStatus[0].regions.push(statusText);
               } else if (data.status === 1) {
                 // 인력 부족: AI 추천보다 적음을 음수로 표시
@@ -1264,7 +1261,7 @@ const OptimizedDisplayComponent = ({
                     {status.description}
                   </small>
                   <div className="mt-auto">
-                    <div className="d-flex flex-wrap gap-1">
+                    <div className="d-flex flex-wrap gap-1" style={{ maxHeight: '80px', overflowY: 'auto' }}>
                       {status.regions.map((region, regionIndex) => (
                         <span
                           key={regionIndex}
@@ -1272,8 +1269,11 @@ const OptimizedDisplayComponent = ({
                           style={{
                             backgroundColor: status.textColor,
                             color: 'white',
-                            fontSize: '11px',
-                            fontWeight: '500'
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            border: `1px solid ${status.textColor}`,
+                            whiteSpace: 'nowrap',
+                            marginBottom: '2px'
                           }}
                         >
                           {region}
@@ -1281,7 +1281,7 @@ const OptimizedDisplayComponent = ({
                       ))}
                     </div>
                     {status.regions.length === 0 && (
-                      <p className="text-muted small mb-0">데이터가 없습니다</p>
+                      <p className="text-muted small mb-0">해당 상태의 지역이 없습니다</p>
                     )}
                   </div>
                 </div>
@@ -1414,8 +1414,8 @@ const OptimizedDisplayComponent = ({
         {/* 지역별 상세 정보 */}
         {region !== '전체' && (
           <div className="mt-3 p-3 rounded-3" style={{ backgroundColor: 'rgba(248, 249, 250, 0.8)' }}>
-            <Row className="text-center">
-              <Col md={4}>
+            <Row className="text-center justify-content-center">
+              <Col md={6}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '4px' }}>
                   <small style={{ color: '#666', fontSize: '11px' }}>장례식장 조정</small>
                   <span 
@@ -1445,7 +1445,7 @@ const OptimizedDisplayComponent = ({
                   {deploymentStats.funeralHallAdjustment > 0 ? '+' : ''}{deploymentStats.funeralHallAdjustment}명
                 </span>
               </Col>
-              <Col md={4}>
+              <Col md={6}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '4px' }}>
                   <small style={{ color: '#666', fontSize: '11px' }}>적합도 등급</small>
                   <span 
