@@ -1094,10 +1094,27 @@ const DataDisplayComponent = ({
     },
     scales: {
       y: {
-        beginAtZero: true,
+        beginAtZero: false,
         title: {
           display: true,
           text: '사망자 수'
+        },
+        // 동적으로 Y축 범위 조정
+        afterDataLimits: function(scale) {
+          const data = scale.chart.data.datasets.flatMap(dataset => 
+            dataset.data.filter(value => value !== null && value !== undefined)
+          );
+          
+          if (data.length > 0) {
+            const minValue = Math.min(...data);
+            const maxValue = Math.max(...data);
+            const range = maxValue - minValue;
+            const padding = range * 0.1; // 10% 여백
+            
+            // 최소값에서 여백을 빼되, 0보다 작아지지 않도록 조정
+            scale.min = Math.max(0, minValue - padding);
+            scale.max = maxValue + padding;
+          }
         }
       },
       x: {
@@ -1439,8 +1456,8 @@ const DataDisplayComponent = ({
                     // 텍스트 라벨 그리기
                     ctx.fillStyle = '#B8860B';
                     ctx.textAlign = 'center';
-                    ctx.font = 'bold 12px sans-serif';
-                    ctx.fillText('현재 위치', x, yAxis.top - 10);
+                    ctx.font = 'bold 16px sans-serif';
+                    ctx.fillText('현재', x, yAxis.bottom - 15);
                     
                     // 현재 월의 데이터 포인트 강조
                     const currentData = chart.data.datasets.find(dataset => 
