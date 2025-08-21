@@ -1594,7 +1594,7 @@ const OptimizedDisplayComponent = ({
           </div>
           <div className="mt-3 text-center">
             <small className="text-muted">
-              * )
+              {/* * ) */}
             </small>
           </div>
         </div>
