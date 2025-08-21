@@ -47,6 +47,24 @@ const Menu2N = () => {
 경고 메시지: 장거리 이동 - 최후의 수단
 */
 
+  // 0등급 권역 분류 (최우선 그룹)
+  const megaRegions = {
+    '수도권': ['서울특별시', '경기도', '인천광역시'],
+    '충청권': ['세종특별자치시', '충청남도', '대전광역시', '충청북도'],
+    '전라권': ['전라북도', '광주광역시', '전라남도'],
+    '경상권': ['경상남도', '대구광역시', '울산광역시', '부산광역시', '경상북도']
+  };
+
+  // 0등급 권역별 소속 찾기
+  const getMegaRegion = (regionName) => {
+    for (const [megaName, regions] of Object.entries(megaRegions)) {
+      if (regions.includes(regionName)) {
+        return megaName;
+      }
+    }
+    return null;
+  };
+
   // 지역 분류 체계 (지방별 그룹)
   const regionGroups = {
     '중부지방': ['서울특별시', '경기도', '인천광역시', '강원도'],
@@ -385,37 +403,75 @@ const Menu2N = () => {
         
         console.log(`${deficitRegion.regionName}에 ${needStaff}명 추가 필요`);
         
-        // 1단계: 같은 지방 내 여유 지역 우선 배치
+        // 공통 변수 정의
+        const deficitMegaRegion = getMegaRegion(deficitRegion.regionName);
         const deficitGroup = getRegionGroup(deficitRegion.regionName);
-        const sameGroupSurplus = surplusRegions.filter(surplus => 
-          getRegionGroup(surplus.regionName) === deficitGroup && surplus.hasExtra > 0
+        
+        // 0단계: 같은 권역 내 여유 지역 최우선 배치 (수도권/충청권/전라권/경상권)
+        const sameMegaRegionSurplus = surplusRegions.filter(surplus => 
+          getMegaRegion(surplus.regionName) === deficitMegaRegion && surplus.hasExtra > 0
         ).sort((a, b) => b.hasExtra - a.hasExtra); // 여유 많은 순서대로
         
-        console.log(`${deficitRegion.regionName} 같은 지방(${deficitGroup}) 여유 지역:`, sameGroupSurplus.map(r => r.regionName));
+        console.log(`${deficitRegion.regionName} 같은 권역(${deficitMegaRegion}) 여유 지역:`, sameMegaRegionSurplus.map(r => r.regionName));
         
-        // 같은 지방 내에서 인력 이동 시도
-        sameGroupSurplus.forEach(surplusRegion => {
+        // 같은 권역 내에서 인력 이동 시도
+        sameMegaRegionSurplus.forEach(surplusRegion => {
           if (remainingNeed <= 0) return;
           
           const availableStaff = surplusRegion.hasExtra;
           const transferAmount = Math.min(remainingNeed, availableStaff);
           
           if (transferAmount > 0) {
-            console.log(`지방 내 이동: ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
+            console.log(`권역 내 이동: ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
             
             recommendations.push({
               from: surplusRegion.regionName,
               to: deficitRegion.regionName,
               amount: transferAmount,
-              distance: 'same-group',
-              priority: 'high',
-              reason: `${nextMonthStr} 인력 수요 증가 (${deficitGroup} 내부 조정)`
+              distance: 'same-mega-region',
+              priority: 'very-high',
+              reason: `${nextMonthStr} 인력 수요 증가 (${deficitMegaRegion} 권역 내부 조정)`
             });
             
             remainingNeed -= transferAmount;
             surplusRegion.hasExtra -= transferAmount;
           }
         });
+        
+        // 1단계: 같은 지방 내 여유 지역 우선 배치 (권역에서 해결되지 않은 경우)
+        if (remainingNeed > 0) {
+          const sameGroupSurplus = surplusRegions.filter(surplus => 
+            getRegionGroup(surplus.regionName) === deficitGroup && 
+            getMegaRegion(surplus.regionName) !== deficitMegaRegion && // 이미 권역에서 처리된 지역 제외
+            surplus.hasExtra > 0
+          ).sort((a, b) => b.hasExtra - a.hasExtra); // 여유 많은 순서대로
+          
+          console.log(`${deficitRegion.regionName} 같은 지방(${deficitGroup}) 타권역 여유 지역:`, sameGroupSurplus.map(r => r.regionName));
+          
+          // 같은 지방 내에서 인력 이동 시도
+          sameGroupSurplus.forEach(surplusRegion => {
+            if (remainingNeed <= 0) return;
+            
+            const availableStaff = surplusRegion.hasExtra;
+            const transferAmount = Math.min(remainingNeed, availableStaff);
+            
+            if (transferAmount > 0) {
+              console.log(`지방 내 이동: ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
+              
+              recommendations.push({
+                from: surplusRegion.regionName,
+                to: deficitRegion.regionName,
+                amount: transferAmount,
+                distance: 'same-group',
+                priority: 'high',
+                reason: `${nextMonthStr} 인력 수요 증가 (${deficitGroup} 내부 조정)`
+              });
+              
+              remainingNeed -= transferAmount;
+              surplusRegion.hasExtra -= transferAmount;
+            }
+          });
+        }
         
         // 2단계: 같은 지방에서 해결되지 않은 경우, 기존 인접성 고려 (장거리 회피)
         if (remainingNeed > 0) {
