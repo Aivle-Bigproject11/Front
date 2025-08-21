@@ -21,22 +21,104 @@ const Menu2N = () => {
   // 2024-01 현재 배치 데이터 (시스템 기본 400명)
   const totalStaff = 400;
 
-  // 지역 간 거리 매트릭스 (인접 지역 우선순위)
+  /* 인력배치 알고리즘
+5단계 장거리 회피 알고리즘
+최외곽 지역 분류
+남동부: 부산, 울산
+서남부: 전남, 제주
+북부: 서울, 인천, 경기, 강원
+5단계 우선순위 체계
+1단계 - 지방 내부 우선 배치
+
+같은 지방 내 이동 (장거리 이동 없음)
+2단계 - 인접 지역 지원 (장거리 회피)
+
+인접 지역이지만 최외곽 간 장거리 이동은 제외
+3단계 - 지방 간 우선순위 지원 (장거리 회피)
+
+중부↔내륙, 내륙↔남부, 남부↔특수 이동에서 장거리 이동 제외
+4단계 - 기타 원거리 지원 (장거리 회피)
+
+일반 원거리 이동에서도 최외곽 간 이동 제외
+5단계 - 최후의 수단 (경고 포함)
+
+모든 다른 방법이 실패한 경우에만 장거리 이동 허용
+우선순위: emergency, 거리: very-far
+경고 메시지: 장거리 이동 - 최후의 수단
+*/
+
+  // 지역 분류 체계 (지방별 그룹)
+  const regionGroups = {
+    '중부지방': ['서울특별시', '경기도', '인천광역시', '강원도'],
+    '내륙지방': ['세종특별자치시', '충청남도', '대전광역시', '충청북도', '경상북도'],
+    '남부지방': ['전라북도', '광주광역시', '전라남도', '경상남도', '대구광역시', '울산광역시', '부산광역시'],
+    '특수지방': ['제주도']
+  };
+
+  // 지방 간 우선순위 매핑
+  const regionGroupPriority = {
+    '중부지방': ['내륙지방'],
+    '내륙지방': ['중부지방', '남부지방'],
+    '남부지방': ['내륙지방', '특수지방'],
+    '특수지방': ['남부지방']
+  };
+
+  // 최외곽 지역 정의 (장거리 이동 회피 대상)
+  const outerRegions = {
+    '남동부': ['부산광역시', '울산광역시'],
+    '서남부': ['전라남도', '제주도'],
+    '북부': ['서울특별시', '인천광역시', '경기도', '강원도']
+  };
+
+  // 최외곽 지역 확인 함수
+  const getOuterRegionGroup = (regionName) => {
+    for (const [groupName, regions] of Object.entries(outerRegions)) {
+      if (regions.includes(regionName)) {
+        return groupName;
+      }
+    }
+    return null;
+  };
+
+  // 장거리 이동 회피 대상인지 확인
+  const shouldAvoidLongDistance = (fromRegion, toRegion) => {
+    const fromOuter = getOuterRegionGroup(fromRegion);
+    const toOuter = getOuterRegionGroup(toRegion);
+    
+    // 최외곽 간 이동이면서 서로 다른 그룹인 경우 회피
+    if (fromOuter && toOuter && fromOuter !== toOuter) {
+      console.log(`⚠️ 장거리 이동 회피: ${fromRegion}(${fromOuter}) → ${toRegion}(${toOuter})`);
+      return true;
+    }
+    return false;
+  };
+
+  // 지역별 소속 지방 찾기
+  const getRegionGroup = (regionName) => {
+    for (const [groupName, regions] of Object.entries(regionGroups)) {
+      if (regions.includes(regionName)) {
+        return groupName;
+      }
+    }
+    return null;
+  };
+
+  // 지역 간 거리 매트릭스 (지방 내부 우선, 기존 인접성 고려)
   const regionProximity = {
-    '부산광역시': ['경상남도', '울산광역시', '경상북도', '대구광역시'],
-    '울산광역시': ['부산광역시', '경상남도', '경상북도' , '대구광역시','부산광역시'],
+    '부산광역시': ['울산광역시', '경상남도', '대구광역시', '경상북도'],
+    '울산광역시': ['부산광역시', '경상남도', '대구광역시', '경상북도'],
     '전라남도': ['광주광역시', '전라북도', '제주도'],
-    '서울특별시': ['경기도', '인천광역시', '충청남도', '충청북도', '강원도'],
+    '서울특별시': ['경기도', '인천광역시', '강원도', '충청남도', '충청북도'],
     '경기도': ['서울특별시', '인천광역시', '강원도', '충청남도', '충청북도'],
     '인천광역시': ['서울특별시', '경기도', '충청남도'],
-    '대구광역시': ['경상북도', '경상남도', '충청북도', '울산광역시','부산광역시'],
+    '대구광역시': ['경상북도', '경상남도', '울산광역시', '부산광역시', '충청북도'],
     '광주광역시': ['전라남도', '전라북도', '충청남도'],
     '대전광역시': ['충청남도', '충청북도', '세종특별자치시'],
     '세종특별자치시': ['충청남도', '충청북도', '대전광역시'],
     '강원도': ['경기도', '서울특별시', '충청북도', '경상북도'],
     '충청북도': ['충청남도', '경기도', '강원도', '대전광역시', '경상북도'],
     '충청남도': ['세종특별자치시', '대전광역시', '충청북도', '경기도', '전라북도'],
-    '전라북도': ['전라남도', '충청남도', '광주광역시', '경상남도'],
+    '전라북도': ['전라남도', '광주광역시', '충청남도', '경상남도'],
     '경상북도': ['대구광역시', '경상남도', '강원도', '충청북도', '울산광역시'],
     '경상남도': ['부산광역시', '울산광역시', '대구광역시', '경상북도', '전라북도'],
     '제주도': ['전라남도']
@@ -296,41 +378,199 @@ const Menu2N = () => {
       console.log('인력 부족 지역:', deficitRegions);
       console.log('인력 여유 지역:', surplusRegions);
       
-      // 각 부족 지역에 대해 가까운 여유 지역에서 인력 이동 추천
+      // 각 부족 지역에 대해 지방 내부 우선, 인접 지역에서 인력 이동 추천
       deficitRegions.forEach(deficitRegion => {
         const needStaff = deficitRegion.needsMore;
         let remainingNeed = needStaff;
         
         console.log(`${deficitRegion.regionName}에 ${needStaff}명 추가 필요`);
         
-        // 가까운 지역 우선순위로 정렬
-        const nearbyRegions = regionProximity[deficitRegion.regionName] || [];
-        const availableSurplus = surplusRegions
-          .filter(surplus => nearbyRegions.includes(surplus.regionName) && surplus.hasExtra > 0)
-          .concat(surplusRegions.filter(surplus => !nearbyRegions.includes(surplus.regionName) && surplus.hasExtra > 0));
+        // 1단계: 같은 지방 내 여유 지역 우선 배치
+        const deficitGroup = getRegionGroup(deficitRegion.regionName);
+        const sameGroupSurplus = surplusRegions.filter(surplus => 
+          getRegionGroup(surplus.regionName) === deficitGroup && surplus.hasExtra > 0
+        ).sort((a, b) => b.hasExtra - a.hasExtra); // 여유 많은 순서대로
         
-        availableSurplus.forEach(surplusRegion => {
+        console.log(`${deficitRegion.regionName} 같은 지방(${deficitGroup}) 여유 지역:`, sameGroupSurplus.map(r => r.regionName));
+        
+        // 같은 지방 내에서 인력 이동 시도
+        sameGroupSurplus.forEach(surplusRegion => {
           if (remainingNeed <= 0) return;
           
           const availableStaff = surplusRegion.hasExtra;
           const transferAmount = Math.min(remainingNeed, availableStaff);
           
           if (transferAmount > 0) {
-            console.log(`이동 추천: ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
+            console.log(`지방 내 이동: ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
             
             recommendations.push({
               from: surplusRegion.regionName,
               to: deficitRegion.regionName,
               amount: transferAmount,
-              distance: nearbyRegions.includes(surplusRegion.regionName) ? 'near' : 'far',
-              priority: remainingNeed === needStaff ? 'high' : 'medium',
-              reason: `${nextMonthStr} 인력 수요 증가로 ${transferAmount}명 추가 필요`
+              distance: 'same-group',
+              priority: 'high',
+              reason: `${nextMonthStr} 인력 수요 증가 (${deficitGroup} 내부 조정)`
             });
             
             remainingNeed -= transferAmount;
-            surplusRegion.hasExtra -= transferAmount; // 여유 인력 차감
+            surplusRegion.hasExtra -= transferAmount;
           }
         });
+        
+        // 2단계: 같은 지방에서 해결되지 않은 경우, 기존 인접성 고려 (장거리 회피)
+        if (remainingNeed > 0) {
+          const nearbyRegions = regionProximity[deficitRegion.regionName] || [];
+          const nearbyDifferentGroupSurplus = surplusRegions
+            .filter(surplus => 
+              nearbyRegions.includes(surplus.regionName) && 
+              getRegionGroup(surplus.regionName) !== deficitGroup &&
+              !shouldAvoidLongDistance(surplus.regionName, deficitRegion.regionName) && // 장거리 회피
+              surplus.hasExtra > 0
+            )
+            .sort((a, b) => b.hasExtra - a.hasExtra);
+          
+          console.log(`${deficitRegion.regionName} 인접 타지방 여유 지역 (장거리 제외):`, nearbyDifferentGroupSurplus.map(r => r.regionName));
+          
+          nearbyDifferentGroupSurplus.forEach(surplusRegion => {
+            if (remainingNeed <= 0) return;
+            
+            const availableStaff = surplusRegion.hasExtra;
+            const transferAmount = Math.min(remainingNeed, availableStaff);
+            
+            if (transferAmount > 0) {
+              console.log(`인접 지역 이동: ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
+              
+              recommendations.push({
+                from: surplusRegion.regionName,
+                to: deficitRegion.regionName,
+                amount: transferAmount,
+                distance: 'near',
+                priority: 'medium',
+                reason: `${nextMonthStr} 인력 수요 증가 (인접 지역 지원)`
+              });
+              
+              remainingNeed -= transferAmount;
+              surplusRegion.hasExtra -= transferAmount;
+            }
+          });
+        }
+        
+        // 2.5단계: 지방 간 우선순위에 따른 이동 (장거리 회피)
+        if (remainingNeed > 0) {
+          const priorityGroups = regionGroupPriority[deficitGroup] || [];
+          
+          priorityGroups.forEach(priorityGroup => {
+            if (remainingNeed <= 0) return;
+            
+            const priorityGroupSurplus = surplusRegions
+              .filter(surplus => 
+                getRegionGroup(surplus.regionName) === priorityGroup &&
+                !shouldAvoidLongDistance(surplus.regionName, deficitRegion.regionName) && // 장거리 회피
+                surplus.hasExtra > 0
+              )
+              .sort((a, b) => b.hasExtra - a.hasExtra);
+            
+            console.log(`${deficitRegion.regionName} 우선순위 지방(${priorityGroup}) 여유 지역 (장거리 제외):`, priorityGroupSurplus.map(r => r.regionName));
+            
+            priorityGroupSurplus.forEach(surplusRegion => {
+              if (remainingNeed <= 0) return;
+              
+              const availableStaff = surplusRegion.hasExtra;
+              const transferAmount = Math.min(remainingNeed, availableStaff);
+              
+              if (transferAmount > 0) {
+                console.log(`지방 간 우선순위 이동: ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
+                
+                recommendations.push({
+                  from: surplusRegion.regionName,
+                  to: deficitRegion.regionName,
+                  amount: transferAmount,
+                  distance: 'priority-group',
+                  priority: 'medium-low',
+                  reason: `${nextMonthStr} 인력 수요 증가 (${deficitGroup}→${priorityGroup} 우선순위 지원)`
+                });
+                
+                remainingNeed -= transferAmount;
+                surplusRegion.hasExtra -= transferAmount;
+              }
+            });
+          });
+        }
+        
+        // 3단계: 여전히 부족한 경우, 기타 원거리 지역에서 충원 (장거리 회피)
+        if (remainingNeed > 0) {
+          const farRegionSurplus = surplusRegions
+            .filter(surplus => {
+              const surplusGroup = getRegionGroup(surplus.regionName);
+              const priorityGroups = regionGroupPriority[deficitGroup] || [];
+              return surplusGroup !== deficitGroup &&
+                     !priorityGroups.includes(surplusGroup) &&
+                     !(regionProximity[deficitRegion.regionName] || []).includes(surplus.regionName) &&
+                     !shouldAvoidLongDistance(surplus.regionName, deficitRegion.regionName) && // 장거리 회피
+                     surplus.hasExtra > 0;
+            })
+            .sort((a, b) => b.hasExtra - a.hasExtra);
+          
+          console.log(`${deficitRegion.regionName} 기타 원거리 여유 지역 (장거리 제외):`, farRegionSurplus.map(r => r.regionName));
+          
+          farRegionSurplus.forEach(surplusRegion => {
+            if (remainingNeed <= 0) return;
+            
+            const availableStaff = surplusRegion.hasExtra;
+            const transferAmount = Math.min(remainingNeed, availableStaff);
+            
+            if (transferAmount > 0) {
+              console.log(`원거리 이동: ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
+              
+              recommendations.push({
+                from: surplusRegion.regionName,
+                to: deficitRegion.regionName,
+                amount: transferAmount,
+                distance: 'far',
+                priority: 'low',
+                reason: `${nextMonthStr} 인력 수요 증가 (원거리 지원)`
+              });
+              
+              remainingNeed -= transferAmount;
+              surplusRegion.hasExtra -= transferAmount;
+            }
+          });
+        }
+        
+        // 4단계: 최후의 수단 - 장거리 이동도 고려 (경고 포함)
+        if (remainingNeed > 0) {
+          const lastResortSurplus = surplusRegions
+            .filter(surplus => 
+              surplus.hasExtra > 0 && 
+              shouldAvoidLongDistance(surplus.regionName, deficitRegion.regionName)
+            )
+            .sort((a, b) => b.hasExtra - a.hasExtra);
+          
+          console.log(`${deficitRegion.regionName} 최후의 수단 - 장거리 이동 고려:`, lastResortSurplus.map(r => r.regionName));
+          
+          lastResortSurplus.forEach(surplusRegion => {
+            if (remainingNeed <= 0) return;
+            
+            const availableStaff = surplusRegion.hasExtra;
+            const transferAmount = Math.min(remainingNeed, availableStaff);
+            
+            if (transferAmount > 0) {
+              console.log(`⚠️ 장거리 이동 (최후의 수단): ${surplusRegion.regionName} → ${deficitRegion.regionName} (${transferAmount}명)`);
+              
+              recommendations.push({
+                from: surplusRegion.regionName,
+                to: deficitRegion.regionName,
+                amount: transferAmount,
+                distance: 'very-far',
+                priority: 'emergency',
+                reason: `${nextMonthStr} 인력 수요 긴급 (⚠️ 장거리 이동 - 최후의 수단)`
+              });
+              
+              remainingNeed -= transferAmount;
+              surplusRegion.hasExtra -= transferAmount;
+            }
+          });
+        }
       });
       
       setTransferRecommendations(recommendations);
