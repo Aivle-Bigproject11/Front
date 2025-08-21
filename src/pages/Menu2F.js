@@ -1552,7 +1552,13 @@ const DataDisplayComponent = ({
                     const [, month] = item.date.split('-');
                     const monthNum = parseInt(month, 10);
                     const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-                    
+
+                    const [itemYear, itemMonth] = item.date.split('-').map(Number);
+                    const prevMonthDate = new Date(itemYear, itemMonth - 2, 1);
+                    const prevMonthDateStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+                    const prevMonthData = currentRegionData.find(d => d.date === prevMonthDateStr);
+                    const changeFromPrevMonth = prevMonthData ? (item.deaths || 0) - (prevMonthData.deaths || 0) : null;
+
                     return (
                       <div 
                         key={index}
@@ -1597,19 +1603,16 @@ const DataDisplayComponent = ({
                           {monthNames[monthNum - 1]}
                         </div>
                         <div style={{ fontSize: '18px', fontWeight: '800', color: isCurrentMonth ? '#B8860B' : '#2C1F14', textAlign: 'center', marginBottom: '8px', lineHeight: '1' }}>
-                          {(item.deaths || 0).toLocaleString()}
+                          {(item.deaths || 0).toLocaleString()}명
                         </div>
                         <div style={{ fontSize: '12px', fontWeight: '600', color: (item.growthRate || 0) >= 0 ? '#dc3545' : '#198754', textAlign: 'center', marginBottom: '6px' }}>
-                          {(item.growthRate || 0) >= 0 ? '+' : ''}{(item.growthRate || 0).toFixed(1)}%
+                          증가율: {(item.growthRate || 0) >= 0 ? '+' : ''}{(item.growthRate || 0).toFixed(1)}%
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <span 
-                            className={`badge ${(item.growthRate || 0) >= 5 ? 'bg-danger' : (item.growthRate || 0) >= 2 ? 'bg-warning' : 'bg-success'}`}
-                            style={{ fontSize: '9px', padding: '3px 6px', borderRadius: '12px' }}
-                          >
-                            {(item.growthRate || 0) >= 5 ? '🚨' : (item.growthRate || 0) >= 2 ? '⚠️' : '✅'}
-                          </span>
-                        </div>
+                        {changeFromPrevMonth !== null && (
+                          <div style={{ fontSize: '11px', fontWeight: '500', color: changeFromPrevMonth >= 0 ? '#dc3545' : '#198754', textAlign: 'center' }}>
+                            전월 대비: {changeFromPrevMonth >= 0 ? '+' : ''}{changeFromPrevMonth.toLocaleString()}명
+                          </div>
+                        )}
                       </div>
                     );
                   })}
