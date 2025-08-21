@@ -416,39 +416,6 @@ const Menu2N = () => {
               setSelectedTransfers={setSelectedTransfers}
             />
             
-            {/* 현재 배치 인력 정보 */}
-            <div className="mt-3 p-3 rounded-3" style={{
-              background: 'rgba(255, 255, 255, 0.9)',
-              border: '1px solid rgba(184, 134, 11, 0.2)',
-              flexShrink: 0
-            }}>
-              <h6 className="mb-2" style={{ color: '#2C1F14', fontWeight: '600' }}>
-                📊 시스템 인력 현황 (2024-01)
-              </h6>
-              <Row>
-                <Col md={6}>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span style={{ fontSize: '14px', color: '#666' }}>총 가용 인력:</span>
-                    <span style={{ fontSize: '18px', fontWeight: '700', color: '#B8860B' }}>
-                      {totalStaff}명
-                    </span>
-                  </div>
-                </Col>
-                <Col md={6}>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span style={{ fontSize: '14px', color: '#666' }}>AI 권장 이동:</span>
-                    <span style={{ fontSize: '18px', fontWeight: '700', color: '#dc3545' }}>
-                      {transferRecommendations.length}건
-                    </span>
-                  </div>
-                </Col>
-              </Row>
-              <div className="mt-2 text-center">
-                <small style={{ color: '#666', fontSize: '12px' }}>
-                  AI가 분석한 최적 인력 재배치 계획
-                </small>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -835,13 +802,21 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
       ))}
 
       {/* 범례 */}
-      <div className="mt-3 p-2 rounded-3" style={{
-        background: 'rgba(255, 255, 255, 0.9)',
-        border: '1px solid rgba(184, 134, 11, 0.2)',
-        flexShrink: 0
+      <div style={{
+        position: 'absolute',
+        bottom: '20px',
+        right: '20px',
+        zIndex: 10,
+        width: '50%',
+        background: 'rgba(255, 255, 255, 0.95)',
+        border: '1px solid rgba(184, 134, 11, 0.3)',
+        borderRadius: '12px',
+        padding: '12px',
+        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(10px)'
       }}>
         <h6 style={{ fontSize: '12px', fontWeight: '600', color: '#2C1F14', marginBottom: '8px' }}>
-          🎨 지역 상태 범례
+          임시 조정 카드
         </h6>
         <Row>
           <Col md={4} className="text-center">
@@ -853,7 +828,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
               display: 'inline-block',
               marginRight: '5px'
             }}></div>
-            <small style={{ fontSize: '11px' }}>AI 추천보다 부족</small>
+            <small style={{ fontSize: '11px' }}>1번</small>
           </Col>
           <Col md={4} className="text-center">
             <div style={{ 
@@ -864,7 +839,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
               display: 'inline-block',
               marginRight: '5px'
             }}></div>
-            <small style={{ fontSize: '11px' }}>AI 추천과 동일</small>
+            <small style={{ fontSize: '11px' }}>2번</small>
           </Col>
           <Col md={4} className="text-center">
             <div style={{ 
@@ -875,7 +850,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
               display: 'inline-block',
               marginRight: '5px'
             }}></div>
-            <small style={{ fontSize: '11px' }}>AI 추천보다 과잉</small>
+            <small style={{ fontSize: '11px' }}>3번</small>
           </Col>
         </Row>
       </div>
@@ -1322,7 +1297,7 @@ const OptimizedDisplayComponent = ({
           })()}
         </Row>
       </div>
-      
+
       {/* 지역별 배치현황 카드 */}
       <div className="p-4 mb-4" style={cardStyle}>
         <h5 className="mb-3" style={{ fontWeight: '600', color: '#2C1F14' }}>
