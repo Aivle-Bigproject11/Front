@@ -2,7 +2,7 @@ import React from 'react';
 import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; 
-import icon from '../../assets/logo/icon01.png';
+import icon from '../../assets/logo/icon04_2.png';
 import { User, LogOut } from 'lucide-react';
 
 const Navbar = () => {
