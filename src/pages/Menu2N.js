@@ -48,28 +48,28 @@ const Menu2N = () => {
     }
   };
 
-  // 고정 현재 배치 데이터 (10단위, 임의배정)
+  // 고정 현재 배치 데이터 (총 400명을 전국에 적절히 배치)
   const fixedCurrentStaffAllocation = {
-    '서울특별시': 70,
-    '경기도': 100,
-    '인천광역시': 30,
-    '강원도': 20,
-    '대전광역시': 15,
-    '세종특별자치시': 0,
-    '충청남도': 10,
-    '충청북도': 15,
-    '전라북도': 15,
-    '광주광역시': 20,
-    '전라남도': 10,
-    '경상북도': 25,
-    '대구광역시': 25,
-    '경상남도': 20,
-    '울산광역시': 15,
-    '부산광역시': 45,
-    '제주도': 10
+    '서울특별시': 45,    // 수도권 중심지 (45명)
+    '경기도': 55,        // 수도권 광역 (55명)
+    '인천광역시': 20,    // 수도권 서해안 (20명)
+    '강원도': 15,        // 북부 산간 (15명)
+    '대전광역시': 15,    // 중부 행정중심지 (15명)
+    '세종특별자치시': 5, // 행정중심복합도시 (5명)
+    '충청남도': 20,      // 중부 서해안 (20명)
+    '충청북도': 15,      // 중부 내륙 (15명)
+    '전라북도': 20,      // 서남부 내륙 (20명)
+    '광주광역시': 15,    // 서남부 중심지 (15명)
+    '전라남도': 25,      // 서남해안 광역 (25명)
+    '경상북도': 30,      // 동부 내륙 광역 (30명)
+    '대구광역시': 20,    // 영남 내륙 중심지 (20명)
+    '경상남도': 35,      // 남부 광역 (35명)
+    '울산광역시': 15,    // 동남부 공업지역 (15명)
+    '부산광역시': 40,    // 남부 최대도시 (40명)
+    '제주도': 10         // 특별자치도 (10명)
   };
 
-  const totalStaff = Object.values(fixedCurrentStaffAllocation).reduce((sum, val) => sum + val, 0);
+  const totalStaff = Object.values(fixedCurrentStaffAllocation).reduce((sum, val) => sum + val, 0); // 총 400명
 
   /* 인력배치 알고리즘
 5단계 장거리 회피 알고리즘
@@ -161,10 +161,12 @@ const Menu2N = () => {
     return false;
   };
 
-  // currentStaffAllocation 변경 시 캐시에 저장
+  // currentStaffAllocation 변경 시 캐시에 저장하고 추천 재계산
   useEffect(() => {
     if (Object.keys(currentStaffAllocation).length > 0) {
       saveStaffAllocationToCache(currentStaffAllocation);
+      // 인력 이동 추천 재계산
+      calculateTransferRecommendations();
     }
   }, [currentStaffAllocation]);
   const getRegionGroup = (regionName) => {
@@ -202,47 +204,43 @@ const Menu2N = () => {
     return regionName === '전체' ? '전국' : regionName;
   };
 
-  // 지역별 배치 상태 계산 (2F로 전달할 간소화된 데이터)
+  // 지역별 배치 상태 계산 (현재 조정된 배치 데이터 기반)
   const calculateRegionDeploymentStatus = () => {
-    if (!staffData || !Array.isArray(staffData)) return {};
+    if (!staffData || !Array.isArray(staffData) || Object.keys(currentStaffAllocation).length === 0) return {};
     
     const currentDate = new Date();
-    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
     const nextMonth = new Date(currentDate);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
     
     const deploymentData = {};
     
-    // 모든 지역에 대해 핵심 데이터만 수집
-    const allRegions = [...new Set(staffData.map(item => item.regionName))];
-    
-    allRegions.forEach(regionName => {
-      const currentData = staffData.find(item => 
-        item.regionName === regionName && item.date === currentMonthStr
-      );
+    // 현재 조정된 배치 데이터를 기반으로 계산
+    Object.keys(currentStaffAllocation).forEach(regionName => {
+      if (regionName === '전국') return; // 전국은 제외
+      
+      // 현재 조정된 배치 인력
+      const currentStaff = currentStaffAllocation[regionName] || 0;
+      
+      // AI 추천 인력 (9월 예측)
       const futureData = staffData.find(item => 
         item.regionName === regionName && item.date === nextMonthStr
       );
+      const recommendedStaff = futureData?.staff || 0;
       
-      if (currentData && futureData) {
-        const currentStaff = currentData.staff || 0;
-        const recommendedStaff = futureData.staff || 0;
-        
-        // 적정여부: 0=적정, 1=부족, 2=과잉
-        let status = 0;
-        if (currentStaff < recommendedStaff) {
-          status = 1; // 부족
-        } else if (currentStaff > recommendedStaff) {
-          status = 2; // 과잉
-        }
-        
-        deploymentData[regionName] = {
-          current: currentStaff,
-          recommended: recommendedStaff,
-          status: status
-        };
+      // 적정여부: 0=적정, 1=부족, 2=과잉
+      let status = 0;
+      if (currentStaff < recommendedStaff) {
+        status = 1; // 부족
+      } else if (currentStaff > recommendedStaff) {
+        status = 2; // 과잉
       }
+      
+      deploymentData[regionName] = {
+        current: currentStaff,
+        recommended: recommendedStaff,
+        status: status
+      };
     });
     
     return deploymentData;
@@ -402,8 +400,7 @@ const Menu2N = () => {
     try {
       console.log('🔄 인력 이동 추천 계산 시작...');
       
-      // 8월 현재이므로 9월 예측 데이터와 비교
-      const currentMonthStr = '2025-08'; // 현재 8월
+      // 현재 8월이므로 9월 예측 데이터와 비교
       const nextMonthStr = '2025-09'; // 9월 예측
       
       const recommendations = [];
@@ -419,7 +416,7 @@ const Menu2N = () => {
         });
       
       console.log('현재 배치 인력 (조정된):', currentStaffByRegion);
-      console.log('AI 추천 인력:', futureStaffByRegion);
+      console.log('AI 추천 인력 (9월 예측):', futureStaffByRegion);
       
       // 각 지역별 인력 증감 계산
       const regionChanges = [];
@@ -430,7 +427,7 @@ const Menu2N = () => {
         
         console.log(`${regionName}: 현재 ${currentStaff}명, AI 추천 ${futureStaff}명, 차이 ${difference}명`);
         
-        if (Math.abs(difference) > 0) { // 변화가 있는 경우만
+        if (Math.abs(difference) >= 1) { // 1명 이상 변화가 있는 경우만 (소수점 제거를 위해 1명 이상으로 변경)
           regionChanges.push({
             regionName,
             currentStaff,
@@ -754,7 +751,7 @@ const Menu2N = () => {
       setCurrentStaffAllocation(fixedCurrentStaffAllocation);
       localStorage.removeItem(STAFF_ALLOCATION_CACHE_KEY);
       saveStaffAllocationToCache(fixedCurrentStaffAllocation);
-      calculateTransferRecommendations();
+      // calculateTransferRecommendations는 useEffect에서 자동으로 호출됩니다
       alert('✅ 배치 데이터가 초기화되었습니다!');
       console.log('🔄 배치 데이터 초기화 완료');
     }
@@ -834,6 +831,7 @@ const Menu2N = () => {
               selectedTransfers={selectedTransfers}
               setSelectedTransfers={setSelectedTransfers}
               calculateRegionDeploymentStatus={calculateRegionDeploymentStatus}
+              currentStaffAllocation={currentStaffAllocation}
             />
             
           </div>
@@ -930,7 +928,7 @@ const Menu2N = () => {
 };
 
 // 최적화된 인력배치 지도 컴포넌트
-const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transferRecommendations, selectedTransfers, setSelectedTransfers, calculateRegionDeploymentStatus }) => {
+const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transferRecommendations, selectedTransfers, setSelectedTransfers, calculateRegionDeploymentStatus, currentStaffAllocation }) => {
   const [hoveredRegion, setHoveredRegion] = useState(null);
   
   const themeColors = {
@@ -985,31 +983,27 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
       return themeColors.primaryGradient;
     }
     
-    // 오른쪽 카드와 동일한 로직으로 현재 실 배치 인력과 AI 추천 인력 계산
+    // 현재 조정된 배치 인력과 AI 추천 인력 비교
     const currentDate = new Date();
-    const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
     const nextMonth = new Date(currentDate);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
     
-    // 현재 달 데이터 (현재 실 배치 인력)
-    const currentRegionData = staffData.find(item => 
-      item.regionName === regionName && item.date === currentMonthStr
-    );
+    // 현재 조정된 배치 인력 (currentStaffAllocation에서 가져옴)
+    const currentDeployedStaff = currentStaffAllocation[regionName] || 0;
     
     // 다음 달 데이터 (AI 추천 인력)
     const futureRegionData = staffData.find(item => 
       item.regionName === regionName && item.date === nextMonthStr
     );
     
-    if (!currentRegionData || !futureRegionData) {
+    if (!futureRegionData) {
       return themeColors.primaryGradient;
     }
     
-    const currentDeployedStaff = currentRegionData.staff || 0; // 현재 실 배치 인력
     const aiRecommendedStaff = futureRegionData.staff || 0; // AI 추천 인력
     
-    // 오른쪽 카드와 동일한 비교 로직
+    // 현재 조정된 배치와 AI 추천 비교
     if (currentDeployedStaff === aiRecommendedStaff) {
       return 'rgba(40, 167, 69, 0.7)'; // 동일하면 초록
     } else if (currentDeployedStaff > aiRecommendedStaff) {
@@ -1146,20 +1140,14 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
                   }
                   
                   const currentDate = new Date();
-                  const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-                  
                   const nextMonth = new Date(currentDate);
                   nextMonth.setMonth(nextMonth.getMonth() + 1);
                   const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
                   
-                  const currentStaffInfo = staffData.find(item => 
-                    item.regionName === region && item.date === currentMonthStr
-                  );
+                  const currentDeployedStaff = currentStaffAllocation[region] || 0;
                   const futureStaffInfo = staffData.find(item => 
                     item.regionName === region && item.date === nextMonthStr
                   );
-                  
-                  const currentDeployedStaff = currentStaffInfo?.staff || 0;
                   const aiRecommendedStaff = futureStaffInfo?.staff || 0;
                   
                   let status = '';
@@ -1171,7 +1159,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
                     status = `부족 배치 (-${aiRecommendedStaff - currentDeployedStaff}명)`;
                   }
                   
-                  return `${region}: 현재 실 배치 ${currentDeployedStaff}명 / AI 추천 ${aiRecommendedStaff}명 (${status})`;
+                  return `${region}: 현재 배치 ${currentDeployedStaff}명 / AI 추천 ${aiRecommendedStaff}명 (${status})`;
                 })()}
                 style={{
                   position: 'absolute',
@@ -1200,7 +1188,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
               >
                 <div style={{ fontSize: '13px', fontWeight: '600' }}>{pos.shortName}</div>
                 <div style={{ fontSize: '11px', fontWeight: '700' }}>
-                  {staffInfo?.staff || 0}명
+                  {currentStaffAllocation[region] || 0}명
                 </div>
                 {transfers.length > 0 && (
                   <div style={{ 
@@ -1260,10 +1248,18 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
               boxShadow: '0 4px 15px rgba(54, 162, 235, 0.3)'
             }}
             onClick={() => {
-              // Menu2F로 이동하면서 선택된 지역 정보와 배치 상태 정보 전달
+              // Menu2F로 이동하면서 선택된 지역 정보, 배치 상태 정보, 현재 조정된 배치 데이터 전달
               const deploymentData = calculateRegionDeploymentStatus();
-              const encodedData = encodeURIComponent(JSON.stringify(deploymentData));
-              window.location.href = `/menu2f?region=${encodeURIComponent(selectedRegion)}&deploymentData=${encodedData}`;
+              const currentAllocation = { ...currentStaffAllocation };
+              
+              const dataToSend = {
+                deploymentData: deploymentData,
+                currentAllocation: currentAllocation,
+                totalStaff: Object.values(currentAllocation).reduce((sum, val) => sum + val, 0)
+              };
+              
+              const encodedData = encodeURIComponent(JSON.stringify(dataToSend));
+              window.location.href = `/menu2f?region=${encodeURIComponent(selectedRegion)}&menuData=${encodedData}`;
             }}
           >
             🔍 데이터 조회하기
@@ -2081,7 +2077,7 @@ const OptimizedDisplayComponent = ({
           
           <div className="mt-3 text-center">
             <small className="text-muted">
-              * 수동 조정된 데이터는 자동으로 저장되어 다른 페이지를 다녀와도 유지됩니다 | 새로고침을 누르면 하단 AI 인력 이동 추천 계획에서 새로운 추천을 확인할 수 있습니다
+              * 조정된 데이터는 자동으로 저장되어 다른 페이지를 다녀와도 유지됩니다 | 새로고침을 누르면 AI 인력 이동 추천 계획에서 새로운 추천을 확인할 수 있습니다.
             </small>
           </div>
         </div>
