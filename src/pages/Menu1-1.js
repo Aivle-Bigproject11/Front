@@ -228,7 +228,7 @@ const Menu1_1 = () => {
       }}>
         <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
           <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px' }}>
-            장례서류작성
+            장례서류 자동화
           </h4>
           <div className="dashboard-left" style={{
             background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',

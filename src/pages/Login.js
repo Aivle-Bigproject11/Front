@@ -227,7 +227,7 @@ const Login = () => {
                   marginBottom: '20px',
                   fontSize: '1.8rem',
                   textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
-                }}>Golden Gate 관리 시스템</h3>
+                }}>Lumora 관리 시스템</h3>
                 <p style={{
                   color: '#4A3728',
                   fontSize: '16px',
@@ -235,7 +235,7 @@ const Login = () => {
                   marginBottom: '30px',
                   maxWidth: '400px'
                 }}>
-                  Golden Gate는 소중한 분들을 위한<br/> 
+                  Lumora는 소중한 분들을 위한<br/> 
                   프리미엄 상조 서비스입니다.<br/>
                   <br/><span style={{ fontSize: '15px'}}>직원 관리 시스템을 통해 효율적인 업무 처리를 지원합니다.</span>
                 </p>
@@ -262,19 +262,19 @@ const Login = () => {
                   }}>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-file-alt me-2" style={{ color: '#B8860B' }}></i>
-                      <strong>장례 서류 작성:</strong> 장례 관련 서류를 자동으로 작성합니다.
+                      <strong>AI 장례서류 자동 작성:</strong> 장례 관련 서류를 자동으로 작성하며 오탈자 검토, 맞춤형 템플릿을 생성해 줍니다.
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-chart-line me-2" style={{ color: '#B8860B' }}></i>
-                      <strong>대시보드:</strong> 지역별 월별 사망자 수를 예측하여 실시간 통계 및 분석을 제공합니다.
+                      <strong>AI 인력운영 어드바이저:</strong> 지역별 월별 사망자 수를 예측하여 실시간 통계 및 분석을 제공합니다.
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-comments-dollar me-2" style={{ color: '#B8860B' }}></i>
-                      <strong>전환 서비스 추천:</strong> 고객에게 맞춤 전환 서비스 메시지를 자동으로 생성하고 기록을 조회합니다.
+                      <strong>AI기반 고객 맞춤형 Upselling:</strong> 고객에게 맞춤 전환 서비스 메시지를 자동으로 생성하고 기록을 조회합니다.
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-book-open me-2" style={{ color: '#B8860B' }}></i>
-                      <strong>디지털 추모관:</strong> 디지털 추모관을 관리합니다.
+                      <strong>AI기반 디지털 추모관:</strong> 디지털 추모관을 관리합니다.
                     </li>
                     <li style={{ color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-users me-2" style={{ color: '#B8860B' }}></i>
@@ -308,7 +308,7 @@ const Login = () => {
                   marginBottom: '20px',
                   fontSize: '1.8rem',
                   textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
-                }}>Golden Gate 사용자 서비스</h3>
+                }}>Lumora 유가족 서비스</h3>
                 <p style={{
                   color: '#4A3728',
                   fontSize: '16px',
@@ -316,9 +316,9 @@ const Login = () => {
                   marginBottom: '30px',
                   maxWidth: '400px'
                 }}>
-                  Golden Gate는 소중한 분들을 위한<br/>
+                  Lumora는 소중한 분들을 위한<br/>
                   프리미엄 상조 서비스입니다.<br/>
-                  <br/><span style={{ fontSize: '15px'}}>사용자 서비스를 통해 추모관을 편리하게 이용하실 수 있습니다.</span>
+                  <br/><span style={{ fontSize: '15px'}}>이 서비스를 통해 추모관을 편리하게 이용하실 수 있습니다.</span>
                 </p>
                 <div style={{
                   width: '100%',
@@ -488,7 +488,7 @@ const Login = () => {
                 }}>
                   <img 
                     src={icon} 
-                    alt="Golden Gate Logo"
+                    alt="Lumora Logo"
                     style={{
                       width: '70px',
                       height: '70px',
@@ -512,7 +512,7 @@ const Login = () => {
                   fontWeight: '700',
                   marginBottom: '15px',
                   fontSize: '1.6rem'
-                }}>Golden Gate</h3>
+                }}>Lumora</h3>
                 <p style={{
                   color: '#4A3728',
                   fontSize: '15px',
@@ -593,7 +593,7 @@ const Login = () => {
                     : 'none' 
                     }}
                     >
-                  사용자 로그인
+                  유가족 로그인
                 </button>
               </div>
 
@@ -940,7 +940,7 @@ const Login = () => {
                     cursor: 'pointer' 
                     }}
                     >
-                    <i className="fas fa-user-plus me-2"></i>사용자 회원가입
+                    <i className="fas fa-user-plus me-2"></i>유가족 회원가입
                   </button>
                 )}
               </div>
@@ -956,7 +956,7 @@ const Login = () => {
                   textDecoration: 'none',
                   fontSize: '12px',
                   fontWeight: '750'
-                }}>Golden Gate 개인정보 처리방침</a>
+                }}>Lumora 개인정보 처리방침</a>
                 <span style={{ margin: '0 10px', color: '#6B4423', fontSize: '12px' }}>|</span>
                 <a href="/termsOfService" style={{
                   color: '#6B4423',
