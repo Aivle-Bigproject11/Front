@@ -14,8 +14,8 @@ import Menu1_2 from './pages/Menu1-2';
 import Menu1_3 from './pages/Menu1-3';
 import Menu1_4 from './pages/Menu1-4';
 import Menu1_5 from './pages/Menu1-5';
-import Menu2 from './pages/Menu2';
 import Menu2F from './pages/Menu2F';
+import Menu2N from './pages/Menu2N';
 import Menu3 from './pages/Menu3';
 import Menu4 from './pages/Menu4';
 import Menu5 from './pages/Menu5';
@@ -60,8 +60,8 @@ function App() {
                             <Route path="/menu1-4" element={<NavbarWrapper><Menu1_4 /></NavbarWrapper>} />
                             <Route path="/menu1-5" element={<NavbarWrapper><Menu1_5 /></NavbarWrapper>} />
                             <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
-                            <Route path="/menu2" element={<NavbarWrapper><Menu2 /></NavbarWrapper>} />
                             <Route path="/menu2f" element={<NavbarWrapper><Menu2F /></NavbarWrapper>} />
+                            <Route path="/menu2n" element={<NavbarWrapper><Menu2N /></NavbarWrapper>} />
                             <Route path="/menu3" element={<NavbarWrapper><Menu3 /></NavbarWrapper>} />
                             <Route path="/menu4" element={<NavbarWrapper><Menu4 /></NavbarWrapper>} />
                             <Route path="/menu5" element={<NavbarWrapper><Menu5 /></NavbarWrapper>} />
@@ -121,7 +121,6 @@ const MainLayout = () => {
                 <Route path="/menu1-4" element={<Menu1_4 />} />
                 <Route path="/menu1-5" element={<Menu1_5 />} />
                 <Route path="/menu1/*" element={<Navigate to="/menu1-1" replace />} />
-                <Route path="/menu2" element={<Menu2 />} />
                 <Route path="/menu3" element={<Menu3 />} />
                 <Route path="/menu4" element={<Menu4 />} />
                 <Route path="/menu5" element={<Menu5 />} />
