@@ -6,7 +6,7 @@ import menu02 from '../assets/images/menu02.png';
 import menu03 from '../assets/images/menu03.png';
 import menu04 from '../assets/images/menu04.png';
 import menu05 from '../assets/images/menu05.png';
-import logoIcon from '../assets/logo/icon01.png';
+import logoIcon from '../assets/logo/lumora bgx.png';
 
 const Home = () => {
   const [animateCard, setAnimateCard] = useState(false);
@@ -190,8 +190,8 @@ const Home = () => {
 
         <div style={{ flexShrink: 0, marginTop: 'auto', paddingTop: '20px' }}>
           <hr style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)' }} />
-          <div className="text-center py-3 d-flex align-items-center justify-content-center" style={{ gap: '15px' }}>
-            <img src={logoIcon} alt="Golden Gate Logo" style={{ height: '24px' }} />
+          <div className="text-center py-3 d-flex align-items-center justify-content-center" style={{ gap: '-10px' }}>
+            <img src={logoIcon} alt="Lumora Logo" style={{ height: '40px' }} />
             <p style={{ color: '#4A3728', margin: 0, fontWeight: '500', fontSize: '1rem' }}>
               상조의 미래를 밝히는 새로운 빛, <strong>Lumora</strong>
             </p>

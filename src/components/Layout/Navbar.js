@@ -2,7 +2,7 @@ import React from 'react';
 import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; 
-import icon from '../../assets/logo/icon04_2.png';
+import icon from '../../assets/logo/lumora bgx.png';
 import { User, LogOut } from 'lucide-react';
 
 const Navbar = () => {
@@ -68,12 +68,13 @@ const Navbar = () => {
         <BootstrapNavbar.Brand as={Link} to="/" style={{...linkStyle, fontWeight: 'bold'}} className="d-flex align-items-center">
            <img
             src={icon}
-            width="30"
-            height="30"
+            width="50"
+            height="50"
             className="d-inline-block align-top me-2" // 이미지와 텍스트 사이에 여백
-            alt="Golden Gate logo"
+            alt="Lumora logo"
+            style={{ marginTop: '-10px', marginBottom: '-10px' }} 
           />
-          Golden Gate - AI 플랫폼
+          Lumora - AI 플랫폼
         </BootstrapNavbar.Brand>
         <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
         <BootstrapNavbar.Collapse id="basic-navbar-nav">
