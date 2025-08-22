@@ -3,7 +3,7 @@ import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
-import icon from '../assets/logo/icon01.png';
+import icon from '../assets/logo/icon05_1.png';
 
 const CustomPopup = ({ message, onConfirm }) => (
     <div className="popup-overlay">
@@ -94,7 +94,7 @@ const Login = () => {
                 message: '일정 횟수 이상 로그인에 실패하였습니다. 비밀번호 재설정 화면으로 이동합니다.',
                 onConfirm: () => {
                     closePopup();
-                    navigate('/FindPassword');
+                    navigate('/findPassword');
                 }
                 });
                 setLoginAttempts(prev => ({ ...prev, [credentials.username]: 0 })); // 팝업 후 카운트 초기화
@@ -474,8 +474,8 @@ const Login = () => {
                 padding: '30px'
               }}>
                 <div style={{
-                  width: '130px',
-                  height: '130px',
+                  width: '180px',
+                  height: '180px',
                   background: 'linear-gradient(135deg, #2C1F14 0%, #4A3728 100%)',
                   borderRadius: '50%',
                   margin: '0 auto 20px',
@@ -483,17 +483,16 @@ const Login = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 15px 35px rgba(44, 31, 20, 0.5)',
-                  border: '3px solid rgba(255, 255, 255, 0.35)',
                   overflow: 'hidden'
                 }}>
                   <img 
                     src={icon} 
                     alt="Golden Gate Logo"
                     style={{
-                      width: '70px',
-                      height: '70px',
+                      width: '170px',
+                      height: '170px',
                       objectFit: 'contain',
-                      filter: 'brightness(1.2) contrast(1.1)'
+                      filter: 'brightness(1.0) contrast(1.1)'
                     }}
                     onError={(e) => {
                       // 이미지 로드 실패시 폴백 아이콘
@@ -739,7 +738,7 @@ const Login = () => {
                     marginBottom: '20px',
                     justifyContent: 'center'
                     }}>
-                  <button type="button" onClick={() => navigate('/FindId', { state: { isEmployee: activeTab === 'employee' } })} className="login-link" style={{ 
+                  <button type="button" onClick={() => navigate('/findId', { state: { isEmployee: activeTab === 'employee' } })} className="login-link" style={{ 
                     background: 'none',
                     border: 'none',
                     padding: 0,
@@ -749,7 +748,7 @@ const Login = () => {
                     fontSize: '14px', 
                     fontWeight: '600' 
                     }}>아이디 찾기</button>
-                  <button type="button" onClick={() => navigate('/FindPassword', { state: { userType: activeTab } })} className="login-link" style={{ 
+                  <button type="button" onClick={() => navigate('/findPassword', { state: { userType: activeTab } })} className="login-link" style={{ 
                     background: 'none',
                     border: 'none',
                     padding: 0,
