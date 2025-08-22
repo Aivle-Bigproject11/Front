@@ -189,18 +189,29 @@ const Home = () => {
         </div>
 
         <div style={{ flexShrink: 0, marginTop: 'auto', paddingTop: '20px' }}>
-          <hr style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)' }} />
-          <div className="text-center py-3 d-flex align-items-center justify-content-center" style={{ gap: '-10px' }}>
-            <img src={logoIcon} alt="Lumora Logo" style={{ height: '40px' }} />
-            <p style={{ color: '#4A3728', margin: 0, fontWeight: '500', fontSize: '1rem' }}>
-              상조의 미래를 밝히는 새로운 빛, <strong>Lumora</strong>
-            </p>
-          </div>
-          <hr style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)' }} />
-          <div className="text-center py-2">
-            <a href="/privacyPolicy" style={{ color: '#6B4423', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>개인정보처리방침</a>
-            <span style={{ margin: '0 10px', color: '#6B4423', fontSize: '12px' }}>|</span>
-            <a href="/termsOfService" style={{ color: '#6B4423', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>이용약관</a>
+          <div 
+            className="text-center p-3 rounded" 
+            style={{
+            //   background: 'linear-gradient(135deg, #222, #000)',
+            //   color: '#FFFBEB',
+            //   textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'
+
+              background: 'linear-gradient(135deg, #3c2d20, #7a4e24)',
+              color: '#FFFBEB',
+              textShadow: '1px 1px 2px rgba(44, 31, 20, 0.5)'
+            }}
+          >
+            <div className="d-flex align-items-center justify-content-center" style={{ gap: '-10px' }}>
+              <img src={logoIcon} alt="Lumora Logo" style={{ height: '40px' }} />
+              <p style={{ margin: 0, fontWeight: '500', fontSize: '1rem' }}>
+                상조의 미래를 밝히는 새로운 빛, <strong>Lumora</strong>
+              </p>
+            </div>
+            <div style={{ marginTop: '0.5rem' }}>
+              <a href="/privacyPolicy" style={{ color: 'inherit', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>개인정보처리방침</a>
+              <span style={{ margin: '0 10px', fontSize: '12px' }}>|</span>
+              <a href="/termsOfService" style={{ color: 'inherit', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>이용약관</a>
+            </div>
           </div>
         </div>
       </div>
