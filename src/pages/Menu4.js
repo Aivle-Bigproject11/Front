@@ -149,8 +149,7 @@ const Menu4 = () => {
 
   const openFamilyModal = async (memorial) => {
     setSelectedMemorial(memorial);
-    console.log(`[현재 모드: 백엔드 API 검색] 서버의 전용 검색 API를 사용합니다. (/families/search-name, /families/search-email, /families/search-phone)`);
-    console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: 백엔드 API`);
+    console.log(`🔍 유가족 조회 시작 - 추모관 ID: ${memorial.id}, 검색 방식: 추모관 기본 조회 API`);
     
     // Memorial ID 유효성 검사
     if (!memorial.id) {
@@ -168,38 +167,39 @@ const Menu4 = () => {
     }
     
     try {
-      // 해당 추모관에 등록된 유가족 목록 조회
-      const familyResponse = await apiService.getFamiliesByMemorialId(memorial.id);
-      if (familyResponse._embedded && familyResponse._embedded.families) {
-        console.log(`✅ 유가족 조회 성공 - ${familyResponse._embedded.families.length}명`);
-        setFamilyMembers(familyResponse._embedded.families);
+      // 추모관 기본 조회 API에서 familyList 가져오기
+      const memorialResponse = await apiService.getMemorial(memorial.id);
+      
+      if (memorialResponse.familyList && Array.isArray(memorialResponse.familyList)) {
+        console.log(`✅ 유가족 조회 성공 - ${memorialResponse.familyList.length}명`);
+        
+        // familyList는 유가족 ID 배열이므로, 각 ID로 유가족 상세 정보 조회
+        if (memorialResponse.familyList.length > 0) {
+          const familyDetailsPromises = memorialResponse.familyList.map(familyId => 
+            apiService.getFamilyById(familyId)
+          );
+          
+          try {
+            const familyDetails = await Promise.all(familyDetailsPromises);
+            setFamilyMembers(familyDetails);
+            console.log(`✅ 유가족 상세 정보 조회 성공 - ${familyDetails.length}명`);
+          } catch (detailError) {
+            console.error("❌ 유가족 상세 정보 조회 실패:", detailError);
+            // ID만 있는 경우라도 모달은 표시
+            const familyWithIds = memorialResponse.familyList.map(id => ({ id, name: `유가족 ${id}` }));
+            setFamilyMembers(familyWithIds);
+          }
+        } else {
+          setFamilyMembers([]);
+        }
       } else {
         console.log('ℹ️ 등록된 유가족이 없습니다');
         setFamilyMembers([]);
       }
     } catch (error) {
-      console.error("❌ 유가족 조회 에러:", error);
-      
-      if (error.response?.status >= 400) {
-        console.warn("⚠️ 백엔드 API 실패, 프론트엔드 필터링으로 폴백 시도");
-        try {
-          // 프론트엔드 필터링으로 폴백
-          const fallbackResponse = await apiService.getFamiliesByMemorialIdFrontend(memorial.id);
-          if (fallbackResponse._embedded && fallbackResponse._embedded.families) {
-            console.log(`✅ 프론트엔드 필터링으로 유가족 조회 성공 - ${fallbackResponse._embedded.families.length}명`);
-            setFamilyMembers(fallbackResponse._embedded.families);
-          } else {
-            setFamilyMembers([]);
-          }
-        } catch (fallbackError) {
-          console.error("❌ 프론트엔드 필터링도 실패:", fallbackError);
-          alert("유가족 조회에 실패했습니다. 네트워크 연결을 확인해주세요.");
-          setFamilyMembers([]);
-        }
-      } else {
-        alert("유가족 조회에 실패했습니다. 네트워크 연결을 확인해주세요.");
-        setFamilyMembers([]);
-      }
+      console.error("❌ 추모관 조회 에러:", error);
+      alert("유가족 조회에 실패했습니다. 네트워크 연결을 확인해주세요.");
+      setFamilyMembers([]);
     }
     setSearchKeyword('');
     setSearchResults([]);
@@ -335,11 +335,33 @@ const Menu4 = () => {
       }
 
       try {
-        await apiService.approveFamily(selectedMember.id, { memorialId: selectedMemorial.id });
+        console.log(`➕ 유가족 등록 시작 - 유가족 ID: ${selectedMember.id}, 추모관 ID: ${selectedMemorial.id}`);
         
-        const familyResponse = await apiService.getFamiliesByMemorialId(selectedMemorial.id);
-        if (familyResponse._embedded && familyResponse._embedded.families) {
-          setFamilyMembers(familyResponse._embedded.families);
+        // 유가족 approve API 호출 (백엔드에서 자동으로 familyList에 추가됨)
+        await apiService.approveFamily(selectedMember.id, { memorialId: selectedMemorial.id });
+        console.log(`✅ 유가족 approve 완료 (백엔드에서 familyList 자동 추가됨)`);
+        
+        // UI 갱신을 위해 새로운 방식으로 유가족 목록 조회
+        const updatedMemorialResponse = await apiService.getMemorial(selectedMemorial.id);
+        if (updatedMemorialResponse.familyList && Array.isArray(updatedMemorialResponse.familyList)) {
+          if (updatedMemorialResponse.familyList.length > 0) {
+            const familyDetailsPromises = updatedMemorialResponse.familyList.map(familyId => 
+              apiService.getFamilyById(familyId)
+            );
+            
+            try {
+              const familyDetails = await Promise.all(familyDetailsPromises);
+              setFamilyMembers(familyDetails);
+              console.log(`✅ 유가족 목록 갱신 완료 - ${familyDetails.length}명`);
+            } catch (detailError) {
+              console.error("❌ 유가족 상세 정보 조회 실패:", detailError);
+              setFamilyMembers([]);
+            }
+          } else {
+            setFamilyMembers([]);
+          }
+        } else {
+          setFamilyMembers([]);
         }
         
         setSelectedMember(null);
@@ -348,7 +370,7 @@ const Menu4 = () => {
         // setSearchResults([]);
         alert('유가족이 등록되었습니다.');
       } catch (error) {
-        console.error("Error adding family member:", error);
+        console.error("❌ 유가족 등록 에러:", error);
         alert("유가족 등록에 실패했습니다.");
       }
     } else {
@@ -359,18 +381,52 @@ const Menu4 = () => {
   const removeFamilyMember = async (familyToRemove) => {
     try {
       const familyId = familyToRemove._links?.self?.href?.split('/').pop() || familyToRemove.id;
-      await apiService.updateFamilyMemorialId(familyId, null);
+      console.log(`🗑️ 유가족 삭제 시작 - 유가족 ID: ${familyId}, 추모관 ID: ${selectedMemorial.id}`);
       
-      const familyResponse = await apiService.getFamiliesByMemorialId(selectedMemorial.id);
-      if (familyResponse._embedded && familyResponse._embedded.families) {
-        setFamilyMembers(familyResponse._embedded.families);
+      // 추모관의 familyList에서 해당 유가족 ID 제거 (유가족 테이블은 그대로 유지)
+      const memorialResponse = await apiService.getMemorial(selectedMemorial.id);
+      if (memorialResponse.familyList && Array.isArray(memorialResponse.familyList)) {
+        // familyList에서 해당 familyId 모두 제거 (중복된 ID도 처리)
+        const updatedFamilyList = memorialResponse.familyList.filter(id => id !== parseInt(familyId));
+        console.log(`🔄 familyList 업데이트: [${memorialResponse.familyList}] → [${updatedFamilyList}]`);
+        
+        // 추모관의 familyList 업데이트
+        await apiService.updateMemorial(selectedMemorial.id, { familyList: updatedFamilyList });
+        console.log(`✅ 추모관 familyList 업데이트 완료`);
+        
+        // 유가족의 memorialId를 null로 설정 (선택사항 - 필요에 따라 제거 가능)
+        // await apiService.updateFamilyMemorialId(familyId, null);
+        // console.log(`✅ 유가족 memorialId null 설정 완료`);
+      } else {
+        console.warn('⚠️ 추모관에 familyList가 없습니다');
+      }
+      
+      // UI 갱신을 위해 새로운 방식으로 유가족 목록 조회
+      const updatedMemorialResponse = await apiService.getMemorial(selectedMemorial.id);
+      if (updatedMemorialResponse.familyList && Array.isArray(updatedMemorialResponse.familyList)) {
+        if (updatedMemorialResponse.familyList.length > 0) {
+          const familyDetailsPromises = updatedMemorialResponse.familyList.map(familyId => 
+            apiService.getFamilyById(familyId)
+          );
+          
+          try {
+            const familyDetails = await Promise.all(familyDetailsPromises);
+            setFamilyMembers(familyDetails);
+            console.log(`✅ 유가족 목록 갱신 완료 - ${familyDetails.length}명`);
+          } catch (detailError) {
+            console.error("❌ 유가족 상세 정보 조회 실패:", detailError);
+            setFamilyMembers([]);
+          }
+        } else {
+          setFamilyMembers([]);
+        }
       } else {
         setFamilyMembers([]);
       }
       
       alert('유가족이 삭제되었습니다.');
     } catch (error) {
-      console.error("Error removing family member:", error);
+      console.error("❌ 유가족 삭제 에러:", error);
       alert("유가족 삭제에 실패했습니다.");
     }
   };
