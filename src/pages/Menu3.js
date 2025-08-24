@@ -54,8 +54,10 @@ const Menu3 = () => {
     const formatKST = (dateString) => {
         if (!dateString) return '';
         
-        const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
-        const date = new Date(utcDateString);
+        //const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+        //const date = new Date(utcDateString);
+
+        const date = new Date(dateString);
 
         const formatter = new Intl.DateTimeFormat('ko-KR', {
             timeZone: 'Asia/Seoul',
