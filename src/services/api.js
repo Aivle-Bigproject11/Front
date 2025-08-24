@@ -109,6 +109,16 @@ const realApiService = {
     }
     return (await api.patch(`/memorials/${id}`, data, config)).data;
   },
+  deleteMemorial: async (id) => {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {}
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return (await api.delete(`/memorials/${id}`, config)).data;
+  },
   getMemorialDetails: async (id) => {
     try {
       // detail 엔드포인트로 사진과 댓글이 포함된 전체 정보 가져오기

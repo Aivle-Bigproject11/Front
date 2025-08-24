@@ -454,11 +454,48 @@ const Menu4 = () => {
   const deleteMemorial = async (id) => {
     if (window.confirm('정말로 이 추모관을 삭제하시겠습니까?')) {
       try {
+        console.log(`🗑️ 추모관 삭제 시작 - ID: ${id}`);
         await apiService.deleteMemorial(id);
-        setMemorials(memorials.filter(memorial => memorial.id !== id));
+        console.log('✅ 추모관 삭제 완료');
+        
+        // 서버에서 최신 목록을 다시 불러오기
+        const response = await apiService.getMemorials();
+        if (response._embedded && response._embedded.memorials) {
+          const memorialsList = response._embedded.memorials;
+          
+          // 각 추모관에 대해 영상 및 추모사 상태를 API로 확인
+          const memorialsWithStatus = await Promise.all(
+            memorialsList.map(async (memorial) => {
+              try {
+                const detailData = await apiService.getMemorialDetails(memorial.id);
+                
+                // 상세 정보(detailData)를 기존 memorial 정보와 합칩니다.
+                return {
+                  ...memorial,
+                  ...detailData,
+                  hasVideo: detailData.videos && detailData.videos.length > 0,
+                  tribute: detailData.tribute || null, 
+                };
+              } catch (error) {
+                console.error(`❌ ${memorial.id} 상태 조회 실패:`, error);
+                return {
+                  ...memorial,
+                  hasVideo: false,
+                  tribute: null
+                };
+              }
+            })
+          );
+          
+          setMemorials(memorialsWithStatus);
+          console.log(`✅ 추모관 목록 갱신 완료 - ${memorialsWithStatus.length}개`);
+        } else {
+          setMemorials([]);
+        }
+        
         alert('추모관이 삭제되었습니다.');
       } catch (error) {
-        console.error("Error deleting memorial:", error);
+        console.error("❌ 추모관 삭제 에러:", error);
         alert('추모관 삭제에 실패했습니다.');
       }
     }
