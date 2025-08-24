@@ -697,7 +697,7 @@ const MemorialDetail = () => {
                         margin: '0 auto' }}></i>
                   )}
                 </div>
-                <h5 className="mt-2 mb-0" style={{ color: '#2C1F14', fontWeight: '600', fontSize: '0.9rem' }}>프로필사진01</h5>
+                <h5 className="mt-2 mb-0" style={{ color: '#2C1F14', fontWeight: '600', fontSize: '0.9rem' }}></h5>
               </Col>
               
               <Col md={9}>
@@ -795,7 +795,7 @@ const MemorialDetail = () => {
                     >
                       <h5 className="mb-0" style={{ color: '#2C1F14', fontSize: '1rem' }}>
                         <i className="fas fa-play me-2"></i>
-                        추모영상 01
+                        AI 추모영상
                       </h5>
                     </div>
 
