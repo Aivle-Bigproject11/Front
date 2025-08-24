@@ -208,7 +208,7 @@ function SignUp() {
 
   const closePopup = () => {
     setShowPopup(false);
-    if (popupMessage === '직원 회원가입이 완료되었습니다!' || popupMessage === '사용자 회원가입이 완료되었습니다!') {
+    if (popupMessage === '직원 회원가입이 완료되었습니다!' || popupMessage === '유가족 회원가입이 완료되었습니다!') {
       navigate('/login');
     }
   };
