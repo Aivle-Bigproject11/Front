@@ -119,7 +119,7 @@ const Menu3 = () => {
             if (filters.gender.length > 0) {
                 customers = customers.filter(c => {
                     if (!c.gender) return false;
-                    return filters.gender.some(filterGender => c.gender.startsWith(filterGender));
+                    return filters.gender.includes(c.gender);
                 });
             }
 
@@ -170,7 +170,7 @@ const Menu3 = () => {
 
             const requestData = {
                 ageGroup: filters.age || undefined,
-                gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
+                gender: filters.gender.length > 0 ? filters.gender[0] : undefined,
                 disease: filters.disease[0] || undefined,
                 family: familyValue,
             };
@@ -213,7 +213,7 @@ const Menu3 = () => {
         try {
             const filterCriteria = {
                 ageGroup: filters.age || undefined,
-                gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
+                gender: filters.gender.length > 0 ? filters.gender[0] : undefined,
                 disease: filters.disease[0] || undefined,
                 family: generatedMessageData.family || undefined,
             };
