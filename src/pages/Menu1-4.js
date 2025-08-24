@@ -83,13 +83,9 @@ const Menu1_4 = () => {
         return `${marriedText}, ${childrenText}`;
     };
 
-    const formatDateForDisplay = (dateString) => {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}.${month}.${day}`;
+    const formatDate = (dateString) => {
+        if (!dateString) return '정보 없음';
+        return dateString.split('T')[0];
     };
 
     if (loading && !animateCard) {
@@ -161,7 +157,7 @@ const Menu1_4 = () => {
                                                 </Col>
                                                 <Col md={7}>
                                                     <Row>
-                                                        <Col sm={6} className="mb-2"><strong>생년월일:</strong> {formatDateForDisplay(customer.birthOfDate)} (만 {customer.age}세)</Col>
+                                                        <Col sm={6} className="mb-2"><strong>생년월일:</strong> {formatDate(customer.birthDate)} (만 {customer.age}세)</Col>
                                                         <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
                                                         <Col sm={6} className="mb-2"><strong>연락처:</strong> {customer.phone}</Col>
                                                         <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>
