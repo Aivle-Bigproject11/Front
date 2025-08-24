@@ -37,7 +37,7 @@ const Menu5_2 = () => {
   const [animateCard, setAnimateCard] = useState(false);
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', rrn: '', birthYear: '', birthMonth: '', birthDay: '',
-    occupation: '', address: '', gender: '남', maritalStatus: '미혼', hasChildren: '무',
+    occupation: '', address: '', gender: '남성', maritalStatus: '미혼', hasChildren: '무',
   });
   
   const [diseases, setDiseases] = useState([]);
@@ -245,8 +245,8 @@ const Menu5_2 = () => {
                <div className="form-group">
                 <label className="form-label">성별</label>
                 <select name="gender" value={formData.gender} onChange={handleChange} className="form-select">
-                  <option value="남">남</option>
-                  <option value="여">여</option>
+                  <option value="남성">남성</option>
+                  <option value="여성">여성</option>
                 </select>
               </div>
               <div className="form-group">
