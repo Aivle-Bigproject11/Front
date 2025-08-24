@@ -24,6 +24,7 @@ const Menu2F = () => {
   const [error, setError] = useState(null);
   const [currentDate, setCurrentDate] = useState({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
   const [deploymentData, setDeploymentData] = useState(null); // 2N에서 전달받은 간소화된 배치 데이터
+  const [currentAllocation, setCurrentAllocation] = useState(null); // 2N에서 전달받은 현재 조정된 배치 데이터
 
   // 표시용 지역명 계산 (전체 -> 전국)
   const getDisplayRegionName = (regionName) => {
@@ -74,24 +75,36 @@ const Menu2F = () => {
       
       // URL 쿼리 파라미터에서 배치 데이터 가져오기
       const urlParams = new URLSearchParams(location.search);
-      const deploymentDataParam = urlParams.get('deploymentData');
+      const menuDataParam = urlParams.get('menuData');
       
-      if (deploymentDataParam) {
+      if (menuDataParam) {
         try {
-          const parsedDeploymentData = JSON.parse(decodeURIComponent(deploymentDataParam));
-          setDeploymentData(parsedDeploymentData);
-          console.log('✅ 배치 데이터 수신:', parsedDeploymentData);
+          const parsedMenuData = JSON.parse(decodeURIComponent(menuDataParam));
+          console.log('✅ Menu2N 데이터 수신:', parsedMenuData);
+          
+          // Menu2N에서 전달받은 데이터 구조 분해
+          const { deploymentData, currentAllocation, totalStaff } = parsedMenuData;
+          
+          setDeploymentData(deploymentData);
+          
+          // 현재 조정된 배치 데이터를 상태로 저장
+          if (currentAllocation) {
+            setCurrentAllocation(currentAllocation);
+            console.log('📊 현재 조정된 배치 데이터:', currentAllocation, '총 인력:', totalStaff);
+          }
+          
         } catch (error) {
-          console.error('⚠️ 배치 데이터 파싱 실패:', error);
+          console.error('⚠️ Menu2N 데이터 파싱 실패:', error);
         }
       }
       
       try {
         // 1. 2025-01, 2026-01 데이터 병렬 생성 요청
-        console.log('📅 2025-01, 2026-01 예측 데이터 동시 요청 중...');
+        console.log('📅 2024-01, 2025-01, 2026-01 예측 데이터 동시 요청 중...');
         const predictionRequests = [
+          apiService.requestPrediction({ date: "2024-01" }),
           apiService.requestPrediction({ date: "2025-01" }),
-          // apiService.requestPrediction({ date: "2026-01" })
+          apiService.requestPrediction({ date: "2026-01" })
         ];
         
         await Promise.all(predictionRequests);
@@ -582,6 +595,7 @@ const Menu2F = () => {
               onRegionSelect={setSelectedRegion}
               staffData={staffData.filter(item => item.date === '2024-01')}
               deploymentData={deploymentData}
+              currentAllocation={currentAllocation}
             />
           </div>
           <button className="refresh-btn" onClick={handleRefresh} disabled={loading}>
@@ -627,6 +641,7 @@ const Menu2F = () => {
               refreshKey={refreshKey}
               currentDate={currentDate}
               deploymentData={deploymentData}
+              currentAllocation={currentAllocation}
             />
           )}
         </div>
@@ -784,7 +799,8 @@ const DataDisplayComponent = ({
   error,
   refreshKey,
   currentDate,
-  deploymentData
+  deploymentData,
+  currentAllocation
 }) => {
   const [selectedYear, setSelectedYear] = useState(currentDate.year);
 
@@ -842,23 +858,40 @@ const DataDisplayComponent = ({
         }
       ];
 
-      // deploymentData 객체를 순회하면서 지역별 상태 분류
+      // deploymentData와 currentAllocation을 함께 사용하여 지역별 상태 분류
       Object.entries(deploymentData).forEach(([regionName, data]) => {
         const shortRegionName = getShortRegionName(regionName);
         let statusText;
         
-        if (data.status === 0) {
+        // 현재 조정된 배치 데이터가 있으면 사용, 없으면 기본 배치 데이터 사용
+        const currentStaffCount = currentAllocation && currentAllocation[regionName] !== undefined 
+          ? currentAllocation[regionName] 
+          : data.current;
+        
+        const recommendedStaffCount = data.recommended;
+        
+        // 상태 계산
+        let status;
+        if (currentStaffCount === recommendedStaffCount) {
+          status = 0; // 적정
+        } else if (currentStaffCount < recommendedStaffCount) {
+          status = 1; // 부족
+        } else {
+          status = 2; // 과잉
+        }
+        
+        if (status === 0) {
           // 적정 배치
-          statusText = `${shortRegionName} (0)`;
+          statusText = shortRegionName;
           regionStatus[0].regions.push(statusText);
-        } else if (data.status === 1) {
+        } else if (status === 1) {
           // 인력 부족: AI 추천보다 적음을 음수로 표시
-          const shortage = data.recommended - data.current;
+          const shortage = recommendedStaffCount - currentStaffCount;
           statusText = `${shortRegionName} (-${shortage})`;
           regionStatus[1].regions.push(statusText);
-        } else if (data.status === 2) {
+        } else if (status === 2) {
           // 인력 과잉: AI 추천보다 많음을 양수로 표시
-          const surplus = data.current - data.recommended;
+          const surplus = currentStaffCount - recommendedStaffCount;
           statusText = `${shortRegionName} (+${surplus})`;
           regionStatus[2].regions.push(statusText);
         }
@@ -971,11 +1004,27 @@ const DataDisplayComponent = ({
       nextMonthChangePercent = currentMonthData.deaths ? ((nextMonthChange / currentMonthData.deaths) * 100) : 0;
     }
 
-    // 배치 데이터 처리
+    // 배치 데이터 처리 - 현재 조정된 배치 데이터 우선 사용
     let currentStaff = 0;
     let recommendedStaff = 0;
     
-    if (deploymentData && Object.keys(deploymentData).length > 0) {
+    if (currentAllocation && Object.keys(currentAllocation).length > 0) {
+      // Menu2N에서 전달받은 현재 조정된 배치 데이터 사용
+      if (region === '전체') {
+        currentStaff = Object.values(currentAllocation).reduce((sum, val) => sum + val, 0);
+        // 추천 인력은 deploymentData에서 가져오기
+        if (deploymentData) {
+          recommendedStaff = Object.values(deploymentData).reduce((sum, data) => sum + data.recommended, 0);
+        }
+      } else if (currentAllocation[region] !== undefined) {
+        currentStaff = currentAllocation[region];
+        // 추천 인력은 deploymentData에서 가져오기
+        if (deploymentData && deploymentData[region]) {
+          recommendedStaff = deploymentData[region].recommended;
+        }
+      }
+    } else if (deploymentData && Object.keys(deploymentData).length > 0) {
+      // 조정된 배치 데이터가 없으면 기본 배치 데이터 사용
       if (region === '전체') {
         currentStaff = Object.values(deploymentData).reduce((sum, data) => sum + data.current, 0);
         recommendedStaff = Object.values(deploymentData).reduce((sum, data) => sum + data.recommended, 0);
@@ -1566,7 +1615,7 @@ const DataDisplayComponent = ({
 };
 
 // 인력배치 지도 컴포넌트
-const StaffMap = ({ selectedRegion, onRegionSelect, staffData, deploymentData }) => {
+const StaffMap = ({ selectedRegion, onRegionSelect, staffData, deploymentData, currentAllocation }) => {
   const [hoveredRegion, setHoveredRegion] = useState(null);
   
   const themeColors = {
@@ -1606,20 +1655,27 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData, deploymentData })
     return staffData.find(item => item.regionName === regionName);
   };
 
-  // 지역 배경색 결정 (인력 배치 현황 기준)
+  // 지역 배경색 결정 (현재 조정된 배치 현황 기준)
   const getRegionBackground = (regionName, isActive, isHovered) => {
     if (isActive) return themeColors.activeBackground;
     
-    // 2N에서 전달받은 배치 데이터가 있으면 우선 사용
+    // 2N에서 전달받은 배치 데이터가 있으면 사용
     if (deploymentData && deploymentData[regionName]) {
       const data = deploymentData[regionName];
       
-      // status: 0=적정, 1=부족, 2=과잉
-      if (data.status === 0) {
+      // 현재 조정된 배치 데이터가 있으면 사용, 없으면 기본 배치 데이터 사용
+      const currentStaffCount = currentAllocation && currentAllocation[regionName] !== undefined 
+        ? currentAllocation[regionName] 
+        : data.current;
+      
+      const recommendedStaffCount = data.recommended;
+      
+      // 상태 계산
+      if (currentStaffCount === recommendedStaffCount) {
         return 'rgba(40, 167, 69, 0.7)'; // 초록색 - 적정
-      } else if (data.status === 1) {
+      } else if (currentStaffCount < recommendedStaffCount) {
         return 'rgba(220, 53, 69, 0.7)'; // 빨간색 - 부족
-      } else if (data.status === 2) {
+      } else {
         return 'rgba(255, 193, 7, 0.7)'; // 노란색 - 과잉
       }
     }
@@ -1677,7 +1733,7 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData, deploymentData })
         backdropFilter: 'blur(10px)'
       }}>
         <h6 style={{ fontSize: '12px', fontWeight: '700', color: '#2C1F14', marginBottom: '10px', textAlign: 'center' }}>
-          {deploymentData ? '지역 배치 상태' : '범례'}
+          {deploymentData ? '지역 배치 상태' : ''}
         </h6>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1742,7 +1798,28 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData, deploymentData })
               onClick={() => onRegionSelect(region)}
               onMouseEnter={() => setHoveredRegion(region)}
               onMouseLeave={() => setHoveredRegion(null)}
-              title={region}
+              title={(() => {
+                // 현재 조정된 배치 데이터가 있으면 표시
+                if (deploymentData && deploymentData[region]) {
+                  const data = deploymentData[region];
+                  const currentStaffCount = currentAllocation && currentAllocation[region] !== undefined 
+                    ? currentAllocation[region] 
+                    : data.current;
+                  const recommendedStaffCount = data.recommended;
+                  
+                  let status = '';
+                  if (currentStaffCount === recommendedStaffCount) {
+                    status = '적정 배치';
+                  } else if (currentStaffCount < recommendedStaffCount) {
+                    status = `부족 배치 (-${recommendedStaffCount - currentStaffCount}명)`;
+                  } else {
+                    status = `과잉 배치 (+${currentStaffCount - recommendedStaffCount}명)`;
+                  }
+                  
+                  return `${region}: 현재 배치 ${currentStaffCount}명 / AI 추천 ${recommendedStaffCount}명 (${status})`;
+                }
+                return region;
+              })()}
               style={{
                 position: 'absolute',
                 top: pos.top,
@@ -1757,14 +1834,25 @@ const StaffMap = ({ selectedRegion, onRegionSelect, staffData, deploymentData })
                 borderRadius: '12px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                fontSize: '14px',
+                fontSize: '13px',
                 transition: 'all 0.2s ease',
                 background: getRegionBackground(region, isActive, isHovered),
                 color: isActive ? themeColors.activeColor : '#2C1F14',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '2px'
               }}
             >
-              {pos.shortName}
+              <div style={{ fontSize: '13px', fontWeight: '600' }}>{pos.shortName}</div>
+              {deploymentData && deploymentData[region] && (
+                <div style={{ fontSize: '11px', fontWeight: '700' }}>
+                  {currentAllocation && currentAllocation[region] !== undefined 
+                    ? currentAllocation[region] 
+                    : deploymentData[region].current}명
+                </div>
+              )}
             </button>
           </div>
         );
