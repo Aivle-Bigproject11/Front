@@ -38,7 +38,7 @@ const FindPassword = () => {
         if (userType === 'employee') {
             setTitle('직원 비밀번호 변경');
         } else {
-            setTitle('사용자 비밀번호 변경');
+            setTitle('유가족 비밀번호 변경');
         }
         setAnimateCard(true);
     }, [location.state]);

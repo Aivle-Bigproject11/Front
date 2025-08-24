@@ -3,7 +3,7 @@ import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
-import icon from '../assets/logo/icon05_1.png';
+import icon from '../assets/logo/lumora bgx.png';
 
 const CustomPopup = ({ message, onConfirm }) => (
     <div className="popup-overlay">
@@ -203,7 +203,7 @@ const Login = () => {
             display: 'flex',
             minHeight: '600px'
           }}>
-            {/* 왼쪽 빈 공간 - Golden Gate 소개 및 기능 안내 */}
+            {/* 왼쪽 빈 공간 - Lumora 소개 및 기능 안내 */}
             {activeTab === 'employee' && (
               <div className="login-card-left" style={{
                 flex: '1',
@@ -235,7 +235,7 @@ const Login = () => {
                   marginBottom: '30px',
                   maxWidth: '400px'
                 }}>
-                  Lumora는 소중한 분들을 위한<br/> 
+                  Lumora는 소중한 이들을 위한 새로운 미래,<br/> 
                   프리미엄 상조 서비스입니다.<br/>
                   <br/><span style={{ fontSize: '15px'}}>직원 관리 시스템을 통해 효율적인 업무 처리를 지원합니다.</span>
                 </p>
@@ -316,7 +316,7 @@ const Login = () => {
                   marginBottom: '30px',
                   maxWidth: '400px'
                 }}>
-                  Lumora는 소중한 분들을 위한<br/>
+                  Lumora는 소중한 이들을 위한 새로운 미래,<br/>
                   프리미엄 상조 서비스입니다.<br/>
                   <br/><span style={{ fontSize: '15px'}}>이 서비스를 통해 추모관을 편리하게 이용하실 수 있습니다.</span>
                 </p>
@@ -519,8 +519,8 @@ const Login = () => {
                   margin: 0,
                   fontWeight: '500'
                 }}>
-                  소중한 분들을 위한<br/>
-                  전통과 품격을 갖춘<br/>
+                  삶의 마지막 순간까지, <br/>
+                  미래를 밝혀주는<br/>
                   프리미엄 상조 서비스
                 </p>
               </div>
