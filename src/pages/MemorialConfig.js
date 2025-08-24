@@ -76,17 +76,39 @@ const MemorialConfig = () => {
                         const response = await apiService.getMemorial(id);
                         const memorialData = response;
                         
-                        // 현재 로그인한 유저의 customerId와 추모관의 customerId 비교
-                        // 또는 familyList에 포함되어 있는지 확인
                         console.log('🔍 권한 확인 - 로그인 유저:', user);
                         console.log('🔍 권한 확인 - 추모관 데이터:', memorialData);
-                        console.log('🔍 권한 확인 - 유저 ID:', user.id, '추모관 고객 ID:', memorialData.customerId);
+                        console.log('🔍 권한 확인 - 유저 ID:', user.id, '추모관 familyList:', memorialData.familyList);
                         
-                        const hasAccess = memorialData.customerId === user.id || 
-                                        (memorialData.familyList && 
-                                         memorialData.familyList.some(family => family.userId === user.id));
+                        let hasAccess = false;
                         
-                        console.log('🔍 권한 확인 결과:', hasAccess);
+                        // 유가족 권한 확인: familyList에 포함되어 있고 memorialId가 일치하는지 확인
+                        if (memorialData.familyList && Array.isArray(memorialData.familyList)) {
+                            // familyList에 현재 유저 ID가 포함되어 있는지 확인
+                            if (memorialData.familyList.includes(user.id)) {
+                                // 추가 검증: 해당 유가족의 memorialId가 현재 추모관과 일치하는지 확인
+                                try {
+                                    const familyData = await apiService.getFamilyById(user.id);
+                                    if (familyData.memorialId === id) {
+                                        hasAccess = true;
+                                        console.log('✅ 권한 확인: 등록된 유가족이며 memorialId 일치');
+                                    } else {
+                                        console.log('❌ 권한 확인: 유가족이지만 memorialId 불일치', {
+                                            familyMemorialId: familyData.memorialId,
+                                            currentMemorialId: id
+                                        });
+                                    }
+                                } catch (familyError) {
+                                    console.error('❌ 유가족 정보 조회 실패:', familyError);
+                                }
+                            } else {
+                                console.log('❌ 권한 확인: familyList에 포함되지 않음');
+                            }
+                        } else {
+                            console.log('❌ 권한 확인: 추모관에 familyList가 없음');
+                        }
+                        
+                        console.log('🔍 최종 권한 확인 결과:', hasAccess);
                         
                         // 개발 환경에서는 권한 검사를 우회 (임시)
                         const isDevelopment = process.env.NODE_ENV === 'development';
