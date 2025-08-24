@@ -2,7 +2,7 @@ import React from 'react';
 import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; 
-import icon from '../../assets/logo/icon01.png';
+import icon from '../../assets/logo/lumora bgx.png';
 import { User, LogOut } from 'lucide-react';
 
 const Navbar = () => {
@@ -68,20 +68,21 @@ const Navbar = () => {
         <BootstrapNavbar.Brand as={Link} to="/" style={{...linkStyle, fontWeight: 'bold'}} className="d-flex align-items-center">
            <img
             src={icon}
-            width="30"
-            height="30"
+            width="50"
+            height="50"
             className="d-inline-block align-top me-2" // 이미지와 텍스트 사이에 여백
-            alt="Golden Gate logo"
+            alt="Lumora logo"
+            style={{ marginTop: '-10px', marginBottom: '-10px' }} 
           />
-          Golden Gate
+          Lumora - AI 플랫폼
         </BootstrapNavbar.Brand>
         <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
         <BootstrapNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             {/* 각 메뉴 링크에 현재 경로와 비교하여 활성 스타일을 동적으로 적용합니다. */}
-            <Nav.Link as={Link} to="/menu1-1" style={location.pathname.startsWith("/menu1") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>장례서류작성</Nav.Link>
-            <Nav.Link as={Link} to="/menu2N" style={location.pathname === "/menu2N" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>AI 인력배치</Nav.Link>
-            <Nav.Link as={Link} to="/menu3" style={location.pathname === "/menu3" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>전환서비스추천</Nav.Link>
+            <Nav.Link as={Link} to="/menu1-1" style={location.pathname.startsWith("/menu1") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>장례서류 자동화</Nav.Link>
+            <Nav.Link as={Link} to="/menu2N" style={location.pathname === "/menu2N" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>인력운영 어드바이저</Nav.Link>
+            <Nav.Link as={Link} to="/menu3" style={location.pathname === "/menu3" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>고객 맞춤형 Upselling</Nav.Link>
             <Nav.Link as={Link} to="/menu4" style={location.pathname === "/menu4" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>디지털 추모관</Nav.Link>
             <Nav.Link as={Link} to="/menu5" style={location.pathname.startsWith("/menu5") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>고객 관리</Nav.Link>
           </Nav>

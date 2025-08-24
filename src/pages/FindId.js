@@ -148,7 +148,7 @@ const FindId = () => {
                         }}>
                             {/* 제목 */}
                             <div style={{ marginBottom: '30px' }}>
-                                <h2 style={{ color: '#2C1F14', fontWeight: '700', fontSize: '28px', marginBottom: '8px' }}>{isEmployee ? '직원 아이디 찾기' : '사용자 아이디 찾기'}</h2>
+                                <h2 style={{ color: '#2C1F14', fontWeight: '700', fontSize: '28px', marginBottom: '8px' }}>{isEmployee ? '직원 아이디 찾기' : '유가족 아이디 찾기'}</h2>
                                 <p style={{ color: '#4A3728', fontSize: '14px', margin: 0 }}>이름과 이메일을 입력해주세요.</p>
                             </div>
 

@@ -3,7 +3,7 @@ import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
-import icon from '../assets/logo/icon01.png';
+import icon from '../assets/logo/lumora bgx.png';
 
 
 const PasswordCheck = () => {
@@ -127,8 +127,8 @@ const PasswordCheck = () => {
                     src={icon}
                     alt="Golden Gate Logo"
                     style={{
-                      width: '70px',
-                      height: '70px',
+                      width: '90px',
+                      height: '90px',
                       objectFit: 'contain',
                       filter: 'brightness(1.2) contrast(1.1)'
                     }}

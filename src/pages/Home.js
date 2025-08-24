@@ -6,7 +6,7 @@ import menu02 from '../assets/images/menu02.png';
 import menu03 from '../assets/images/menu03.png';
 import menu04 from '../assets/images/menu04.png';
 import menu05 from '../assets/images/menu05.png';
-import logoIcon from '../assets/logo/icon01.png';
+import logoIcon from '../assets/logo/lumora bgx.png';
 
 const Home = () => {
   const [animateCard, setAnimateCard] = useState(false);
@@ -94,7 +94,7 @@ const Home = () => {
         }}>
           <h1 className="display-5" style={{ fontWeight: '600' }}>환영합니다!</h1>
           <p className="lead" style={{ fontWeight: '400' }}>
-            Golden Gate 상조회사 서비스 플랫폼입니다. 아래 메뉴를 통해 다양한 기능을 이용하실 수 있습니다.
+            Lumora 상조회사 서비스 플랫폼입니다. 아래 메뉴를 통해 다양한 기능을 이용하실 수 있습니다.
           </p>
         </div>
 
@@ -110,9 +110,11 @@ const Home = () => {
             <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
               <img src={menu01} alt="장례 서류 작성" style={{ width: '90px', height: '90px' }} />
               <div>
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>장례 서류 작성</Card.Title>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI 장례서류 자동 작성</Card.Title>
                 <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
-                  - 장례 관련 서류 자동 작성
+                  - 장례 관련 서류 자동화<br />
+                  - 입력 데이터 오탈자 검증<br />
+                  - 맞춤형 템플릿 생성
                 </Card.Text>
               </div>
               <Button as={Link} to="/menu1" style={redButtonStyle} className="w-75 service-button">
@@ -125,7 +127,7 @@ const Home = () => {
             <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
               <img src={menu02} alt="AI 인력배치" style={{ width: '90px', height: '90px' }} />
               <div>
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI 인력배치</Card.Title>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI 인력운영 어드바이저</Card.Title>
                 <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
                   - 실시간 통계 및 분석<br />
                   - 사망자 현황 및 예측 대시보드
@@ -141,7 +143,7 @@ const Home = () => {
             <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
               <img src={menu03} alt="전환 서비스 추천" style={{ width: '90px', height: '90px' }} />
               <div>
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>전환 서비스 추천</Card.Title>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI기반 고객 맞춤형 Upselling</Card.Title>
                 <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
                   - 맞춤 전환 서비스 메시지 생성<br />
                   - 고객 메시지 발송 기록 조회
@@ -157,7 +159,7 @@ const Home = () => {
             <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
               <img src={menu04} alt="디지털 추모관" style={{ width: '90px', height: '90px' }} />
               <div>
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>디지털 추모관</Card.Title>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI기반 디지털 추모관</Card.Title>
                 <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
                   - 추모관 관리<br />
                   - AI 추모영상/추모사 생성
@@ -176,7 +178,7 @@ const Home = () => {
                 <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>고객 관리</Card.Title>
                 <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
                   - 고객 정보 조회<br />
-                  - 고객 문의 관리
+                  - 고객 정보 추가 / 삭제
                 </Card.Text>
               </div>
               <Button as={Link} to="/menu5" style={purpleButtonStyle} className="w-75 service-button">
@@ -187,18 +189,29 @@ const Home = () => {
         </div>
 
         <div style={{ flexShrink: 0, marginTop: 'auto', paddingTop: '20px' }}>
-          <hr style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)' }} />
-          <div className="text-center py-3 d-flex align-items-center justify-content-center" style={{ gap: '15px' }}>
-            <img src={logoIcon} alt="Golden Gate Logo" style={{ height: '24px' }} />
-            <p style={{ color: '#4A3728', margin: 0, fontWeight: '500', fontSize: '1rem' }}>
-              <strong>Golden Gate</strong>, 전통과 품격으로 마지막 순간까지 함께합니다
-            </p>
-          </div>
-          <hr style={{ borderTop: '1px solid rgba(184, 134, 11, 0.2)' }} />
-          <div className="text-center py-2">
-            <a href="/privacyPolicy" style={{ color: '#6B4423', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>개인정보처리방침</a>
-            <span style={{ margin: '0 10px', color: '#6B4423', fontSize: '12px' }}>|</span>
-            <a href="/termsOfService" style={{ color: '#6B4423', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>이용약관</a>
+          <div 
+            className="text-center p-3 rounded" 
+            style={{
+            //   background: 'linear-gradient(135deg, #222, #000)',
+            //   color: '#FFFBEB',
+            //   textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'
+
+              background: 'linear-gradient(135deg, #3c2d20, #7a4e24)',
+              color: '#FFFBEB',
+              textShadow: '1px 1px 2px rgba(44, 31, 20, 0.5)'
+            }}
+          >
+            <div className="d-flex align-items-center justify-content-center" style={{ gap: '-10px' }}>
+              <img src={logoIcon} alt="Lumora Logo" style={{ height: '40px' }} />
+              <p style={{ margin: 0, fontWeight: '500', fontSize: '1rem' }}>
+                상조의 미래를 밝히는 새로운 빛, <strong>Lumora</strong>
+              </p>
+            </div>
+            <div style={{ marginTop: '0.5rem' }}>
+              <a href="/privacyPolicy" style={{ color: 'inherit', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>개인정보처리방침</a>
+              <span style={{ margin: '0 10px', fontSize: '12px' }}>|</span>
+              <a href="/termsOfService" style={{ color: 'inherit', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>이용약관</a>
+            </div>
           </div>
         </div>
       </div>
