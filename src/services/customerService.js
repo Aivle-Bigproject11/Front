@@ -78,7 +78,7 @@ export const mockCustomers = [
 // API 호출 함수들
 export const customerService = {
   // 1. 모든 고객 조회 
-  getAllCustomers: () => api.get('/customerProfiles'),
+  getAllCustomers: () => api.get('/customerProfiles?page=0&size=1000'),
 
   // 2. 특정 고객 조회 
   getCustomerById: (id) => api.get(`/customerProfiles/${id}`),
