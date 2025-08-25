@@ -1243,7 +1243,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
       {/* 상세 예측 데이터 및 시계열 데이터 조회 카드 */}
       <div className="prediction-data-card" style={{
         position: 'absolute',
-        bottom: '30px',
+        bottom: '120px',
         right: '20px',
         zIndex: 10,
         width: '50%',
