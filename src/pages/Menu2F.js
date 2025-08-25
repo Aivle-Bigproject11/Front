@@ -99,24 +99,43 @@ const Menu2F = () => {
       }
       
       try {
-        // 1. 2025-01, 2026-01 데이터 병렬 생성 요청
-        console.log('📅 2024-01, 2025-01, 2026-01 예측 데이터 동시 요청 중...');
-        const predictionRequests = [
-          apiService.requestPrediction({ date: "2024-01" }),
-          apiService.requestPrediction({ date: "2025-01" }),
-          apiService.requestPrediction({ date: "2026-01" })
-        ];
+        // 1. 먼저 2024-01 데이터가 존재하는지 확인
+        console.log('📅 기존 2024-01 데이터 존재 여부 확인 중...');
+        let shouldGenerateData = false;
         
-        await Promise.all(predictionRequests);
-        console.log('✅ 초기 예측 데이터 생성 성공');
+        try {
+          const existingData = await apiService.getDashboardByDate('2024-01');
+          if (!existingData || existingData.length === 0) {
+            shouldGenerateData = true;
+            console.log('📋 기존 데이터가 없어 새로 생성이 필요합니다.');
+          } else {
+            console.log('✅ 기존 2024-01 데이터가 존재합니다. 생성 요청을 생략합니다.');
+          }
+        } catch (error) {
+          shouldGenerateData = true;
+          console.log('📋 데이터 확인 실패, 새로 생성을 시도합니다.');
+        }
         
-        // 데이터 처리 시간 대기
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // 2. 데이터가 없는 경우에만 예측 데이터 생성 요청
+        if (shouldGenerateData) {
+          console.log('📅 2024-01, 2025-01, 2026-01 예측 데이터 동시 요청 중...');
+          const predictionRequests = [
+            apiService.requestPrediction({ date: "2024-01" }),
+            apiService.requestPrediction({ date: "2025-01" }),
+            apiService.requestPrediction({ date: "2026-01" })
+          ];
+          
+          await Promise.all(predictionRequests);
+          console.log('✅ 초기 예측 데이터 생성 성공');
+          
+          // 데이터 처리 시간 대기
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
         
-        // 2. 전국 데이터 조회 (2024-01, 2025-01, 2026-01)
+        // 3. 전국 데이터 조회 (2024-01, 2025-01, 2026-01)
         await loadNationalData();
         
-        // 3. 초기 지역 데이터 로딩
+        // 4. 초기 지역 데이터 로딩
         await loadRegionData('전체');
         
         console.log('✅ Menu2F 초기 데이터 로딩 완료');
