@@ -591,13 +591,16 @@ const Menu2F = () => {
       }}>
         {/* 왼쪽 영역 (지도와 버튼) */}
         <div style={{ flex: '0 0 600px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ paddingBottom: '10px' }}>
+          <div style={{ paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button
               onClick={() => navigate(-1)}
               className="back-btn"
             >
               <ArrowLeft size={16} style={{ marginRight: '6px' }} />
               뒤로가기
+            </button>
+            <button className="refresh-btn" onClick={handleRefresh} disabled={loading}>
+              {loading ? '🔄 처리 중...' : <>🚀 데이터 새로고침</>}
             </button>
           </div>
           <div className="dashboard-left" style={{
@@ -617,9 +620,6 @@ const Menu2F = () => {
               currentAllocation={currentAllocation}
             />
           </div>
-          <button className="refresh-btn" onClick={handleRefresh} disabled={loading}>
-            {loading ? '🔄 처리 중...' : '🚀 데이터 새로고침'}
-          </button>
         </div>
 
         {/* 오른쪽 영역 (데이터) */}
@@ -705,25 +705,26 @@ const Menu2F = () => {
         }
 
         .refresh-btn {
-          width: 100%;
-          margin-top: 20px; /* 지도 컴포넌트와의 간격 */
+          display: flex;
+          align-items: center;
+          gap: 8px;
           padding: 12px 20px;
-          font-size: 16px;
-          font-weight: 600;
+          font-size: 14px;
+          font-weight: 700;
           color: #fff;
           background: linear-gradient(135deg, #b8860b, #965a25);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 12px;
           cursor: pointer;
-          box-shadow: 0 4px 15px rgba(44, 31, 20, 0.2);
+          box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
           transition: all 0.3s ease;
           text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
         .refresh-btn:hover {
           background: linear-gradient(135deg, #c9971c, #a86b36);
-          box-shadow: 0 6px 20px rgba(44, 31, 20, 0.3);
           transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
         }
         
         .refresh-btn:active {
