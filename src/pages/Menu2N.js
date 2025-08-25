@@ -834,52 +834,6 @@ const Menu2N = () => {
             />
             
           </div>
-          
-          {/* 상세 예측 데이터 및 시계열 데이터 조회 카드 */}
-          <div style={{
-            marginTop: '20px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            border: '1px solid rgba(184, 134, 11, 0.3)',
-            borderRadius: '12px',
-            padding: '15px',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <div className="text-center">
-              <h6 className="mb-3" style={{ fontWeight: '700', color: '#369CE3' }}>
-                📊사망자 상세 예측 데이터 & 시계열 분석
-              </h6>
-              <Button 
-                variant="primary" 
-                size="sm"
-                style={{
-                  padding: '8px 20px',
-                  fontSize: '17px',
-                  fontWeight: '600',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #369CE3, #4BC0C0)',
-                  border: 'none',
-                  boxShadow: '0 4px 15px rgba(54, 162, 235, 0.3)'
-                }}
-                onClick={() => {
-                  // Menu2F로 이동하면서 선택된 지역 정보, 배치 상태 정보, 현재 조정된 배치 데이터 전달
-                  const deploymentData = calculateRegionDeploymentStatus();
-                  const currentAllocation = { ...currentStaffAllocation };
-                  
-                  const dataToSend = {
-                    deploymentData: deploymentData,
-                    currentAllocation: currentAllocation,
-                    totalStaff: Object.values(currentAllocation).reduce((sum, val) => sum + val, 0)
-                  };
-                  
-                  const encodedData = encodeURIComponent(JSON.stringify(dataToSend));
-                  window.location.href = `/menu2f?region=${encodeURIComponent(selectedRegion)}&menuData=${encodedData}`;
-                }}
-              >
-                🔍 데이터 조회하기
-              </Button>
-            </div>
-          </div>
         </div>
 
         {/* 오른쪽 영역 (데이터 분석) */}
@@ -981,6 +935,15 @@ const Menu2N = () => {
           .dashboard-right {
             height: auto;
             max-height: none;
+          }
+          .prediction-data-card {
+            bottom: 10px !important;
+            right: 10px !important;
+            width: auto !important;
+            padding: 8px !important;
+          }
+          .prediction-data-title {
+            display: none !important;
           }
         }
       `}</style>
@@ -1276,6 +1239,57 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
           transfer={transfer}
         />
       ))}
+
+      {/* 상세 예측 데이터 및 시계열 데이터 조회 카드 */}
+      <div className="prediction-data-card" style={{
+        position: 'absolute',
+        bottom: '30px',
+        right: '20px',
+        zIndex: 10,
+        width: '50%',
+        background: 'rgba(255, 255, 255, 0.95)',
+        border: '1px solid rgba(184, 134, 11, 0.3)',
+        borderRadius: '12px',
+        padding: '15px',
+        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <div className="text-center">
+          <div style={{ fontSize: '28px', marginBottom: '10px' }}></div>
+          <h6 className="prediction-data-title mb-2" style={{ fontWeight: '700', color: '#369CE3' }}>
+            📊사망자 상세 예측 데이터 & 시계열 분석
+          </h6>
+          <Button 
+            variant="primary" 
+            size="sm"
+            style={{
+              padding: '8px 20px',
+              fontSize: '17px',
+              fontWeight: '600',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #369CE3, #4BC0C0)',
+              border: 'none',
+              boxShadow: '0 4px 15px rgba(54, 162, 235, 0.3)'
+            }}
+            onClick={() => {
+              // Menu2F로 이동하면서 선택된 지역 정보, 배치 상태 정보, 현재 조정된 배치 데이터 전달
+              const deploymentData = calculateRegionDeploymentStatus();
+              const currentAllocation = { ...currentStaffAllocation };
+              
+              const dataToSend = {
+                deploymentData: deploymentData,
+                currentAllocation: currentAllocation,
+                totalStaff: Object.values(currentAllocation).reduce((sum, val) => sum + val, 0)
+              };
+              
+              const encodedData = encodeURIComponent(JSON.stringify(dataToSend));
+              window.location.href = `/menu2f?region=${encodeURIComponent(selectedRegion)}&menuData=${encodedData}`;
+            }}
+          >
+            🔍 데이터 조회하기
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
