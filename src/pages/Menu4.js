@@ -689,10 +689,10 @@ const Menu4 = () => {
                               <Dropdown.Item onClick={(e) => { e.stopPropagation(); openFamilyModal(memorial); }}>
                                 <i className="fas fa-users me-2"></i> 유가족 관리
                               </Dropdown.Item>
-                              <Dropdown.Divider />
-                              <Dropdown.Item onClick={(e) => { e.stopPropagation(); deleteMemorial(memorial.id); }} className="text-danger">
+                              {/* <Dropdown.Divider /> */}
+                              {/* <Dropdown.Item onClick={(e) => { e.stopPropagation(); deleteMemorial(memorial.id); }} className="text-danger">
                                 <i className="fas fa-trash me-2"></i> 삭제
-                              </Dropdown.Item>
+                              </Dropdown.Item> */}
                             </Dropdown.Menu>
                           </Dropdown>
                         </div>
