@@ -88,26 +88,37 @@ const Menu3 = () => {
         setError(null);
         setFilteredCustomers([]);
         try {
-            let response;
-            const apiParams = {
-                ageGroup: filters.age || undefined,
+            let customers = [];
+            const otherFilters = {
                 disease: filters.disease.length > 0 ? filters.disease[0] : undefined,
                 isMarried: filters.isMarried.length > 0 ? (filters.isMarried[0] === '기혼') : undefined,
                 hasChildren: filters.hasChildren.length > 0 ? (filters.hasChildren[0] === '유') : undefined,
             };
-            Object.keys(apiParams).forEach(key => apiParams[key] === undefined && delete apiParams[key]);
-            
-            const hasApiFilters = Object.keys(apiParams).length > 0;
+            Object.keys(otherFilters).forEach(key => otherFilters[key] === undefined && delete otherFilters[key]);
 
-            if (!hasApiFilters && !filters.id && !filters.name && filters.gender.length === 0) {
-                // 모든 필터가 비어있으면 전체 조회
-                response = await recommendationService.getAllCustomers();
+            if (filters.age === '60대 이상') {
+                const ageGroups = ['60대', '70대', '80대', '90대']; // 60대부터 90대까지 요청
+                const promises = ageGroups.map(ageGroup => 
+                    recommendationService.getFilteredCustomers({ ...otherFilters, ageGroup })
+                );
+                const responses = await Promise.all(promises);
+                customers = responses.flatMap(response => response.data);
             } else {
-                // 상세 필터가 하나라도 있으면 필터 조회 API 호출
-                response = await recommendationService.getFilteredCustomers(apiParams);
-            }
+                const apiParams = {
+                    ...otherFilters,
+                    ageGroup: filters.age || undefined,
+                };
+                Object.keys(apiParams).forEach(key => apiParams[key] === undefined && delete apiParams[key]);
 
-            let customers = response.data;
+                const hasApiFilters = Object.keys(apiParams).length > 0;
+                let response;
+                if (!hasApiFilters && !filters.id && !filters.name && filters.gender.length === 0) {
+                    response = await recommendationService.getAllCustomers();
+                } else {
+                    response = await recommendationService.getFilteredCustomers(apiParams);
+                }
+                customers = response.data;
+            }
             
             // 프론트엔드에서 id, name, gender 필터링 적용
             if (filters.id) {
@@ -123,7 +134,10 @@ const Menu3 = () => {
                 });
             }
 
-            setFilteredCustomers(customers);
+            // 중복 제거 (여러 연령대 조회 시 발생 가능)
+            const uniqueCustomers = customers.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+            setFilteredCustomers(uniqueCustomers);
+
         } catch (err) {
             setError("데이터 조회에 실패했습니다. 잠시 후 다시 시도해주세요.");
             console.error(err);
