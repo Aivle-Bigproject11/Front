@@ -593,8 +593,8 @@ const Menu4 = () => {
                       className="memorial-header"
                       style={{
                         height: '180px',
-                        background: memorial.imageUrl 
-                          ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url(${memorial.imageUrl})`
+                        background: memorial.profileImageUrl 
+                          ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url(${memorial.profileImageUrl})`
                           : 'linear-gradient(135deg, #b8860b, #965a25)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
@@ -607,7 +607,7 @@ const Menu4 = () => {
                         borderRadius: '16px 16px 0 0'
                       }}
                     >
-                      {!memorial.imageUrl && (
+                      {!memorial.profileImageUrl && (
                         <i className="fas fa-user-circle fa-4x mb-2" style={{ opacity: 0.8 }}></i>
                       )}
                       <h4 className="mb-0" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>
