@@ -197,7 +197,7 @@ const realApiService = {
   checkExistingFuneralInfo: (customerId) => api.get(`/funeralInfos/search/findFirstByCustomerIdOrderByFuneralInfoIdDesc?customerId=${customerId}`),
 
   // 고객 관련 API
-  getCustomers: () => api.get('/customerProfiles'),
+  getCustomers: () => api.get('/customerProfiles?page=0&size=1000'),
 
   // 장례 정보 생성
   createFuneralInfo: (data) => api.post('/funeralInfos', data),
