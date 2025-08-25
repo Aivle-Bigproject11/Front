@@ -139,7 +139,7 @@ const PasswordCheck = () => {
                   fontWeight: '700',
                   marginBottom: '10px',
                   fontSize: '1.6rem'
-                }}>Golden Gate</h3>
+                }}>Lumora</h3>
                 <p className="logo-subtitle" style={{
                   color: '#4A3728',
                   fontSize: '15px',

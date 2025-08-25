@@ -326,7 +326,7 @@ const UserConfig = () => {
                   fontWeight: '700',
                   marginBottom: '10px', // 마진 조정
                   fontSize: '1.6rem' // 폰트 사이즈 조정
-                }}>Golden Gate</h3>
+                }}>Lumora</h3>
                 <p className="logo-subtitle" style={{
                   color: '#4A3728',
                   fontSize: '15px', // 폰트 사이즈 조정
