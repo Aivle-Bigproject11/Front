@@ -803,7 +803,7 @@ const Menu2N = () => {
         overflow: 'hidden'
       }}>
         {/* 왼쪽 영역 (지도) */}
-        <div style={{ flex: '0 0 50%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '0 0 600px', display: 'flex', flexDirection: 'column' }}>
           <h4 className="mb-3" style={{ 
             fontSize: '32px', 
             fontWeight: '700', 
@@ -819,9 +819,8 @@ const Menu2N = () => {
             padding: '20px',
             boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
             border: '1px solid rgba(184, 134, 11, 0.2)',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column'
+            position: 'sticky',
+            top: '0'
           }}>
             <OptimizedStaffMap
               selectedRegion={selectedRegion}
@@ -834,6 +833,52 @@ const Menu2N = () => {
               currentStaffAllocation={currentStaffAllocation}
             />
             
+          </div>
+          
+          {/* 상세 예측 데이터 및 시계열 데이터 조회 카드 */}
+          <div style={{
+            marginTop: '20px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid rgba(184, 134, 11, 0.3)',
+            borderRadius: '12px',
+            padding: '15px',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div className="text-center">
+              <h6 className="mb-3" style={{ fontWeight: '700', color: '#369CE3' }}>
+                📊사망자 상세 예측 데이터 & 시계열 분석
+              </h6>
+              <Button 
+                variant="primary" 
+                size="sm"
+                style={{
+                  padding: '8px 20px',
+                  fontSize: '17px',
+                  fontWeight: '600',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #369CE3, #4BC0C0)',
+                  border: 'none',
+                  boxShadow: '0 4px 15px rgba(54, 162, 235, 0.3)'
+                }}
+                onClick={() => {
+                  // Menu2F로 이동하면서 선택된 지역 정보, 배치 상태 정보, 현재 조정된 배치 데이터 전달
+                  const deploymentData = calculateRegionDeploymentStatus();
+                  const currentAllocation = { ...currentStaffAllocation };
+                  
+                  const dataToSend = {
+                    deploymentData: deploymentData,
+                    currentAllocation: currentAllocation,
+                    totalStaff: Object.values(currentAllocation).reduce((sum, val) => sum + val, 0)
+                  };
+                  
+                  const encodedData = encodeURIComponent(JSON.stringify(dataToSend));
+                  window.location.href = `/menu2f?region=${encodeURIComponent(selectedRegion)}&menuData=${encodedData}`;
+                }}
+              >
+                🔍 데이터 조회하기
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -917,10 +962,26 @@ const Menu2N = () => {
         }
 
         @media (max-width: 1200px) {
-          .page-wrapper { height: auto; min-height: calc(100vh - var(--navbar-height)); }
-          .dashboard-container { flex-direction: column; height: auto; }
-          .dashboard-left { position: static !important; width: 100%; flex: 0 0 auto; }
-          .dashboard-right { height: auto; max-height: none; }
+          .page-wrapper {
+            height: auto !important;
+            min-height: calc(100vh - var(--navbar-height));
+            align-items: flex-start !important;
+          }
+          .dashboard-container {
+            flex-direction: column;
+            height: auto !important;
+            overflow: visible;
+          }
+          .dashboard-left {
+            position: static !important;
+            width: 100%;
+            flex: 1 1 auto;
+            margin-bottom: 20px;
+          }
+          .dashboard-right {
+            height: auto;
+            max-height: none;
+          }
         }
       `}</style>
     </div>
@@ -1215,57 +1276,6 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
           transfer={transfer}
         />
       ))}
-
-      {/* 상세 예측 데이터 및 시계열 데이터 조회 카드 */}
-      <div style={{
-        position: 'absolute',
-        bottom: '30px',
-        right: '20px',
-        zIndex: 10,
-        width: '50%',
-        background: 'rgba(255, 255, 255, 0.95)',
-        border: '1px solid rgba(184, 134, 11, 0.3)',
-        borderRadius: '12px',
-        padding: '15px',
-        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
-        backdropFilter: 'blur(10px)'
-      }}>
-        <div className="text-center">
-          <div style={{ fontSize: '28px', marginBottom: '10px' }}></div>
-          <h6 className="mb-2" style={{ fontWeight: '700', color: '#369CE3' }}>
-            📊사망자 상세 예측 데이터 & 시계열 분석
-          </h6>
-          <Button 
-            variant="primary" 
-            size="sm"
-            style={{
-              padding: '8px 20px',
-              fontSize: '17px',
-              fontWeight: '600',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #369CE3, #4BC0C0)',
-              border: 'none',
-              boxShadow: '0 4px 15px rgba(54, 162, 235, 0.3)'
-            }}
-            onClick={() => {
-              // Menu2F로 이동하면서 선택된 지역 정보, 배치 상태 정보, 현재 조정된 배치 데이터 전달
-              const deploymentData = calculateRegionDeploymentStatus();
-              const currentAllocation = { ...currentStaffAllocation };
-              
-              const dataToSend = {
-                deploymentData: deploymentData,
-                currentAllocation: currentAllocation,
-                totalStaff: Object.values(currentAllocation).reduce((sum, val) => sum + val, 0)
-              };
-              
-              const encodedData = encodeURIComponent(JSON.stringify(dataToSend));
-              window.location.href = `/menu2f?region=${encodeURIComponent(selectedRegion)}&menuData=${encodedData}`;
-            }}
-          >
-            🔍 데이터 조회하기
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };
