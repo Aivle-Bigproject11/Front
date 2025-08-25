@@ -590,7 +590,7 @@ const Menu2F = () => {
         overflow: 'hidden'
       }}>
         {/* 왼쪽 영역 (지도와 버튼) */}
-        <div style={{ flex: '0 0 500px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '0 0 450px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button
               onClick={() => navigate(-1)}
@@ -609,8 +609,9 @@ const Menu2F = () => {
             padding: '20px',
             boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
             border: '1px solid rgba(184, 134, 11, 0.2)',
-            position: 'sticky',
-            top: '0'
+            flex: 1,
+            overflowY: 'auto',
+            minHeight: 0
           }}>
             <StaffMap
               selectedRegion={selectedRegion}
@@ -738,13 +739,16 @@ const Menu2F = () => {
           transform: none !important;
         }
 
+        .dashboard-left::-webkit-scrollbar,
         .dashboard-right::-webkit-scrollbar {
           width: 6px;
         }
+        .dashboard-left::-webkit-scrollbar-track,
         .dashboard-right::-webkit-scrollbar-track {
           background: rgba(0,0,0,0.05);
           border-radius: 10px;
         }
+        .dashboard-left::-webkit-scrollbar-thumb,
         .dashboard-right::-webkit-scrollbar-thumb {
           background-color: rgba(184, 134, 11, 0.5);
           border-radius: 10px;

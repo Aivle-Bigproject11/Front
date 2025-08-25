@@ -803,9 +803,9 @@ const Menu2N = () => {
         overflow: 'hidden'
       }}>
         {/* 왼쪽 영역 (지도) */}
-        <div style={{ flex: '0 0 500px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '0 0 450px', display: 'flex', flexDirection: 'column' }}>
           <h4 className="mb-3" style={{ 
-            fontSize: '32px', 
+            fontSize: '28px', 
             fontWeight: '700', 
             color: '#2C1F14',
             paddingLeft: '10px',
@@ -819,8 +819,9 @@ const Menu2N = () => {
             padding: '20px',
             boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
             border: '1px solid rgba(184, 134, 11, 0.2)',
-            position: 'sticky',
-            top: '0'
+            flex: 1,
+            overflowY: 'auto',
+            minHeight: 0
           }}>
             <OptimizedStaffMap
               selectedRegion={selectedRegion}
@@ -905,11 +906,14 @@ const Menu2N = () => {
         .dashboard-container { opacity: 0; }
         .animate-in { animation: fadeIn 0.6s ease-out forwards; }
 
+        .dashboard-left::-webkit-scrollbar,
         .dashboard-right::-webkit-scrollbar { width: 6px; }
+        .dashboard-left::-webkit-scrollbar-track,
         .dashboard-right::-webkit-scrollbar-track {
           background: rgba(0,0,0,0.05);
           border-radius: 10px;
         }
+        .dashboard-left::-webkit-scrollbar-thumb,
         .dashboard-right::-webkit-scrollbar-thumb {
           background-color: rgba(184, 134, 11, 0.5);
           border-radius: 10px;
@@ -1256,7 +1260,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
       }}>
         <div className="text-center">
           <div style={{ fontSize: '28px', marginBottom: '10px' }}></div>
-          <h6 className="prediction-data-title mb-2" style={{ fontWeight: '700', color: '#369CE3' }}>
+          <h6 className="prediction-data-title mb-2" style={{ fontWeight: '700', color: '#369CE3', fontSize: '14px' }}>
             📊사망자 상세 예측 데이터 & 시계열 분석
           </h6>
           <Button 
@@ -1264,7 +1268,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
             size="sm"
             style={{
               padding: '8px 20px',
-              fontSize: '17px',
+              fontSize: '15px',
               fontWeight: '600',
               borderRadius: '8px',
               background: 'linear-gradient(135deg, #369CE3, #4BC0C0)',
