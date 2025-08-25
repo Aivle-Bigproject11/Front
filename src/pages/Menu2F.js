@@ -590,7 +590,7 @@ const Menu2F = () => {
         overflow: 'hidden'
       }}>
         {/* 왼쪽 영역 (지도와 버튼) */}
-        <div style={{ flex: '0 0 600px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '0 0 500px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button
               onClick={() => navigate(-1)}

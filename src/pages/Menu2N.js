@@ -803,7 +803,7 @@ const Menu2N = () => {
         overflow: 'hidden'
       }}>
         {/* 왼쪽 영역 (지도) */}
-        <div style={{ flex: '0 0 600px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '0 0 500px', display: 'flex', flexDirection: 'column' }}>
           <h4 className="mb-3" style={{ 
             fontSize: '32px', 
             fontWeight: '700', 
@@ -1243,7 +1243,7 @@ const OptimizedStaffMap = ({ selectedRegion, onRegionSelect, staffData, transfer
       {/* 상세 예측 데이터 및 시계열 데이터 조회 카드 */}
       <div className="prediction-data-card" style={{
         position: 'absolute',
-        bottom: '120px',
+        bottom: '0px',
         right: '20px',
         zIndex: 10,
         width: '50%',
