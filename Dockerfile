@@ -1,5 +1,5 @@
 # ========================================
-# STAGE 1: Build aivlebigproject/Frontend
+# aivlebigproject/Front/Dockerfile
 # 역할: 리액트 코드를 빌드하여 정적 파일(HTML, CSS, JS)로 변환
 # ========================================
 
@@ -37,6 +37,9 @@ FROM nginx:alpine
 
 # 2. 1단계(builder)의 빌드 결과물(/app/build)을 Nginx 서버의 기본 웹 폴더로 복사합니다.
 COPY --from=builder /app/build /usr/share/nginx/html
+
+# 👇 [추가] 우리가 만든 Nginx 설정 파일을 서버의 설정 폴더에 복사합니다.
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # 3. 80 포트를 외부에 공개합니다.
 EXPOSE 80
