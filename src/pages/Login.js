@@ -218,9 +218,7 @@ const Login = () => {
                 boxShadow: 'inset -5px 0 15px rgba(0,0,0,0.05)',
                 position: 'relative',
                 overflow: 'hidden'
-              }}>
-
-
+              }}>                
                 <h3 style={{
                   color: '#2C1F14',
                   fontWeight: '700',
@@ -281,6 +279,103 @@ const Login = () => {
                       <strong>고객 관리:</strong> 고객을 조회 및 관리합니다.
                     </li>
                   </ul>
+                </div>
+
+                <div className="unique-number-section" style={{ 
+                  padding: '15px', 
+                  background: 'rgba(184, 134, 11, 0.12)', 
+                  borderRadius: '12px', 
+                  border: '2px solid #c09f4dff',
+                  marginTop: '20px',
+                  width: '100%', 
+                  maxWidth: '420px',
+                  }}>
+                  <h6 style={{ 
+                      color: '#2C1F14', 
+                      marginBottom: '5px', 
+                      fontSize: '14px', 
+                      fontWeight: '700',
+                      }}>
+                    <i className="fas fa-yin-yang me-2" style={{ color: '#B8860B' }}></i>
+                    고유번호로 추모관 입장
+                  </h6>
+                  <div style={{ 
+                      display: 'flex', 
+                      gap: '10px' 
+                      }}>
+                    <input 
+                    type="text" 
+                    placeholder="추모관 고유번호 (예: 1c1425e1-8f64-43ea-9798-f747e1a97c0e)" 
+                    value={joinCode} 
+                    onChange={(e) => setJoinCode(e.target.value)} 
+                    onKeyPress={(e) => { 
+                      if (e.key === 'Enter') { 
+                          handleJoinByCode(); 
+                          } 
+                          }} 
+                          style={{ 
+                              flex: 1, 
+                              padding: '10px 15px', 
+                              border: '2px solid rgba(184, 134, 11, 0.35)', 
+                              borderRadius: '8px', 
+                              fontSize: '14px', 
+                              outline: 'none', 
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)' 
+                              }} 
+                              onFocus={(e) => { 
+                                  e.target.style.borderColor = '#B8860B'; 
+                                  e.target.style.boxShadow = '0 0 0 2px rgba(184, 134, 11, 0.2)'; 
+                                  }} 
+                                  onBlur={(e) => { 
+                                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)'; 
+                                      e.target.style.boxShadow = 'none'; 
+                                      }} 
+                                      disabled={joinLoading} 
+                                      />
+                    <button 
+                    onClick={handleJoinByCode} 
+                    disabled={joinLoading} 
+                    style={{ 
+                      padding: '10px 20px', 
+                      background: joinLoading 
+                      ? '#6c757d' 
+                      : 'linear-gradient(135deg, #4A3728, #8B5A2B)', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      fontSize: '14px', 
+                      fontWeight: '700', 
+                      cursor: joinLoading ? 'not-allowed' : 'pointer', 
+                      minWidth: '80px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center' 
+                      }}>
+                      {joinLoading ? ( 
+                          <div style={{ 
+                              width: '16px', 
+                              height: '16px', 
+                              border: '2px solid transparent', 
+                              borderTop: '2px solid white', 
+                              borderRadius: '50%', 
+                              animation: 'spin 1s linear infinite' 
+                              }}></div> 
+                              ) : ( 
+                                  '입장' 
+                                  )}
+                    </button>
+                  </div>
+                  {joinCode && (
+                    <div style={{ 
+                      marginTop: '10px', 
+                      fontSize: '12px', 
+                      color: '#6B4423', 
+                      fontWeight: '500' 
+                      }}>
+                      <i className="fas fa-info-circle me-1" style={{ color: '#B8860B' }}></i>
+                      입력된 고유번호: {joinCode}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -347,7 +442,7 @@ const Login = () => {
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-door-open me-2" style={{ color: '#B8860B' }}></i>
-                      <strong>추모관 입장:</strong> 고유번호로 추모관에 입장합니다.
+                      <strong>추모관 입장:</strong> 고유번호, 또는 QR코드로 추모관에 입장합니다.
                     </li>
                     <li style={{ marginBottom: '10px', color: '#4A3728', fontSize: '15px' }}>
                       <i className="fas fa-pen-alt me-2" style={{ color: '#B8860B' }}></i>
@@ -362,6 +457,102 @@ const Login = () => {
                       <strong>장례 서류 조회:</strong> 장례 관련 서류를 조회합니다.
                     </li>
                   </ul>
+                </div>
+                <div className="unique-number-section" style={{ 
+                  padding: '15px', 
+                  background: 'rgba(184, 134, 11, 0.12)', 
+                  borderRadius: '12px', 
+                  border: '2px solid #c09f4dff',
+                  marginTop: '20px',
+                  width: '100%', 
+                  maxWidth: '420px',
+                  }}>
+                  <h6 style={{ 
+                      color: '#2C1F14', 
+                      marginBottom: '5px', 
+                      fontSize: '14px', 
+                      fontWeight: '700',
+                      }}>
+                    <i className="fas fa-yin-yang me-2" style={{ color: '#B8860B' }}></i>
+                    고유번호로 추모관 입장
+                  </h6>
+                  <div style={{ 
+                      display: 'flex', 
+                      gap: '10px' 
+                      }}>
+                    <input 
+                    type="text" 
+                    placeholder="추모관 고유번호 (예: 1c1425e1-8f64-43ea-9798-f747e1a97c0e)" 
+                    value={joinCode} 
+                    onChange={(e) => setJoinCode(e.target.value)} 
+                    onKeyPress={(e) => { 
+                      if (e.key === 'Enter') { 
+                          handleJoinByCode(); 
+                          } 
+                          }} 
+                          style={{ 
+                              flex: 1, 
+                              padding: '10px 15px', 
+                              border: '2px solid rgba(184, 134, 11, 0.35)', 
+                              borderRadius: '8px', 
+                              fontSize: '14px', 
+                              outline: 'none', 
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)' 
+                              }} 
+                              onFocus={(e) => { 
+                                  e.target.style.borderColor = '#B8860B'; 
+                                  e.target.style.boxShadow = '0 0 0 2px rgba(184, 134, 11, 0.2)'; 
+                                  }} 
+                                  onBlur={(e) => { 
+                                      e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)'; 
+                                      e.target.style.boxShadow = 'none'; 
+                                      }} 
+                                      disabled={joinLoading} 
+                                      />
+                    <button 
+                    onClick={handleJoinByCode} 
+                    disabled={joinLoading} 
+                    style={{ 
+                      padding: '10px 20px', 
+                      background: joinLoading 
+                      ? '#6c757d' 
+                      : 'linear-gradient(135deg, #4A3728, #8B5A2B)', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      fontSize: '14px', 
+                      fontWeight: '700', 
+                      cursor: joinLoading ? 'not-allowed' : 'pointer', 
+                      minWidth: '80px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center' 
+                      }}>
+                      {joinLoading ? ( 
+                          <div style={{ 
+                              width: '16px', 
+                              height: '16px', 
+                              border: '2px solid transparent', 
+                              borderTop: '2px solid white', 
+                              borderRadius: '50%', 
+                              animation: 'spin 1s linear infinite' 
+                              }}></div> 
+                              ) : ( 
+                                  '입장' 
+                                  )}
+                    </button>
+                  </div>
+                  {joinCode && (
+                    <div style={{ 
+                      marginTop: '10px', 
+                      fontSize: '12px', 
+                      color: '#6B4423', 
+                      fontWeight: '500' 
+                      }}>
+                      <i className="fas fa-info-circle me-1" style={{ color: '#B8860B' }}></i>
+                      입력된 고유번호: {joinCode}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -807,103 +998,6 @@ const Login = () => {
             )}
                 </button>
               </form>
-
-              {/* 고유번호 입장 */}
-              <div className="unique-number-section" style={{ 
-                padding: '15px', 
-                background: 'rgba(184, 134, 11, 0.12)', 
-                borderRadius: '12px', 
-                border: '1px solid rgba(184, 134, 11, 0.25)',
-                visibility: activeTab === 'employee' ? 'hidden' : 'visible' 
-                }}>
-                <h6 style={{ 
-                    color: '#2C1F14', 
-                    marginBottom: '5px', 
-                    fontSize: '14px', 
-                    fontWeight: '700' 
-                    }}>
-                  <i className="fas fa-yin-yang me-2" style={{ color: '#B8860B' }}></i>
-                  고유번호로 추모관 입장
-                </h6>
-                <div style={{ 
-                    display: 'flex', 
-                    gap: '10px' 
-                    }}>
-                  <input 
-                  type="text" 
-                  placeholder="추모관 고유번호 (예: 1c1425e1-8f64-43ea-9798-f747e1a97c0e)" 
-                  value={joinCode} 
-                  onChange={(e) => setJoinCode(e.target.value)} 
-                  onKeyPress={(e) => { 
-                    if (e.key === 'Enter') { 
-                        handleJoinByCode(); 
-                        } 
-                        }} 
-                        style={{ 
-                            flex: 1, 
-                            padding: '10px 15px', 
-                            border: '2px solid rgba(184, 134, 11, 0.35)', 
-                            borderRadius: '8px', 
-                            fontSize: '14px', 
-                            outline: 'none', 
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)' 
-                            }} 
-                            onFocus={(e) => { 
-                                e.target.style.borderColor = '#B8860B'; 
-                                e.target.style.boxShadow = '0 0 0 2px rgba(184, 134, 11, 0.2)'; 
-                                }} 
-                                onBlur={(e) => { 
-                                    e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)'; 
-                                    e.target.style.boxShadow = 'none'; 
-                                    }} 
-                                    disabled={joinLoading} 
-                                    />
-                  <button 
-                  onClick={handleJoinByCode} 
-                  disabled={joinLoading} 
-                  style={{ 
-                    padding: '10px 20px', 
-                    background: joinLoading 
-                    ? '#6c757d' 
-                    : 'linear-gradient(135deg, #4A3728, #8B5A2B)', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '8px', 
-                    fontSize: '14px', 
-                    fontWeight: '700', 
-                    cursor: joinLoading ? 'not-allowed' : 'pointer', 
-                    minWidth: '80px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center' 
-                    }}
-                    >
-                    {joinLoading ? ( 
-                        <div style={{ 
-                            width: '16px', 
-                            height: '16px', 
-                            border: '2px solid transparent', 
-                            borderTop: '2px solid white', 
-                            borderRadius: '50%', 
-                            animation: 'spin 1s linear infinite' 
-                            }}></div> 
-                            ) : ( 
-                                '입장' 
-                                )}
-                  </button>
-                </div>
-                {joinCode && (
-                  <div style={{ 
-                    marginTop: '10px', 
-                    fontSize: '12px', 
-                    color: '#6B4423', 
-                    fontWeight: '500' 
-                    }}>
-                    <i className="fas fa-info-circle me-1" style={{ color: '#B8860B' }}></i>
-                    입력된 고유번호: {joinCode}
-                  </div>
-                )}
-              </div>
 
               {/* 회원가입 링크 */}
               <div className="login-links" style={{ 
