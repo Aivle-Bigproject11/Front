@@ -18,6 +18,7 @@ const Lobby = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewContent, setPreviewContent] = useState({ title: '', content: '' });
   const [currentQRCodeUrl, setCurrentQRCodeUrl] = useState(null); // QR코드 다운로드를 위한 상태
+  const [currentMemorialName, setCurrentMemorialName] = useState(''); // QR코드 다운로드를 위한 상태
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -62,7 +63,7 @@ const Lobby = () => {
             id: memorialId,
             name: `故 ${memorialData.name || '고인'} 추모관`, // API 응답에 맞게 필드명 수정
             description: detailData.tribute || '',
-            period: `${memorialData.birthDate || '미상'} ~ ${memorialData.deceasedDate || '미상'}`,
+            period: `${memorialData.birthDate || '미상'} ~ ${memorialData.deceasedDate || '미상'}`, 
             joinCode: memorialId, // 추모관 고유번호는 memorialId를 사용
             customerId: memorialData.customerId,
             // Menu4.js와 동일한 상태 로직 적용
@@ -246,9 +247,10 @@ const Lobby = () => {
       
       // QR코드 URL을 저장하여 모달에서 다운로드할 수 있도록 함
       setCurrentQRCodeUrl(qrCodeDataUrl);
+      setCurrentMemorialName(memorial.name);
       
       setPreviewContent({
-        title: `${memorial.deceasedName}님 추모관 QR코드`,
+        title: `${memorial.name} QR코드`,
         content: `
           <div style="text-align: center;">
             <img src="${qrCodeDataUrl}" alt="QR Code" style="max-width: 100%; height: auto; margin-bottom: 15px;" />
@@ -276,7 +278,7 @@ const Lobby = () => {
       const guestUrl = QRService.generateMemorialGuestUrl(memorial.id);
       
       setPreviewContent({
-        title: `${memorial.deceasedName}님 추모관 QR코드`,
+        title: `${memorial.name} QR코드`,
         content: `
           <div style="text-align: center;">
             <img src="${qrCodeDataUrl}" alt="QR Code" style="max-width: 100%; height: auto; margin-bottom: 15px;" />
@@ -299,10 +301,7 @@ const Lobby = () => {
   // 모달에서 QR코드 다운로드하는 함수
   const handleDownloadQRFromModal = () => {
     if (currentQRCodeUrl) {
-      // previewContent.title에서 이름 추출
-      const titleMatch = previewContent.title.match(/(.+)님 추모관 QR코드/);
-      const memorialName = titleMatch ? titleMatch[1] : '';
-      const sanitizedName = memorialName.replace(/[^a-zA-Z0-9가-힣]/g, '_');
+      const sanitizedName = currentMemorialName.replace(/[^a-zA-Z0-9가-힣]/g, '_');
       const filename = `추모관_QR_${sanitizedName || 'memorial'}.png`;
       
       QRService.downloadQRCode(currentQRCodeUrl, filename);
@@ -616,7 +615,8 @@ const Lobby = () => {
                       </div>}
                     </Card.Footer>
                   </Card>
-                )})}
+                )
+              })}
             </div>
           )}
         </div>
@@ -745,13 +745,30 @@ const Lobby = () => {
         </Modal.Body>
         <Modal.Footer>
           {currentQRCodeUrl && (
-            <Button variant="primary" onClick={handleDownloadQRFromModal}>
+            <Button 
+              onClick={handleDownloadQRFromModal}
+              style={{
+                background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
+                border: 'none',
+                boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(184, 134, 11, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 15px rgba(184, 134, 11, 0.3)';
+              }}
+            >
               다운로드
             </Button>
           )}
           <Button variant="secondary" onClick={() => {
             setShowPreviewModal(false);
             setCurrentQRCodeUrl(null); // 모달 닫을 때 QR코드 URL 초기화
+            setCurrentMemorialName('');
           }}>
             닫기
           </Button>
