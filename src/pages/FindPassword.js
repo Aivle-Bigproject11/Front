@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const FindPassword = () => {
@@ -13,13 +12,60 @@ const FindPassword = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [animateCard, setAnimateCard] = useState(false);
+    const [title, setTitle] = useState('비밀번호 변경');
 
-    const { changePassword } = useAuth();
+    // 실시간 유효성 검사를 위한 상태
+    const [passwordError, setPasswordError] = useState('');
+    const [confirmPasswordError, setConfirmPasswordError] = useState('');
+
+    const { changePasswordByType } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // 비밀번호 유효성 검사 함수 (SignUp.js에서 가져옴)
+    const validatePassword = (pw) => {
+        const hasLetters = /[a-zA-Z]/.test(pw);
+        const hasNumbers = /\d/.test(pw);
+        const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(pw);
+        const types = [hasLetters, hasNumbers, hasSymbols].filter(Boolean).length;
+        if (types >= 3 && pw.length >= 8) return true;
+        if (types >= 2 && pw.length >= 10) return true;
+        return false;
+    };
 
     useEffect(() => {
+        const userType = location.state?.userType;
+        if (userType === 'employee') {
+            setTitle('직원 비밀번호 변경');
+        } else {
+            setTitle('유가족 비밀번호 변경');
+        }
         setAnimateCard(true);
-    }, []);
+    }, [location.state]);
+
+    // 비밀번호 필드 변경 시 실시간 유효성 검사
+    useEffect(() => {
+        if (formData.newPassword) {
+            const isValid = validatePassword(formData.newPassword);
+            if (!isValid) {
+                setPasswordError('영문, 숫자, 특수문자 중 2종류 조합 시 10자리, 3종류 조합 시 8자리 이상으로 구성해주세요.');
+            } else {
+                setPasswordError('');
+            }
+        } else {
+            setPasswordError('');
+        }
+
+        if (formData.confirmPassword) {
+            if (formData.newPassword !== formData.confirmPassword) {
+                setConfirmPasswordError('비밀번호가 일치하지 않습니다.');
+            } else {
+                setConfirmPasswordError('');
+            }
+        } else {
+            setConfirmPasswordError('');
+        }
+    }, [formData.newPassword, formData.confirmPassword]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,25 +73,23 @@ const FindPassword = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setSuccessMessage('');
-        setLoading(true);
+        setError(''); // 이전의 제출 에러는 초기화
 
-        const { loginId, newPassword, confirmPassword } = formData;
-
-        // 유효성 검사
-        if (!loginId || !newPassword || !confirmPassword) {
+        // 제출 시 최종 유효성 검사
+        if (passwordError || confirmPasswordError) {
+            setError('입력 값을 확인해주세요.');
+            return;
+        }
+        if (!formData.loginId || !formData.newPassword || !formData.confirmPassword) {
             setError('모든 필드를 입력해주세요.');
-            setLoading(false);
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            setError('새 비밀번호가 일치하지 않습니다.');
-            setLoading(false);
             return;
         }
 
-        const result = await changePassword(loginId, newPassword);
+        setLoading(true);
+        const { loginId, newPassword } = formData;
+        const userType = location.state?.userType || 'user';
+
+        const result = await changePasswordByType(loginId, newPassword, userType);
 
         setLoading(false);
 
@@ -111,7 +155,6 @@ const FindPassword = () => {
                             position: 'relative',
                             overflow: 'hidden'
                         }}>
-                            {/* 장식 요소들 */}
                             <div style={{ position: 'absolute', top: '10%', left: '10%', width: '80px', height: '80px', background: 'linear-gradient(135deg, #D4AF37, #B8860B)', borderRadius: '50%', opacity: 0.1 }}></div>
                             <div style={{ position: 'absolute', bottom: '20%', right: '15%', width: '120px', height: '120px', background: 'linear-gradient(135deg, #B8860B, #D4AF37)', borderRadius: '20px', opacity: 0.08, transform: 'rotate(45deg)' }}></div>
                             
@@ -136,20 +179,17 @@ const FindPassword = () => {
                             flexDirection: 'column',
                             background: 'transparent'
                         }}>
-                            {/* 제목 */}
-                            <div style={{ marginBottom: '30px' }}>
-                                <h2 style={{ color: '#2C1F14', fontWeight: '700', fontSize: '28px', marginBottom: '8px' }}>비밀번호 변경</h2>
+                            <div style={{ marginBottom: '20px' }}>
+                                <h2 style={{ color: '#2C1F14', fontWeight: '700', fontSize: '28px', marginBottom: '8px' }}>{title}</h2>
                                 <p style={{ color: '#4A3728', fontSize: '14px', margin: 0 }}>아이디와 새 비밀번호를 입력해주세요.</p>
                             </div>
 
-                            {/* 에러 메시지 */}
                             {error && (
-                                <Alert variant="danger" style={{ borderRadius: '10px', border: '1px solid rgba(178, 58, 72, 0.2)', backgroundColor: 'rgba(178, 58, 72, 0.1)', color: '#b23a48', marginBottom: '20px' }}>
+                                <div style={{ padding: '15px', background: 'rgba(178, 58, 72, 0.1)', borderRadius: '12px', border: '1px solid rgba(178, 58, 72, 0.2)', marginBottom: '20px', textAlign: 'center', color: '#b23a48', fontWeight: '500' }}>
                                     {error}
-                                </Alert>
+                                </div>
                             )}
                             
-                            {/* 성공 메시지 */}
                             {successMessage && (
                                 <div style={{ padding: '20px', background: 'rgba(184, 134, 11, 0.1)', borderRadius: '12px', border: '1px solid rgba(184, 134, 11, 0.2)', marginBottom: '20px', textAlign: 'center' }}>
                                     <p style={{ fontSize: '14px', color: '#4A3728', margin: 0, fontWeight: '500' }}>
@@ -159,22 +199,30 @@ const FindPassword = () => {
                                 </div>
                             )}
 
-                            {/* 폼 */}
                             {!successMessage && (
                                 <form onSubmit={handleSubmit}>
-                                    <div className="login-form-group" style={{ marginBottom: '20px' }}>
+                                    <div className="login-form-group" style={{ marginBottom: '15px' }}>
                                         <label style={{ display: 'block', marginBottom: '8px', color: '#2C1F14', fontWeight: '600', fontSize: '14px' }}>아이디</label>
                                         <input type="text" name="loginId" value={formData.loginId} onChange={handleChange} required style={{ width: '100%', padding: '12px 18px', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '12px', fontSize: '16px', transition: 'all 0.3s ease', outline: 'none' }} onFocus={(e) => { e.target.style.borderColor = '#B8860B'; e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)'; }} onBlur={(e) => { e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)'; e.target.style.boxShadow = 'none'; }} />
+                                        <div style={{ height: '20px', marginTop: '5px' }}></div>
                                     </div>
 
-                                    <div className="login-form-group" style={{ marginBottom: '20px' }}>
+                                    <div className="login-form-group" style={{ marginBottom: '15px' }}>
                                         <label style={{ display: 'block', marginBottom: '8px', color: '#2C1F14', fontWeight: '600', fontSize: '14px' }}>새 비밀번호</label>
                                         <input type="password" name="newPassword" value={formData.newPassword} onChange={handleChange} required style={{ width: '100%', padding: '12px 18px', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '12px', fontSize: '16px', transition: 'all 0.3s ease', outline: 'none' }} onFocus={(e) => { e.target.style.borderColor = '#B8860B'; e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)'; }} onBlur={(e) => { e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)'; e.target.style.boxShadow = 'none'; }} />
+                                        <div style={{ height: '20px', marginTop: '5px' }}>
+                                            {passwordError && <p style={{ color: '#dc3545', fontSize: '12px', margin: 0 }}>{passwordError}</p>}
+                                            {!passwordError && formData.newPassword && <p style={{ color: '#28a745', fontSize: '12px', margin: 0 }}>사용 가능한 비밀번호입니다.</p>}
+                                        </div>
                                     </div>
                                     
                                     <div className="login-form-group" style={{ marginBottom: '25px' }}>
                                         <label style={{ display: 'block', marginBottom: '8px', color: '#2C1F14', fontWeight: '600', fontSize: '14px' }}>새 비밀번호 확인</label>
                                         <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required style={{ width: '100%', padding: '12px 18px', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '12px', fontSize: '16px', transition: 'all 0.3s ease', outline: 'none' }} onFocus={(e) => { e.target.style.borderColor = '#B8860B'; e.target.style.boxShadow = '0 0 0 3px rgba(184, 134, 11, 0.2)'; }} onBlur={(e) => { e.target.style.borderColor = 'rgba(184, 134, 11, 0.35)'; e.target.style.boxShadow = 'none'; }} />
+                                        <div style={{ height: '20px', marginTop: '5px' }}>
+                                            {confirmPasswordError && <p style={{ color: '#dc3545', fontSize: '12px', margin: 0 }}>{confirmPasswordError}</p>}
+                                            {!confirmPasswordError && formData.confirmPassword && formData.newPassword && !passwordError && <p style={{ color: '#28a745', fontSize: '12px', margin: 0 }}>비밀번호가 일치합니다.</p>}
+                                        </div>
                                     </div>
                                     
                                     <button type="submit" className="login-btn" disabled={loading} style={{ width: '100%', padding: '15px', background: loading ? '#e9ecef' : 'linear-gradient(135deg, #D4AF37, #F5C23E)', color: '#2C1F14', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.3s ease' }}>

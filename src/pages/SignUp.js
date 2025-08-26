@@ -75,18 +75,34 @@ function SignUp() {
     }
   }, [email]);
 
-  const handleIdCheck = () => {
+  const handleIdCheck = async () => {
     if (!userId) {
       setPopupMessage('아이디를 입력해주세요.');
       setShowPopup(true);
       return;
     }
-    if (userId === 'testuser') {
-      setIsIdAvailable(false);
-      setPopupMessage('이미 사용 중인 아이디입니다.');
+
+    // Reset previous check result
+    setIsIdAvailable(null);
+
+    try {
+      const isTaken = isEmployee 
+        ? await apiService.checkManagerId(userId)
+        : await apiService.checkFamilyId(userId);
+
+      if (isTaken) { // true means taken/unavailable
+        setIsIdAvailable(false);
+        setPopupMessage('이미 사용 중인 아이디입니다.');
+      } else { // false means available
+        setIsIdAvailable(true);
+        setPopupMessage('사용 가능한 아이디입니다.');
+      }
       setShowPopup(true);
-    } else {
-      setIsIdAvailable(true);
+
+    } catch (error) {
+      console.error("ID check failed:", error);
+      setPopupMessage('아이디 확인 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setShowPopup(true);
     }
   };
 
@@ -177,7 +193,7 @@ function SignUp() {
 
       try {
         await apiService.createFamily(familyData);
-        setPopupMessage('사용자 회원가입이 완료되었습니다!');
+        setPopupMessage('유가족 회원가입이 완료되었습니다!');
         setShowPopup(true);
         // navigate('/login'); // Optionally navigate after popup confirmation
       } catch (error) {
@@ -192,7 +208,7 @@ function SignUp() {
 
   const closePopup = () => {
     setShowPopup(false);
-    if (popupMessage === '직원 회원가입이 완료되었습니다!' || popupMessage === '사용자 회원가입이 완료되었습니다!') {
+    if (popupMessage === '직원 회원가입이 완료되었습니다!' || popupMessage === '유가족 회원가입이 완료되었습니다!') {
       navigate('/login');
     }
   };
@@ -229,7 +245,7 @@ function SignUp() {
           <div className="signup-content">
             <div className="header">
               <h1 style={{ color: currentTheme.headerColor }}>
-                {isEmployee ? '직원' : '사용자'} 회원가입
+                {isEmployee ? '직원' : '유가족'} 회원가입
               </h1>
             </div>
 

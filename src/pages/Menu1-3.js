@@ -136,8 +136,94 @@ const Menu1_3 = () => {
         loadPreview(fileUrl);
     };
 
-    const handleGenerateDocument = async (docType) => {
+    const handleGenerateDocument = async (docType, isBulk = false) => {
+        const requiredFields = [
+            'customerId', 'deceasedName', 'deceasedRrn', 'deceasedAge',
+            'deceasedBirthOfDate', 'deceasedGender', 'deceasedDate', 'deceasedAddress',
+            'deceasedRelationToHouseholdHead', 'deathLocation', 'deathLocationType',
+            'reporterName', 'reporterRrn', 'reporterQualification', 'reporterRelationToDeceased',
+            'reporterAddress', 'reporterPhone', 'funeralCompanyName', 'directorName',
+            'directorPhone', 'funeralHomeName', 'funeralHomeAddress', 'funeralDuration',
+            'mortuaryInfo', 'processionDateTime', 'burialSiteInfo', 'chiefMourners',
+            'chiefMournersContact', 'templateKeyword'
+        ];
+
+        const fieldLabels = {
+            customerId: '상조회사 고객 ID',
+            deceasedName: '고인 성명 (한글)',
+            deceasedRrn: '고인 주민등록번호',
+            deceasedAge: '고인 나이',
+            deceasedBirthOfDate: '고인 생일',
+            deceasedGender: '고인 성별',
+            deceasedDate: '고인 돌아가신 날짜',
+            deceasedAddress: '고인 주소',
+            deceasedRelationToHouseholdHead: '고인과 세대주와의 관계',
+            deathLocation: '사망 장소',
+            deathLocationType: '사망 장소 (구분)',
+            reporterName: '신고인 이름',
+            reporterRrn: '신고인 주민등록번호',
+            reporterQualification: '신고인 자격',
+            reporterRelationToDeceased: '신고인과 고인의 관계',
+            reporterAddress: '신고인 주소',
+            reporterPhone: '신고인 전화번호',
+            funeralCompanyName: '이용 상조회사 이름',
+            directorName: '담당 장례지도사 이름',
+            directorPhone: '담당 장례지도사 연락처',
+            funeralHomeName: '장례식장 이름',
+            funeralHomeAddress: '장례식장 주소',
+            funeralDuration: '장례 기간',
+            mortuaryInfo: '빈소 정보',
+            processionDateTime: '발인 일시',
+            burialSiteInfo: '장지 정보',
+            chiefMourners: '상주 목록',
+            chiefMournersContact: '상주 연락처',
+            templateKeyword: '사용자가 선택한 고인의 키워드'
+        };
+
+        const validateRequiredFields = (data) => {
+            if (!data) {
+                return "고인 정보가 없습니다. 목록에서 다시 선택해주세요.";
+            }
+            const missingFields = [];
+            for (const field of requiredFields) {
+                if (data[field] === null || data[field] === undefined || String(data[field]).trim() === '') {
+                    missingFields.push(field);
+                }
+            }
+            
+            if (missingFields.length > 0) {
+                if (isBulk) {
+                    return '필수 입력 항목을 모두 입력해주세요.';
+                }
+                const missingLabels = missingFields.map(field => fieldLabels[field] || field);
+                return (
+                    <>
+                        <span>다음 필수 항목이 비어있습니다:</span>
+                        <br />
+                        {
+                            missingLabels.map((label, index) => (
+                                <React.Fragment key={label}>
+                                    <strong>{label}</strong>
+                                    {index < missingLabels.length - 1 ? ', ' : ''}
+                                </React.Fragment>
+                            ))
+                        }
+                        <br />
+                        <small>'정보 등록' 메뉴에서 정보를 입력해주세요.</small>
+                    </>
+                );
+            }
+            return null; // All fields are valid
+        };
+
         try {
+            const validationError = validateRequiredFields(selectedCustomer);
+            if (validationError) {
+                setErrorMessage(validationError);
+                setGenerating(false); // Stop loading spinner
+                return false; // Indicate failure
+            }
+
             setGenerating(true);
             setSuccessMessage('');
             setErrorMessage('');
@@ -243,7 +329,7 @@ const Menu1_3 = () => {
 
     const handleSingleGenerate = async (docType) => {
         try {
-            await handleGenerateDocument(docType);
+            await handleGenerateDocument(docType, false);
         } finally {
             setGenerating(false);
         }
@@ -263,16 +349,16 @@ const Menu1_3 = () => {
 
             if (bulkAction === 'generateAll') {
                 const results = await Promise.allSettled(['obituary', 'deathCertificate', 'schedule'].map(docType =>
-                    handleGenerateDocument(docType)
+                    handleGenerateDocument(docType, true)
                 ));
 
-                const allSuccessful = results.every(result => result.status === 'fulfilled' && result.value === true); // Check for true return
-                const someFailed = results.some(result => result.status === 'rejected' || result.value === false); // Check for false return or rejection
+                const allSuccessful = results.every(result => result.status === 'fulfilled' && result.value === true);
+                const someFailed = results.some(result => result.status === 'rejected' || result.value === false);
 
                 if (allSuccessful) {
                     setSuccessMessage('모든 서류가 성공적으로 생성되었습니다.');
                 } else if (someFailed) {
-                    setErrorMessage('일부 서류 생성에 실패했습니다.');
+                    // Error message is already set by the first failed handleGenerateDocument call
                 } else {
                     setSuccessMessage('일괄 제작 요청이 처리되었습니다. 각 서류의 상태를 확인해주세요.');
                 }

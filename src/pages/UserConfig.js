@@ -4,7 +4,7 @@ import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
-import icon from '../assets/logo/icon01.png';
+import icon from '../assets/logo/lumora bgx.png';
 
 const UserConfig = () => {
   const [userInfo, setUserInfo] = useState({
@@ -312,10 +312,10 @@ const UserConfig = () => {
                 }}>
                   <img
                     src={icon}
-                    alt="Golden Gate Logo"
+                    alt="Lumora Logo"
                     style={{
-                      width: '70px', // 사이즈 조정
-                      height: '70px', // 사이즈 조정
+                      width: '90px', // 사이즈 조정
+                      height: '90px', // 사이즈 조정
                       objectFit: 'contain',
                       filter: 'brightness(1.2) contrast(1.1)'
                     }}
@@ -326,7 +326,7 @@ const UserConfig = () => {
                   fontWeight: '700',
                   marginBottom: '10px', // 마진 조정
                   fontSize: '1.6rem' // 폰트 사이즈 조정
-                }}>Golden Gate</h3>
+                }}>Lumora</h3>
                 <p className="logo-subtitle" style={{
                   color: '#4A3728',
                   fontSize: '15px', // 폰트 사이즈 조정

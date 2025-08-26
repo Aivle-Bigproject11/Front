@@ -34,7 +34,7 @@ const TermsOfService = () => {
                             <h5 className="mt-4" style={{color: '#B8860B'}}>제 1 장 총 칙</h5>
                             <h6 className="mt-3" style={{color: '#4A3728'}}>제 1 조 (목적)</h6>
                             <p style={{color: '#4A3728'}}>
-                                본 약관은 Golden Gate(이하 "회사")가 제공하는 프리미엄 상조 서비스(이하 "서비스")를 이용함에 있어 회사와 회원의 권리, 의무 및 책임사항, 이용조건 및 절차 등 기본적인 사항을 규정함을 목적으로 합니다.
+                                본 약관은 Lumora(이하 "회사")가 제공하는 프리미엄 상조 서비스(이하 "서비스")를 이용함에 있어 회사와 회원의 권리, 의무 및 책임사항, 이용조건 및 절차 등 기본적인 사항을 규정함을 목적으로 합니다.
                             </p>
 
                             <h6 className="mt-3" style={{color: '#4A3728'}}>제 2 조 (약관의 효력 및 변경)</h6>
@@ -95,7 +95,7 @@ const TermsOfService = () => {
                             </p>
 
                             <p className="mt-5 text-muted" style={{fontSize: '12px'}}>
-                                본 약관은 2025년 8월 7일부터 시행됩니다.
+                                본 약관은 2025년 8월 22일부터 시행됩니다.
                             </p>
                         </Card.Body>
                     </Card>

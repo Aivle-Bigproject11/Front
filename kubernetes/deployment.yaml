@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # [수정] 이름을 모두 frontend로 변경
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          # [수정] ACR에 올린 frontend 이미지 주소로 변경
+          image: "a071098registry.azurecr.io/frontend:v1"
+          ports:
+            # [수정] Nginx 웹서버는 보통 80 포트를 사용
+            - containerPort: 80
+            
+          # [삭제] FE 컨테이너는 DB나 API 키 같은 백엔드 비밀 정보가 필요 없으므로 envFrom 섹션을 삭제합니다.
+          
+          readinessProbe:
+            httpGet:
+              # [수정] Nginx는 actuator가 없으므로, 기본 경로인 '/'로 상태를 확인합니다.
+              path: '/'
+              port: 80
+            # [수정] Nginx는 Spring Boot보다 훨씬 빨리 시작하므로 대기 시간을 줄입니다.
+            initialDelaySeconds: 15
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/'
+              port: 80
+            initialDelaySeconds: 15
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10

@@ -1,17 +1,14 @@
-// src/pages/Lobby.js - 사용자용 로비 페이지
-
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Badge, Spinner, Alert, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Calendar, Users, Search, LogOut, User, ArrowRight, FileText, Check, X, Phone, MapPin, Printer, Eye } from 'lucide-react';
+import { Heart, Calendar, Search, LogOut, User, ArrowRight, Check, X, Printer, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
-import { customerService, customerUtils } from '../services/customerService';
-import { documentService } from '../services/documentService';
+import { customerService } from '../services/customerService';
 
 const Lobby = () => {
   const [memorialHalls, setMemorialHalls] = useState([]);
-  const [customerDocuments, setCustomerDocuments] = useState([]);
+  const [memorialDetails, setMemorialDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [documentsLoading, setDocumentsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,20 +20,85 @@ const Lobby = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadMemorialHalls();
-    loadCustomerDocuments();
+    if (user?.id) {
+      loadMemorialHalls();
+    }
     setTimeout(() => setAnimateCard(true), 100);
   }, [user]);
+
+  useEffect(() => {
+    if (memorialHalls.length > 0) {
+      loadCustomerDocuments(); 
+    } else if (!loading) {
+      setDocumentsLoading(false);
+    }
+  }, [memorialHalls, loading]);
 
   const loadMemorialHalls = async () => {
     try {
       setLoading(true);
       setError('');
-      const userMemorials = await apiService.getUserMemorialHalls(user?.id || user?.loginId);
-      setMemorialHalls(userMemorials);
-      setLoading(false);
+      setMemorialHalls([]); 
+
+      // 1단계: 로그인한 유저(유가족)의 정보를 조회하여 memorialId를 가져오기
+      console.log('로그인한 사용자 ID:', user.id);
+      const familyInfo = await apiService.getFamily(user.id);
+      console.log('유가족 정보:', familyInfo);
+      const memorialId = familyInfo.memorialId; 
+
+      // 2단계: memorialId가 존재할 경우, 해당 ID로 추모관의 상세 정보 조회
+      if (memorialId) {
+        try {
+          const memorialData = await apiService.getMemorial(memorialId);
+          console.log('추모관 정보:', memorialData);
+
+          // 상세 정보 추가 조회(영상, 추모사- 뱃지상태표시 위함)
+          const detailData = await apiService.getMemorialDetails(memorialId);
+
+          // 화면에 표시할 데이터 형태로 가공
+          const formattedMemorial = {
+            id: memorialId,
+            name: `故 ${memorialData.name || '고인'} 추모관`, // API 응답에 맞게 필드명 수정
+            description: detailData.tribute || '',
+            period: `${memorialData.birthDate || '미상'} ~ ${memorialData.deceasedDate || '미상'}`,
+            joinCode: memorialId, // 추모관 고유번호는 memorialId를 사용
+            customerId: memorialData.customerId,
+            // Menu4.js와 동일한 상태 로직 적용
+            hasVideo: detailData.videos && detailData.videos.length > 0,
+            tribute: detailData.tribute || null,
+          };
+
+          setMemorialHalls([formattedMemorial]);
+        } catch (memorialError) {
+          console.error('추모관 상세 정보 조회 실패:', memorialError);
+          setError(`추모관 정보를 불러올 수 없습니다 (ID: ${memorialId}). 관리자에게 문의하세요.`);
+        }
+      } else {
+        console.log('연결된 추모관이 없습니다.');
+        setError('아직 추모관이 생성되지 않았습니다. 관리자에게 추모관 생성을 요청하세요.');
+        setMemorialHalls([]);
+      }
+
     } catch (err) {
-      setError('추모관 목록을 불러오는데 실패했습니다.');
+      console.error('추모관 정보를 불러오는 중 오류 발생:', err);
+      
+      // 상세한 에러 메시지 제공
+      if (err.response) {
+        if (err.response.status === 404) {
+          setError('유가족 정보를 찾을 수 없습니다. 관리자에게 문의하세요.');
+        } else if (err.response.status === 401) {
+          setError('인증이 만료되었습니다. 다시 로그인해주세요.');
+        } else {
+          setError(`서버 오류가 발생했습니다 (${err.response.status}). 잠시 후 다시 시도해주세요.`);
+        }
+      } else if (err.request) {
+        setError('서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.');
+      } else {
+        setError('알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      }
+      
+      setMemorialHalls([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -44,15 +106,43 @@ const Lobby = () => {
   const loadCustomerDocuments = async () => {
     try {
       setDocumentsLoading(true);
-      const allCustomers = await customerService.getAllCustomers();
-      const userMemorials = await apiService.getUserMemorialHalls(user?.id || user?.loginId);
-      const userRelatedCustomers = allCustomers.filter(customer => 
-        userMemorials.some(memorial => memorial.name === customer.name)
-      );
-      setCustomerDocuments(userRelatedCustomers);
-      setDocumentsLoading(false);
-    } catch (err) {
-      console.error('Error loading customer documents:', err);
+      const detailsPromises = memorialHalls.map(async (memorial) => {
+        if (!memorial.customerId) {
+          return [memorial.id, { customer: null, statuses: {} }];
+        }
+
+        let customer = null;
+        try {
+            const response = await customerService.getCustomerById(memorial.customerId);
+            customer = response.data; 
+        } catch (e) {
+            console.error(`Failed to fetch customer ${memorial.customerId}`, e);
+        }
+
+        const statusPromises = [
+          apiService.getObituaryByCustomerId(memorial.customerId),
+          apiService.getScheduleByCustomerId(memorial.customerId),
+          apiService.getDeathReportByCustomerId(memorial.customerId)
+        ];
+        
+        const results = await Promise.allSettled(statusPromises);
+        
+        const statuses = {
+          obituary: results[0].status === 'fulfilled' ? results[0].value?.data : null,
+          schedule: results[1].status === 'fulfilled' ? results[1].value?.data : null,
+          deathCertificate: results[2].status === 'fulfilled' ? results[2].value?.data : null,
+        };
+        
+        return [memorial.id, { customer, statuses }];
+      });
+      
+      const detailsArray = await Promise.all(detailsPromises);
+      setMemorialDetails(Object.fromEntries(detailsArray));
+    } catch (err)
+    {
+      console.error('Error loading customer documents status:', err);
+      setError('서류 상태를 불러오는 중 오류가 발생했습니다.');
+    } finally {
       setDocumentsLoading(false);
     }
   };
@@ -64,53 +154,93 @@ const Lobby = () => {
 
   const handleJoinByCode = async () => {
     if (!joinCode.trim()) {
-      setError('고유 번호를 입력해주세요.');
+      setError('추모관 고유번호를 입력해주세요.');
       return;
     }
     try {
       setError('');
-      const memorial = await apiService.getMemorialByCode(joinCode);
+      console.log('🔍 고유번호로 추모관 검색:', joinCode.trim());
+      
+      // memorialId로 직접 추모관 조회
+      const memorial = await apiService.getMemorialById(joinCode.trim());
       if (memorial) {
-        navigate(`/user-memorial/${memorial.id}`);
+        console.log('✅ 추모관 발견:', memorial);
+        navigate(`/user-memorial/${joinCode.trim()}`);
       } else {
-        setError('유효하지 않은 고유번호입니다.');
+        setError('유효하지 않은 추모관 고유번호입니다.');
       }
     } catch (err) {
-      setError('추모관을 찾는데 실패했습니다.');
+      console.error('❌ 추모관 조회 실패:', err);
+      if (err.response?.status === 404) {
+        setError('존재하지 않는 추모관 고유번호입니다.');
+      } else {
+        setError('추모관을 찾는데 실패했습니다. 네트워크 연결을 확인해주세요.');
+      }
     }
   };
 
-  const handleMemorialClick = (memorial) => {
-    navigate(`/user-memorial/${memorial.id}`);
-  };
-
-  const handlePreview = async (docType, customer) => {
-    if (!customer || !customer.formData) {
-        setPreviewContent({ title: '오류', content: '미리보기를 위한 데이터가 없습니다.' });
-        setShowPreviewModal(true);
-        return;
-    }
+  const handleMemorialClick = async (memorial) => {
     try {
-        const preview = await documentService.previewDocument(docType, customer.formData);
-        setPreviewContent(preview);
-        setShowPreviewModal(true);
-    } catch (error) {
-        setPreviewContent({ title: '미리보기 오류', content: '미리보기를 불러올 수 없습니다.' });
-        setShowPreviewModal(true);
+      setError('');
+      // 상세한 로깅 추가
+      console.log('🔗 추모관 클릭:', memorial);
+      console.log('🔗 추모관 ID:', memorial.id);
+      console.log('🔗 추모관 ID 타입:', typeof memorial.id);
+      console.log('🔗 Navigation 경로:', `/user-memorial/${memorial.id}`);
+      
+      // 이미 memorial 정보가 있으므로 직접 navigate
+      navigate(`/user-memorial/${memorial.id}`);
+      console.log('✅ Navigation 완료');
+    } catch (err) {
+      console.error('❌ Navigation error:', err);
+      setError('추모관 정보를 불러오는 중 오류가 발생했습니다.');
     }
   };
 
-  const handlePrint = () => {
-      window.print();
+  const handlePreview = (docType, documentData) => {
+    const urlKeys = {
+      obituary: 'obituaryFileUrl',
+      schedule: 'scheduleFileUrl', 
+      deathCertificate: 'deathReportFileUrl' 
+    };
+    const documentUrl = documentData ? documentData[urlKeys[docType]] : null;
+
+    if (documentUrl) {
+      const docName = documentsInfo.find(d => d.type === docType)?.name || '문서';
+      setPreviewContent({
+        title: `${docName} 미리보기`,
+        // PDF를 모달 안에 보여주기 위해 iframe을 사용
+        content: `<iframe src="${documentUrl}#toolbar=0" style="width: 100%; height: 65vh; border: none;"></iframe>`
+
+      });
+      setShowPreviewModal(true);
+    } else {
+      alert('미리보기할 서류 파일을 찾을 수 없습니다.');
+      console.error("Document URL not found for:", docType, documentData);
+    }
   };
 
-  const getStatusBadge = (status) => {
-    if (status === 'active') {
-      return <Badge bg="success">진행중</Badge>;
-    } else if (status === 'completed') {
-      return <Badge bg="secondary">완료</Badge>;
+  const handlePrint = (docType, documentData) => {
+    const urlKeys = {
+      obituary: 'obituaryFileUrl',
+      schedule: 'scheduleFileUrl',
+      deathCertificate: 'deathReportFileUrl'
+    };
+    const documentUrl = documentData ? documentData[urlKeys[docType]] : null;
+
+    if (documentUrl) {
+      // 인쇄는 새 탭에서 PDF를 열어 브라우저의 인쇄 사용
+      window.open(documentUrl, '_blank');
+    } else {
+      alert('인쇄할 서류 파일을 찾을 수 없습니다.');
     }
-    return <Badge bg="warning">예정</Badge>;
+  };
+
+  const maskName = (name) => {
+    if (!name || name.length < 2) {
+      return name;
+    }
+    return name.slice(0, -1) + '*';
   };
 
   const documentsInfo = [
@@ -159,7 +289,7 @@ const Lobby = () => {
             alignItems: 'center'
           }}>
             <User size={16} style={{ marginRight: '8px', color: '#B8860B' }} />
-            <span style={{ fontWeight: '600', color: '#333' }}>{user?.name || '사용자'}님</span>
+            <span style={{ fontWeight: '600', color: '#333' }}>{maskName(user?.name) || '사용자'}님</span>
           </div>
           <Button
             variant="outline-secondary"
@@ -233,131 +363,161 @@ const Lobby = () => {
               gap: '20px'
             }}>
               {memorialHalls.map((memorial, index) => {
-                const customer = customerDocuments.find(doc => doc.name === memorial.name);
-                const isAnyDocumentReady = customer && documentsInfo.some(docInfo => customer.documents[docInfo.type]);
+                const details = memorialDetails[memorial.id];
+                const customer = details?.customer;
+                const statuses = details?.statuses;
 
                 return (
-                <Card
-                  key={memorial.id}
-                  style={{
-                    border: 'none',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
-                    opacity: animateCard ? 1 : 0,
-                    transition: `all 0.6s ease-out ${index * 0.1}s`,
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
-                  }}
-                >
-                  <div 
-                    onClick={() => handleMemorialClick(memorial)}
+                  <Card
+                    key={memorial.id}
                     style={{
-                      cursor: 'pointer',
-                      background: memorial.status === 'active' 
-                        ? 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)'
-                        : memorial.status === 'completed'
-                        ? 'linear-gradient(135deg, #6c757d 0%, #495057 100%)'
-                        : 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)',
-                      padding: '20px',
-                      color: 'white'
-                  }}>
-                    <div style={{
+                      border: 'none',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
                       display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: '15px'
-                    }}>
-                      <div>
-                        <h5 style={{ margin: '0 0 5px 0', fontSize: '1.3rem', fontWeight: '700' }}>
-                          {memorial.name}
-                        </h5>
-                        <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>
-                          {memorial.description}
-                        </p>
-                      </div>
-                      {getStatusBadge(memorial.status)}
-                    </div>
-                    
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.15)',
-                      padding: '12px',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
-                          {memorial.period}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Card.Body onClick={() => handleMemorialClick(memorial)} style={{ padding: '20px', cursor: 'pointer' }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <div>
-                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>추모관 고유번호</small>
-                        <div 
-                          className="fw-bold" 
-                          style={{ 
-                            color: '#B8860B', 
-                            fontSize: '1rem', 
-                            letterSpacing: '0.5px' 
-                          }}
-                        >
-                          {memorial.joinCode}
+                      flexDirection: 'column',
+                      transform: animateCard ? 'translateY(0)' : 'translateY(30px)',
+                      opacity: animateCard ? 1 : 0,
+                      transition: `all 0.6s ease-out ${index * 0.1}s`,
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+                    }}
+                  >
+                    <div 
+                      onClick={() => handleMemorialClick(memorial)}
+                      style={{
+                        cursor: 'pointer',
+                        background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                        padding: '20px',
+                        color: 'white'
+                      }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: '15px'
+                      }}>
+                        <div>
+                          <h5 style={{ margin: '0 0 5px 0', fontSize: '1.3rem', fontWeight: '700' }}>
+                            {memorial.name}
+                          </h5>
+                          
+                        </div>
+                        <div>
+                          <Badge bg={memorial.hasVideo ? 'success' : 'danger'} className="px-2 py-1 me-1">
+                            <i className={`fas ${memorial.hasVideo ? 'fa-check' : 'fa-times'} me-1`}></i> AI 영상
+                          </Badge>
+                          <Badge bg={memorial.tribute ? 'success' : 'danger'} className="px-2 py-1">
+                            <i className={`fas ${memorial.tribute ? 'fa-check' : 'fa-times'} me-1`}></i> 추모사
+                          </Badge>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '600', marginRight: '5px' }}>
-                          입장하기
-                        </span>
-                        <ArrowRight size={16} />
+                      
+                      <div style={{
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        padding: '12px',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
+                            {memorial.period}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </Card.Body>
-                  <Card.Footer style={{ background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', padding: '15px 20px' }}>
-                    <div style={{ fontWeight: '600', color: '#555', marginBottom: '12px', fontSize: '0.9rem' }}>서류 작성 상태</div>
-                    {documentsLoading ? <Spinner animation="border" size="sm" /> :
-                    !customer ? <div style={{fontSize: '0.85rem', color: '#888'}}>서류 정보 없음</div> :
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {documentsInfo.map(docInfo => {
-                        const isCompleted = customer.documents[docInfo.type];
-                        return (
-                          <div key={docInfo.type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                              {isCompleted ? <Check size={16} style={{ color: '#28a745', marginRight: '6px' }} /> : <X size={16} style={{ color: '#dc3545', marginRight: '6px' }} />}
-                              <span style={{ fontWeight: 500, color: isCompleted ? '#333' : '#888' }}>{docInfo.name}</span>
-                            </div>
-                            {isCompleted && (
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePreview(docInfo.type, customer); }}>
-                                  <Eye size={12} />
-                                </Button>
-                                <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePrint(); }}>
-                                  <Printer size={12} />
-                                </Button>
-                              </div>
-                            )}
+                    
+                    <Card.Body onClick={() => handleMemorialClick(memorial)} style={{ padding: '20px', cursor: 'pointer', flexGrow: 1 }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <div style={{ flex: 1, marginRight: '10px' }}>
+                          <small className="text-muted" style={{ fontSize: '0.75rem' }}>추모관 고유번호</small>
+                          <div 
+                            className="fw-bold" 
+                            style={{ 
+                              color: '#B8860B', 
+                              fontSize: '0.75rem', 
+                              letterSpacing: '0.3px',
+                              cursor: 'pointer',
+                              wordBreak: 'break-all',
+                              lineHeight: '1.2',
+                              padding: '2px 4px',
+                              borderRadius: '4px',
+                              backgroundColor: 'rgba(184, 134, 11, 0.1)',
+                              border: '1px dashed rgba(184, 134, 11, 0.3)',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(memorial.joinCode);
+                              // 복사 완료 표시
+                              const element = e.target;
+                              const originalText = element.textContent;
+                              element.textContent = '복사완료!';
+                              element.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                              element.style.borderColor = 'rgba(40, 167, 69, 0.3)';
+                              element.style.color = '#28a745';
+                              setTimeout(() => {
+                                element.textContent = originalText;
+                                element.style.backgroundColor = 'rgba(184, 134, 11, 0.1)';
+                                element.style.borderColor = 'rgba(184, 134, 11, 0.3)';
+                                element.style.color = '#B8860B';
+                              }, 1500);
+                            }}
+                            title="클릭하여 복사"
+                          >
+                            {memorial.joinCode}
                           </div>
-                        );
-                      })}
-                    </div>
-                    }
-                  </Card.Footer>
-                </Card>
-              )})}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B', flexShrink: 0 }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '600', marginRight: '5px' }}>
+                            입장하기
+                          </span>
+                          <ArrowRight size={14} />
+                        </div>
+                      </div>
+                    </Card.Body>
+                    <Card.Footer style={{ background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', padding: '15px 20px' }}>
+                      <div style={{ fontWeight: '600', color: '#555', marginBottom: '12px', fontSize: '0.9rem' }}>서류 작성 상태</div>
+                      {documentsLoading ? <Spinner animation="border" size="sm" /> :
+                      !customer ? <div style={{fontSize: '0.85rem', color: '#888'}}>서류 정보 없음</div> :
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {documentsInfo.map(docInfo => {
+                          const documentData = statuses ? statuses[docInfo.type] : null;
+                          const isCompleted = !!documentData;
+                          return (
+                            <div key={docInfo.type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                {isCompleted ? <Check size={16} style={{ color: '#28a745', marginRight: '6px' }} /> : <X size={16} style={{ color: '#dc3545', marginRight: '6px' }} />}
+                                <span style={{ fontWeight: 500, color: isCompleted ? '#333' : '#888' }}>{docInfo.name}</span>
+                              </div>
+                              {isCompleted && (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePreview(docInfo.type, documentData); }}>
+                                    <Eye size={12} />
+                                  </Button>
+                                  <Button variant="outline-secondary" size="sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handlePrint(docInfo.type, documentData); }}>
+                                    <Printer size={12} />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>}
+                    </Card.Footer>
+                  </Card>
+                )})}
             </div>
           )}
         </div>
@@ -405,7 +565,7 @@ const Lobby = () => {
               type="text"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value)}
-              placeholder="예: MEM001"
+              placeholder="예: 1c1425e1-8f64-43ea-9798-f747e1a97c0e"
               style={{
                 width: '100%',
                 padding: '12px 16px',
@@ -467,9 +627,10 @@ const Lobby = () => {
               paddingLeft: '15px',
               margin: 0
             }}>
-              <li>추모관 고유번호는 관리자에게 문의하세요</li>
-              <li>유가족 등록이 필요한 경우 관리자가 도움을 드립니다</li>
-              <li>추모관 참여 후 조문 글을 남기실 수 있습니다</li>
+              <li>추모관 고유번호(memorialId)는 유가족이나 관리자에게 문의하세요</li>
+              <li>고유번호는 UUID 형태입니다 (예: 1c1425e1-8f64-43ea-9798-f747e1a97c0e)</li>
+              <li>추모관 카드에서 고유번호를 클릭하여 복사할 수 있습니다</li>
+              <li>추모관 참여 후 조문 글과 사진을 남기실 수 있습니다</li>
             </ul>
           </div>
         </div>
@@ -479,19 +640,13 @@ const Lobby = () => {
         <Modal.Header closeButton>
           <Modal.Title>{previewContent.title}</Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ background: '#f9f9f9', maxHeight: '70vh', overflowY: 'auto' }}>
-            <div style={{ background: 'white', fontFamily: 'serif', padding: '32px', border: '1px solid #ddd' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '32px', fontSize: '24px', fontWeight: 'bold' }}>{previewContent.title}</h2>
-                <div style={{ whiteSpace: 'pre-line', lineHeight: '1.8', fontSize: '16px' }} dangerouslySetInnerHTML={{ __html: previewContent.content }} />
-            </div>
+        <Modal.Body>
+            {/* dangerouslySetInnerHTML을 사용하여 iframe을 렌더링합니다. */}
+            <div dangerouslySetInnerHTML={{ __html: previewContent.content }} />
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowPreviewModal(false)}>
             닫기
-          </Button>
-          <Button variant="primary" onClick={handlePrint}>
-            <Printer size={16} style={{ marginRight: '6px' }} />
-            인쇄
           </Button>
         </Modal.Footer>
       </Modal>
@@ -502,15 +657,11 @@ const Lobby = () => {
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-in { animation: fadeInUp 0.6s ease-out; }
-        @media (max-width: 768px) {
-          .lobby-wrapper > div { grid-template-columns: 1fr !important; gap: 20px !important; }
-          .memorial-section > div:last-child { grid-template-columns: 1fr !important; }
-        }
-        .printable-content { display: none; }
-        @media print {
-            body * { visibility: hidden; }
-            .printable-content, .printable-content * { visibility: visible; }
-            .printable-content { position: absolute; left: 0; top: 0; width: 100%; }
+        @media (max-width: 992px) {
+          div[style*="grid-template-columns: 2fr 1fr"] { 
+            grid-template-columns: 1fr !important; 
+            gap: 20px !important; 
+          }
         }
       `}</style>
     </div>

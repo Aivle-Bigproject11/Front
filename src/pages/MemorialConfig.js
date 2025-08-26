@@ -36,6 +36,7 @@ const MemorialConfig = () => {
     const [profileImageFile, setProfileImageFile] = useState(null);
     const [imagePreviewUrl, setImagePreviewUrl] = useState('');
     const [slideshowPhotos, setSlideshowPhotos] = useState([]);
+    const [slideshowPhotoURLs, setSlideshowPhotoURLs] = useState([]);
     const [animatedPhoto, setAnimatedPhoto] = useState(null);
     const [keywords, setKeywords] = useState(['', '', '', '', '']);
     const [generatedVideoUrl, setGeneratedVideoUrl] = useState('');
@@ -59,15 +60,77 @@ const MemorialConfig = () => {
         // 권한 확인 및 데이터 로드
         const loadData = async () => {
             try {
-                // TODO: 실제 API로 유가족 권한 확인 로직 필요
-                const hasAccess = isAdminAccess || isUserAccess; 
-
-                if (!hasAccess) {
-                    alert('유가족 또는 관리자만 접근 가능한 페이지입니다.');
-                    navigate(`/memorial/${id}`);
+                // 로그인 상태 확인
+                if (!user) {
+                    alert('로그인이 필요한 페이지입니다.');
+                    navigate('/login');
                     return;
                 }
-                setIsFamilyMember(true);
+
+                // 관리자는 모든 추모관에 접근 가능
+                if (isAdminAccess) {
+                    setIsFamilyMember(true);
+                } else if (isUserAccess) {
+                    // 유저(유가족)인 경우 해당 추모관 접근 권한 확인
+                    try {
+                        const response = await apiService.getMemorial(id);
+                        const memorialData = response;
+                        
+                        console.log('🔍 권한 확인 - 로그인 유저:', user);
+                        console.log('🔍 권한 확인 - 추모관 데이터:', memorialData);
+                        console.log('🔍 권한 확인 - 유저 ID:', user.id, '추모관 familyList:', memorialData.familyList);
+                        
+                        let hasAccess = false;
+                        
+                        // 유가족 권한 확인: familyList에 포함되어 있고 memorialId가 일치하는지 확인
+                        if (memorialData.familyList && Array.isArray(memorialData.familyList)) {
+                            // familyList에 현재 유저 ID가 포함되어 있는지 확인
+                            if (memorialData.familyList.includes(user.id)) {
+                                // 추가 검증: 해당 유가족의 memorialId가 현재 추모관과 일치하는지 확인
+                                try {
+                                    const familyData = await apiService.getFamilyById(user.id);
+                                    if (familyData.memorialId === id) {
+                                        hasAccess = true;
+                                        console.log('✅ 권한 확인: 등록된 유가족이며 memorialId 일치');
+                                    } else {
+                                        console.log('❌ 권한 확인: 유가족이지만 memorialId 불일치', {
+                                            familyMemorialId: familyData.memorialId,
+                                            currentMemorialId: id
+                                        });
+                                    }
+                                } catch (familyError) {
+                                    console.error('❌ 유가족 정보 조회 실패:', familyError);
+                                }
+                            } else {
+                                console.log('❌ 권한 확인: familyList에 포함되지 않음');
+                            }
+                        } else {
+                            console.log('❌ 권한 확인: 추모관에 familyList가 없음');
+                        }
+                        
+                        console.log('🔍 최종 권한 확인 결과:', hasAccess);
+                        
+                        // 개발 환경에서는 권한 검사를 우회 (임시)
+                        const isDevelopment = process.env.NODE_ENV === 'development';
+                        if (!hasAccess && !isDevelopment) {
+                            alert('해당 추모관에 대한 접근 권한이 없습니다.');
+                            navigate('/menu4');
+                            return;
+                        } else if (!hasAccess && isDevelopment) {
+                            console.warn('⚠️ 개발 환경에서 권한 검사 우회');
+                        }
+                        setIsFamilyMember(true);
+                    } catch (error) {
+                        console.error('권한 확인 중 오류:', error);
+                        alert('권한 확인 중 오류가 발생했습니다.');
+                        navigate('/menu4');
+                        return;
+                    }
+                } else {
+                    alert('유가족 또는 관리자만 접근 가능한 페이지입니다.');
+                    navigate('/login');
+                    return;
+                }
 
                 const response = await apiService.getMemorial(id);
                 console.log('✅ MemorialConfig API 응답:', response);
@@ -100,6 +163,16 @@ const MemorialConfig = () => {
         loadData();
     }, [id, navigate, isAdminAccess, isUserAccess]);
 
+    useEffect(() => {
+        const urls = slideshowPhotos.map(photo => URL.createObjectURL(photo));
+        setSlideshowPhotoURLs(urls);
+
+        // Cleanup function to revoke URLs
+        return () => {
+            urls.forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [slideshowPhotos]);
+
     // 유가족 및 관리자 권한 확인 함수 (실제 API 구현 필요)
     const checkFamilyAccess = async (memorialId) => {
         // TODO: 실제 API 호출로 교체
@@ -126,6 +199,65 @@ const MemorialConfig = () => {
         setVideoData({
             ...videoData,
             [e.target.name]: e.target.value
+        });
+    };
+
+    const handleSlideshowPhotoChange = (e) => {
+        const newFiles = Array.from(e.target.files);
+        const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+        const MAX_INDIVIDUAL_SIZE = 5 * 1024 * 1024; // 5MB
+
+        // 개별 파일 크기 확인
+        for (const file of newFiles) {
+            if (file.size > MAX_INDIVIDUAL_SIZE) {
+                alert(`개별 사진의 용량은 5MB를 초과할 수 없습니다. (${file.name})`);
+                return;
+            }
+        }
+
+        // 새로 추가될 사진 포함 전체 개수 확인
+        if (slideshowPhotos.length + newFiles.length > 15) {
+            alert('슬라이드쇼 사진은 최대 15개까지 선택 가능합니다.');
+            return;
+        }
+
+        // 새로 추가될 사진 포함 전체 용량 확인
+        const currentTotalSize = slideshowPhotos.reduce((acc, photo) => acc + photo.size, 0);
+        const newFilesSize = newFiles.reduce((acc, file) => acc + file.size, 0);
+        if (currentTotalSize + newFilesSize > MAX_TOTAL_SIZE) {
+            alert('업로드하는 모든 사진의 총 용량은 50MB를 초과할 수 없습니다.');
+            return;
+        }
+
+        setSlideshowPhotos(prevPhotos => [...prevPhotos, ...newFiles]);
+    };
+
+    const handleRemoveSlideshowPhoto = (index) => {
+        setSlideshowPhotos(prevPhotos => prevPhotos.filter((_, i) => i !== index));
+    };
+
+    const handleChangeSlideshowPhoto = (index, file) => {
+        const MAX_INDIVIDUAL_SIZE = 5 * 1024 * 1024; // 5MB
+        if (file.size > MAX_INDIVIDUAL_SIZE) {
+            alert(`개별 사진의 용량은 5MB를 초과할 수 없습니다. (${file.name})`);
+            return;
+        }
+
+        const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+        const currentTotalSize = slideshowPhotos.reduce((acc, photo, i) => {
+            if (i === index) return acc; // 교체될 파일은 용량 계산에서 제외
+            return acc + photo.size;
+        }, 0);
+
+        if (currentTotalSize + file.size > MAX_TOTAL_SIZE) {
+            alert('업로드하는 모든 사진의 총 용량은 50MB를 초과할 수 없습니다.');
+            return;
+        }
+
+        setSlideshowPhotos(prevPhotos => {
+            const newPhotos = [...prevPhotos];
+            newPhotos[index] = file;
+            return newPhotos;
         });
     };
 
@@ -174,6 +306,13 @@ const MemorialConfig = () => {
                 return;
             }
             
+            const totalSize = slideshowPhotos.reduce((acc, photo) => acc + photo.size, 0);
+            const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+            if (totalSize > MAX_TOTAL_SIZE) {
+                alert('업로드하는 모든 사진의 총 용량은 50MB를 초과할 수 없습니다.');
+                return;
+            }
+
             if (!animatedPhoto) {
                 alert("움직이는 효과를 적용할 사진을 선택해주세요.");
                 return;
@@ -256,6 +395,16 @@ const MemorialConfig = () => {
         } else if (activeTab === 'memorial') {
             // 추모사 생성 처리
             setIsEulogyLoading(true);
+            
+            // 토큰 확인
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('인증 토큰이 없습니다. 다시 로그인해주세요.');
+                navigate('/login');
+                setIsEulogyLoading(false);
+                return;
+            }
+            
             try {
                 const eulogyRequest = {
                     keywords: eulogyKeywords.filter(k => k).join(', '), // API 명세에 따라 String으로 변경
@@ -263,7 +412,7 @@ const MemorialConfig = () => {
                 };
                 console.log('🔗 CreateTribute 요청 데이터:', eulogyRequest);
                 console.log('🔗 Memorial ID:', id);
-                console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8088'}/memorials/${id}/tribute`);
+                console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/memorials/${id}/tribute`);
                 console.log('🔗 추모사 생성 시작... (최대 60초 소요)');
                 
                 const response = await apiService.createTribute(id, eulogyRequest);
@@ -281,14 +430,37 @@ const MemorialConfig = () => {
                     console.error('응답 데이터:', error.response.data);
                     
                     if (error.response.status === 500) {
-                        alert('서버 오류로 인해 추모사 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+                        // 백엔드 서버 오류 상세 분석
+                        const errorMessage = error.response.data?.message || '서버 내부 오류';
+                        console.error('서버 오류 상세:', errorMessage);
+                        
+                        if (errorMessage.includes('AI') || errorMessage.includes('LLM') || errorMessage.includes('OpenAI')) {
+                            alert('AI 서비스 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.');
+                        } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+                            alert('네트워크 연결에 문제가 있습니다. 인터넷 연결을 확인해주세요.');
+                        } else {
+                            alert(`서버 오류로 인해 추모사 생성에 실패했습니다.\n오류: ${errorMessage}\n잠시 후 다시 시도해주세요.`);
+                        }
+                    } else if (error.response.status === 401) {
+                        alert('인증 토큰이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.');
+                        navigate('/login');
+                    } else if (error.response.status === 403) {
+                        alert('추모사 생성 권한이 없습니다. 유가족만 이용 가능한 기능입니다.');
+                    } else if (error.response.status === 404) {
+                        alert('추모관을 찾을 수 없습니다.');
+                    } else if (error.response.status === 400) {
+                        const errorMessage = error.response.data?.message || '잘못된 요청';
+                        alert(`요청 정보가 올바르지 않습니다: ${errorMessage}`);
                     } else {
-                        alert(`추모사 생성에 실패했습니다. (오류 코드: ${error.response.status})`);
+                        const errorMessage = error.response.data?.message || '알 수 없는 오류';
+                        alert(`추모사 생성에 실패했습니다.\n오류 코드: ${error.response.status}\n메시지: ${errorMessage}`);
                     }
                 } else if (error.request) {
-                    alert('서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.');
+                    console.error('네트워크 오류:', error.request);
+                    alert('서버에 연결할 수 없습니다.\n1. 백엔드 서버가 실행 중인지 확인해주세요\n2. 네트워크 연결 상태를 확인해주세요');
                 } else {
-                    alert('추모사 생성 중 예상치 못한 오류가 발생했습니다.');
+                    console.error('요청 설정 오류:', error.message);
+                    alert(`추모사 생성 중 예상치 못한 오류가 발생했습니다.\n오류: ${error.message}`);
                 }
             } finally {
                 setIsEulogyLoading(false);
@@ -320,7 +492,7 @@ const MemorialConfig = () => {
         return (
             <div className="page-wrapper" style={{
                 '--navbar-height': '62px',
-                height: 'calc(100vh - var(--navbar-height))',
+                height: isUserAccess ? '100vh' : 'calc(100vh - var(--navbar-height))',
                 background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
                 display: 'flex',
                 alignItems: 'center',
@@ -645,28 +817,6 @@ const MemorialConfig = () => {
 
                                             <Form.Group className="mb-3">
                                                 <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
-                                                    <i className="fas fa-id-card me-2" style={{ color: '#B8860B' }}></i>고객ID *
-                                                </Form.Label>
-                                                <Form.Control
-                                                    type="number"
-                                                    name="customerId"
-                                                    value={formData.customerId}
-                                                    onChange={handleInputChange}
-                                                    required
-                                                    style={{ 
-                                                        borderRadius: '12px', 
-                                                        padding: '12px 16px',
-                                                        border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                        background: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2C1F14'
-                                                    }}
-                                                />
-                                            </Form.Group>
-                                        </Col>
-
-                                        <Col md={6}>
-                                            <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
                                                     <i className="fas fa-calendar-alt me-2" style={{ color: '#B8860B' }}></i>생년월일 *
                                                 </Form.Label>
                                                 <Form.Control
@@ -704,7 +854,9 @@ const MemorialConfig = () => {
                                                     }}
                                                 />
                                             </Form.Group>
+                                        </Col>
 
+                                        <Col md={6} className="d-flex flex-column justify-content-center">
                                             <div style={{
                                                 border: '2px solid rgba(184, 134, 11, 0.2)',
                                                 borderRadius: '16px',
@@ -780,56 +932,155 @@ const MemorialConfig = () => {
                                         <Row>
                                             <Col md={6}>
                                                 <Form.Group className="mb-3">
-                                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <Form.Label className="fw-bold mb-0" style={{ color: '#2C1F14' }}>
-                                                            <i className="fas fa-images me-2" style={{ color: '#B8860B' }}></i>슬라이드쇼 사진 (9~15장)
-                                                        </Form.Label>
-                                                        <Badge 
-                                                            bg={slideshowPhotos.length >= 9 && slideshowPhotos.length <= 15 ? "success" : "warning"}
-                                                            style={{ fontSize: '0.8rem' }}
-                                                        >
-                                                            {slideshowPhotos.length}/15장 선택됨
-                                                        </Badge>
-                                                    </div>
-                                                    <Form.Control
-                                                        type="file"
-                                                        multiple
-                                                        accept="image/*"
-                                                        onChange={(e) => setSlideshowPhotos(Array.from(e.target.files).slice(0, 15))}
-                                                        style={{ 
-                                                            borderRadius: '12px', 
-                                                            padding: '12px 16px',
-                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                            background: 'rgba(255, 255, 255, 0.9)',
-                                                            color: '#2C1F14'
-                                                        }}
-                                                    />
-                                                    <Form.Text className="text-muted">
-                                                        영상에 포함될 9~15장의 사진을 선택하세요. 
-                                                        {slideshowPhotos.length < 9 && <span className="text-warning"> (최소 {9 - slideshowPhotos.length}장 더 필요)</span>}
-                                                        {slideshowPhotos.length > 15 && <span className="text-danger"> (최대 15장까지만 가능)</span>}
-                                                    </Form.Text>
-                                                </Form.Group>
+    <div className="d-flex justify-content-between align-items-center mb-2">
+        <Form.Label className="fw-bold mb-0" style={{ color: '#2C1F14' }}>
+            <i className="fas fa-images me-2" style={{ color: '#B8860B' }}></i>슬라이드쇼 사진 (9~15장)
+        </Form.Label>
+        <Badge 
+            bg={slideshowPhotos.length >= 9 && slideshowPhotos.length <= 15 ? "success" : "warning"}
+            style={{ fontSize: '0.8rem' }}
+        >
+            {slideshowPhotos.length}/15장 선택됨
+        </Badge>
+    </div>
+    <Form.Control
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={handleSlideshowPhotoChange}
+        style={{ 
+            borderRadius: '12px', 
+            padding: '12px 16px',
+            border: '2px solid rgba(184, 134, 11, 0.2)',
+            background: 'rgba(255, 255, 255, 0.9)',
+            color: '#2C1F14'
+        }}
+    />
+    <Form.Text className="text-muted">
+        영상에 포함될 9~15장의 사진을 선택하세요. 
+        {slideshowPhotos.length < 9 && <span className="text-warning"> (최소 {9 - slideshowPhotos.length}장 더 필요)</span>}
+        {slideshowPhotos.length > 15 && <span className="text-danger"> (최대 15장까지만 가능)</span>}
+    </Form.Text>
+
+    {/* 이미지 미리보기 및 관리 */}
+    <div className="mt-3 d-flex flex-wrap gap-3">
+        {slideshowPhotoURLs.map((url, index) => (
+            <div key={index} className="position-relative" style={{ width: '100px', height: '100px' }}>
+                <img
+                    src={url}
+                    alt={`슬라이드쇼 이미지 ${index + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                />
+                <div className="position-absolute top-0 end-0 p-1">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            if (e.target.files[0]) {
+                                handleChangeSlideshowPhoto(index, e.target.files[0]);
+                            }
+                        }}
+                        style={{ display: 'none' }}
+                        id={`change-photo-${index}`}
+                    />
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => document.getElementById(`change-photo-${index}`).click()}
+                        style={{ lineHeight: '1', padding: '0.2rem 0.4rem', marginRight: '4px' }}
+                    >
+                        변경
+                    </Button>
+                    <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleRemoveSlideshowPhoto(index)}
+                        style={{ lineHeight: '1', padding: '0.2rem 0.4rem' }}
+                    >
+                        삭제
+                    </Button>
+                </div>
+            </div>
+        ))}
+    </div>
+</Form.Group>
 
                                                 <Form.Group className="mb-3">
                                                     <Form.Label className="fw-bold" style={{ color: '#2C1F14' }}>
                                                         <i className="fas fa-running me-2" style={{ color: '#B8860B' }}></i>움직이는 사진 (1장)
                                                     </Form.Label>
-                                                    <Form.Control
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => setAnimatedPhoto(e.target.files[0])}
-                                                        style={{ 
-                                                            borderRadius: '12px', 
-                                                            padding: '12px 16px',
-                                                            border: '2px solid rgba(184, 134, 11, 0.2)',
-                                                            background: 'rgba(255, 255, 255, 0.9)',
-                                                            color: '#2C1F14'
-                                                        }}
-                                                    />
-                                                    <Form.Text className="text-muted">
-                                                        영상에서 움직이는 효과를 적용할 사진 1장을 선택하세요.
-                                                    </Form.Text>
+                                                    {animatedPhoto ? (
+                                                        <div className="position-relative" style={{ width: '100px', height: '100px' }}>
+                                                            <img
+                                                                src={URL.createObjectURL(animatedPhoto)}
+                                                                alt="움직이는 사진"
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                                            />
+                                                            <div className="position-absolute top-0 end-0 p-1">
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    onChange={(e) => {
+                                                                        if (e.target.files[0]) {
+                                                                            const file = e.target.files[0];
+                                                                            const MAX_INDIVIDUAL_SIZE = 5 * 1024 * 1024; // 5MB
+                                                                            if (file.size > MAX_INDIVIDUAL_SIZE) {
+                                                                                alert(`개별 사진의 용량은 5MB를 초과할 수 없습니다. (${file.name})`);
+                                                                                return;
+                                                                            }
+                                                                            setAnimatedPhoto(file);
+                                                                        }
+                                                                    }}
+                                                                    style={{ display: 'none' }}
+                                                                    id="change-animated-photo"
+                                                                />
+                                                                <Button
+                                                                    variant="secondary"
+                                                                    size="sm"
+                                                                    onClick={() => document.getElementById('change-animated-photo').click()}
+                                                                    style={{ lineHeight: '1', padding: '0.2rem 0.4rem', marginRight: '4px' }}
+                                                                >
+                                                                    변경
+                                                                </Button>
+                                                                <Button
+                                                                    variant="danger"
+                                                                    size="sm"
+                                                                    onClick={() => setAnimatedPhoto(null)}
+                                                                    style={{ lineHeight: '1', padding: '0.2rem 0.4rem' }}
+                                                                >
+                                                                    삭제
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <Form.Control
+                                                                type="file"
+                                                                accept="image/*"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files[0];
+                                                                    if (file) {
+                                                                        const MAX_INDIVIDUAL_SIZE = 5 * 1024 * 1024; // 5MB
+                                                                        if (file.size > MAX_INDIVIDUAL_SIZE) {
+                                                                            alert(`개별 사진의 용량은 5MB를 초과할 수 없습니다. (${file.name})`);
+                                                                            return;
+                                                                        }
+                                                                        setAnimatedPhoto(file);
+                                                                    }
+                                                                }}
+                                                                style={{ 
+                                                                    borderRadius: '12px', 
+                                                                    padding: '12px 16px',
+                                                                    border: '2px solid rgba(184, 134, 11, 0.2)',
+                                                                    background: 'rgba(255, 255, 255, 0.9)',
+                                                                    color: '#2C1F14'
+                                                                }}
+                                                            />
+                                                            <Form.Text className="text-muted">
+                                                                영상에서 움직이는 효과를 적용할 사진 1장을 선택하세요.
+                                                            </Form.Text>
+                                                        </>
+                                                    )}
                                                 </Form.Group>
                                             </Col>
 

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge } from 'react-bootstrap';
 import { ArrowLeft } from 'lucide-react';
@@ -10,7 +11,13 @@ const MemorialDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const videoPanelRef = useRef(null);
+  const photoPanelRef = useRef(null);
+  const rightPanelRef = useRef(null);
+  const memorialContainerRef = useRef(null);
   
+  const [editingCommentId, setEditingCommentId] = useState(null); // Add this state
+
   // 모든 useState 훅을 먼저 호출
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,20 +63,23 @@ const MemorialDetail = () => {
     setAnimateCard(true);
     const fetchMemorialDetails = async () => {
       try {
-        // ID 검증은 여기서 수행
+        // memorialId 검증
         if (!id) {
-          console.error('❌ Memorial ID가 URL에서 추출되지 않음!');
-          navigate('/menu4');
+          console.error('❌ 추모관 고유번호가 URL에서 추출되지 않음!');
+          navigate('/lobby');
           return;
         }
 
-        // UUID 형태인지 확인 (예: 1c337344-ad3c-4785-a5f8-0054698c3ebe)
-        const isValidUUID = id && id.includes('-') && id.length >= 36;
-        console.log('🔍 Is Valid UUID:', isValidUUID);
+        // UUID 형태 검증 (8-4-4-4-12 패턴)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isValidMemorialId = uuidRegex.test(id);
+        console.log('🔍 추모관 고유번호 검증:', id, '유효성:', isValidMemorialId);
         
-        if (!isValidUUID) {
-          console.error('❌ Memorial ID가 올바른 UUID 형태가 아님:', id);
-          // navigate('/menu4'); // 일단 주석처리해서 계속 진행
+        if (!isValidMemorialId) {
+          console.error('❌ 유효하지 않은 추모관 고유번호 형태:', id);
+          alert('유효하지 않은 추모관 고유번호입니다.');
+          navigate('/lobby');
+          return;
         }
 
         console.log('🔍 Final Memorial ID:', id);
@@ -102,15 +112,24 @@ const MemorialDetail = () => {
           }
         }
       } catch (error) {
-        console.error("❌ MemorialDetail API 호출 실패:", error);
+        console.error("❌ 추모관 정보 로드 실패:", error);
         console.error("에러 상세:", error.response?.data, error.response?.status);
         console.error("요청 URL:", error.config?.url);
         
-        // CORS 에러인지 확인
-        if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
-          console.warn("🔧 CORS 문제 감지: 백엔드 설정 확인 필요");
-          alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
+        // 에러 유형별 처리
+        if (error.response?.status === 404) {
+          console.error("❌ 추모관을 찾을 수 없음 (404)");
+          alert("존재하지 않는 추모관 고유번호입니다.");
+          navigate('/lobby');
+        } else if (error.response?.status === 403) {
+          console.error("❌ 접근 권한 없음 (403)");
+          alert("해당 추모관에 접근할 권한이 없습니다.");
+          navigate('/lobby');
+        } else if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
+          console.warn("🔧 네트워크 연결 문제 감지");
+          alert("네트워크 연결 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
         } else {
+          console.error("❌ 기타 에러:", error.message);
           alert("추모관 정보를 불러오는 데 실패했습니다.");
         }
       } finally {
@@ -120,6 +139,114 @@ const MemorialDetail = () => {
 
     fetchMemorialDetails();
   }, [id, navigate, location.search]); // location.search를 의존성으로 추가하여 URL 파라미터 변경 시 새로고침
+
+  useEffect(() => {
+    const videoEl = videoPanelRef.current;
+    const photoEl = photoPanelRef.current;
+    const rightEl = rightPanelRef.current; // Get ref to right panel
+
+    if (videoEl && photoEl && rightEl) { // Check all refs
+      const resizeObserver = new ResizeObserver(() => {
+        const height = videoEl.offsetHeight;
+        if (height > 0) {
+            photoEl.style.height = `${height}px`;
+            rightEl.style.height = `${height}px`; // Set right panel height
+        }
+      });
+
+      resizeObserver.observe(videoEl);
+
+      return () => resizeObserver.disconnect();
+    }
+  }, [memorial]);
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        .memorial-container {
+            opacity: 0;
+        }
+
+        .animate-in {
+          animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .back-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          height: 45px;
+          padding: 0 20px;
+          margin-bottom: 1rem;
+          box-sizing: border-box;
+          background: linear-gradient(135deg, #4A3728, #8B5A2B);
+          border: none;
+          color: white;
+          font-weight: 700;
+          font-size: 14px;
+          box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
+          transition: all 0.3s ease;
+          border-radius: 8px;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+
+        .back-btn:hover {
+          background: linear-gradient(135deg, #3c2d20, #7a4e24);
+          transform: scale(1.03);
+          box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
+        }
+
+        .memorial-container::-webkit-scrollbar {
+          width: 6px;
+        }
+        .memorial-container::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.05);
+          border-radius: 10px;
+        }
+        .memorial-container::-webkit-scrollbar-thumb {
+          background-color: rgba(184, 134, 11, 0.5);
+          border-radius: 10px;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.1);
+        }
+
+        /* --- 수정된 반응형 코드 --- */
+        @media (max-width: 1200px) {
+          .page-wrapper {
+            height: auto !important; /* 고정 높이 해제 */
+            min-height: calc(100vh - var(--navbar-height));
+            overflow-y: auto !important; /* 전체 페이지 스크롤이 가능하도록 변경 */
+            align-items: flex-start !important; /* 컨텐츠를 위쪽으로 정렬 */
+          }
+          .memorial-container {
+            height: auto !important; 
+            overflow: visible !important; /* 내용이 넘쳐도 보이도록 설정 */
+          }
+          .memorial-detail-scroll-area {
+            height: auto !important; 
+            overflow: visible !important; /* 내부 스크롤을 제거,전체 스크롤을 따르도록 함 */
+            flex: none !important; /* flex-grow 속성 제거 */
+          }
+        }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []); // Runs only once on mount
 
   // 사진 업로드 함수
   const handlePhotoUpload = async (e) => {
@@ -143,9 +270,13 @@ const MemorialDetail = () => {
 
       // 전체 memorial 정보 다시 로드 (사진 목록 포함)
       const updatedMemorial = await apiService.getMemorialDetails(id);
+      console.log('🔄 사진 업로드 후 memorial 데이터:', updatedMemorial);
       setMemorial(updatedMemorial);
       if (updatedMemorial.photos) {
+        console.log('🖼️ 업데이트된 사진 목록:', updatedMemorial.photos);
         setPhotos(updatedMemorial.photos);
+      } else {
+        console.log('⚠️ 업데이트된 memorial에 photos가 없음');
       }
       
       // 폼 초기화
@@ -218,28 +349,79 @@ const MemorialDetail = () => {
 
   const handleGuestbookSubmit = async (e) => {
     e.preventDefault();
+    
+    // 입력값 검증
+    if (!guestbookEntry.name.trim()) {
+      alert('작성자 이름을 입력해주세요.');
+      return;
+    }
+    if (!guestbookEntry.content.trim()) {
+      alert('내용을 입력해주세요.');
+      return;
+    }
+    if (!guestbookEntry.relationship.trim()) {
+      alert('관계를 입력해주세요.');
+      return;
+    }
+    
+    console.log('📝 방명록 작성 시작');
+    console.log('💬 작성 데이터:', guestbookEntry);
+    console.log('🆔 추모관 ID:', id);
+    console.log('✏️ 수정 모드:', editingCommentId ? '수정' : '신규 작성');
+    
     try {
-      const response = await apiService.createComment(id, guestbookEntry);
-      console.log('✅ 댓글 생성 성공:', response);
-      
+      let response;
+      if (editingCommentId) {
+        // This is an update operation
+        console.log('🔄 댓글 수정 API 호출 - ID:', editingCommentId);
+        response = await apiService.updateComment(editingCommentId, guestbookEntry);
+        console.log('✅ 댓글 수정 성공:', response);
+      } else {
+        // This is a create operation
+        console.log('📝 새 댓글 생성 API 호출');
+        response = await apiService.createComment(id, guestbookEntry);
+        console.log('✅ 댓글 생성 성공:', response);
+      }
+
       // 전체 memorial 정보 다시 로드 (댓글 목록 포함)
+      console.log('🔄 추모관 정보 새로고침 중...');
       const updatedMemorial = await apiService.getMemorialDetails(id);
+      console.log('✅ 추모관 정보 새로고침 완료:', updatedMemorial);
+      
       setMemorial(updatedMemorial);
       if (updatedMemorial.comments) {
+        console.log('📋 댓글 목록 업데이트:', updatedMemorial.comments.length, '개');
+        console.log('📋 댓글 상세:', updatedMemorial.comments);
         setGuestbookList(updatedMemorial.comments);
-      }
-      
-      setGuestbookEntry({ name: '', content: '', relationship: '' });
-      setShowGuestbookModal(false);
-      alert('소중한 위로의 말씀이 등록되었습니다.');
-    } catch (error) {
-      console.error("Error creating comment:", error);
-      
-      // CORS 에러인지 확인
-      if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
-        alert("네트워크 연결 문제가 발생했습니다. (CORS 설정 확인 필요)");
       } else {
-        alert("방명록 작성에 실패했습니다.");
+        console.log('⚠️ 업데이트된 memorial에 comments가 없음');
+      }
+
+      setGuestbookEntry({ name: '', content: '', relationship: '' });
+      setEditingCommentId(null); // Reset editing state
+      setShowGuestbookModal(false);
+      alert(editingCommentId ? '댓글이 성공적으로 수정되었습니다.' : '소중한 위로의 말씀이 등록되었습니다.');
+    } catch (error) {
+      console.error("❌ 방명록 작성/수정 에러:", error);
+      console.error("에러 상세:", error.response?.data, error.response?.status);
+      console.error("요청 URL:", error.config?.url);
+
+      // 에러 유형별 처리
+      if (error.response?.status === 400) {
+        console.error("❌ 잘못된 요청 (400)");
+        alert("입력한 내용에 오류가 있습니다. 다시 확인해주세요.");
+      } else if (error.response?.status === 404) {
+        console.error("❌ 추모관을 찾을 수 없음 (404)");
+        alert("존재하지 않는 추모관입니다.");
+      } else if (error.response?.status >= 500) {
+        console.error("❌ 서버 에러 (500+)");
+        alert("서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      } else if (error.message === 'Network Error' && error.code === 'ERR_NETWORK') {
+        console.error("❌ 네트워크 에러");
+        alert("네트워크 연결 문제가 발생했습니다. 인터넷 연결을 확인해주세요.");
+      } else {
+        console.error("❌ 기타 에러:", error.message);
+        alert(editingCommentId ? '댓글 수정에 실패했습니다.' : '방명록 작성에 실패했습니다.');
       }
     }
   };
@@ -252,6 +434,8 @@ const MemorialDetail = () => {
       relationship: comment.relationship
     });
     setSelectedRibbon(null); // 상세보기 모달 닫기
+    setShowRibbonDetailModal(false); // 상세보기 모달 닫기 추가
+    setEditingCommentId(comment.commentId); // Store the ID of the comment being edited
     setShowGuestbookModal(true); // 편집 모달 열기
     // TODO: 수정 모드 상태 추가 (새로 생성 vs 수정 구분)
   };
@@ -274,6 +458,7 @@ const MemorialDetail = () => {
       }
       
       setSelectedRibbon(null); // 상세보기 모달 닫기
+      setShowRibbonDetailModal(false);
       alert('댓글이 삭제되었습니다.');
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -292,6 +477,10 @@ const MemorialDetail = () => {
 
   // 마우스 휠 이벤트 핸들러
   const handleRibbonWheel = (e) => {
+    // 페이지 스크롤 방지
+    e.preventDefault();
+    e.stopPropagation();
+
     // 방명록이 비어있거나 스크롤할 필요가 없는 경우 무시
     if (!guestbookList || guestbookList.length <= ribbonItemsPerView) {
       return;
@@ -317,19 +506,54 @@ const MemorialDetail = () => {
     }
   };
 
+  // Function to handle copying invite code to clipboard
+  const handleCopyInviteCode = async () => {
+    // 초대코드는 URL 파라미터의 id (추모관 고유번호)
+    const inviteCode = id || memorial?.id;
+    
+    if (inviteCode) {
+      try {
+        await navigator.clipboard.writeText(inviteCode);
+        console.log('✅ 초대코드 복사 성공:', inviteCode);
+        alert('추모관 초대코드가 복사되었습니다!');
+      } catch (err) {
+        console.error('❌ 클립보드 복사 실패:', err);
+        // 클립보드 API가 실패하면 다른 방법 시도
+        try {
+          const textArea = document.createElement('textarea');
+          textArea.value = inviteCode;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          console.log('✅ 대체 방법으로 초대코드 복사 성공:', inviteCode);
+          alert('추모관 초대코드가 복사되었습니다!');
+        } catch (fallbackErr) {
+          console.error('❌ 대체 복사 방법도 실패:', fallbackErr);
+          alert(`클립보드 복사에 실패했습니다. 초대코드를 직접 복사해주세요: ${inviteCode}`);
+        }
+      }
+    } else {
+      console.error('❌ 초대코드를 찾을 수 없음 - id:', id, 'memorial:', memorial);
+      alert('초대 코드를 찾을 수 없습니다.');
+    }
+  };
+
+  const pageWrapperStyle = {
+    '--navbar-height': '62px',
+    height: isUserAccess || isGuestAccess ? '100vh' : 'calc(100vh - var(--navbar-height))',
+    background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    position: 'relative',
+    overflow: 'hidden'
+  };
+
   if (loading) {
     return (
-      <div className="page-wrapper" style={{
-        '--navbar-height': '62px',
-        height: 'calc(100vh - var(--navbar-height))',
-        background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+        <div className="page-wrapper" style={pageWrapperStyle}>
         <div style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
@@ -348,17 +572,7 @@ const MemorialDetail = () => {
 
   if (!memorial) {
     return (
-      <div className="page-wrapper" style={{
-        '--navbar-height': '62px',
-        height: 'calc(100vh - var(--navbar-height))',
-        background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+        <div className="page-wrapper" style={pageWrapperStyle}>
         <div style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
@@ -386,17 +600,7 @@ const MemorialDetail = () => {
   }
 
   return (
-    <div className="page-wrapper" style={{
-      '--navbar-height': '62px',
-      height: 'calc(100vh - var(--navbar-height))',
-      background: 'linear-gradient(135deg, #f7f3e9 0%, #e8e2d5 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
+    <div className="page-wrapper" style={pageWrapperStyle}>
 
       <div style={{
         position: 'absolute',
@@ -405,7 +609,7 @@ const MemorialDetail = () => {
         opacity: 0.7
       }}></div>
 
-      <div className={`memorial-container ${animateCard ? 'animate-in' : ''}`} style={{
+      <div ref={memorialContainerRef} className={`memorial-container ${animateCard ? 'animate-in' : ''}`} style={{
         position: 'relative',
         zIndex: 1,
         width: '100%',
@@ -422,7 +626,8 @@ const MemorialDetail = () => {
         borderRadius: '28px',
         border: '2px solid rgba(184, 134, 11, 0.35)',
         overflowY: 'auto',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        scrollbarGutter: 'stable'
       }}>
                {/* 프로필 섹션 (수정됨) */}
         <div style={{ marginBottom: '20px' }}>
@@ -480,17 +685,19 @@ const MemorialDetail = () => {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   borderRadius: '15px',
-                  border: '3px solid rgba(184, 134, 11, 0.3)',
                   margin: '0 auto',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
                   {!memorial.profileImageUrl && (
-                    <i className="fas fa-user fa-3x" style={{ color: '#b8860b' }}></i>
+                    <i className="fas fa-user fa-3x" style={{ 
+                        color: '#b8860b',
+                        display: 'block',
+                        margin: '0 auto' }}></i>
                   )}
                 </div>
-                <h5 className="mt-2 mb-0" style={{ color: '#2C1F14', fontWeight: '600', fontSize: '0.9rem' }}>프로필사진01</h5>
+                <h5 className="mt-2 mb-0" style={{ color: '#2C1F14', fontWeight: '600', fontSize: '0.9rem' }}></h5>
               </Col>
               
               <Col md={9}>
@@ -507,7 +714,7 @@ const MemorialDetail = () => {
                         <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                           <strong>나이:</strong> {memorial.deceasedAge}세
                         </div>
-                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+                        <div className="info-item" style={{ color: '#495057', fontSize: '0.9rem', marginBottom: '0.3rem' }}>                          
                           <strong>성별:</strong> {memorial.gender}
                         </div>
                       </Col>
@@ -540,8 +747,8 @@ const MemorialDetail = () => {
         </div>
 
         {/* 메인 콘텐츠 영역 */}
-          <Row>
-          {/* 좌측: 영상/사진첩 + 방명록 리본 */}
+          <Row style={{ display: 'flex', height: '100%' }}>
+          {/* 좌측: 영상/사진첩 */}
           <Col lg={8} className="mb-4 mb-lg-0">
             <Row>
               {/* 상단: 추모영상과 사진첩 - 겹쳐진 탭 구조 */}
@@ -588,7 +795,7 @@ const MemorialDetail = () => {
                     >
                       <h5 className="mb-0" style={{ color: '#2C1F14', fontSize: '1rem' }}>
                         <i className="fas fa-play me-2"></i>
-                        추모영상 01
+                        AI 추모영상
                       </h5>
                     </div>
 
@@ -631,6 +838,7 @@ const MemorialDetail = () => {
                     
                     {/* 추모영상 콘텐츠 */}
                     <div 
+                      ref={videoPanelRef}
                       className={`tab-content ${activeTab === 'video' ? 'active' : ''}`}
                       style={{
                         display: activeTab === 'video' ? 'block' : 'none',
@@ -775,6 +983,7 @@ const MemorialDetail = () => {
 
                     {/* 사진첩 콘텐츠 */}
                     <div 
+                      ref={photoPanelRef}
                       className={`tab-content ${activeTab === 'photos' ? 'active' : ''}`}
                       style={{
                         display: activeTab === 'photos' ? 'block' : 'none',
@@ -803,6 +1012,12 @@ const MemorialDetail = () => {
                         </div>
                       )}
 
+                      {(() => {
+                        console.log('🖼️ 사진 렌더링 체크 - photos:', photos);
+                        console.log('🖼️ photos 타입:', typeof photos, 'length:', photos?.length);
+                        return null;
+                      })()}
+                      
                       {photos && photos.length > 0 ? (
                         <Row xs={1} sm={2} md={2} lg={2} className="g-4">
                           {photos.map((photo, index) => (
@@ -887,27 +1102,102 @@ const MemorialDetail = () => {
 
               </Col>
             </Row>
+          </Col>
 
-            {/* 하단: 리본 방명록 */}
-            <Row>
-              <Col lg={12}>
-                <div className="ribbon-guestbook-container" style={{
-                  background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-                  borderRadius: '16px',
-                  padding: '2rem',
-                  minHeight: '380px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
-                  border: '1px solid rgba(184, 134, 11, 0.2)'
-                }}>
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h5 className="mb-0" style={{ color: '#2C1F14' }}>
-                      <i className="fas fa-ribbon me-2"></i>
-                      방명록 리본
-                    </h5>
+          {/* 우측: 추모사 + 공유 버튼 */}
+          <Col lg={4} ref={rightPanelRef} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* 추모사 */}
+            <Card style={{ 
+              flexGrow: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0, // Changed from height: '100%'
+              borderRadius: '16px', 
+              border: '1px solid rgba(184, 134, 11, 0.2)', 
+              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)'
+            }}>
+              <Card.Header style={{ 
+                background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
+                borderRadius: '16px 16px 0 0',
+                border: 'none'
+              }}>
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5 className="mb-0" style={{ color: '#2C1F14' }}>
+                    <i className="fas fa-heart me-2"></i>
+                    추모사
+                  </h5>
+                </div>
+              </Card.Header>
+              <Card.Body className="p-4" style={{ flexGrow: 1, height: '100%', overflowY: 'auto' }}>
+                <div className="memorial-eulogy">
+                  {memorial.tribute ? (
+                      <div className="eulogy-content" style={{ 
+                        lineHeight: '1.8', 
+                        fontSize: '0.9rem',
+                        color: '#495057',
+                        whiteSpace: 'pre-line'
+                      }}>
+                          {memorial.tribute}
+                      </div>
+                  ) : (
+                      <div className="text-center text-muted">
+                          <p>등록된 추모사가 없습니다.</p>
+                      </div>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+            {/* 공유 버튼 */}
+            <Card style={{ 
+              borderRadius: '16px', 
+              border: '1px solid rgba(184, 134, 11, 0.2)', 
+              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
+              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)'
+            }}>
+              <Card.Body className="text-center p-3">
+                <Button 
+                  className="w-100"
+                  onClick={handleCopyInviteCode}
+                  style={{
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    fontWeight: '600',
+                    padding: '12px'
+                  }}
+                >
+                  <i className="fas fa-share-alt me-2"></i>
+                  초대코드 복사하기
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+        {/* 하단: 리본 방명록 */}
+        <Row className="mt-4">
+          <Col lg={12}>
+                        <Card style={{
+              background: 'rgba(255, 251, 235, 0.95)',
+              borderRadius: '16px',
+              border: '1px solid rgba(184, 134, 11, 0.2)',
+              minHeight: '380px',
+            }}>
+              <Card.Header style={{
+                background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
+                borderRadius: '16px 16px 0 0',
+                border: 'none',
+                padding: '1rem 2rem'
+              }}>
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5 className="mb-0" style={{ color: '#2C1F14' }}>
+                    <i className="fas fa-ribbon me-2"></i>
+                    방명록 리본
+                  </h5>
+                  <div className="d-flex align-items-center">
                     {guestbookList.length > ribbonItemsPerView && (
-                      <div className="ribbon-controls">
+                      <div className="ribbon-controls me-3">
                         <button 
                           className="btn btn-sm me-2"
                           onClick={() => setRibbonScrollIndex(Math.max(0, ribbonScrollIndex - 1))}
@@ -939,321 +1229,255 @@ const MemorialDetail = () => {
                         </button>
                       </div>
                     )}
+                    <Button
+                      size="sm"
+                      onClick={() => setShowGuestbookModal(true)}
+                      style={{
+                        background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        color: '#fff',
+                        fontWeight: '600',
+                        borderRadius: '8px'
+                      }}
+                    >
+                      <i className="fas fa-edit me-1"></i>
+                      작성
+                    </Button>
                   </div>
-                  
-                  <div 
-                    className="ribbon-scroll-container" 
-                    style={{
-                      height: '300px',
-                      perspective: '1200px',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      maxWidth: '1200px',
-                      margin: '0 auto',
-                      padding: '10px 0'
-                    }}
-                    onWheel={handleRibbonWheel}
-                  >
-                    <div className="ribbon-items-wrapper" style={{
-                      display: 'flex',
-                      gap: '20px',
-                      transform: `translateX(-${ribbonScrollIndex * ribbonItemWidth}px)`,
-                      transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                      height: '100%',
-                      alignItems: 'flex-start',
-                      paddingTop: '20px',
-                      justifyContent: 'flex-start'
-                    }}>
-                      {guestbookList.map((entry, index) => (
-                        <div
-                          key={entry.id}
-                          className="ribbon-item"
-                          style={{
-                            width: '200px',
-                            minWidth: '200px',
-                            maxWidth: '200px',
-                            height: '350px',
-                            position: 'relative',
-                            cursor: 'pointer',
-                            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                            transform: `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`,
-                            zIndex: guestbookList.length - Math.abs(index - ribbonScrollIndex),
-                            transformOrigin: 'center top',
-                            flexShrink: 0
-                          }}
-                          onClick={() => {
-                            setSelectedRibbon(entry);
-                            setShowRibbonDetailModal(true);
-                          }}
-                          onMouseEnter={(e) => {
-                            const ribbonItem = e.currentTarget;
-                            const ribbonBody = ribbonItem.querySelector('.ribbon-body');
-                            const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
-                            
-                            ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15 + 15}px) scale(1.05)`;
-                            ribbonItem.style.filter = 'brightness(1.1)';
-                            
-                            if (ribbonBody) {
-                              ribbonBody.style.transform = 'translateY(-5px)';
-                            }
-                            if (ribbonTailWrapper) {
-                              ribbonTailWrapper.style.transform = 'translateY(-5px)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            const ribbonItem = e.currentTarget;
-                            const ribbonBody = ribbonItem.querySelector('.ribbon-body');
-                            const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
-                            
-                            ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`;
-                            ribbonItem.style.filter = 'brightness(1)';
-                            
-                            if (ribbonBody) {
-                              ribbonBody.style.transform = 'translateY(0)';
-                            }
-                            if (ribbonTailWrapper) {
-                              ribbonTailWrapper.style.transform = 'translateY(0)';
-                            }
-                          }}
-                        >
-                          {/* 실제 리본 모양 */}
-                          <div className="ribbon-body" style={{
-                            width: '100%',
-                            height: '280px',
-                            background: `linear-gradient(135deg, 
-                              ${index % 4 === 0 ? '#b8860b' : index % 4 === 1 ? '#965a25' : index % 4 === 2 ? '#cd853f' : '#daa520'} 0%, 
-                              ${index % 4 === 0 ? '#965a25' : index % 4 === 1 ? '#b8860b' : index % 4 === 2 ? '#b8860b' : '#cd853f'} 100%)`,
-                            borderRadius: '12px',
-                            color: 'white',
+                </div>
+              </Card.Header>
+              <Card.Body style={{ padding: '2rem', position: 'relative', overflow: 'hidden', background: 'rgba(255, 251, 235, 0.95)' }}>
+                <div
+                  className="ribbon-scroll-container"
+                  style={{
+                    background: 'rgba(255, 251, 235, 0.95)',
+                    height: '300px',
+                    perspective: '1200px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    // maxWidth: '1200px',
+                    margin: '0 auto',
+                    padding: '10px 0'
+                  }}
+                  onWheel={handleRibbonWheel}
+                  onMouseEnter={() => {
+                    if (memorialContainerRef.current) {
+                      memorialContainerRef.current.style.overflowY = 'hidden';
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (memorialContainerRef.current) {
+                      memorialContainerRef.current.style.overflowY = 'auto';
+                    }
+                  }}
+                >
+                  <div className="ribbon-items-wrapper" style={{
+                    display: 'flex',
+                    gap: '20px',
+                    transform: `translateX(-${ribbonScrollIndex * ribbonItemWidth}px)`,
+                    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                    height: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {(() => {
+                      console.log('🎗️ 방명록 렌더링 체크 - guestbookList:', guestbookList);
+                      console.log('🎗️ guestbookList 타입:', typeof guestbookList, 'length:', guestbookList?.length);
+                      return null;
+                    })()}
+                    
+                    {guestbookList.map((entry, index) => (
+                      <div
+                        key={entry.id}
+                        className="ribbon-item"
+                        style={{
+                          width: '200px',
+                          minWidth: '200px',
+                          maxWidth: '200px',
+                          height: '280px', // Adjusted height
+                          display: 'flex', // Added flex
+                          flexDirection: 'column', // Added flex direction
+                          justifyContent: 'center', // Added justify content
+                          alignItems: 'center', // Added align items
+                          position: 'relative',
+                          cursor: 'pointer',
+                          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transform: `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`,
+                          zIndex: guestbookList.length - Math.abs(index - ribbonScrollIndex),
+                          // transformOrigin: 'center top', // Removed transformOrigin
+                          flexShrink: 0
+                        }}
+                        onClick={() => {
+                          setSelectedRibbon(entry);
+                          setShowRibbonDetailModal(true);
+                        }}
+                        onMouseEnter={(e) => {
+                          const ribbonItem = e.currentTarget;
+                          const ribbonBody = ribbonItem.querySelector('.ribbon-body');
+                          const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
+
+                          ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15 + 15}px) scale(1.05)`;
+                          ribbonItem.style.filter = 'brightness(1.1)';
+
+                          if (ribbonBody) {
+                            ribbonBody.style.transform = 'translateY(-5px)';
+                          }
+                          if (ribbonTailWrapper) {
+                            ribbonTailWrapper.style.transform = 'translateY(-5px)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          const ribbonItem = e.currentTarget;
+                          const ribbonBody = ribbonItem.querySelector('.ribbon-body');
+                          const ribbonTailWrapper = ribbonItem.querySelector('.ribbon-tail-wrapper');
+
+                          ribbonItem.style.transform = `rotateY(${Math.max(0, index - ribbonScrollIndex) * -5}deg) translateZ(${Math.max(0, index - ribbonScrollIndex) * -15}px)`;
+                          ribbonItem.style.filter = 'brightness(1)';
+
+                          if (ribbonBody) {
+                            ribbonBody.style.transform = 'translateY(0)';
+                          }
+                          if (ribbonTailWrapper) {
+                            ribbonTailWrapper.style.transform = 'translateY(0)';
+                          }
+                        }}
+                      >
+                        {/* 실제 리본 모양 */}
+                        <div className="ribbon-body" style={{
+                          width: '100%',
+                          // height: '280px', // Removed fixed height
+                          flexGrow: 1, // Allow it to grow within flex parent
+                          background: `linear-gradient(135deg, 
+                            ${index % 4 === 0 ? '#b8860b' : index % 4 === 1 ? '#965a25' : index % 4 === 2 ? '#cd853f' : '#daa520'} 0%, 
+                            ${index % 4 === 0 ? '#965a25' : index % 4 === 1 ? '#b8860b' : index % 4 === 2 ? '#b8860b' : '#cd853f'} 100%)`,
+                          borderRadius: '12px',
+                          color: 'white',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          padding: '25px 20px',
+                          
+                          border: 'none',
+                          position: 'relative',
+                          overflow: 'visible',
+                          textAlign: 'center'
+                        }}>
+                          {/* 헤더 영역 */}
+                          <div className="ribbon-header" style={{
+                            textAlign: 'center',
+                            marginBottom: '20px',
+                            borderBottom: '1px solid rgba(255,255,255,0.3)',
+                            paddingBottom: '15px'
+                          }}>
+                            <div style={{
+                              fontSize: '1.25rem',
+                              fontWeight: 'bold',
+                              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                              marginBottom: '8px',
+                              lineHeight: '1.3'
+                            }}>
+                              {entry.name}
+                            </div>
+                            <div style={{
+                              fontSize: '0.95rem',
+                              opacity: 0.9,
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              marginBottom: '5px',
+                              lineHeight: '1.2'
+                            }}>
+                              {entry.relationship}
+                            </div>
+                            <div style={{
+                              fontSize: '0.8rem',
+                              opacity: 0.8,
+                              marginTop: '5px',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              lineHeight: '1.2'
+                            }}>
+                              {entry.date}
+                            </div>
+                          </div>
+
+                          {/* 메시지 영역 */}
+                          <div className="ribbon-message" style={{
+                            flex: 1,
                             display: 'flex',
                             flexDirection: 'column',
-                            justifyContent: 'flex-start',
-                            alignItems: 'center',
-                            padding: '25px 20px',
-                            boxShadow: '0 8px 25px rgba(44, 31, 20, 0.3)',
-                            border: 'none',
-                            position: 'relative',
-                            overflow: 'visible',
-                            textAlign: 'center'
+                            justifyContent: 'center',
+                            textAlign: 'center',
+                            padding: '10px 0'
                           }}>
-                            {/* 헤더 영역 */}
-                            <div className="ribbon-header" style={{
-                              textAlign: 'center',
-                              marginBottom: '20px',
-                              borderBottom: '1px solid rgba(255,255,255,0.3)',
-                              paddingBottom: '15px'
+                            <div style={{
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              lineHeight: '1.5',
+                              fontSize: '0.95rem',
+                              overflow: 'visible',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 5,
+                              WebkitBoxOrient: 'vertical',
+                              wordWrap: 'break-word'
                             }}>
-                              <div style={{ 
-                                fontSize: '1.25rem',
-                                fontWeight: 'bold',
-                                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                                marginBottom: '8px',
-                                lineHeight: '1.3'
-                              }}>
-                                {entry.name}
-                              </div>
-                              <div style={{ 
-                                fontSize: '0.95rem',
-                                opacity: 0.9,
-                                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                marginBottom: '5px',
-                                lineHeight: '1.2'
-                              }}>
-                                {entry.relationship}
-                              </div>
-                              <div style={{ 
-                                fontSize: '0.8rem',
+                              {entry.content}
+                            </div>
+
+                            {entry.content.length > 80 && (
+                              <div style={{
+                                marginTop: '10px',
+                                fontSize: '0.75rem',
                                 opacity: 0.8,
-                                marginTop: '5px',
-                                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                lineHeight: '1.2'
+                                fontStyle: 'italic'
                               }}>
-                                {entry.date}
+                                클릭하여 전체보기
                               </div>
-                            </div>
-                            
-                            {/* 메시지 영역 */}
-                            <div className="ribbon-message" style={{
-                              flex: 1,
-                              display: 'flex',
-                              flexDirection: 'column',
+                            )}
+                          </div>
+
+                          {/* 하단 아이콘 */}
+                          <div className="ribbon-footer" style={{
+                            textAlign: 'center',
+                            marginTop: '15px'
+                          }}>
+                            <div style={{
+                              width: '30px',
+                              height: '30px',
+                              background: 'rgba(255,255,255,0.25)',
+                              borderRadius: '50%',
+                              display: 'inline-flex',
+                              alignItems: 'center',
                               justifyContent: 'center',
-                              textAlign: 'center',
-                              padding: '10px 0'
+                              border: '2px solid rgba(255,255,255,0.4)'
                             }}>
-                              <div style={{
-                                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                lineHeight: '1.5',
-                                fontSize: '0.95rem',
-                                overflow: 'visible',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 5,
-                                WebkitBoxOrient: 'vertical',
-                                wordWrap: 'break-word'
-                              }}>
-                                {entry.content}
-                              </div>
-                              
-                              {entry.content.length > 80 && (
-                                <div style={{
-                                  marginTop: '10px',
-                                  fontSize: '0.75rem',
-                                  opacity: 0.8,
-                                  fontStyle: 'italic'
-                                }}>
-                                  클릭하여 전체보기
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* 하단 아이콘 */}
-                            <div className="ribbon-footer" style={{
-                              textAlign: 'center',
-                              marginTop: '15px'
-                            }}>
-                              <div style={{
-                                width: '30px',
-                                height: '30px',
-                                background: 'rgba(255,255,255,0.25)',
-                                borderRadius: '50%',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: '2px solid rgba(255,255,255,0.4)'
-                              }}>
-                                <i className="fas fa-heart" style={{ 
-                                  fontSize: '0.8rem',
-                                  color: 'white',
-                                  textShadow: '0 1px 2px rgba(0,0,0,0.5)'
-                                }}></i>
-                              </div>
+                              <i className="fas fa-heart" style={{
+                                fontSize: '0.8rem',
+                                color: 'white',
+                                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                                display: 'block',
+                                margin: '0 auto'
+                              }}></i>
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    
-                    {guestbookList.length === 0 && (
-                      <div className="text-center" style={{ 
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        color: '#b8860b'
-                      }}>
-                        <i className="fas fa-ribbon fa-3x mb-3 opacity-50"></i>
-                        <p>첫 번째 리본을 남겨주세요</p>
                       </div>
-                    )}
+                    ))}
                   </div>
-                </div>
-              </Col>
-            </Row>
-          </Col>
 
-          {/* 우측: 추모사 + 위로의 말 전하기 */}
-          <Col lg={4}>
-            {/* 추모사 */}
-            <Card style={{ 
-              borderRadius: '16px', 
-              border: '1px solid rgba(184, 134, 11, 0.2)', 
-              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
-              marginBottom: '20px'
-            }}>
-              <Card.Header style={{ 
-                background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
-                borderRadius: '16px 16px 0 0',
-                border: 'none'
-              }}>
-                <div className="d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0" style={{ color: '#2C1F14' }}>
-                    <i className="fas fa-heart me-2"></i>
-                    추모사
-                  </h5>
-                </div>
-              </Card.Header>
-              <Card.Body className="p-4" style={{ maxHeight: '500px', overflowY: 'auto' }}>
-                <div className="memorial-eulogy">
-                  {memorial.tribute ? (
-                      <div className="eulogy-content" style={{ 
-                        lineHeight: '1.8', 
-                        fontSize: '0.9rem',
-                        color: '#495057',
-                        whiteSpace: 'pre-line'
-                      }}>
-                          {memorial.tribute}
-                      </div>
-                  ) : (
-                      <div className="text-center text-muted">
-                          <p>등록된 추모사가 없습니다.</p>
-                      </div>
+                  {guestbookList.length === 0 && (
+                    <div className="text-center" style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      color: '#b8860b'
+                    }}>
+                      {(() => {
+                        console.log('🎗️ 빈 방명록 표시 중 - guestbookList.length:', guestbookList.length);
+                        return null;
+                      })()}
+                      <i className="fas fa-ribbon fa-3x mb-3 opacity-50"></i>
+                      <p>첫 번째 리본을 남겨주세요</p>
+                    </div>
                   )}
-                </div>
-              </Card.Body>
-            </Card>
-            {/* 공유 버튼 */}
-            <Card style={{ 
-              borderRadius: '16px', 
-              border: '1px solid rgba(184, 134, 11, 0.2)', 
-              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)',
-              marginBottom: '20px'
-            }}>
-              <Card.Body className="text-center p-3">
-                <Button 
-                  className="w-100"
-                  style={{
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    color: '#fff',
-                    fontWeight: '600',
-                    padding: '12px'
-                  }}
-                >
-                  <i className="fas fa-share-alt me-2"></i>
-                  공유하기
-                </Button>
-              </Card.Body>
-            </Card>
-            {/* 위로의 말 전하기 */}
-            <Card style={{ 
-              borderRadius: '16px', 
-              border: '1px solid rgba(184, 134, 11, 0.2)', 
-              background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)',
-              boxShadow: '0 4px 20px rgba(44, 31, 20, 0.12)' 
-            }}>
-              <Card.Header style={{ 
-                background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.15) 0%, rgba(205, 133, 63, 0.1) 100%)',
-                borderRadius: '16px 16px 0 0',
-                border: 'none'
-              }}>
-                <div className="d-flex justify-content-between align-items-center">
-                  <h6 className="mb-0" style={{ color: '#2C1F14' }}>
-                    <i className="fas fa-book me-2"></i>
-                    위로의 말 전하기
-                  </h6>
-                  <Button 
-                    size="sm"
-                    onClick={() => setShowGuestbookModal(true)}
-                    style={{
-                      background: 'linear-gradient(135deg, #b8860b, #965a25)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: '#fff',
-                      fontWeight: '600',
-                      borderRadius: '8px'
-                    }}
-                  >
-                    <i className="fas fa-edit me-1"></i>
-                    작성
-                  </Button>
-                </div>
-              </Card.Header>
-              <Card.Body className="p-3">
-                <div className="text-center text-muted">
-                  <i className="fas fa-ribbon fa-2x mb-2" style={{ color: '#b8860b' }}></i>
-                  <p className="small mb-0">소중한 추억과 위로의 말을<br/>아름다운 리본으로 남겨주세요</p>
                 </div>
               </Card.Body>
             </Card>
@@ -1276,7 +1500,7 @@ const MemorialDetail = () => {
               작성하신 위로의 말씀이 아름다운 리본으로 표시됩니다
             </p>
           </div>
-          <Form onSubmit={handleGuestbookSubmit}>
+          <Form id="guestbook-form" onSubmit={handleGuestbookSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>성명</Form.Label>
               <Form.Control
@@ -1327,7 +1551,8 @@ const MemorialDetail = () => {
             취소
           </Button>
           <Button 
-            onClick={handleGuestbookSubmit}
+            type="submit"
+            form="guestbook-form"
             style={{
               background: 'linear-gradient(135deg, #b8860b, #965a25)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -1336,7 +1561,7 @@ const MemorialDetail = () => {
             }}
           >
             <i className="fas fa-ribbon me-2"></i>
-            리본으로 등록하기
+            {editingCommentId ? '수정하기' : '등록하기'}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -1382,7 +1607,7 @@ const MemorialDetail = () => {
                     </p>
                     <p className="text-muted">
                       <i className="fas fa-calendar-alt me-2"></i>
-                      작성일: {selectedRibbon.date}
+                      작성일: {selectedRibbon.createdAt ? new Date(selectedRibbon.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day:'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : '날짜 없음'}
                     </p>
                   </Col>
                   <Col md={4} className="text-end">
@@ -1399,7 +1624,10 @@ const MemorialDetail = () => {
                       margin: '0 auto',
                       boxShadow: '0 4px 15px rgba(44, 31, 20, 0.2)'
                     }}>
-                      <i className="fas fa-heart fa-2x" style={{ color: 'white' }}></i>
+                      <i className="fas fa-heart fa-2x" style={{ 
+                        color: 'white',
+                        display: 'block',
+                        margin: '0 auto' }}></i>
                     </div>
                   </Col>
                 </Row>
@@ -1464,22 +1692,6 @@ const MemorialDetail = () => {
             onClick={() => setShowRibbonDetailModal(false)}
           >
             닫기
-          </Button>
-          <Button 
-            style={{
-              background: selectedRibbon ? `linear-gradient(135deg, 
-                ${selectedRibbon.id % 4 === 1 ? '#b8860b' : selectedRibbon.id % 4 === 2 ? '#965a25' : selectedRibbon.id % 4 === 3 ? '#cd853f' : '#daa520'} 0%, 
-                ${selectedRibbon.id % 4 === 1 ? '#965a25' : selectedRibbon.id % 4 === 2 ? '#b8860b' : selectedRibbon.id % 4 === 3 ? '#b8860b' : '#cd853f'} 100%)` : '#b8860b',
-              border: 'none',
-              color: '#fff'
-            }}
-            onClick={() => {
-              // 공유 기능 구현 예정
-              alert('공유 기능은 곧 구현될 예정입니다.');
-            }}
-          >
-            <i className="fas fa-share-alt me-2"></i>
-            공유하기
           </Button>
         </Modal.Footer>
       </Modal>
@@ -1682,7 +1894,8 @@ const MemorialDetail = () => {
                       month: 'long', 
                       day: 'numeric',
                       hour: '2-digit',
-                      minute: '2-digit'
+                      minute: '2-digit',
+                      hour12: false
                     })}
                   </small>
                   
@@ -1708,88 +1921,6 @@ const MemorialDetail = () => {
           )}
         </Modal.Body>
       </Modal>
-
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        
-        .memorial-container {
-            opacity: 0;
-        }
-
-        .animate-in {
-          animation: fadeIn 0.6s ease-out forwards;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          height: 45px;
-          padding: 0 20px;
-          margin-bottom: 1rem;
-          box-sizing: border-box;
-          background: linear-gradient(135deg, #4A3728, #8B5A2B);
-          border: none;
-          color: white;
-          font-weight: 700;
-          font-size: 14px;
-          box-shadow: 0 2px 8px rgba(74, 55, 40, 0.35);
-          transition: all 0.3s ease;
-          border-radius: 8px;
-          cursor: pointer;
-          white-space: nowrap;
-        }
-
-        .back-btn:hover {
-          background: linear-gradient(135deg, #3c2d20, #7a4e24);
-          transform: scale(1.03);
-          box-shadow: 0 4px 12px rgba(74, 55, 40, 0.45);
-        }
-
-        .memorial-container::-webkit-scrollbar {
-          width: 6px;
-        }
-        .memorial-container::-webkit-scrollbar-track {
-          background: rgba(0,0,0,0.05);
-          border-radius: 10px;
-        }
-        .memorial-container::-webkit-scrollbar-thumb {
-          background-color: rgba(184, 134, 11, 0.5);
-          border-radius: 10px;
-        }
-
-        .photo-card:hover img {
-            transform: scale(1.1);
-        }
-
-        /* --- 수정된 반응형 코드 --- */
-        @media (max-width: 1200px) {
-          .page-wrapper {
-            height: auto !important; /* 고정 높이 해제제 */
-            min-height: calc(100vh - var(--navbar-height));
-            overflow-y: auto !important; /* 전체 페이지 스크롤이 가능하도록 변경 */
-            align-items: flex-start !important; /* 컨텐츠를 위쪽으로 정렬 */
-          }
-          .memorial-container {
-            height: auto !important; 
-            overflow: visible !important; /* 내용이 넘쳐도 보이도록 설정 */
-          }
-          .memorial-detail-scroll-area {
-            height: auto !important; 
-            overflow: visible !important; /* 내부 스크롤을 제거,전체 스크롤을 따르도록 함 */
-            flex: none !important; /* flex-grow 속성 제거 */
-          }
-        }
-
-        
-      `}</style>
     </div>
   );
 };

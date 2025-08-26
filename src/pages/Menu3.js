@@ -39,11 +39,25 @@ const Menu3 = () => {
         }));
     };
 
+    const calculateAge = (birthDateString) => {
+        if (!birthDateString) return '';
+        const birthDate = new Date(birthDateString);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
     const formatKST = (dateString) => {
         if (!dateString) return '';
         
-        const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
-        const date = new Date(utcDateString);
+        //const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+        //const date = new Date(utcDateString);
+
+        const date = new Date(dateString);
 
         const formatter = new Intl.DateTimeFormat('ko-KR', {
             timeZone: 'Asia/Seoul',
@@ -74,26 +88,37 @@ const Menu3 = () => {
         setError(null);
         setFilteredCustomers([]);
         try {
-            let response;
-            const apiParams = {
-                ageGroup: filters.age || undefined,
+            let customers = [];
+            const otherFilters = {
                 disease: filters.disease.length > 0 ? filters.disease[0] : undefined,
                 isMarried: filters.isMarried.length > 0 ? (filters.isMarried[0] === '기혼') : undefined,
                 hasChildren: filters.hasChildren.length > 0 ? (filters.hasChildren[0] === '유') : undefined,
             };
-            Object.keys(apiParams).forEach(key => apiParams[key] === undefined && delete apiParams[key]);
-            
-            const hasApiFilters = Object.keys(apiParams).length > 0;
+            Object.keys(otherFilters).forEach(key => otherFilters[key] === undefined && delete otherFilters[key]);
 
-            if (!hasApiFilters && !filters.id && !filters.name && filters.gender.length === 0) {
-                // 모든 필터가 비어있으면 전체 조회
-                response = await recommendationService.getAllCustomers();
+            if (filters.age === '60대 이상') {
+                const ageGroups = ['60대', '70대', '80대', '90대']; // 60대부터 90대까지 요청
+                const promises = ageGroups.map(ageGroup => 
+                    recommendationService.getFilteredCustomers({ ...otherFilters, ageGroup })
+                );
+                const responses = await Promise.all(promises);
+                customers = responses.flatMap(response => response.data);
             } else {
-                // 상세 필터가 하나라도 있으면 필터 조회 API 호출
-                response = await recommendationService.getFilteredCustomers(apiParams);
-            }
+                const apiParams = {
+                    ...otherFilters,
+                    ageGroup: filters.age || undefined,
+                };
+                Object.keys(apiParams).forEach(key => apiParams[key] === undefined && delete apiParams[key]);
 
-            let customers = response.data;
+                const hasApiFilters = Object.keys(apiParams).length > 0;
+                let response;
+                if (!hasApiFilters && !filters.id && !filters.name && filters.gender.length === 0) {
+                    response = await recommendationService.getAllCustomers();
+                } else {
+                    response = await recommendationService.getFilteredCustomers(apiParams);
+                }
+                customers = response.data;
+            }
             
             // 프론트엔드에서 id, name, gender 필터링 적용
             if (filters.id) {
@@ -105,11 +130,14 @@ const Menu3 = () => {
             if (filters.gender.length > 0) {
                 customers = customers.filter(c => {
                     if (!c.gender) return false;
-                    return filters.gender.some(filterGender => c.gender.startsWith(filterGender));
+                    return filters.gender.includes(c.gender);
                 });
             }
 
-            setFilteredCustomers(customers);
+            // 중복 제거 (여러 연령대 조회 시 발생 가능)
+            const uniqueCustomers = customers.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+            setFilteredCustomers(uniqueCustomers);
+
         } catch (err) {
             setError("데이터 조회에 실패했습니다. 잠시 후 다시 시도해주세요.");
             console.error(err);
@@ -156,7 +184,7 @@ const Menu3 = () => {
 
             const requestData = {
                 ageGroup: filters.age || undefined,
-                gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
+                gender: filters.gender.length > 0 ? filters.gender[0] : undefined,
                 disease: filters.disease[0] || undefined,
                 family: familyValue,
             };
@@ -199,7 +227,7 @@ const Menu3 = () => {
         try {
             const filterCriteria = {
                 ageGroup: filters.age || undefined,
-                gender: filters.gender.length > 0 ? (filters.gender[0] === '남' ? '남성' : '여성') : undefined,
+                gender: filters.gender.length > 0 ? filters.gender[0] : undefined,
                 disease: filters.disease[0] || undefined,
                 family: generatedMessageData.family || undefined,
             };
@@ -237,7 +265,7 @@ const Menu3 = () => {
                 <div className={`dashboard-container ${animateCard ? 'animate-in' : ''}`} style={{width: '100%', maxWidth: '1600px', height: '100%', margin: '0 auto', display: 'flex', boxSizing: 'border-box', background: 'rgba(255, 251, 235, 0.95)', boxShadow: '0 20px 60px rgba(44, 31, 20, 0.4)', backdropFilter: 'blur(15px)', border: '2px solid rgba(184, 134, 11, 0.35)', borderRadius: '28px', padding: '20px', gap: '20px', overflow: 'hidden'}}>
                     {/* 좌측 필터링 UI */}
                     <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
-                        <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px', flexShrink: 0 }}>전환서비스 추천</h4>
+                        <h4 className="mb-3" style={{ fontSize: '30px', fontWeight: '700', color: '#2C1F14', paddingLeft: '10px', flexShrink: 0 }}>고객 맞춤형 Upselling</h4>
                         <div className="sidebar-scroll-area" style={{background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(205, 133, 63, 0.08) 100%)', borderRadius: '15px', padding: '20px', flex: 1, overflowY: 'auto', minHeight: 0, border: '1px solid rgba(184, 134, 11, 0.2)'}}>
                             <div style={{width: '100px', height: '100px', background: 'rgba(184, 134, 11, 0.15)', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(44, 31, 20, 0.2)'}}><Mail size={40} style={{ color: '#B8860B' }} /></div>
                             <h2 style={{fontWeight: '700', marginBottom: '15px', fontSize: '1.8rem', textAlign: 'center', color: '#2C1F14'}}>고객 조회</h2>
@@ -246,7 +274,7 @@ const Menu3 = () => {
                             <Form>
                                 <Row className="g-3 mb-3"><Col xs={6}><Form.Label style={{color: '#4A3728'}}>고객 고유번호</Form.Label><Form.Control name="id" value={filters.id} onChange={handleInputChange} placeholder="고유번호" /></Col><Col xs={6}><Form.Label style={{color: '#4A3728'}}>이름</Form.Label><Form.Control name="name" value={filters.name} onChange={handleInputChange} placeholder="이름" /></Col></Row>
                                 <hr className="my-4"/><Form.Label style={{color: '#4A3728'}}>상세 조건</Form.Label>
-                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>성별:</strong><Form.Check inline type="checkbox" label="남" name="gender" value="남" checked={filters.gender.includes('남')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여" name="gender" value="여" checked={filters.gender.includes('여')} onChange={handleCheckboxChange} /></div>
+                                <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>성별:</strong><Form.Check inline type="checkbox" label="남성" name="gender" value="남성" checked={filters.gender.includes('남성')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="여성" name="gender" value="여성" checked={filters.gender.includes('여성')} onChange={handleCheckboxChange} /></div>
                                 <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>질병:</strong><Form.Check inline type="checkbox" label="유" name="disease" value="유" checked={filters.disease.includes('유')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="disease" value="무" checked={filters.disease.includes('무')} onChange={handleCheckboxChange} /></div>
                                 <div className="d-flex align-items-center mb-2"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>결혼:</strong><Form.Check inline type="checkbox" label="기혼" name="isMarried" value="기혼" checked={filters.isMarried.includes('기혼')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="미혼" name="isMarried" value="미혼" checked={filters.isMarried.includes('미혼')} onChange={handleCheckboxChange} /></div>
                                 <div className="d-flex align-items-center mb-3"><strong className="me-3" style={{minWidth: '40px', color: '#4A3728'}}>자녀:</strong><Form.Check inline type="checkbox" label="유" name="hasChildren" value="유" checked={filters.hasChildren.includes('유')} onChange={handleCheckboxChange} /><Form.Check inline type="checkbox" label="무" name="hasChildren" value="무" checked={filters.hasChildren.includes('무')} onChange={handleCheckboxChange} /></div>
@@ -294,7 +322,7 @@ const Menu3 = () => {
                                                                                                 <Col md={3} className="text-center text-md-start mb-3 mb-md-0 border-end pe-md-3"><p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>고객고유번호: {customer.id}</p><h5 className="fw-bold mb-0" style={{color: '#2C1F14'}}>{customer.name}</h5></Col>
                                                 <Col>
                                                     <Row>
-                                                        <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthDate?.split('T')[0]}</Col>
+                                                        <Col sm={6} className="mb-2"><strong>생년월일:</strong> {customer.birthDate?.split('T')[0]} (만 {calculateAge(customer.birthDate)}세)</Col>
                                                         <Col sm={6} className="mb-2"><strong>성별:</strong> {customer.gender}</Col>
                                                         <Col sm={6} className="mb-2"><strong>연락처:</strong> {formatPhone(customer.phone)}</Col>
                                                         <Col sm={6} className="mb-2"><strong>직업:</strong> {customer.job}</Col>

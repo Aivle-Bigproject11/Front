@@ -5,9 +5,8 @@ import {
     getUserByCredentials, 
     getEmployeeByCredentials,
     getUserByNameAndEmail,
-    getEmployeeByNameAndEmail,
-    updateUserPasswordByLoginId,
-    updateEmployeePasswordByLoginId } 
+    getEmployeeByNameAndEmail
+} 
 from '../services/userService';
 import { apiService } from '../services/api'; // Added for direct API calls
 
@@ -31,12 +30,21 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       const userData = localStorage.getItem('user');
       
+      console.log('🔍 localStorage에서 불러온 데이터:', { token: !!token, userData });
+      
       if (token && userData) {
+        const parsedUser = JSON.parse(userData);
+        console.log('🔍 파싱된 사용자 데이터:', parsedUser);
+        console.log('🔍 사용자 타입:', parsedUser.userType);
+        
         setIsAuthenticated(true);
-        setUser(JSON.parse(userData));
+        setUser(parsedUser);
       }
     } catch (error) {
       console.error("사용자 정보를 불러오는 데 실패했습니다.", error);
+      // localStorage 데이터가 손상된 경우 정리
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
     setLoading(false);
   }, []);
@@ -78,41 +86,72 @@ export const AuthProvider = ({ children }) => {
       let token;
       let userData;
 
+      console.log(`🔍 ${userType} 로그인 시도:`, { loginId, userType });
+
       if (userType === 'employee') {
         const credentials = { loginId, loginPassword };
+        console.log('🔍 관리자 로그인 API 호출 중...', credentials);
+        
         const response = await apiService.loginManager(credentials);
-        // Assuming response.data contains user info and token
-        foundUser = response.data; // The user object is directly in response.data
-        token = response.data.token; // The token is directly in response.data.token
+        console.log('🔍 관리자 로그인 API 응답:', response);
+        
+        // response는 이제 직접 데이터 객체입니다 (response.data가 아님)
+        foundUser = response;
+        token = response.token;
+        
+        console.log('🔍 추출된 토큰:', token);
+        console.log('🔍 사용자 정보:', foundUser);
+        
         userData = {
           id: foundUser.id,
-          loginId: loginId, // Use the loginId passed into loginByType
+          loginId: loginId,
           name: foundUser.name,
-          userType: 'employee' // Set userType explicitly
+          userType: 'employee'
         };
       } else { // userType === 'user'
         const credentials = { loginId, loginPassword };
+        console.log('🔍 사용자 로그인 API 호출 중...', credentials);
+        
         const response = await apiService.loginUser(credentials);
-        // Assuming response.data contains user info and token
-        foundUser = response.data; // The user object is directly in response.data
-        token = response.data.token; // The token is directly in response.data.token
+        console.log('🔍 사용자 로그인 API 응답:', response);
+        
+        // response는 이제 직접 데이터 객체입니다 (response.data가 아님)
+        foundUser = response;
+        token = response.token;
         userData = {
           id: foundUser.id,
-          loginId: loginId, // Use the loginId passed into loginByType
+          loginId: loginId,
           name: foundUser.name,
-          userType: 'user' // Set userType explicitly
+          userType: 'user'
         };
+      }
+      
+      console.log('🔍 최종 사용자 데이터:', userData);
+      console.log('🔍 저장할 토큰:', token);
+      
+      if (!token) {
+        console.error('❌ 토큰이 없습니다!');
+        return { success: false, message: '토큰을 받지 못했습니다.' };
       }
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
+      
+      console.log('✅ localStorage에 저장 완료');
+      console.log('✅ 저장된 토큰:', localStorage.getItem('token'));
+      console.log('✅ 저장된 사용자:', localStorage.getItem('user'));
       
       setIsAuthenticated(true);
       setUser(userData);
       
       return { success: true };
     } catch (error) {
-      console.error(error);
+      console.error('❌ 로그인 오류:', error);
+      console.error('❌ 오류 상세:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
       return { success: false, message: error.message };
     }
   };
@@ -197,12 +236,14 @@ export const AuthProvider = ({ children }) => {
    */
   const changePasswordByType = async (loginId, newPassword, userType) => {
     try {
-      const updateFunction = userType === 'employee' ? updateEmployeePasswordByLoginId : updateUserPasswordByLoginId;
-      const result = await updateFunction(loginId, newPassword);
-      return result; // { success: true, message: '...' }
+      const updateFunction = userType === 'employee' ? apiService.changeEmployeePassword : apiService.changeUserPassword;
+      await updateFunction(loginId, newPassword);
+      return { success: true, message: '비밀번호가 성공적으로 변경되었습니다.' };
     } catch (error) {
-      console.error(error);
-      return { success: false, message: error.message };
+      console.error("Password change error:", error);
+      // Axios 에러인 경우, 백엔드에서 보낸 커스텀 메시지(error.response.data)를 우선적으로 사용합니다.
+      const message = error.response?.data || error.message;
+      return { success: false, message: message };
     }
   };
 
@@ -211,17 +252,21 @@ export const AuthProvider = ({ children }) => {
    */
   const changePassword = async (loginId, newPassword) => {
     try {
-      const result = await updateUserPasswordByLoginId(loginId, newPassword);
-      return result; // { success: true, message: '...' }
+      // 기본값을 사용자 비밀번호 변경으로 설정
+      await apiService.changeUserPassword(loginId, newPassword);
+      return { success: true, message: '비밀번호가 성공적으로 변경되었습니다.' };
     } catch (error) {
-      console.error(error);
-      return { success: false, message: error.message };
+      console.error("Password change error:", error);
+      // Axios 에러인 경우, 백엔드에서 보낸 커스텀 메시지(error.response.data)를 우선적으로 사용합니다.
+      const message = error.response?.data || error.message;
+      return { success: false, message: message };
     }
   };
 
   const value = {
     isAuthenticated,
     user,
+    userType: user?.userType, // userType 추가
     loading,
     login,
     loginByType,
@@ -231,6 +276,13 @@ export const AuthProvider = ({ children }) => {
     changePassword,
     changePasswordByType
   };
+
+  // 디버깅을 위한 로그
+  console.log('🔍 AuthContext value:', { 
+    isAuthenticated, 
+    user: user ? { ...user, loginPassword: '[HIDDEN]' } : null, 
+    userType: user?.userType 
+  });
 
   return (
     <AuthContext.Provider value={value}>
