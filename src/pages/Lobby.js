@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Badge, Spinner, Alert, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Calendar, Search, LogOut, User, ArrowRight, Check, X, Printer, Eye } from 'lucide-react';
+import { Heart, Calendar, Search, LogOut, User, ArrowRight, Check, X, Printer, Eye, QrCode } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { customerService } from '../services/customerService';
+import QRService from '../services/QRservice';
 
 const Lobby = () => {
   const [memorialHalls, setMemorialHalls] = useState([]);
@@ -233,6 +234,55 @@ const Lobby = () => {
       window.open(documentUrl, '_blank');
     } else {
       alert('인쇄할 서류 파일을 찾을 수 없습니다.');
+    }
+  };
+
+  // QR코드 생성 및 다운로드 함수
+  const handleGenerateQRCode = async (memorial) => {
+    try {
+      await QRService.generateAndDownloadMemorialQRCode(
+        memorial.id,
+        memorial.deceasedName,
+        {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        }
+      );
+      console.log('QR코드가 다운로드되었습니다.');
+    } catch (error) {
+      console.error('QR코드 생성 실패:', error);
+      alert('QR코드 생성에 실패했습니다.');
+    }
+  };
+
+  // QR코드 미리보기 함수
+  const handleShowQRPreview = async (memorial) => {
+    try {
+      const qrCodeDataUrl = await QRService.generateMemorialQRCode(memorial.id);
+      const guestUrl = QRService.generateMemorialGuestUrl(memorial.id);
+      
+      setPreviewContent({
+        title: `${memorial.deceasedName}님 추모관 QR코드`,
+        content: `
+          <div style="text-align: center;">
+            <img src="${qrCodeDataUrl}" alt="QR Code" style="max-width: 100%; height: auto; margin-bottom: 15px;" />
+            <p style="font-size: 14px; color: #666; margin: 10px 0;">
+              QR코드를 스캔하면 다음 링크로 이동합니다:
+            </p>
+            <p style="font-size: 12px; color: #888; word-break: break-all; background: #f8f9fa; padding: 8px; border-radius: 4px;">
+              ${guestUrl}
+            </p>
+          </div>
+        `
+      });
+      setShowPreviewModal(true);
+    } catch (error) {
+      console.error('QR코드 미리보기 실패:', error);
+      alert('QR코드 미리보기에 실패했습니다.');
     }
   };
 
@@ -479,15 +529,67 @@ const Lobby = () => {
                             {memorial.joinCode}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B', flexShrink: 0 }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: '600', marginRight: '5px' }}>
-                            입장하기
+                        <div style={{
+                          width: '120px',
+                          height: '120px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'column',
+                          backgroundColor: 'rgba(184, 134, 11, 0.05)',
+                          border: '2px dashed rgba(184, 134, 11, 0.3)',
+                          borderRadius: '16px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // 여기에 QR 코드 생성 및 모달 표시 로직 추가
+                          console.log(`QR 코드 생성 for memorial: ${memorial.id}`);
+                          alert(`'${memorial.name}' QR코드 생성 기능은 현재 개발 중입니다.`);
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(184, 134, 11, 0.1)';
+                          e.currentTarget.style.borderColor = 'rgba(184, 134, 11, 0.5)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(184, 134, 11, 0.05)';
+                          e.currentTarget.style.borderColor = 'rgba(184, 134, 11, 0.3)';
+                        }}
+                        >
+                          <QrCode size={32} style={{ color: '#B8860B', marginBottom: '10px' }} />
+                          <span style={{ fontWeight: '600', color: '#B8860B', fontSize: '0.9rem' }}>
+                            QR코드 생성
                           </span>
-                          <ArrowRight size={14} />
                         </div>
                       </div>
                     </Card.Body>
                     <Card.Footer style={{ background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', padding: '15px 20px' }}>
+                      {/* QR코드 섹션 */}
+                      <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+                        <div style={{ fontWeight: '600', color: '#555', marginBottom: '12px', fontSize: '0.9rem' }}>추모관 QR코드</div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm" 
+                            style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center' }}
+                            onClick={(e) => { e.stopPropagation(); handleShowQRPreview(memorial); }}
+                          >
+                            <Eye size={14} style={{ marginRight: '4px' }} />
+                            미리보기
+                          </Button>
+                          <Button 
+                            variant="primary" 
+                            size="sm" 
+                            style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center' }}
+                            onClick={(e) => { e.stopPropagation(); handleGenerateQRCode(memorial); }}
+                          >
+                            <QrCode size={14} style={{ marginRight: '4px' }} />
+                            다운로드
+                          </Button>
+                        </div>
+                      </div>
+                      
                       <div style={{ fontWeight: '600', color: '#555', marginBottom: '12px', fontSize: '0.9rem' }}>서류 작성 상태</div>
                       {documentsLoading ? <Spinner animation="border" size="sm" /> :
                       !customer ? <div style={{fontSize: '0.85rem', color: '#888'}}>서류 정보 없음</div> :

@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge } from 'react-bootstrap';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, QrCode, Eye, Download } from 'lucide-react';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import QRService from '../services/QRservice';
 
 const MemorialDetail = () => {
   const { id } = useParams();
@@ -49,6 +50,11 @@ const MemorialDetail = () => {
     description: ''
   });
   const [photoPreview, setPhotoPreview] = useState(null);
+
+  // QR코드 관련 상태
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState(null);
+  const [generatingQR, setGeneratingQR] = useState(false);
 
   // 접근 모드 확인: 고유번호 접근(guest), 유저 로그인(user), 관리자 로그인(admin)
   const isGuestAccess = !user; // 로그인하지 않고 고유번호로 접근
@@ -536,6 +542,60 @@ const MemorialDetail = () => {
     } else {
       console.error('❌ 초대코드를 찾을 수 없음 - id:', id, 'memorial:', memorial);
       alert('초대 코드를 찾을 수 없습니다.');
+    }
+  };
+
+  // QR코드 생성 및 다운로드 함수
+  const handleGenerateQRCode = async () => {
+    try {
+      setGeneratingQR(true);
+      const memorialId = id || memorial?.id;
+      const memorialName = memorial?.deceasedName || '';
+      
+      await QRService.generateAndDownloadMemorialQRCode(
+        memorialId,
+        memorialName,
+        {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        }
+      );
+      console.log('QR코드가 다운로드되었습니다.');
+    } catch (error) {
+      console.error('QR코드 생성 실패:', error);
+      alert('QR코드 생성에 실패했습니다.');
+    } finally {
+      setGeneratingQR(false);
+    }
+  };
+
+  // QR코드 모달 표시 함수
+  const handleShowQRCode = async () => {
+    try {
+      setGeneratingQR(true);
+      const memorialId = id || memorial?.id;
+      const qrCodeDataUrl = await QRService.generateMemorialQRCode(memorialId);
+      setQrCodeDataUrl(qrCodeDataUrl);
+      setShowQRModal(true);
+    } catch (error) {
+      console.error('QR코드 생성 실패:', error);
+      alert('QR코드 생성에 실패했습니다.');
+    } finally {
+      setGeneratingQR(false);
+    }
+  };
+
+  // QR코드 모달에서 다운로드
+  const handleDownloadFromModal = async () => {
+    if (qrCodeDataUrl) {
+      const memorialName = memorial?.deceasedName || '';
+      const sanitizedName = memorialName.replace(/[^a-zA-Z0-9가-힣]/g, '_');
+      const filename = `추모관_QR_${sanitizedName || 'memorial'}.png`;
+      QRService.downloadQRCode(qrCodeDataUrl, filename);
     }
   };
 
