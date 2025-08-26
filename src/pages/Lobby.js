@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Badge, Spinner, Alert, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Calendar, Search, LogOut, User, ArrowRight, Check, X, Printer, Eye } from 'lucide-react';
+import { Heart, Calendar, Search, LogOut, User, ArrowRight, Check, X, Printer, Eye, QrCode } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { customerService } from '../services/customerService';
@@ -479,11 +479,38 @@ const Lobby = () => {
                             {memorial.joinCode}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B', flexShrink: 0 }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: '600', marginRight: '5px' }}>
-                            입장하기
+                        <div style={{
+                          width: '120px',
+                          height: '120px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'column',
+                          backgroundColor: 'rgba(184, 134, 11, 0.05)',
+                          border: '2px dashed rgba(184, 134, 11, 0.3)',
+                          borderRadius: '16px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // 여기에 QR 코드 생성 및 모달 표시 로직 추가
+                          console.log(`QR 코드 생성 for memorial: ${memorial.id}`);
+                          alert(`'${memorial.name}' QR코드 생성 기능은 현재 개발 중입니다.`);
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(184, 134, 11, 0.1)';
+                          e.currentTarget.style.borderColor = 'rgba(184, 134, 11, 0.5)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(184, 134, 11, 0.05)';
+                          e.currentTarget.style.borderColor = 'rgba(184, 134, 11, 0.3)';
+                        }}
+                        >
+                          <QrCode size={32} style={{ color: '#B8860B', marginBottom: '10px' }} />
+                          <span style={{ fontWeight: '600', color: '#B8860B', fontSize: '0.9rem' }}>
+                            QR코드 생성
                           </span>
-                          <ArrowRight size={14} />
                         </div>
                       </div>
                     </Card.Body>
