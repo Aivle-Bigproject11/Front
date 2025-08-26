@@ -10,7 +10,7 @@ class QRService {
    * @param {string} baseUrl - 기본 URL (기본값: http://localhost:3000)
    * @returns {string} 생성된 URL
    */
-  static generateMemorialGuestUrl(memorialId, baseUrl = 'http://localhost:3000') {
+  static generateMemorialGuestUrl(memorialId, baseUrl = window.location.origin) {
     return `${baseUrl}/memorial/${memorialId}/guest`;
   }
 
@@ -49,7 +49,7 @@ class QRService {
    * @param {string} baseUrl - 기본 URL
    * @returns {Promise<string>} Base64 인코딩된 QR코드 이미지 데이터 URL
    */
-  static async generateMemorialQRCode(memorialId, options = {}, baseUrl = 'http://localhost:3000') {
+  static async generateMemorialQRCode(memorialId, options = {}, baseUrl = window.location.origin) {
     const url = this.generateMemorialGuestUrl(memorialId, baseUrl);
     return await this.generateQRCode(url, options);
   }
@@ -85,7 +85,7 @@ class QRService {
     memorialId, 
     memorialName = '', 
     options = {}, 
-    baseUrl = 'http://localhost:3000'
+    baseUrl = window.location.origin
   ) {
     try {
       // QR코드 생성
@@ -140,7 +140,7 @@ class QRService {
    * @param {Object} options - QR코드 생성 옵션
    * @param {string} baseUrl - 기본 URL
    */
-  static async renderMemorialQRCodeToCanvas(canvas, memorialId, options = {}, baseUrl = 'http://localhost:3000') {
+  static async renderMemorialQRCodeToCanvas(canvas, memorialId, options = {}, baseUrl = window.location.origin) {
     const url = this.generateMemorialGuestUrl(memorialId, baseUrl);
     await this.renderQRCodeToCanvas(canvas, url, options);
   }
