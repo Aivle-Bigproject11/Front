@@ -80,8 +80,8 @@ function App() {
                         </Route>
 
                         <Route element={<PrivateRoute allowedUserTypes={['employee', 'user']} />}>
-                            <Route path="/password-check" element={<NavbarWrapper><PasswordCheck /></NavbarWrapper>} />
-                            <Route path="/user-config" element={<NavbarWrapper><UserConfig /></NavbarWrapper>} />
+                            <Route path="/password-check" element={<PasswordCheck />} />
+                            <Route path="/user-config" element={<UserConfig />} />
                         </Route>
 
                         {/* Fallback for any unmatched routes */}

@@ -361,9 +361,23 @@ const Lobby = () => {
             display: 'flex',
             alignItems: 'center'
           }}>
-            <User size={16} style={{ marginRight: '8px', color: '#B8860B' }} />
-            <span style={{ fontWeight: '600', color: '#333' }}>{maskName(user?.name) || '사용자'}님</span>
+            <span style={{ fontWeight: '600', color: '#333' }}>환영합니다, {maskName(user?.name) || '사용자'}님</span>
           </div>
+          <Button
+            variant="outline-primary"
+            onClick={() => navigate('/password-check')}
+            style={{
+              borderRadius: '12px',
+              padding: '8px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              borderColor: '#B8860B',
+              color: '#B8860B'
+            }}
+          >
+            <User size={16} style={{ marginRight: '6px' }} />
+            내 정보
+          </Button>
           <Button
             variant="outline-secondary"
             onClick={handleLogout}
