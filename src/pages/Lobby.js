@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Badge, Spinner, Alert, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Calendar, Search, LogOut, User, ArrowRight, Check, X, Printer, Eye } from 'lucide-react';
+import { Heart, Calendar, Search, LogOut, User, ArrowRight, Check, X, Printer, Eye, QrCode } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { customerService } from '../services/customerService';
+import QRService from '../services/QRservice';
 
 const Lobby = () => {
   const [memorialHalls, setMemorialHalls] = useState([]);
@@ -16,6 +17,8 @@ const Lobby = () => {
   const [animateCard, setAnimateCard] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewContent, setPreviewContent] = useState({ title: '', content: '' });
+  const [currentQRCodeUrl, setCurrentQRCodeUrl] = useState(null); // QR코드 다운로드를 위한 상태
+  const [currentMemorialName, setCurrentMemorialName] = useState(''); // QR코드 다운로드를 위한 상태
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -60,7 +63,7 @@ const Lobby = () => {
             id: memorialId,
             name: `故 ${memorialData.name || '고인'} 추모관`, // API 응답에 맞게 필드명 수정
             description: detailData.tribute || '',
-            period: `${memorialData.birthDate || '미상'} ~ ${memorialData.deceasedDate || '미상'}`,
+            period: `${memorialData.birthDate || '미상'} ~ ${memorialData.deceasedDate || '미상'}`, 
             joinCode: memorialId, // 추모관 고유번호는 memorialId를 사용
             customerId: memorialData.customerId,
             // Menu4.js와 동일한 상태 로직 적용
@@ -236,6 +239,76 @@ const Lobby = () => {
     }
   };
 
+  // QR코드 생성 및 미리보기 함수 (기존 다운로드 버튼용)
+  const handleGenerateQRCode = async (memorial) => {
+    try {
+      const qrCodeDataUrl = await QRService.generateMemorialQRCode(memorial.id);
+      const guestUrl = QRService.generateMemorialGuestUrl(memorial.id);
+      
+      // QR코드 URL을 저장하여 모달에서 다운로드할 수 있도록 함
+      setCurrentQRCodeUrl(qrCodeDataUrl);
+      setCurrentMemorialName(memorial.name);
+      
+      setPreviewContent({
+        title: `${memorial.name} QR코드`,
+        content: `
+          <div style="text-align: center;">
+            <img src="${qrCodeDataUrl}" alt="QR Code" style="max-width: 100%; height: auto; margin-bottom: 15px;" />
+            <p style="font-size: 14px; color: #666; margin: 10px 0;">
+              QR코드를 스캔하면 다음 링크로 이동합니다:
+            </p>
+            <p style="font-size: 12px; color: #888; word-break: break-all; background: #f8f9fa; padding: 8px; border-radius: 4px;">
+              ${guestUrl}
+            </p>
+          </div>
+        `
+      });
+      setShowPreviewModal(true);
+      console.log('QR코드 미리보기가 표시되었습니다.');
+    } catch (error) {
+      console.error('QR코드 생성 실패:', error);
+      alert('QR코드 생성에 실패했습니다.');
+    }
+  };
+
+  // QR코드 미리보기 함수
+  const handleShowQRPreview = async (memorial) => {
+    try {
+      const qrCodeDataUrl = await QRService.generateMemorialQRCode(memorial.id);
+      const guestUrl = QRService.generateMemorialGuestUrl(memorial.id);
+      
+      setPreviewContent({
+        title: `${memorial.name} QR코드`,
+        content: `
+          <div style="text-align: center;">
+            <img src="${qrCodeDataUrl}" alt="QR Code" style="max-width: 100%; height: auto; margin-bottom: 15px;" />
+            <p style="font-size: 14px; color: #666; margin: 10px 0;">
+              QR코드를 스캔하면 다음 링크로 이동합니다:
+            </p>
+            <p style="font-size: 12px; color: #888; word-break: break-all; background: #f8f9fa; padding: 8px; border-radius: 4px;">
+              ${guestUrl}
+            </p>
+          </div>
+        `
+      });
+      setShowPreviewModal(true);
+    } catch (error) {
+      console.error('QR코드 미리보기 실패:', error);
+      alert('QR코드 미리보기에 실패했습니다.');
+    }
+  };
+
+  // 모달에서 QR코드 다운로드하는 함수
+  const handleDownloadQRFromModal = () => {
+    if (currentQRCodeUrl) {
+      const sanitizedName = currentMemorialName.replace(/[^a-zA-Z0-9가-힣]/g, '_');
+      const filename = `추모관_QR_${sanitizedName || 'memorial'}.png`;
+      
+      QRService.downloadQRCode(currentQRCodeUrl, filename);
+      console.log('QR코드가 다운로드되었습니다.');
+    }
+  };
+
   const maskName = (name) => {
     if (!name || name.length < 2) {
       return name;
@@ -288,9 +361,23 @@ const Lobby = () => {
             display: 'flex',
             alignItems: 'center'
           }}>
-            <User size={16} style={{ marginRight: '8px', color: '#B8860B' }} />
-            <span style={{ fontWeight: '600', color: '#333' }}>{maskName(user?.name) || '사용자'}님</span>
+            <span style={{ fontWeight: '600', color: '#333' }}>환영합니다, {maskName(user?.name) || '사용자'}님</span>
           </div>
+          <Button
+            variant="outline-primary"
+            onClick={() => navigate('/password-check')}
+            style={{
+              borderRadius: '12px',
+              padding: '8px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              borderColor: '#B8860B',
+              color: '#B8860B'
+            }}
+          >
+            <User size={16} style={{ marginRight: '6px' }} />
+            내 정보
+          </Button>
           <Button
             variant="outline-secondary"
             onClick={handleLogout}
@@ -479,21 +566,46 @@ const Lobby = () => {
                             {memorial.joinCode}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', color: '#B8860B', flexShrink: 0 }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: '600', marginRight: '5px' }}>
-                            입장하기
+                        <div style={{
+                          width: '120px',
+                          height: '120px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'column',
+                          backgroundColor: 'rgba(184, 134, 11, 0.05)',
+                          border: '2px dashed rgba(184, 134, 11, 0.3)',
+                          borderRadius: '16px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGenerateQRCode(memorial);
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(184, 134, 11, 0.1)';
+                          e.currentTarget.style.borderColor = 'rgba(184, 134, 11, 0.5)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(184, 134, 11, 0.05)';
+                          e.currentTarget.style.borderColor = 'rgba(184, 134, 11, 0.3)';
+                        }}
+                        >
+                          <QrCode size={32} style={{ color: '#B8860B', marginBottom: '10px' }} />
+                          <span style={{ fontWeight: '600', color: '#B8860B', fontSize: '0.9rem' }}>
+                            QR코드 생성
                           </span>
-                          <ArrowRight size={14} />
                         </div>
                       </div>
                     </Card.Body>
                     <Card.Footer style={{ background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', padding: '15px 20px' }}>
                       <div style={{ fontWeight: '600', color: '#555', marginBottom: '12px', fontSize: '0.9rem' }}>서류 작성 상태</div>
                       {documentsLoading ? <Spinner animation="border" size="sm" /> :
-                      !customer ? <div style={{fontSize: '0.85rem', color: '#888'}}>서류 정보 없음</div> :
+                      !details?.customer ? <div style={{fontSize: '0.85rem', color: '#888'}}>서류 정보 없음</div> :
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {documentsInfo.map(docInfo => {
-                          const documentData = statuses ? statuses[docInfo.type] : null;
+                          const documentData = details?.statuses ? details.statuses[docInfo.type] : null;
                           const isCompleted = !!documentData;
                           return (
                             <div key={docInfo.type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
@@ -517,7 +629,8 @@ const Lobby = () => {
                       </div>}
                     </Card.Footer>
                   </Card>
-                )})}
+                )
+              })}
             </div>
           )}
         </div>
@@ -645,7 +758,32 @@ const Lobby = () => {
             <div dangerouslySetInnerHTML={{ __html: previewContent.content }} />
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowPreviewModal(false)}>
+          {currentQRCodeUrl && (
+            <Button 
+              onClick={handleDownloadQRFromModal}
+              style={{
+                background: 'linear-gradient(135deg, #B8860B 0%, #CD853F 100%)',
+                border: 'none',
+                boxShadow: '0 4px 15px rgba(184, 134, 11, 0.3)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(184, 134, 11, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 15px rgba(184, 134, 11, 0.3)';
+              }}
+            >
+              다운로드
+            </Button>
+          )}
+          <Button variant="secondary" onClick={() => {
+            setShowPreviewModal(false);
+            setCurrentQRCodeUrl(null); // 모달 닫을 때 QR코드 URL 초기화
+            setCurrentMemorialName('');
+          }}>
             닫기
           </Button>
         </Modal.Footer>
