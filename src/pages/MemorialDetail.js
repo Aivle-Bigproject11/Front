@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Badge } from 'react-bootstrap';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, QrCode, Eye, Download, Copy } from 'lucide-react';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import QRService from '../services/QRservice';
 
 const MemorialDetail = () => {
   const { id } = useParams();
@@ -39,6 +40,7 @@ const MemorialDetail = () => {
   const [animateCard, setAnimateCard] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [showShareButtons, setShowShareButtons] = useState(false);
   
   // 사진 업로드 관련 상태
   const [showPhotoUploadModal, setShowPhotoUploadModal] = useState(false);
@@ -49,6 +51,11 @@ const MemorialDetail = () => {
     description: ''
   });
   const [photoPreview, setPhotoPreview] = useState(null);
+
+  // QR코드 관련 상태
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState(null);
+  const [generatingQR, setGeneratingQR] = useState(false);
 
   // 접근 모드 확인: 고유번호 접근(guest), 유저 로그인(user), 관리자 로그인(admin)
   const isGuestAccess = !user; // 로그인하지 않고 고유번호로 접근
@@ -536,6 +543,60 @@ const MemorialDetail = () => {
     } else {
       console.error('❌ 초대코드를 찾을 수 없음 - id:', id, 'memorial:', memorial);
       alert('초대 코드를 찾을 수 없습니다.');
+    }
+  };
+
+  // QR코드 생성 및 다운로드 함수
+  const handleGenerateQRCode = async () => {
+    try {
+      setGeneratingQR(true);
+      const memorialId = id || memorial?.id;
+      const memorialName = memorial?.deceasedName || '';
+      
+      await QRService.generateAndDownloadMemorialQRCode(
+        memorialId,
+        memorialName,
+        {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        }
+      );
+      console.log('QR코드가 다운로드되었습니다.');
+    } catch (error) {
+      console.error('QR코드 생성 실패:', error);
+      alert('QR코드 생성에 실패했습니다.');
+    } finally {
+      setGeneratingQR(false);
+    }
+  };
+
+  // QR코드 모달 표시 함수
+  const handleShowQRCode = async () => {
+    try {
+      setGeneratingQR(true);
+      const memorialId = id || memorial?.id;
+      const qrCodeDataUrl = await QRService.generateMemorialQRCode(memorialId);
+      setQrCodeDataUrl(qrCodeDataUrl);
+      setShowQRModal(true);
+    } catch (error) {
+      console.error('QR코드 생성 실패:', error);
+      alert('QR코드 생성에 실패했습니다.');
+    } finally {
+      setGeneratingQR(false);
+    }
+  };
+
+  // QR코드 모달에서 다운로드
+  const handleDownloadFromModal = async () => {
+    if (qrCodeDataUrl) {
+      const memorialName = memorial?.deceasedName || '';
+      const sanitizedName = memorialName.replace(/[^a-zA-Z0-9가-힣]/g, '_');
+      const filename = `추모관_QR_${sanitizedName || 'memorial'}.png`;
+      QRService.downloadQRCode(qrCodeDataUrl, filename);
     }
   };
 
@@ -1158,7 +1219,9 @@ const MemorialDetail = () => {
               <Card.Body className="text-center p-3">
                 <Button 
                   className="w-100"
-                  onClick={handleCopyInviteCode}
+                  onClick={() => setShowShareButtons(prev => !prev)}
+                  aria-controls="share-options"
+                  aria-expanded={showShareButtons}
                   style={{
                     borderRadius: '12px',
                     background: 'linear-gradient(135deg, #b8860b, #965a25)',
@@ -1169,8 +1232,39 @@ const MemorialDetail = () => {
                   }}
                 >
                   <i className="fas fa-share-alt me-2"></i>
-                  초대코드 복사하기
+                  추모관 공유하기
                 </Button>
+                {showShareButtons && (
+                  <div id="share-options" className="mt-2 d-flex flex-column gap-2">
+                    <Button
+                      variant="outline-secondary"
+                      onClick={handleShowQRCode}
+                      disabled={generatingQR}
+                      style={{
+                        borderRadius: '8px',
+                        borderColor: '#b8860b',
+                        color: '#b8860b',
+                        background: 'rgba(184, 134, 11, 0.1)'
+                      }}
+                    >
+                      <QrCode size={16} className="me-2" />
+                      {generatingQR ? '생성 중...' : 'QR 코드 미리보기'}
+                    </Button>
+                    <Button
+                      variant="outline-secondary"
+                      onClick={handleCopyInviteCode}
+                      style={{
+                        borderRadius: '8px',
+                        borderColor: '#b8860b',
+                        color: '#b8860b',
+                        background: 'rgba(184, 134, 11, 0.1)'
+                      }}
+                    >
+                      <Copy size={16} className="me-2" />
+                      초대코드 복사하기
+                    </Button>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           </Col>
@@ -1920,6 +2014,51 @@ const MemorialDetail = () => {
             </>
           )}
         </Modal.Body>
+      </Modal>
+
+      {/* QR 코드 미리보기 모달 */}
+      <Modal show={showQRModal} onHide={() => setShowQRModal(false)} centered>
+        <Modal.Header closeButton style={{ 
+            background: 'linear-gradient(135deg, #b8860b 0%, #965a25 100%)',
+            color: 'white',
+            border: 'none'
+          }}>
+          <Modal.Title>故 {memorial?.deceasedName} 추모관 QR 코드</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center" style={{ 
+          padding: '2rem',
+          background: 'rgba(255, 251, 235, 0.95)'
+        }}>
+          {qrCodeDataUrl ? (
+            <img src={qrCodeDataUrl} alt="Memorial QR Code" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+          ) : (
+            <div className="spinner-border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          )}
+          <p className="text-muted mt-3">
+            이 QR 코드를 스캔하여 추모관에 방문할 수 있습니다.
+          </p>
+        </Modal.Body>
+        <Modal.Footer style={{ background: 'rgba(255, 251, 235, 0.95)', border: 'none' }}>
+          <Button 
+            variant="primary" 
+            onClick={handleDownloadFromModal} 
+            disabled={!qrCodeDataUrl}
+            style={{
+                background: 'linear-gradient(135deg, #b8860b, #965a25)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#fff',
+                fontWeight: '600'
+            }}
+          >
+            <Download size={16} className="me-2" />
+            다운로드
+          </Button>
+          <Button variant="secondary" onClick={() => setShowQRModal(false)}>
+            닫기
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );

@@ -15,7 +15,7 @@ const Menu1_3 = () => {
     const [formData, setFormData] = useState({});
     const [selectedDoc, setSelectedDoc] = useState('obituary');
     const [loading, setLoading] = useState(true);
-    const [generating, setGenerating] = useState(false);
+    const [generating, setGenerating] = useState({});
     const [animateCard, setAnimateCard] = useState(false);
     const [previewContent, setPreviewContent] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
@@ -216,122 +216,111 @@ const Menu1_3 = () => {
             return null; // All fields are valid
         };
 
-        try {
-            const validationError = validateRequiredFields(selectedCustomer);
-            if (validationError) {
-                setErrorMessage(validationError);
-                setGenerating(false); // Stop loading spinner
-                return false; // Indicate failure
-            }
-
-            setGenerating(true);
-            setSuccessMessage('');
-            setErrorMessage('');
-
-            if (!funeralInfoId) { // Use the state variable directly
-                setErrorMessage('장례 정보 ID를 찾을 수 없습니다.');
-                setGenerating(false);
-                return false; // Indicate failure
-            }
-
-            let createApiCall;
-            let getApiCall;
-            let statusKey;
-            let fileUrlKey;
-
-            if (docType === 'obituary') {
-                createApiCall = () => apiService.createObituary(funeralInfoId);
-                getApiCall = () => apiService.getObituaryByCustomerId(selectedCustomer.customerId);
-                statusKey = 'obituaryStatus';
-                fileUrlKey = 'obituaryFileUrl';
-            } else if (docType === 'deathCertificate') {
-                createApiCall = () => apiService.createDeathReport(funeralInfoId);
-                getApiCall = () => apiService.getDeathReportByCustomerId(selectedCustomer.customerId);
-                statusKey = 'deathReportStatus';
-                fileUrlKey = 'deathReportFileUrl';
-            } else if (docType === 'schedule') {
-                createApiCall = () => apiService.createSchedule(funeralInfoId);
-                getApiCall = () => apiService.getScheduleByCustomerId(selectedCustomer.customerId);
-                statusKey = 'scheduleStatus';
-                fileUrlKey = 'scheduleFileUrl';
-            } else {
-                setErrorMessage('알 수 없는 문서 유형입니다.');
-                setGenerating(false);
-                return false; // Indicate failure
-            }
-
-            // Step 1: Send the PUT request to generate the document
-            const initialResponse = await createApiCall();
-            const initialStatus = initialResponse.data[statusKey];
-
-            if (initialStatus === 'COMPLETED') {
-                setSuccessMessage(`${documentUtils.getDocumentName(docType)} 생성 완료.`);
-                // Update the file URL state immediately if completed
-                if (docType === 'obituary') setObituaryFileUrl(initialResponse.data[fileUrlKey]);
-                else if (docType === 'deathCertificate') setDeathReportFileUrl(initialResponse.data[fileUrlKey]);
-                else if (docType === 'schedule') setScheduleFileUrl(initialResponse.data[fileUrlKey]);
-                if (docType === selectedDoc) {
-                    loadPreview(initialResponse.data[fileUrlKey]); // Update preview
-                }
-                return true; // Indicate success
-            } else if (initialStatus === 'PENDING') {
-                setSuccessMessage(`${documentUtils.getDocumentName(docType)} 생성 요청 완료. 문서 생성 중...`);
-                // Start polling
-                return new Promise((resolve) => {
-                    let pollCount = 0;
-                    const pollDocumentStatus = async () => {
-                        try {
-                            pollCount++;
-                            if (pollCount > 90) {
-                                setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 시간이 초과되었습니다. 다시 시도해주세요.`);
-                                resolve(false);
-                                return;
-                            }
-
-                            const pollResponse = await getApiCall();
-                            const currentStatus = pollResponse.data[statusKey];
-
-                            if (currentStatus === 'COMPLETED') {
-                                setSuccessMessage(`${documentUtils.getDocumentName(docType)} 생성 완료.`);
-                                if (docType === 'obituary') setObituaryFileUrl(pollResponse.data[fileUrlKey]);
-                                else if (docType === 'deathCertificate') setDeathReportFileUrl(pollResponse.data[fileUrlKey]);
-                                else if (docType === 'schedule') setScheduleFileUrl(pollResponse.data[fileUrlKey]);
-                                if (docType === selectedDoc) {
-                                    loadPreview(pollResponse.data[fileUrlKey]);
-                                }
-                                resolve(true);
-                            } else if (currentStatus === 'PENDING') {
-                                setTimeout(pollDocumentStatus, 1000);
-                            } else {
-                                setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 실패: ${currentStatus}`);
-                                resolve(false);
-                            }
-                        } catch (pollError) {
-                            console.error('Polling error:', pollError);
-                            setErrorMessage('문서 상태 확인 중 오류가 발생했습니다.');
-                            resolve(false);
-                        }
-                    };
-                    setTimeout(pollDocumentStatus, 1000);
-                });
-            } else {
-                setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 실패: ${initialStatus}`);
-                return false; // Indicate failure
-            }
-
-        } catch (error) {
-            console.error('Error generating document:', error);
-            setErrorMessage('서류 생성 중 오류 발생');
+        const validationError = validateRequiredFields(selectedCustomer);
+        if (validationError) {
+            setErrorMessage(validationError);
             return false; // Indicate failure
         }
-        // The finally block is now handled by the wrapper function
+
+        setSuccessMessage('');
+        setErrorMessage('');
+
+        if (!funeralInfoId) { // Use the state variable directly
+            setErrorMessage('장례 정보 ID를 찾을 수 없습니다.');
+            return false; // Indicate failure
+        }
+
+        let createApiCall;
+        let getApiCall;
+        let statusKey;
+        let fileUrlKey;
+
+        if (docType === 'obituary') {
+            createApiCall = () => apiService.createObituary(funeralInfoId);
+            getApiCall = () => apiService.getObituaryByCustomerId(selectedCustomer.customerId);
+            statusKey = 'obituaryStatus';
+            fileUrlKey = 'obituaryFileUrl';
+        } else if (docType === 'deathCertificate') {
+            createApiCall = () => apiService.createDeathReport(funeralInfoId);
+            getApiCall = () => apiService.getDeathReportByCustomerId(selectedCustomer.customerId);
+            statusKey = 'deathReportStatus';
+            fileUrlKey = 'deathReportFileUrl';
+        } else if (docType === 'schedule') {
+            createApiCall = () => apiService.createSchedule(funeralInfoId);
+            getApiCall = () => apiService.getScheduleByCustomerId(selectedCustomer.customerId);
+            statusKey = 'scheduleStatus';
+            fileUrlKey = 'scheduleFileUrl';
+        } else {
+            setErrorMessage('알 수 없는 문서 유형입니다.');
+            return false; // Indicate failure
+        }
+
+        // Step 1: Send the PUT request to generate the document
+        const initialResponse = await createApiCall();
+        const initialStatus = initialResponse.data[statusKey];
+
+        if (initialStatus === 'COMPLETED') {
+            setSuccessMessage(`${documentUtils.getDocumentName(docType)} 생성 완료.`);
+            // Update the file URL state immediately if completed
+            if (docType === 'obituary') setObituaryFileUrl(initialResponse.data[fileUrlKey]);
+            else if (docType === 'deathCertificate') setDeathReportFileUrl(initialResponse.data[fileUrlKey]);
+            else if (docType === 'schedule') setScheduleFileUrl(initialResponse.data[fileUrlKey]);
+            if (docType === selectedDoc) {
+                loadPreview(initialResponse.data[fileUrlKey]); // Update preview
+            }
+            return true; // Indicate success
+        } else if (initialStatus === 'PENDING') {
+            setSuccessMessage(`${documentUtils.getDocumentName(docType)} 생성 요청 완료. 문서 생성 중...`);
+            // Start polling
+            return new Promise((resolve) => {
+                let pollCount = 0;
+                const pollDocumentStatus = async () => {
+                    try {
+                        pollCount++;
+                        if (pollCount > 90) {
+                            setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 시간이 초과되었습니다. 다시 시도해주세요.`);
+                            resolve(false);
+                            return;
+                        }
+
+                        const pollResponse = await getApiCall();
+                        const currentStatus = pollResponse.data[statusKey];
+
+                        if (currentStatus === 'COMPLETED') {
+                            setSuccessMessage(`${documentUtils.getDocumentName(docType)} 생성 완료.`);
+                            if (docType === 'obituary') setObituaryFileUrl(pollResponse.data[fileUrlKey]);
+                            else if (docType === 'deathCertificate') setDeathReportFileUrl(pollResponse.data[fileUrlKey]);
+                            else if (docType === 'schedule') setScheduleFileUrl(pollResponse.data[fileUrlKey]);
+                            if (docType === selectedDoc) {
+                                loadPreview(pollResponse.data[fileUrlKey]);
+                            }
+                            resolve(true);
+                        } else if (currentStatus === 'PENDING') {
+                            setTimeout(pollDocumentStatus, 1000);
+                        } else {
+                            setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 실패: ${currentStatus}`);
+                            resolve(false);
+                        }
+                    } catch (pollError) {
+                        console.error('Polling error:', pollError);
+                        setErrorMessage('문서 상태 확인 중 오류가 발생했습니다.');
+                        resolve(false);
+                    }
+                };
+                setTimeout(pollDocumentStatus, 1000);
+            });
+        } else {
+            setErrorMessage(`${documentUtils.getDocumentName(docType)} 생성 실패: ${initialStatus}`);
+            return false; // Indicate failure
+        }
     };
 
     const handleSingleGenerate = async (docType) => {
+        setGenerating(prev => ({ ...prev, [docType]: true }));
         try {
             await handleGenerateDocument(docType, false);
         } finally {
-            setGenerating(false);
+            setGenerating(prev => ({ ...prev, [docType]: false }));
         }
     };
 
@@ -342,8 +331,8 @@ const Menu1_3 = () => {
 
     const confirmBulkAction = async () => {
         setShowConfirmModal(false);
+        setGenerating(prev => ({ ...prev, bulk: true }));
         try {
-            setGenerating(true);
             setSuccessMessage('');
             setErrorMessage('');
 
@@ -367,7 +356,7 @@ const Menu1_3 = () => {
             console.error('일괄 작업 중 예상치 못한 오류 발생:', error);
             setErrorMessage('일괄 작업 중 오류가 발생했습니다.');
         } finally {
-            setGenerating(false);
+            setGenerating(prev => ({ ...prev, bulk: false }));
         }
     };
 
@@ -404,6 +393,8 @@ const Menu1_3 = () => {
         { type: 'deathCertificate', name: '사망신고서', icon: <FileText size={18} /> },
         { type: 'schedule', name: '장례일정표', icon: <Calendar size={18} /> },
     ];
+
+    const isBulkGenerating = Object.values(generating).some(v => v);
 
     return (
         <div className="page-wrapper" style={{
@@ -452,7 +443,7 @@ const Menu1_3 = () => {
                             </div>
                             <hr className="my-3"/>
                             <Row className="g-2">
-                                <Col><Button className="w-100 btn-golden" size="sm" onClick={() => handleBulkAction('generateAll')} disabled={generating}>{generating ? <Loader size={14} className="spinner" /> : <FileText size={14} />}<span className="ms-2">일괄 제작</span></Button></Col>
+                                <Col><Button className="w-100 btn-golden" size="sm" onClick={() => handleBulkAction('generateAll')} disabled={isBulkGenerating}>{generating.bulk ? <Loader size={14} className="spinner" /> : <FileText size={14} />}<span className="ms-2">일괄 제작</span></Button></Col>
                                 
                             </Row>
                         </div>
@@ -474,7 +465,7 @@ const Menu1_3 = () => {
                             </h3>
                         </div>
                         <div className="d-flex gap-2">
-                            <Button className="save-btn" size="sm" onClick={() => handleSingleGenerate(selectedDoc)} disabled={generating}>{generating ? <Loader size={14} className='spinner me-2' /> : <FileText size={14} className='me-2' />}{isDocumentGenerated(selectedDoc) ? '재생성' : '생성'}</Button>
+                            <Button className="save-btn" size="sm" onClick={() => handleSingleGenerate(selectedDoc)} disabled={generating.bulk || generating[selectedDoc]}>{generating[selectedDoc] ? <Loader size={14} className='spinner me-2' /> : <FileText size={14} className='me-2' />}{isDocumentGenerated(selectedDoc) ? '재생성' : '생성'}</Button>
                             
                             
                         </div>
