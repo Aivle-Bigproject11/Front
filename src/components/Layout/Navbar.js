@@ -80,11 +80,11 @@ const Navbar = () => {
         <BootstrapNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             {/* 각 메뉴 링크에 현재 경로와 비교하여 활성 스타일을 동적으로 적용합니다. */}
-            <Nav.Link as={Link} to="/menu1-1" style={location.pathname.startsWith("/menu1") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>장례서류 자동화</Nav.Link>
-            <Nav.Link as={Link} to="/menu2N" style={location.pathname === "/menu2N" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>인력운영 어드바이저</Nav.Link>
-            <Nav.Link as={Link} to="/menu3" style={location.pathname === "/menu3" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>고객 맞춤형 Upselling</Nav.Link>
-            <Nav.Link as={Link} to="/menu4" style={location.pathname === "/menu4" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>디지털 추모관</Nav.Link>
             <Nav.Link as={Link} to="/menu5" style={location.pathname.startsWith("/menu5") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>고객 관리</Nav.Link>
+            <Nav.Link as={Link} to="/menu3" style={location.pathname === "/menu3" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>고객 맞춤형 Upselling</Nav.Link>
+            <Nav.Link as={Link} to="/menu2N" style={location.pathname === "/menu2N" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>인력운영 어드바이저</Nav.Link>
+            <Nav.Link as={Link} to="/menu1-1" style={location.pathname.startsWith("/menu1") ? {...linkStyle, ...activeLinkStyle} : linkStyle}>장례서류 자동화</Nav.Link>
+            <Nav.Link as={Link} to="/menu4" style={location.pathname === "/menu4" ? {...linkStyle, ...activeLinkStyle} : linkStyle}>디지털 추모관</Nav.Link>
           </Nav>
           <Nav>
             <span className="welcome-text">환영합니다, {maskName(user?.username || user?.name)}님!</span>
