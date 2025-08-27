@@ -108,37 +108,19 @@ const Home = () => {
         }}>
           <Card style={cardStyle} className="menu-card">
             <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
-              <img src={menu01} alt="장례 서류 작성" style={{ width: '90px', height: '90px' }} />
+              <img src={menu05} alt="고객 관리" style={{ width: '90px', height: '90px' }} />
               <div>
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI 장례서류 자동 작성</Card.Title>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>고객 관리</Card.Title>
                 <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
-                  - 장례 관련 서류 자동화<br />
-                  - 입력 데이터 오탈자 검증<br />
-                  - 맞춤형 템플릿 생성
+                  - 고객 정보 조회<br />
+                  - 고객 정보 추가 / 삭제
                 </Card.Text>
               </div>
-              <Button as={Link} to="/menu1" style={redButtonStyle} className="w-75 service-button">
+              <Button as={Link} to="/menu5" style={redButtonStyle} className="w-75 service-button">
                 바로가기
               </Button>
             </Card.Body>
           </Card>
-
-          <Card style={cardStyle} className="menu-card">
-            <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
-              <img src={menu02} alt="AI 인력배치" style={{ width: '90px', height: '90px' }} />
-              <div>
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI 인력운영 어드바이저</Card.Title>
-                <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
-                  - 실시간 통계 및 분석<br />
-                  - 사망자 현황 및 예측 대시보드
-                </Card.Text>
-              </div>
-              <Button as={Link} to="/menu2N" style={orangeButtonStyle} className="w-75 service-button">
-                바로가기
-              </Button>
-            </Card.Body>
-          </Card>
-
           <Card style={cardStyle} className="menu-card">
             <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
               <img src={menu03} alt="전환 서비스 추천" style={{ width: '90px', height: '90px' }} />
@@ -149,7 +131,38 @@ const Home = () => {
                   - 고객 메시지 발송 기록 조회
                 </Card.Text>
               </div>
-              <Button as={Link} to="/menu3" style={greenButtonStyle} className="w-75 service-button">
+              <Button as={Link} to="/menu3" style={orangeButtonStyle} className="w-75 service-button">
+                바로가기
+              </Button>
+            </Card.Body>
+          </Card>
+          <Card style={cardStyle} className="menu-card">
+            <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
+              <img src={menu02} alt="AI 인력배치" style={{ width: '90px', height: '90px' }} />
+              <div>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI 인력운영 어드바이저</Card.Title>
+                <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
+                  - 실시간 통계 및 분석<br />
+                  - 사망자 현황 및 예측 대시보드
+                </Card.Text>
+              </div>
+              <Button as={Link} to="/menu2N" style={greenButtonStyle} className="w-75 service-button">
+                바로가기
+              </Button>
+            </Card.Body>
+          </Card>
+          <Card style={cardStyle} className="menu-card">
+            <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
+              <img src={menu01} alt="장례 서류 작성" style={{ width: '90px', height: '90px' }} />
+              <div>
+                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>AI 장례서류 자동 작성</Card.Title>
+                <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
+                  - 장례 관련 서류 자동화<br />
+                  - 입력 데이터 오탈자 검증<br />
+                  - 맞춤형 템플릿 생성
+                </Card.Text>
+              </div>
+              <Button as={Link} to="/menu1" style={blueButtonStyle} className="w-75 service-button">
                 바로가기
               </Button>
             </Card.Body>
@@ -165,27 +178,19 @@ const Home = () => {
                   - AI 추모영상/추모사 생성
                 </Card.Text>
               </div>
-              <Button as={Link} to="/menu4" style={blueButtonStyle} className="w-75 service-button">
+              <Button as={Link} to="/menu4" style={purpleButtonStyle} className="w-75 service-button">
                 바로가기
               </Button>
             </Card.Body>
           </Card>
 
-          <Card style={cardStyle} className="menu-card">
-            <Card.Body className="text-center d-flex flex-column justify-content-around align-items-center p-4">
-              <img src={menu05} alt="고객 관리" style={{ width: '90px', height: '90px' }} />
-              <div>
-                <Card.Title className="mb-3" style={{ color: '#2C1F14', fontWeight: '700', fontSize: '1.25rem' }}>고객 관리</Card.Title>
-                <Card.Text style={{ color: '#4A3728', fontSize: '0.9rem' }}>
-                  - 고객 정보 조회<br />
-                  - 고객 정보 추가 / 삭제
-                </Card.Text>
-              </div>
-              <Button as={Link} to="/menu5" style={purpleButtonStyle} className="w-75 service-button">
-                바로가기
-              </Button>
-            </Card.Body>
-          </Card>
+
+
+
+
+
+
+
         </div>
 
         <div style={{ flexShrink: 0, marginTop: 'auto', paddingTop: '20px' }}>
