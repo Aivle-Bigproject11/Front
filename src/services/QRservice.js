@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import logo from '../assets/logo/lumora bgx.png';
 
 /**
  * QR코드 생성 및 다운로드 서비스
@@ -26,16 +27,40 @@ class QRService {
         width: 256,
         margin: 2,
         color: {
-          dark: '#000000',
+          dark: '#B8860B',
           light: '#FFFFFF'
         },
-        errorCorrectionLevel: 'M',
+        errorCorrectionLevel: 'H', // Use 'H' for high error correction
         type: 'image/png'
       };
 
       const qrOptions = { ...defaultOptions, ...options };
-      const qrCodeDataUrl = await QRCode.toDataURL(text, qrOptions);
-      return qrCodeDataUrl;
+
+      // Create a canvas element
+      const canvas = document.createElement('canvas');
+      canvas.width = qrOptions.width;
+      canvas.height = qrOptions.width;
+
+      // Draw QR code to canvas
+      await QRCode.toCanvas(canvas, text, qrOptions);
+
+      // Load the logo
+      const logoImg = new Image();
+      logoImg.src = logo;
+
+      // Wait for the logo to load
+      await new Promise(resolve => {
+        logoImg.onload = resolve;
+      });
+
+      // Draw the logo on the canvas
+      const ctx = canvas.getContext('2d');
+      const logoSize = qrOptions.width * 0.8; // Adjust logo size as needed
+      const x = (qrOptions.width - logoSize) / 2;
+      const y = (qrOptions.width - logoSize) / 2;
+      ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+
+      return canvas.toDataURL(qrOptions.type);
     } catch (error) {
       console.error('QR코드 생성 중 오류 발생:', error);
       throw new Error('QR코드 생성에 실패했습니다.');
@@ -119,14 +144,31 @@ class QRService {
         width: canvas.width || 256,
         margin: 2,
         color: {
-          dark: '#000000',
+          dark: '#B8860B',
           light: '#FFFFFF'
         },
-        errorCorrectionLevel: 'M'
+        errorCorrectionLevel: 'H' // Use 'H' for high error correction
       };
 
       const qrOptions = { ...defaultOptions, ...options };
       await QRCode.toCanvas(canvas, text, qrOptions);
+
+      // Load the logo
+      const logoImg = new Image();
+      logoImg.src = logo;
+
+      // Wait for the logo to load
+      await new Promise(resolve => {
+        logoImg.onload = resolve;
+      });
+
+      // Draw the logo on the canvas
+      const ctx = canvas.getContext('2d');
+      const logoSize = qrOptions.width * 0.8; // Adjust logo size as needed
+      const x = (qrOptions.width - logoSize) / 2;
+      const y = (qrOptions.width - logoSize) / 2;
+      ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+
     } catch (error) {
       console.error('Canvas에 QR코드 렌더링 중 오류 발생:', error);
       throw new Error('QR코드 렌더링에 실패했습니다.');
