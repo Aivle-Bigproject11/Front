@@ -1506,9 +1506,9 @@ const MemorialDetail = () => {
                               textShadow: '0 1px 2px rgba(0,0,0,0.3)',
                               lineHeight: '1.5',
                               fontSize: '0.95rem',
-                              overflow: 'visible',
+                              overflow: 'hidden',
                               display: '-webkit-box',
-                              WebkitLineClamp: 5,
+                              WebkitLineClamp: 2,
                               WebkitBoxOrient: 'vertical',
                               wordWrap: 'break-word'
                             }}>
