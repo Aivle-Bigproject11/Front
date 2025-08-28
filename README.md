@@ -116,8 +116,8 @@ npm run test   # 테스트 실행
 │   │   ├── privacyPolicy.js       # 개인정보 처리방침
 │   │   ├── termsOfService.js      # 서비스 이용약관
 │   │   ├── Menu1-1.js ~ Menu1-5.js # 장례서류작성 단계별 페이지
-│   │   ├── Menu2F.js              # 대시보드 (장례식장)
-│   │   ├── Menu2N.js              # 대시보드 (일반)
+│   │   ├── Menu2F.js              # 대시보드 (사망자 기반 예측 AI 데이터 조회 페이지)
+│   │   ├── Menu2N.js              # 대시보드 (장례식장 반영 AI인력배치 이동/조회 페이지)
 │   │   ├── Menu3.js               # 전환서비스추천 (/menu3)
 │   │   ├── Menu4.js               # 디지털 추모관 (/menu4)
 │   │   ├── Menu5.js               # 추가 메뉴
