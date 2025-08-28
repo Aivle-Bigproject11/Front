@@ -51,12 +51,12 @@ npm run start:docker  # 8080 게이트웨이 서비스로 개발 서버 시작
 
 React 앱이 `http://localhost:3000`에서 시작됩니다.
 
-### Mock 모드 vs Real 모드 (프로덕션 환경에서는 Real 모드 사용)
+### 기본/도커 모드. (실제 웹 배포시엔 다른 포트)
 
 | 모드 | 실행 명령 | 설명 | 용도 |
 |------|-----------|------|------|
-| Real | `npm start` | 8088 백엔드 서버와 통신 | 프로덕션 환경 |
-| Mock | `npm run start:docker` | 개발/테스트 환경, 8080포트. |
+| Basic | `npm start` | 8088 백엔드 서버와 통신 | 프로덕션 환경 |
+| Docker | `npm run start:docker` | 개발/테스트 환경, 8080포트. |
 
 상세한 Mock 서비스 가이드는 [`docs/MockServiceGuide.md`](./docs/MockServiceGuide.md)를 참조하세요.
 
