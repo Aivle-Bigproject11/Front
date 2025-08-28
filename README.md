@@ -70,20 +70,17 @@ npm run test   # 테스트 실행
 
 ```
 프로젝트 루트/                      # React 프론트엔드 프로젝트
-├── .env                           # 기본 환경 변수 (8088 백엔드)
+├── .env                           # API키를 비롯한 환경 변수 (8088 백엔드)
 ├── .env.docker                    # Docker 환경 변수 (8080 게이트웨이)
 ├── .env.local                     # 로컬 환경 변수
 ├── .gitignore                     # Git 무시 파일
 ├── .idea/                         # IntelliJ IDEA 설정
-├── apitest.md                     # API 테스트 문서
 ├── build/                         # 프로덕션 빌드 결과물
-├── dashboardflow.md               # 대시보드 플로우 문서
 ├── db.json                        # Mock 데이터베이스
 ├── Dockerfile                     # Docker 이미지 빌드 설정
 ├── nginx.conf                     # Nginx 웹서버 설정
 ├── package.json                   # npm 의존성 및 스크립트
 ├── package-lock.json              # 의존성 잠금 파일
-├── PORT_GUIDE.md                  # 포트 가이드 문서
 ├── README.md                      # 프로젝트 문서
 ├── public/                        # 정적 파일
 │   ├── index.html                 # HTML 템플릿
@@ -148,7 +145,10 @@ npm run test   # 테스트 실행
 │   ├── reportWebVitals.js         # 성능 측정
 │   └── setupTests.js              # 테스트 설정
 ├── docs/                          # 프로젝트 문서
+│   ├── apitest.md                 # API 테스트 문서
+│   ├── PORT_GUIDE.md              # 포트 가이드 문서
 │   ├── FamilyAPI.md               # 가족 관리 API 명세서
+│   ├── dashboardflow.md           # 대시보드 플로우 문서
 │   ├── LobbyAPI.md                # 로비 API 명세서
 │   ├── LoginAPI.md                # 로그인 API 명세서
 │   ├── Menu1API.md                # 장례서류작성 API 명세서
